@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Views/auth/otp.dart';
 import 'package:flutter_naqli/Views/auth/stepOne.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Register extends StatefulWidget {
-  const Register({Key? key}) : super(key: key);
+  final String selectedRole; // Added field for selected role
+
+  const Register({Key? key, required this.selectedRole}) : super(key: key);
 
   @override
   State<Register> createState() => _RegisterState();
@@ -12,21 +18,34 @@ final TextEditingController nameController = TextEditingController();
 final TextEditingController mobileController = TextEditingController();
 final TextEditingController emailController = TextEditingController();
 final TextEditingController passwordController = TextEditingController();
+final AuthService _authService = AuthService();
 
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>(); // Global key for form validation
+
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      _authService.registerUser(
+        context,
+        partnerName: nameController.text,
+        mobileNo: mobileController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        role: widget.selectedRole,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: MediaQuery.of(context).size.height * 0.33,
+        toolbarHeight: MediaQuery.of(context).size.height * 0.31,
         title: Stack(
           children: [
             Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
                 alignment: Alignment.center,
-                // height: 300,
                 child: Image.asset(
                   'assets/Register.jpg',
                   fit: BoxFit.contain,
@@ -55,7 +74,7 @@ class _RegisterState extends State<Register> {
       ),
       body: SingleChildScrollView(
         child: Form(
-          key: _formKey, // Assign the form key to the form widget
+          key: _formKey,
           child: Column(
             children: [
               _buildTextField(
@@ -88,6 +107,9 @@ class _RegisterState extends State<Register> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
                   }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email address';
+                  }
                   return null;
                 },
               ),
@@ -117,15 +139,7 @@ class _RegisterState extends State<Register> {
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // If the form is valid, print the data and navigate
-                        print('Name: ${nameController.text}');
-                        print('Mobile No: ${mobileController.text}');
-                        print('Email: ${emailController.text}');
-                        print('Password: ${passwordController.text}');
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const StepOne()));
+                        _submitForm();
                       }
                     },
                     child: const Text(

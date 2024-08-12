@@ -8,9 +8,25 @@ class Role extends StatefulWidget {
   State<Role> createState() => _RoleState();
 }
 
-int _selectedValue = 1;
-
 class _RoleState extends State<Role> {
+  int _selectedValue = 1;
+
+  // Helper method to convert selected value to corresponding role string
+  String _getRoleString(int value) {
+    switch (value) {
+      case 1:
+        return 'enterprise';
+      case 2:
+        return 'multipleUnits';
+      case 3:
+        return 'singleUnit + operator';
+      case 4:
+        return 'operator';
+      default:
+        return 'Unknown';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,27 +35,28 @@ class _RoleState extends State<Role> {
         title: Stack(
           children: [
             Container(
-                alignment: Alignment.center,
-                // height: 330,
-                child: Image.asset(
-                  'assets/Joinus.jpg',
-                  fit: BoxFit.fill,
-                  width: MediaQuery.of(context).size.width,
-                  height: 300,
-                )),
+              alignment: Alignment.center,
+              child: Image.asset(
+                'assets/Joinus.jpg',
+                fit: BoxFit.fill,
+                width: MediaQuery.of(context).size.width,
+                height: 300,
+              ),
+            ),
             GestureDetector(
               onTap: () {
                 Navigator.pop(context);
               },
               child: const Align(
-                  alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    backgroundColor: Color(0xffFFFFFF),
-                    child: Icon(
-                      Icons.clear,
-                      color: Colors.black,
-                    ),
-                  )),
+                alignment: Alignment.topRight,
+                child: CircleAvatar(
+                  backgroundColor: Color(0xffFFFFFF),
+                  child: Icon(
+                    Icons.clear,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -53,9 +70,7 @@ class _RoleState extends State<Role> {
             child: Text(
               'Choose your role',
               style: TextStyle(
-                  fontSize: 35,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w500),
+                  fontSize: 35, color: Colors.black, fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(
@@ -105,7 +120,7 @@ class _RoleState extends State<Role> {
               ),
               child: RadioListTile(
                 title: const Text(
-                  'Single Unit + operator',
+                  'Single Unit + Operator',
                   style: TextStyle(fontSize: 23),
                 ),
                 value: 3,
@@ -145,25 +160,31 @@ class _RoleState extends State<Role> {
                 height: MediaQuery.of(context).size.height * 0.08,
                 width: MediaQuery.of(context).size.width * 0.8,
                 child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6A66D1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff6A66D1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Register()));
-                    },
-                    child: const Text(
-                      'Next',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.normal),
-                    )),
+                  ),
+                  onPressed: () {
+                    String selectedRole = _getRoleString(_selectedValue);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Register(
+                          selectedRole: selectedRole,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Next',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.normal),
+                  ),
+                ),
               ),
             ),
           ),

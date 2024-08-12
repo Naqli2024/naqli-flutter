@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Views/auth/otp.dart';
 import 'package:flutter_naqli/Views/home_page.dart';
 
 void main() {
