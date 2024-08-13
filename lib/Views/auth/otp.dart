@@ -8,8 +8,10 @@ import 'package:http/http.dart' as http;
 class OtpScreen extends StatefulWidget {
   final String mobileNo;
   final String email;
+  final String password;
+  final String partnerName;
 
-  const OtpScreen({Key? key, required this.mobileNo, required this.email}) : super(key: key);
+  const OtpScreen({Key? key, required this.mobileNo, required this.email, required this.password, required this.partnerName}) : super(key: key);
 
   @override
   _OtpScreenState createState() => _OtpScreenState();
@@ -57,7 +59,11 @@ class _OtpScreenState extends State<OtpScreen> {
     String otp = _otpControllers.map((controller) => controller.text).join();
     AuthService().validateOTP(
               context,
-              otp:otp
+              email: widget.email,
+              password: widget.password,
+              mobileNo: widget.mobileNo,
+              otp:otp,
+              partnerName: widget.partnerName
     );
   }
 
@@ -69,7 +75,10 @@ class _OtpScreenState extends State<OtpScreen> {
     String otp = _otpControllers.map((controller) => controller.text).join();
     AuthService().resendOTP(
         context,
-        email: widget.email
+        email: widget.email,
+        password: widget.password,
+        mobileNo: widget.mobileNo,
+        partnerName: widget.partnerName
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('OTP Sent')),

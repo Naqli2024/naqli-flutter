@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Model/services.dart';
-import 'package:flutter_naqli/Views/auth/otp.dart';
-import 'package:flutter_naqli/Views/auth/stepOne.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class Register extends StatefulWidget {
-  final String selectedRole; // Added field for selected role
+  final String selectedRole;
 
   const Register({Key? key, required this.selectedRole}) : super(key: key);
 
@@ -19,22 +15,28 @@ final TextEditingController mobileController = TextEditingController();
 final TextEditingController emailController = TextEditingController();
 final TextEditingController passwordController = TextEditingController();
 final AuthService _authService = AuthService();
+bool isLoading = false;
 
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>(); // Global key for form validation
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      _authService.registerUser(
-        context,
-        partnerName: nameController.text,
-        mobileNo: mobileController.text,
-        email: emailController.text,
-        password: passwordController.text,
-        role: widget.selectedRole,
-      );
-    }
+  Future<void> _submitForm() async {
+      setState(() {
+        isLoading = true;
+      });
+        _authService.registerUser(
+          context,
+          partnerName: nameController.text,
+          mobileNo: mobileController.text,
+          email: emailController.text,
+          password: passwordController.text,
+          role: widget.selectedRole,
+        );
+        setState(() {
+          isLoading = false; // Hide loading indicator
+        });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +74,9 @@ class _RegisterState extends State<Register> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+         ? const Center(child: CircularProgressIndicator())
+        : SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(

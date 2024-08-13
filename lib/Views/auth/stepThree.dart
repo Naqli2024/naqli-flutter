@@ -15,8 +15,9 @@ class _StepThreeState extends State<StepThree> {
       appBar: commonAppBar(
         context,
         bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(70.0),
+            preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
+              toolbarHeight: 80,
               backgroundColor: const Color(0xff6A66D1),
               title: const Text('Operator/Owner',
                 style: TextStyle(color: Colors.white),
@@ -30,7 +31,8 @@ class _StepThreeState extends State<StepThree> {
                     color: Colors.white,
                   )),
             )),
-      ),      body: Container(
+      ),
+      body: Container(
         color: Colors.white,
         child: Column(
           children: [
@@ -69,10 +71,10 @@ class _StepThreeState extends State<StepThree> {
                 ),
               ),
               onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginPage()));
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //         builder: (context) => const LoginPage()));
               },
               child: const Text(
                 'Submit',

@@ -4,7 +4,10 @@ import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/auth/stepTwo.dart';
 
 class StepOne extends StatefulWidget {
-  const StepOne({Key? key}) : super(key: key);
+  final String partnerName;
+  final String emailOrMobile;
+  final String mobileNo;
+  const StepOne({Key? key, required this.partnerName, required this.emailOrMobile, required this.mobileNo}) : super(key: key);
 
   @override
   State<StepOne> createState() => _StepOneState();
@@ -33,6 +36,7 @@ class _StepOneState extends State<StepOne> {
     return Scaffold(
       appBar: commonAppBar(
           context,
+          User: widget.partnerName,
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(70.0),
             child: AppBar(
@@ -50,6 +54,7 @@ class _StepOneState extends State<StepOne> {
                   )),
             )),
       ),
+        drawer: createDrawer(context),
         body: Container(
           color: Colors.white,
           child: SingleChildScrollView(
@@ -71,7 +76,6 @@ class _StepOneState extends State<StepOne> {
                   child: RadioListTile(
                     title: const Text(
                       'Vehicle',
-                      // style: TextStyle(fontSize: 1),
                     ),
                     value: 1,
                     groupValue: selectedUnit,
@@ -89,7 +93,6 @@ class _StepOneState extends State<StepOne> {
                   child: RadioListTile(
                     title: const Text(
                       'Bus',
-                      // style: TextStyle(fontSize: 23),
                     ),
                     value: 2,
                     groupValue: selectedUnit,
@@ -107,7 +110,6 @@ class _StepOneState extends State<StepOne> {
                   child: RadioListTile(
                     title: const Text(
                       'Equipment',
-                      // style: TextStyle(fontSize: 23),
                     ),
                     value: 3,
                     groupValue: selectedUnit,
@@ -125,7 +127,6 @@ class _StepOneState extends State<StepOne> {
                   child: RadioListTile(
                     title: const Text(
                       'Special',
-                      // style: TextStyle(fontSize: 23),
                     ),
                     value: 4,
                     groupValue: selectedUnit,
@@ -143,7 +144,6 @@ class _StepOneState extends State<StepOne> {
                   child: RadioListTile(
                     title: const Text(
                       'Others',
-                      // style: TextStyle(fontSize: 23),
                     ),
                     value: 5,
                     groupValue: selectedUnit,

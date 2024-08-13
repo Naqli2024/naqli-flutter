@@ -7,7 +7,10 @@ import 'package:flutter_naqli/Views/auth/role.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String mobileNo;
+  final String partnerName;
+  final String password;
+  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -110,7 +113,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const LoginPage()));
+                          builder: (context) => LoginPage(partnerName: widget.partnerName,mobileNo: widget.mobileNo,password: widget.password,)));
                 },
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

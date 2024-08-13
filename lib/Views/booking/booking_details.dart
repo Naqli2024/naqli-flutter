@@ -15,8 +15,9 @@ class _BookingDetailsState extends State<BookingDetails> {
       appBar: commonAppBar(
         context,
         bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(70.0),
+            preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
+              toolbarHeight: 80,
               backgroundColor: const Color(0xff6A66D1),
               title: const Center(
                 child: Text('Booking',
@@ -33,6 +34,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                   )),
             )),
       ),
+      drawer: createDrawer(context),
       body: Container(
         color: Colors.white,
         child: ListView.builder(
