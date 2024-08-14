@@ -22,24 +22,24 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.transparent),
         useMaterial3: true,
       ),
-      home: const HomePage(partnerName: '',password: '',mobileNo: '',),
+      // home: const HomePage(partnerName: '',password: '',mobileNo: '',),
       // home: const BookingDetails(),
-      // home: FutureBuilder<Map<String, dynamic>?>(
-      //   future: getUserData(),
-      //   builder: (context, snapshot) {
-      //     if (snapshot.connectionState == ConnectionState.waiting) {
-      //       return const Scaffold(
-      //         body: Center(child: CircularProgressIndicator()),
-      //       );
-      //     } else if (snapshot.hasData) {
-      //       final userData = snapshot.data!;
-      //       final partnerName = userData['partnerName'];
-      //       return StepOne(partnerName: partnerName, mobileNo: '', emailOrMobile: '',);
-      //     } else {
-      //       return LoginPage(partnerName: '', mobileNo: '', password: '',);
-      //     }
-      //   },
-      // ),
+      home: FutureBuilder<Map<String, dynamic>?>(
+        future: getUserData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasData) {
+            final userData = snapshot.data!;
+            final partnerName = userData['partnerName'];
+            return StepOne(partnerName: partnerName, unitType: '', name: '');
+          } else {
+            return const HomePage(partnerName: '',password: '',mobileNo: '',);
+          }
+        },
+      ),
     );
   }
 }

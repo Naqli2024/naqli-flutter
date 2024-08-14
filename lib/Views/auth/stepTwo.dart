@@ -4,7 +4,8 @@ import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/auth/stepThree.dart';
 
 class StepTwo extends StatefulWidget {
-  const StepTwo({super.key});
+  final String partnerName;
+  const StepTwo({super.key, required this.partnerName});
 
   @override
   State<StepTwo> createState() => _StepTwoState();
@@ -16,6 +17,7 @@ class _StepTwoState extends State<StepTwo> {
     return Scaffold(
       appBar: commonAppBar(
         context,
+        User: widget.partnerName,
         bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
@@ -308,7 +310,7 @@ class _StepTwoState extends State<StepTwo> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const StepThree()));
+                                  builder: (context) => StepThree(partnerName: widget.partnerName)));
                         },
                         child: const Text(
                           'Next',

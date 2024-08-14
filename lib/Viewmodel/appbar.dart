@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Model/sharedPreferences.dart';
+import 'package:flutter_naqli/Views/auth/login.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Views/payment/payment_details.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -29,7 +31,7 @@ AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bott
               child: Row(
                 children: [
                   Text(
-                    User!,
+                    User??'user',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   Stack(
@@ -78,9 +80,9 @@ Drawer createDrawer(BuildContext context) {
   return Drawer(
     backgroundColor: Colors.white,
     child: Container(
-      margin: EdgeInsets.only(top: 40),
+      margin: const EdgeInsets.only(top: 40),
       child: ListView(
-        padding: EdgeInsets.all(40),
+        padding: const EdgeInsets.all(40),
         children: <Widget>[
           ListTile(
             title: Row(
@@ -88,12 +90,12 @@ Drawer createDrawer(BuildContext context) {
               children: [
                 SvgPicture.asset('assets/naqlee-logo.svg',
                     height: MediaQuery.of(context).size.height * 0.05),
-                Icon(Icons.cancel)
+                const Icon(Icons.cancel)
               ],
             ),
           ),
           ListTile(
-            title: Text('Booking',style: TextStyle(fontSize: 30),),
+            title: const Text('Booking',style: TextStyle(fontSize: 30),),
             onTap: () {
               Navigator.push(
                   context,
@@ -102,7 +104,7 @@ Drawer createDrawer(BuildContext context) {
             },
           ),
           ListTile(
-            title: Text('Payment',style: TextStyle(fontSize: 30),),
+            title: const Text('Payment',style: TextStyle(fontSize: 30),),
             onTap: () {
               Navigator.push(
                   context,
@@ -111,19 +113,33 @@ Drawer createDrawer(BuildContext context) {
             },
           ),
           ListTile(
-            title: Text('Report',style: TextStyle(fontSize: 30),),
+            title: const Text('Report',style: TextStyle(fontSize: 30),),
             onTap: () {
 
             },
           ),
           ListTile(
-            title: Text('Help',style: TextStyle(fontSize: 30),),
+            title: const Text('Help',style: TextStyle(fontSize: 30),),
             onTap: () {
 
+            },
+          ),
+          ListTile(
+            title: const Text('Logout',style: TextStyle(fontSize: 30),),
+            onTap: () {
+              logout(context);
             },
           ),
         ],
       ),
     ),
+  );
+}
+
+void logout(BuildContext context) async {
+  await clearUserData();
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const LoginPage(partnerName: '',mobileNo: '',password: '',)),
   );
 }

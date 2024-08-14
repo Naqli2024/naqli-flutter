@@ -20,3 +20,9 @@ Future<Map<String, dynamic>?> getUserData() async {
     return null;
   }
 }
+
+Future<void> clearUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('auth_token');
+  await prefs.remove('user_data');
+}
