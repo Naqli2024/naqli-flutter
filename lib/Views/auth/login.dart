@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Model/services.dart';
 import 'package:flutter_naqli/Views/auth/role.dart';
+import 'package:flutter_naqli/Views/home_page.dart';
 
 class LoginPage extends StatefulWidget {
 final String partnerName;
@@ -23,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController emailOrMobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -33,12 +35,15 @@ class _LoginPageState extends State<LoginPage> {
 
   void login() {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
       _authService.loginUser(
         context,
         emailOrMobile: emailOrMobileController.text,
         password: passwordController.text,
         partnerName: widget.partnerName,
-        mobileNo: widget.mobileNo
+        mobileNo: widget.mobileNo,
       );
     }
   }
@@ -61,7 +66,12 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: ''),
+                ),
+              );
             },
             child: const Padding(
               padding: EdgeInsets.all(15),
@@ -79,7 +89,9 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-      body: Container(
+      body: isLoading
+      ? Center(child: CircularProgressIndicator())
+      : Container(
         color: const Color(0xff6A66D1),
         child: Stack(
           children: [
@@ -164,10 +176,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     GestureDetector(
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                            color: Color(0xff6A66D1), fontSize: 15),
+                      child: const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                              color: Color(0xff6A66D1), fontSize: 15),
+                        ),
                       ),
                     ),
                     Padding(
@@ -205,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                       child: Container(
-                        padding: const EdgeInsets.only(top: 30),
+                        padding: const EdgeInsets.only(top: 15),
                         decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(

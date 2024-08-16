@@ -19,11 +19,10 @@ class MyApp extends StatelessWidget {
       title: 'Naqli',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.transparent),
+        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xff6A66D1)),
         useMaterial3: true,
       ),
       // home: const HomePage(partnerName: '',password: '',mobileNo: '',),
-      // home: const BookingDetails(),
       home: FutureBuilder<Map<String, dynamic>?>(
         future: getUserData(),
         builder: (context, snapshot) {
@@ -34,7 +33,8 @@ class MyApp extends StatelessWidget {
           } else if (snapshot.hasData) {
             final userData = snapshot.data!;
             final partnerName = userData['partnerName'];
-            return StepOne(partnerName: partnerName, unitType: '', name: '');
+            final partnerId = userData['_id'];
+            return StepOne(partnerName: partnerName, unitType: '', name: '',partnerId: partnerId,);
           } else {
             return const HomePage(partnerName: '',password: '',mobileNo: '',);
           }

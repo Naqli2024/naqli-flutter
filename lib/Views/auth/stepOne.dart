@@ -1,187 +1,142 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Model/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/auth/stepTwo.dart';
-import 'package:http/http.dart' as http;
 
 class StepOne extends StatefulWidget {
   final String partnerName;
   final String name;
   final String unitType;
-  const StepOne({Key? key, required this.partnerName, required this.name, required this.unitType}) : super(key: key);
+  final String partnerId;
+
+  const StepOne({
+    Key? key,
+    required this.partnerName,
+    required this.name,
+    required this.unitType, required this.partnerId,
+  }) : super(key: key);
 
   @override
   State<StepOne> createState() => _StepOneState();
 }
 
-int selectedUnit = 1;
-String unitdropdownvalue = 'Unit 1';
-String subdropdownvalue = 'Sub Unit 1';
-List<String> _currentUnitClassifications = [];
-String? _selectedUnitClassification;
-File?selectedfile;
-// List of items in our dropdown menu
-var unitItems = [
-  'Unit 1',
-  'Unit 2',
-  'Unit 3',
-];
-
-var subItems = [
-  'Sub Unit 1',
-  'Sub Unit 2',
-  'Sub Unit 3',
-];
-Map<int, List<String>> unitClassifications = {
-  1: ['Diana', 'Vehicle 2', 'Vehicle 3'],
-  2: ['Bus 1', 'Bus 2', 'Bus 3'],
-  3: ['Equipment 1', 'Equipment 2', 'Equipment 3'],
-  4: ['Special 1', 'Special 2', 'Special 3'],
-  5: ['Others 1', 'Others 2', 'Others 3'],
-};
-
-
-Map<int, String> unitMap = {
-  1: 'vehicle',
-  2: 'Bus',
-  3: 'Equipment',
-  4: 'Special',
-  5: 'Others',
-};
-
-String? _getRoleString(int value) {
-  String selectedUnitString = unitMap[selectedUnit]!;
-  switch (value) {
-    case 1:
-
-      print('Selected Unit: $selectedUnitString');
-    case 2:
-      print('Selected Unit: $selectedUnitString');
-    case 3:
-      print('Selected Unit: $selectedUnitString');
-    case 4:
-      print('Selected Unit: $selectedUnitString');
-    default:
-      return 'Unknown';
-  }
-}
-
-
-
 class _StepOneState extends State<StepOne> {
   final AuthService authService = AuthService();
-  List<Map<String, dynamic>> _vehicles = [];
-  List<String> _vehicleDetails = [];
-  List<String> subClassification = [];
-  String? _selectedVehicle;
-  List<String> _details = [];
-  String? _selectedDetail;
-  List<String> _typeNames = [];
-  String? _selectedTypeName;
 
-  void fetchUnitData() async {
-    try {
-      String selectedUnitString = unitMap[selectedUnit]!;
-      List<dynamic> data;
-      if (selectedUnitString == 'vehicle') {
-        data = await AuthService().fetchVehicleData();
-      }
-      else if(selectedUnitString == 'Bus'){
-        data = await AuthService().fetchBusData();
-      }
-      else if(selectedUnitString == 'Equipment'){
-        data = await AuthService().fetchEquipmentData();
-      }
-      else if(selectedUnitString == 'Special'){
-        data = await AuthService().fetchSpecialData();
-      }
-      else {
-        data = await AuthService().fetchBusData();
-      }
+  int selectedUnit = 1;
+  String? unitDropdownValue;
+  String? subDropdownValue;
+  List<String> _unitClassifications = [];
+  List<String> _subClassifications = [];
+  String? _selectedUnitClassification;
+  String? _selectedSubClassification;
+  PlatformFile? istimaraCardFile;
+  PlatformFile? vehilePictureFile;
+  final TextEditingController plateInfoController = TextEditingController();
+  final TextEditingController istimaraNoController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool istimaraUpload = false;
+  bool vehicleUpload = false;
 
-      setState(() {
-        _details = List<String>.from(data.map((item) => item['name']));
-        _selectedDetail = null; // Reset dropdown selection
-      });
-    } catch (error) {
-      print('Failed to load data: $error');
+
+  String unitMap(int value) {
+    switch (value) {
+      case 1:
+        return 'vehicle';
+      case 2:
+        return 'bus';
+      case 3:
+        return 'equipment';
+      case 4:
+        return 'special';
+      default:
+        return 'others';
     }
   }
-
-  void fetchSubData() async {
-    try {
-      String selectedUnitString = unitMap[selectedUnit]!;
-      List<dynamic> data;
-      if (selectedUnitString == _details) {
-        data = await AuthService().fetchVehicleTypes();
-        print(data);
-      }
-      else if(selectedUnitString == _details){
-        data = await AuthService().fetchBusData();
-      }
-      else if(selectedUnitString == _details){
-        data = await AuthService().fetchEquipmentData();
-      }
-      else if(selectedUnitString == _details){
-        data = await AuthService().fetchSpecialData();
-      }
-      else {
-        data = await AuthService().fetchBusData();
-      }
-
-      setState(() {
-        _details = List<String>.from(data.map((item) => item['name']));
-        _selectedDetail = null; // Reset dropdown selection
-      });
-    } catch (error) {
-      print('Failed to load data: $error');
-    }
-  }
-
 
   @override
   void initState() {
     super.initState();
-    fetchUnitClassification();
-    _loadVehicleTypes();
+    fetchUnitData();
   }
-  Future<void> _loadVehicleTypes() async {
-    AuthService().fetchVehicleTypes().then((types) {
+
+  Future<void> fetchUnitData() async {
+    try {
+      // final selectedUnitString = unitMap[selectedUnit] ?? '';
+      String selectedUnitString = unitMap(selectedUnit);
+      List<Map<String, dynamic>> data;
+
+      if (selectedUnitString == 'vehicle') {
+        data = await authService.fetchVehicleData();
+      } else if (selectedUnitString == 'bus') {
+        data = await authService.fetchBusData();
+      } else if (selectedUnitString == 'equipment') {
+        data = await authService.fetchEquipmentData();
+      } else if (selectedUnitString == 'special') {
+        data = await authService.fetchSpecialData();
+      } else if (selectedUnitString == 'others') {
+        data = await authService.fetchEquipmentData(); // Fetch Loaders data
+      } else {
+        data = [];
+      }
+
       setState(() {
-        _typeNames = types;
-        _selectedTypeName = _typeNames.isNotEmpty ? _typeNames[0] : null;
-        print(_selectedTypeName);
+        _unitClassifications = data
+            .map((item) => (item['name'] as String?) ?? 'Unknown')
+            .toSet()
+            .toList();
+
+        _selectedUnitClassification = _unitClassifications.isNotEmpty ? _unitClassifications[0] : null;
+
+        _updateSubClassifications();
       });
-    }).catchError((error) {
-      print('Failed to load vehicle types: $error');
+    } catch (error) {
+      print('Failed to load unit data: $error');
+    }
+  }
+
+  Future<void> _updateSubClassifications() async {
+    if (_selectedUnitClassification == null) {
+      _subClassifications = [];
+      _selectedSubClassification = null;
+      return;
+    }
+
+    String selectedUnitString = unitMap(selectedUnit);
+    List<Map<String, dynamic>> data;
+
+    if (selectedUnitString == 'vehicle') {
+      data = await authService.fetchVehicleData();
+    } else if (selectedUnitString == 'bus') {
+      data = await authService.fetchBusData();
+    } else if (selectedUnitString == 'equipment') {
+      data = await authService.fetchEquipmentData();
+    } else if (selectedUnitString == 'special') {
+      data = await authService.fetchSpecialData();
+    } else if (selectedUnitString == 'others') {
+      data = await authService.fetchEquipmentData(); // Fetch Loaders data
+    } else {
+      data = [];
+    }
+
+    setState(() {
+      _subClassifications = data
+          .where((item) => item['name'] == _selectedUnitClassification)
+          .expand((item) {
+        final types = item['type'] as List<dynamic>? ?? [];
+        return types.map((typeItem) {
+          final typeName = typeItem['typeName'] as String? ?? 'Unknown';
+          return typeName;
+        }).toList();
+      }).toSet().toList();
+
+      _selectedSubClassification = _subClassifications.isNotEmpty ? _subClassifications[0] : null;
     });
   }
 
-  void fetchUnitClassification(){
-    AuthService().fetchVehicleData().then((data) {
-      setState(() {
-        // Directly mapping the list of vehicles to the names
-        _vehicleDetails = List<String>.from(data.map((vehicle) => vehicle['name']));
-        print(_vehicleDetails);
-      });
-    }).catchError((error) {
-      print('Failed to load vehicle data: $error');
-    });
-  }
 
-  Future<void> _submitForm() async {
-    String selectedUnitString = unitMap[selectedUnit]!;
-    AuthService().addOperator(
-      context,
-      unitType: selectedUnitString,
-      unitClassification: unitdropdownvalue,
-    );
-
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,9 +147,9 @@ class _StepOneState extends State<StepOne> {
           preferredSize: const Size.fromHeight(70.0),
           child: AppBar(
             backgroundColor: const Color(0xff6A66D1),
-            title: Text(
-              widget.unitType,
-              style: const TextStyle(color: Colors.white),
+            title: const Text(
+              'Operator/Owner',
+              style: TextStyle(color: Colors.white),
             ),
             leading: IconButton(
               onPressed: () {
@@ -209,489 +164,446 @@ class _StepOneState extends State<StepOne> {
         ),
       ),
       drawer: createDrawer(context),
-      body: Container(
-        color: Colors.white,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                  margin: const EdgeInsets.fromLTRB(50, 10, 30, 10),
+      body: Form(
+        key: _formKey,
+        child: Container(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  margin: const EdgeInsets.fromLTRB(40, 20, 30, 5),
                   alignment: Alignment.topLeft,
                   child: const Text(
                     'Select Unit',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  )),
-              Container(
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.08,
-                ),
-                child: RadioListTile(
-                  title: const Text('Vehicle'),
-                  value: 1,
-                  groupValue: selectedUnit,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUnit = value!;
-                      fetchUnitData();
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.08,
-                ),
-                child: RadioListTile(
-                  title: const Text('Bus'),
-                  value: 2,
-                  groupValue: selectedUnit,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUnit = value!;
-                      fetchUnitData();
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.08,
-                ),
-                child: RadioListTile(
-                  title: const Text('Equipment'),
-                  value: 3,
-                  groupValue: selectedUnit,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUnit = value!;
-                      fetchUnitData();
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.08,
-                ),
-                child: RadioListTile(
-                  title: const Text('Special'),
-                  value: 4,
-                  groupValue: selectedUnit,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUnit = value!;
-                      fetchUnitData();
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.08,
-                ),
-                child: RadioListTile(
-                  title: const Text('Others'),
-                  value: 5,
-                  groupValue: selectedUnit,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUnit = value!;
-                      fetchUnitData();
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Unit Classification',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child:  DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                    ),
-                  ),
-                  hint: const Text('Select a vehicle or bus'),
-                  value: _selectedDetail,
-                  items: _details.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedDetail = value;
-                    });
-                  },
-                )
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Sub Classification',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: DropdownButtonFormField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                    ),
-                  ),
-                  value: subdropdownvalue,
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 25,
-                  ),
-                  items: subItems.map((String items) {
-                    return DropdownMenuItem(
-                      value: items,
-                      child: Text(items),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      subdropdownvalue = newValue!;
-                    });
-                  },
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Plate Information',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500
                     ),
                   ),
                 ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Istimara No',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Istimara Card',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.bottomLeft,
-                margin: const EdgeInsets.only(left: 30, bottom: 10),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.065,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black)),
-                      ),
-                      onPressed: () async {
-                        var picked = await FilePicker.platform.pickFiles();
+                _buildUnitRadioList(),
+                _buildUnitClassificationDropdown(),
+                _buildSubClassificationDropdown(),
+                _buildTextField('Plate Information',plateInfoController),
+                _buildTextField('Istimara no',istimaraNoController),
+                _buildIstimaraFileUploadButton('Istimara Card'),
+                _buildVehicleFileUploadButton('Picture of Vehicle'),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.057,
+                    width: MediaQuery.of(context).size.width * 0.55,
+                    child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            String selectedUnitString = unitMap(selectedUnit);
+                            print(selectedUnitString);
+                            print(_selectedUnitClassification.toString());
+                            print(_selectedSubClassification.toString());
+                            print(plateInfoController.text);
+                            print(istimaraNoController.text);
+                            print(istimaraCardFile);
+                            print(vehilePictureFile);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => StepTwo(
+                                      partnerName: widget.partnerName,
+                                      partnerId: widget.partnerId,
+                                      unitType: selectedUnitString,
+                                      unitClassification: _selectedUnitClassification.toString(),
+                                      subClassification: _selectedSubClassification.toString(),
+                                      plateInformation: plateInfoController.text,
+                                      istimaraNo: istimaraNoController.text,
+                                      istimaraCard: istimaraCardFile,
+                                      pictureOfVehicle: vehilePictureFile,
+                                    )));
+                          }
 
-                        if (picked != null) {
-                          print(picked.files.first.name);
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Icon(
-                            Icons.file_upload_outlined,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            'Upload a File',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      )),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Picture of Vehicle',
-                  style: TextStyle(
-                    fontSize: 20,
+                        },
+                        child: const Text(
+                          'Next',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500),
+                        )),
                   ),
                 ),
-              ),
-              Container(
-                alignment: Alignment.bottomLeft,
-                margin: const EdgeInsets.only(left: 30, bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.065,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black)),
-                      ),
-                      onPressed: () async {
-                        var picked = await FilePicker.platform.pickFiles();
-
-                        if (picked != null) {
-                          print(picked.files.first.name);
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Icon(
-                            Icons.file_upload_outlined,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            'Upload a File',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      )),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Driving License',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.bottomLeft,
-                margin: const EdgeInsets.only(left: 30, bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.065,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black)),
-                      ),
-                      onPressed: () async {
-                        var picked = await FilePicker.platform.pickFiles();
-
-                        if (picked != null) {
-                          print(picked.files.first.name);
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Icon(
-                            Icons.file_upload_outlined,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            'Upload a File',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      )),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'Aramco License',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.bottomLeft,
-                margin: const EdgeInsets.only(left: 30, bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.065,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black)),
-                      ),
-                      onPressed: () async {
-                        var picked = await FilePicker.platform.pickFiles();
-
-                        if (picked != null) {
-                          print(picked.files.first.name);
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Icon(
-                            Icons.file_upload_outlined,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            'Upload a File',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      )),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 10, 30, 10),
-                alignment: Alignment.topLeft,
-                child: const Text(
-                  'National ID',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              Container(
-                alignment: Alignment.bottomLeft,
-                margin: const EdgeInsets.only(left: 30, bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.065,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Colors.black)),
-                      ),
-                      onPressed: () async {
-                        var picked = await FilePicker.platform.pickFiles();
-
-                        if (picked != null) {
-                          print(picked.files.first.name);
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Icon(
-                            Icons.file_upload_outlined,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            'Upload a File',
-                            style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      )),
-                ),
-              ),
-
-              Container(
-                alignment: Alignment.bottomCenter,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff6A66D1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    _submitForm();
-                    _getRoleString(selectedUnit);
-                    // authService.addOperator(context, name: widget.name);
-                    String selectedUnitString = unitMap[selectedUnit]!;
-                    // print('Selected Unit: $selectedUnitString');
-                    print(widget.name);
-                    print(widget.partnerName);
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => StepTwo(
-                    //           partnerName: widget.partnerName,
-                    //           // name: widget.name,
-                    //           // mobileNo: widget.mobileNo,
-                    //           // selectedUnit: selectedUnitString,
-                    //           // unitClassification: unitdropdownvalue,
-                    //           // subClassification: subdropdownvalue,
-                    //         )));
-                  },
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              )
-            ],
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildUnitRadioList() {
+    return Column(
+      children: [
+        Container(
+          margin: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+          ),
+          child: RadioListTile(
+            title: const Text(
+              'Vehicle',
+            ),
+            value: 1,
+            groupValue: selectedUnit,
+            onChanged: (value) {
+              setState(() {
+                selectedUnit = value!;
+                fetchUnitData();
+              });
+            },
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+          ),
+          child: RadioListTile(
+            title: const Text(
+              'Bus',
+            ),
+            value: 2,
+            groupValue: selectedUnit,
+            onChanged: (value) {
+              setState(() {
+                selectedUnit = value!;
+                fetchUnitData();
+              });
+            },
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+          ),
+          child: RadioListTile(
+            title: const Text(
+              'Equipment',
+            ),
+            value: 3,
+            groupValue: selectedUnit,
+            onChanged: (value) {
+              setState(() {
+                selectedUnit = value!;
+                fetchUnitData();
+              });
+            },
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+          ),
+          child: RadioListTile(
+            title: const Text(
+              'Special',
+            ),
+            value: 4,
+            groupValue: selectedUnit,
+            onChanged: (value) {
+              setState(() {
+                selectedUnit = value!;
+                fetchUnitData();
+              });
+            },
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(
+            left: MediaQuery.of(context).size.width * 0.04,
+          ),
+          child: RadioListTile(
+            title: const Text(
+              'Others',
+            ),
+            value: 5,
+            groupValue: selectedUnit,
+            onChanged: (value) {
+              setState(() {
+                selectedUnit = value!;
+                fetchUnitData();
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnitClassificationDropdown() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
+      alignment: Alignment.topLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Unit Classification',
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+            child: DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+              ),
+              value: _selectedUnitClassification,
+              hint: const Text('Select Unit Classification'),
+              icon: const Icon(Icons.keyboard_arrow_down, size: 25),
+              items: _unitClassifications.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Container(color:Colors.white,child: Text(value)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedUnitClassification = value;
+                  _updateSubClassifications();
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubClassificationDropdown() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
+      alignment: Alignment.topLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Sub Classification',
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+            child: DropdownButtonFormField<String>(
+              value: _selectedSubClassification,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+              ),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedSubClassification = newValue;
+                });
+              },
+              hint: const Text('No Data for Sub Classification'),
+              icon: const Icon(Icons.keyboard_arrow_down, size: 25),
+              items: _subClassifications.map((subClass) {
+                return DropdownMenuItem<String>(
+                  value: subClass,
+                  child: Text(subClass),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label,controller) {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 20,
+                  fontWeight: FontWeight.w500
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter $label';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIstimaraFileUploadButton(String label) {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ),
+        Container(
+          alignment: Alignment.bottomLeft,
+          margin: const EdgeInsets.only(left: 40, bottom: 20),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.065,
+            width: MediaQuery.of(context).size.width * 0.6,
+            child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: Colors.black)),
+                ),
+                onPressed: () async {
+                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  if (result != null) {
+                    setState(() {
+                      istimaraCardFile = result!.files.first;
+                      istimaraUpload = true;
+                    });
+                    print(result.files.first.name);
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Expanded(
+                      flex: 2,
+                      child: Icon(
+                        Icons.file_upload_outlined,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text(
+                        istimaraUpload?istimaraCardFile!.name:'Upload a file',
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal),
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleFileUploadButton(String label) {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ),
+        Container(
+          alignment: Alignment.bottomLeft,
+          margin: const EdgeInsets.only(left: 40, bottom: 20),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.065,
+            width: MediaQuery.of(context).size.width * 0.6,
+            child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: Colors.black)),
+                ),
+                onPressed: () async {
+                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  if (result != null) {
+                    setState(() {
+                      vehilePictureFile = result!.files.first;
+                      vehicleUpload=true;
+                    });
+                    print(result.files.first.name);
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Expanded(
+                      flex: 2,
+                      child: Icon(
+                        Icons.file_upload_outlined,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Text(
+                        vehicleUpload?vehilePictureFile!.name:'Upload a file',
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal),
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+        ),
+      ],
     );
   }
 }

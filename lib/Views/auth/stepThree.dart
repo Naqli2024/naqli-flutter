@@ -1,15 +1,106 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Model/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Views/auth/login.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+
 class StepThree extends StatefulWidget {
   final String partnerName;
-  const StepThree({super.key, required this.partnerName});
+  final String partnerId;
+  final String unitType;
+  final String unitClassification;
+  final String subClassification;
+  final String plateInformation;
+  final String istimaraNo;
+  final PlatformFile? istimaraCard;
+  final PlatformFile? pictureOfVehicle;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String mobileNo;
+  final String dateOfBirth;
+  final String iqamaNo;
+  final String panelInformation;
+  final PlatformFile? drivingLicense;
+  final PlatformFile? nationalID;
+  final PlatformFile? aramcoLicense;
+  const StepThree({super.key, required this.partnerName, required this.firstName, required this.lastName, required this.email, required this.mobileNo, required this.iqamaNo, this.drivingLicense, this.nationalID, this.aramcoLicense, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.dateOfBirth, required this.panelInformation, required this.partnerId});
 
   @override
   State<StepThree> createState() => _StepThreeState();
 }
 
+late TextEditingController partnerNameController = TextEditingController();
+bool isEditing = false;
 class _StepThreeState extends State<StepThree> {
+
+  @override
+  void initState() {
+    partnerNameController = TextEditingController(text: widget.partnerName);
+    super.initState();
+  }
+
+  void toggleEditMode() {
+    setState(() {
+      isEditing = !isEditing;
+
+      if (isEditing) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          FocusScope.of(context).requestFocus();
+        });
+      } else {
+
+      }
+    });
+  }
+
+  Future<void> _submitForm() async {
+    print('sssssssssssssssSending data:');
+    print('partnerName: $widget.partnerName');
+    print('unitType: $widget.unitType');
+    print('unitClassification: $widget.unitClassification');
+    print('subClassification: $widget.subClassification');
+    print('plateInformation: $widget.plateInformation');
+    print('istimaraNo: $widget.istimaraNo');
+    print('firstName: $widget.firstName');
+    print('lastName: $widget.lastName');
+    print('email: $widget.email');
+    print('mobileNo: $widget.mobileNo');
+    print('dateOfBirth: $widget.dateOfBirth');
+    print('iqamaNo: $widget.iqamaNo');
+    print('panelInformation: $widget.panelInformation');
+    print('id: $widget.partnerId');
+    // Navigator.push(
+    //     context,
+    //     MaterialPageRoute(
+    //         builder: (context) => const LoginPage()));
+    AuthService().addOperator(
+      context,
+      partnerName: partnerNameController.text,
+      partnerId: widget.partnerId,
+      unitType: widget.unitType,
+      unitClassification: widget.unitClassification,
+      subClassification: widget.subClassification,
+      plateInformation: widget.plateInformation,
+      istimaraNo: widget.istimaraNo,
+      istimaraCard: widget.istimaraCard,
+      pictureOfVehicle: widget.pictureOfVehicle,
+      firstName: widget.firstName,
+      lastName: widget.lastName,
+      email: widget.email,
+      mobileNo: widget.mobileNo,
+      dateOfBirth: widget.dateOfBirth,
+      iqamaNo: widget.iqamaNo,
+      panelInformation: widget.panelInformation,
+      drivingLicense: widget.drivingLicense,
+      nationalID: widget.nationalID,
+      aramcoLicense: widget.aramcoLicense, stepThreeInstance: widget,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,17 +133,26 @@ class _StepThreeState extends State<StepThree> {
                 margin: const EdgeInsets.fromLTRB(30, 20, 30, 10),
                 alignment: Alignment.topLeft,
                 child: const Text(
-                  'Partner Name/id',
+                  'Partner Name',
                   style: TextStyle(
                     fontSize: 20,
+                    fontWeight: FontWeight.w500
                   ),
                 )),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
               child: TextField(
+                readOnly: !isEditing,
+                controller: partnerNameController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                  suffixIcon: IconButton(
+                      onPressed: (){
+                        toggleEditMode();
+                      },
+                      icon: isEditing?Icon(Icons.check): Icon(Icons.edit)
+                  ),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                 ),
               ),
@@ -60,11 +160,12 @@ class _StepThreeState extends State<StepThree> {
           ],
         ),
       ),
+
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         height: MediaQuery.of(context).size.height * 0.11,
         child: Container(
-          margin: EdgeInsets.fromLTRB(60, 0, 60, 20),
+          margin: const EdgeInsets.fromLTRB(60, 0, 60, 20),
           child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff6A66D1),
@@ -73,17 +174,14 @@ class _StepThreeState extends State<StepThree> {
                 ),
               ),
               onPressed: () {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //         builder: (context) => const LoginPage()));
+                _submitForm();
               },
               child: const Text(
                 'Submit',
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.normal),
+                    fontWeight: FontWeight.w500),
               )),
         ),
       ),
