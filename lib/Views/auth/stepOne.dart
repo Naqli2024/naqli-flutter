@@ -39,6 +39,8 @@ class _StepOneState extends State<StepOne> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool istimaraUpload = false;
   bool vehicleUpload = false;
+  bool istimaraError = false;
+  bool vehicleError = false;
 
 
   String unitMap(int value) {
@@ -190,7 +192,7 @@ class _StepOneState extends State<StepOne> {
                 _buildIstimaraFileUploadButton('Istimara Card'),
                 _buildVehicleFileUploadButton('Picture of Vehicle'),
                 Container(
-                  margin: const EdgeInsets.only(bottom: 20),
+                  margin: const EdgeInsets.only(top:20,bottom: 20),
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.057,
                     width: MediaQuery.of(context).size.width * 0.55,
@@ -202,31 +204,40 @@ class _StepOneState extends State<StepOne> {
                           ),
                         ),
                         onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            String selectedUnitString = unitMap(selectedUnit);
-                            print(selectedUnitString);
-                            print(_selectedUnitClassification.toString());
-                            print(_selectedSubClassification.toString());
-                            print(plateInfoController.text);
-                            print(istimaraNoController.text);
-                            print(istimaraCardFile);
-                            print(vehilePictureFile);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => StepTwo(
-                                      partnerName: widget.partnerName,
-                                      partnerId: widget.partnerId,
-                                      unitType: selectedUnitString,
-                                      unitClassification: _selectedUnitClassification.toString(),
-                                      subClassification: _selectedSubClassification.toString(),
-                                      plateInformation: plateInfoController.text,
-                                      istimaraNo: istimaraNoController.text,
-                                      istimaraCard: istimaraCardFile,
-                                      pictureOfVehicle: vehilePictureFile,
-                                    )));
-                          }
-
+                          if (!istimaraUpload && !vehicleUpload) {
+                              istimaraError =true;
+                              vehicleError =true;
+                              setState(() {});
+                            }
+                            if (_formKey.currentState!.validate() && istimaraUpload && vehicleUpload) {
+                              String selectedUnitString = unitMap(selectedUnit);
+                              print(selectedUnitString);
+                              print(_selectedUnitClassification.toString());
+                              print(_selectedSubClassification.toString());
+                              print(plateInfoController.text);
+                              print(istimaraNoController.text);
+                              print(istimaraCardFile);
+                              print(vehilePictureFile);
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          StepTwo(
+                                            partnerName: widget.partnerName,
+                                            partnerId: widget.partnerId,
+                                            unitType: selectedUnitString,
+                                            unitClassification: _selectedUnitClassification
+                                                .toString(),
+                                            subClassification: _selectedSubClassification
+                                                .toString(),
+                                            plateInformation: plateInfoController
+                                                .text,
+                                            istimaraNo: istimaraNoController
+                                                .text,
+                                            istimaraCard: istimaraCardFile,
+                                            pictureOfVehicle: vehilePictureFile,
+                                          )));
+                            }
                         },
                         child: const Text(
                           'Next',
@@ -475,6 +486,7 @@ class _StepOneState extends State<StepOne> {
 
   Widget _buildIstimaraFileUploadButton(String label) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
@@ -491,54 +503,71 @@ class _StepOneState extends State<StepOne> {
         ),
         Container(
           alignment: Alignment.bottomLeft,
-          margin: const EdgeInsets.only(left: 40, bottom: 20),
+          margin: const EdgeInsets.only(left: 40, bottom: 5),
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.065,
             width: MediaQuery.of(context).size.width * 0.6,
             child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.black)),
-                ),
-                onPressed: () async {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles();
-                  if (result != null) {
-                    setState(() {
-                      istimaraCardFile = result!.files.first;
-                      istimaraUpload = true;
-                    });
-                    print(result.files.first.name);
-                  }
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Expanded(
-                      flex: 2,
-                      child: Icon(
-                        Icons.file_upload_outlined,
-                        color: Colors.black,
-                      ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: const BorderSide(color: Colors.black)),
+              ),
+              onPressed: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles();
+                if (result != null) {
+                  setState(() {
+                    istimaraCardFile = result.files.first;
+                    istimaraUpload = true;
+                    istimaraError = false;
+                  });
+                  print(result.files.first.name);
+                }
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Expanded(
+                    flex: 2,
+                    child: Icon(
+                      Icons.file_upload_outlined,
+                      color: Colors.black,
                     ),
-                    Expanded(
-                      flex: 5,
-                      child: Text(
-                        istimaraUpload?istimaraCardFile!.name:'Upload a file',
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal),
-                      ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(
+                      istimaraUpload
+                          ? istimaraCardFile!.name
+                          : 'Upload a file',
+                      style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontWeight: FontWeight.normal),
                     ),
-                  ],
-                )),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
+        if (istimaraError)
+          Container(
+            margin: const EdgeInsets.only(left: 60, bottom: 20),
+            alignment: Alignment.centerLeft,
+            child: const Text(
+              'Please upload a file',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+            ),
       ],
     );
   }
+
 
   Widget _buildVehicleFileUploadButton(String label) {
     return Column(
@@ -558,7 +587,7 @@ class _StepOneState extends State<StepOne> {
         ),
         Container(
           alignment: Alignment.bottomLeft,
-          margin: const EdgeInsets.only(left: 40, bottom: 20),
+          margin: const EdgeInsets.only(left: 40, bottom: 5),
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.065,
             width: MediaQuery.of(context).size.width * 0.6,
@@ -575,6 +604,7 @@ class _StepOneState extends State<StepOne> {
                     setState(() {
                       vehilePictureFile = result!.files.first;
                       vehicleUpload=true;
+                      vehicleError=false;
                     });
                     print(result.files.first.name);
                   }
@@ -603,6 +633,18 @@ class _StepOneState extends State<StepOne> {
                 )),
           ),
         ),
+        if (vehicleError)
+          Container(
+            margin: const EdgeInsets.only(left: 60, bottom: 20),
+            alignment: Alignment.centerLeft,
+            child: const Text(
+              'Please upload a file',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ),
       ],
     );
   }

@@ -34,7 +34,8 @@ class MyApp extends StatelessWidget {
             final userData = snapshot.data!;
             final partnerName = userData['partnerName'];
             final partnerId = userData['_id'];
-            return StepOne(partnerName: partnerName, unitType: '', name: '',partnerId: partnerId,);
+            // return StepOne(partnerName: partnerName, unitType: '', name: '',partnerId: partnerId,);
+            return BookingDetails(partnerName: partnerName, partnerId: partnerId);
           } else {
             return const HomePage(partnerName: '',password: '',mobileNo: '',);
           }

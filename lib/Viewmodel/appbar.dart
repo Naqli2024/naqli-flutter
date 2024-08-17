@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Model/sharedPreferences.dart';
 import 'package:flutter_naqli/Views/auth/login.dart';
+import 'package:flutter_naqli/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Views/payment/payment_details.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom}) {
   return AppBar(
@@ -76,62 +78,90 @@ AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bott
   );
 }
 
-Drawer createDrawer(BuildContext context) {
+Drawer createDrawer(BuildContext context,{String ? partnerName, String ? partnerId}) {
   return Drawer(
     backgroundColor: Colors.white,
-    child: Container(
-      margin: const EdgeInsets.only(top: 40),
-      child: ListView(
-        padding: const EdgeInsets.all(40),
-        children: <Widget>[
-          ListTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SvgPicture.asset('assets/naqlee-logo.svg',
-                    height: MediaQuery.of(context).size.height * 0.05),
-                const Icon(Icons.cancel)
-              ],
-            ),
+    child: ListView(
+      children: <Widget>[
+        ListTile(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SvgPicture.asset('assets/naqlee-logo.svg',
+                  height: MediaQuery.of(context).size.height * 0.05),
+              GestureDetector(
+                onTap: (){
+                  Navigator.pop(context);
+                },
+                  child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+            ],
           ),
-          ListTile(
-            title: const Text('Booking',style: TextStyle(fontSize: 30),),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ViewBooking()));
-            },
+        ),
+        const Divider(),
+        ListTile(
+          leading: Image.asset('assets/booking_logo.png',
+              height: MediaQuery.of(context).size.height * 0.05),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: const Text('Booking',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          ListTile(
-            title: const Text('Payment',style: TextStyle(fontSize: 30),),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const PaymentDetails()));
-            },
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const BookingDetails(partnerId: '',partnerName: '',)));
+          },
+        ),
+        ListTile(
+          leading: Image.asset('assets/payment_logo.png',
+          height: MediaQuery.of(context).size.height * 0.05),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 5),
+            child: const Text('Payment',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          ListTile(
-            title: const Text('Report',style: TextStyle(fontSize: 30),),
-            onTap: () {
-
-            },
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const PaymentDetails()));
+          },
+        ),
+        ListTile(
+          leading: Image.asset('assets/report_logo.png',
+              height: MediaQuery.of(context).size.height * 0.05),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: const Text('Report',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          ListTile(
-            title: const Text('Help',style: TextStyle(fontSize: 30),),
-            onTap: () {
-
-            },
+          onTap: () {
+    
+          },
+        ),
+        ListTile(
+          leading: Image.asset('assets/help_logo.png',
+              height: MediaQuery.of(context).size.height * 0.05),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: const Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          ListTile(
-            title: const Text('Logout',style: TextStyle(fontSize: 30),),
-            onTap: () {
-              logout(context);
-            },
+          onTap: () {
+    
+          },
+        ),
+        ListTile(
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Icon(Icons.logout,color: Color(0xff707070),size: 30,),
           ),
-        ],
-      ),
+          title: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: const Text('Logout',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+          ),
+          onTap: () {
+            logout(context);
+          },
+        ),
+      ],
     ),
   );
 }

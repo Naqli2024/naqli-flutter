@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Model/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
 class BookingDetails extends StatefulWidget {
-  const BookingDetails({super.key});
+  final String partnerName;
+  final String partnerId;
+   const BookingDetails({super.key, required this.partnerName, required this.partnerId});
 
   @override
   State<BookingDetails> createState() => _BookingDetailsState();
@@ -14,6 +17,7 @@ class _BookingDetailsState extends State<BookingDetails> {
     return Scaffold(
       appBar: commonAppBar(
         context,
+        User: widget.partnerName,
         bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
@@ -34,7 +38,9 @@ class _BookingDetailsState extends State<BookingDetails> {
                   )),
             )),
       ),
-      drawer: createDrawer(context),
+      drawer: createDrawer(
+          context,
+      ),
       body: Container(
         color: Colors.white,
         child: ListView.builder(
@@ -74,10 +80,11 @@ class _BookingDetailsState extends State<BookingDetails> {
                               ),
                             ),
                             onPressed: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => const ViewBooking()));
+                              AuthService().getBookingData(widget.partnerId);
+                              // Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //         builder: (context) => const ViewBooking()));
                             },
                             child: const Text(
                               'View',

@@ -33,7 +33,7 @@ class _RegisterState extends State<Register> {
           role: widget.selectedRole,
         );
         setState(() {
-          isLoading = false; // Hide loading indicator
+          isLoading = false;
         });
   }
 
@@ -74,12 +74,12 @@ class _RegisterState extends State<Register> {
           ],
         ),
       ),
-      body: isLoading
-         ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Form(
           key: _formKey,
-          child: Column(
+          child: isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Column(
             children: [
               _buildTextField(
                 context: context,

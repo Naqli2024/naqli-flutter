@@ -51,7 +51,16 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return isLoading
+        ? Container(color: Colors.white,
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+            ],
+          ),
+        )
+        : Scaffold(
       appBar: AppBar(
         toolbarHeight: 250.0,
         backgroundColor: const Color(0xff6A66D1),
@@ -89,9 +98,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-      body: isLoading
-      ? Center(child: CircularProgressIndicator())
-      : Container(
+      body: Container(
         color: const Color(0xff6A66D1),
         child: Stack(
           children: [

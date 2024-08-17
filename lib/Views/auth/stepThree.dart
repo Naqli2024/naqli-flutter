@@ -35,6 +35,7 @@ class StepThree extends StatefulWidget {
 
 late TextEditingController partnerNameController = TextEditingController();
 bool isEditing = false;
+bool isLoading= false;
 class _StepThreeState extends State<StepThree> {
 
   @override
@@ -77,6 +78,9 @@ class _StepThreeState extends State<StepThree> {
     //     context,
     //     MaterialPageRoute(
     //         builder: (context) => const LoginPage()));
+    setState(() {
+      isLoading = true;
+    });
     AuthService().addOperator(
       context,
       partnerName: partnerNameController.text,
@@ -97,8 +101,11 @@ class _StepThreeState extends State<StepThree> {
       panelInformation: widget.panelInformation,
       drivingLicense: widget.drivingLicense,
       nationalID: widget.nationalID,
-      aramcoLicense: widget.aramcoLicense, stepThreeInstance: widget,
+      aramcoLicense: widget.aramcoLicense,
+      stepThreeInstance: widget,
+      controller: partnerNameController,
     );
+
   }
 
   @override

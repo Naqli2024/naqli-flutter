@@ -155,7 +155,7 @@ class _RoleState extends State<Role> {
           ),
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(bottom: 20),
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.08,
                 width: MediaQuery.of(context).size.width * 0.8,

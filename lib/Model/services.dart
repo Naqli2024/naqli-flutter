@@ -9,13 +9,14 @@ import 'package:flutter_naqli/Views/auth/otp.dart';
 import 'package:flutter_naqli/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Views/auth/stepThree.dart';
 import 'package:flutter_naqli/Views/auth/stepTwo.dart';
+import 'package:flutter_naqli/Views/booking/booking_details.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class AuthService {
   static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
-
+  String globalPartnerId = '';
   Future<void> registerUser(context,{
     required String partnerName,
     required String mobileNo,
@@ -206,6 +207,8 @@ class AuthService {
         required String iqamaNo,
         required String panelInformation,
         required String partnerId,
+        required TextEditingController controller,
+
       }) async {
 
     // Extract values from the StepThree instance
@@ -247,7 +250,7 @@ class AuthService {
     final url = Uri.parse('${baseUrl}add-operator');
 
     var request = http.MultipartRequest('POST', url);
-    request.fields['partnerName'] = partnerName;
+    request.fields['partnerName'] = partnerNameController.text;
     request.fields['partnerId'] = partnerId;
     request.fields['unitType'] = unitType;
     request.fields['unitClassification'] = unitClassification;
@@ -282,12 +285,13 @@ class AuthService {
     try {
 
       final response = await request.send();
-      final responseBody = await response.stream.bytesToString(); // Read the stream only once
-
+      final responseBody = await response.stream.bytesToString();
+      var parsedResponse = jsonDecode(responseBody);
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: $responseBody');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
+        globalPartnerId = partnerId;
         print('Upload successful');
         Fluttertoast.showToast(
           msg: 'Operator added Successfully',
@@ -297,6 +301,12 @@ class AuthService {
           backgroundColor: Colors.black,
           textColor: Colors.white,
           fontSize: 16.0,
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookingDetails(partnerId: partnerId,partnerName: partnerName,),
+          ),
         );
       } else {
         var parsedResponse = jsonDecode(responseBody);
@@ -377,79 +387,6 @@ class AuthService {
     return completer.future;
   }
 
-/*  Future<void> addOperator(
-      BuildContext context, {
-        required String partnerName,
-        required String unitType,
-        required String unitClassification,
-        required String subClassification,
-        required String plateInformation,
-        required String istimaraNo,
-        required PlatformFile? istimaraCard,
-        required PlatformFile? pictureOfVehicle,
-      }) async {
-    final url = Uri.parse('https://naqli.onrender.com/api/partner/add-operator');
-
-    // Create a multipart request
-    var request = http.MultipartRequest('POST', url);
-
-    // Add fields
-    request.fields['unitType'] = unitType;
-    request.fields['unitClassification'] = unitClassification;
-    request.fields['subClassification'] = subClassification;
-    request.fields['plateInformation'] = plateInformation;
-    request.fields['istimaraNo'] = istimaraNo;
-    request.fields['partnerName,'] = partnerName;
-
-    // Attach files
-    request.files.add(await http.MultipartFile.fromPath('istimaraCard', istimaraCard!.path.toString()));
-    request.files.add(await http.MultipartFile.fromPath('pictureOfVehicle', pictureOfVehicle!.path.toString()));
-
-    // Send the request
-    var response = await request.send();
-
-    // Get the response
-    if (response.statusCode == 200) {
-      var responseBody = await response.stream.bytesToString();
-      var parsedResponse = jsonDecode(responseBody);
-      var userData = parsedResponse['data']['partner'];
-
-      print('Upload successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Operation successful')),
-      );
-
-      var token = parsedResponse['data']['token'];
-      var partnerName = parsedResponse['data']['partner']['operator'];
-
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => StepTwo(
-                partnerName: partnerName,
-                unitType: unitType,
-                unitClassification: unitClassification,
-                subClassification: subClassification,
-                plateInformation: plateInformation,
-                istimaraNo: istimaraNo,
-                istimaraCard: istimaraCard,
-                pictureOfVehicle: pictureOfVehicle,
-              )));
-    } else {
-      var responseBody = await response.stream.bytesToString();
-      var parsedResponse = jsonDecode(responseBody);
-      var message = parsedResponse['message'] ?? 'Operation failed. Please try again.';
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to upload files: ${response.statusCode}');
-      print('Response body: $responseBody');
-    }
-  }*/
-
-
-
   Future<List<Map<String, dynamic>>> fetchVehicleData() async {
     final response = await http.get(Uri.parse('https://naqli.onrender.com/api/vehicles'));
     if (response.statusCode == 200) {
@@ -489,6 +426,41 @@ class AuthService {
       throw Exception('Failed to load special data');
     }
   }
+
+
+
+  Future<void> getBookingData(String partnerId) async {
+    final response = await http.get(Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'));
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      final responseBody = response.body;
+
+      // Parse the JSON response
+      var parsedResponse = jsonDecode(responseBody);
+
+      // Access partnerId
+      final partnerId = parsedResponse['_id'];
+      print("Partner ID: $partnerId");
+
+      // Access operators list
+      final operators = parsedResponse['operators'] as List;
+
+      // Iterate over operators to get booking requests
+      for (var operator in operators) {
+        final bookingRequests = operator['bookingRequest'] as List;
+
+        for (var booking in bookingRequests) {
+          // Access the bookingId
+          final bookingId = booking['bookingId'];
+          print("Booking ID: $bookingId");
+        }
+      }
+    } else {
+      throw Exception('Failed to load booking data');
+    }
+  }
+
 
 }
 
