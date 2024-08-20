@@ -78,7 +78,7 @@ AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bott
   );
 }
 
-Drawer createDrawer(BuildContext context,{String ? partnerName, String ? partnerId}) {
+Drawer createDrawer(BuildContext context,{VoidCallback ? onPressed,String ? partnerName, String ? partnerId}) {
   return Drawer(
     backgroundColor: Colors.white,
     child: ListView(
@@ -105,12 +105,13 @@ Drawer createDrawer(BuildContext context,{String ? partnerName, String ? partner
             padding: const EdgeInsets.only(left: 15),
             child: const Text('Booking',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const BookingDetails(partnerId: '',partnerName: '',)));
-          },
+          onTap: onPressed
+          //     () {
+          //   Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //           builder: (context) => const BookingDetails(partnerId: '',partnerName: '',)));
+          // },
         ),
         ListTile(
           leading: Image.asset('assets/payment_logo.png',

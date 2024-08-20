@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/auth/stepThree.dart';
+import 'package:flutter_naqli/Views/booking/booking_details.dart';
 
 class StepTwo extends StatefulWidget {
   final String partnerName;
@@ -11,9 +12,10 @@ class StepTwo extends StatefulWidget {
   final String subClassification;
   final String plateInformation;
   final String istimaraNo;
+  final String token;
   final PlatformFile? istimaraCard;
   final PlatformFile? pictureOfVehicle;
-  const StepTwo({super.key, required this.partnerName, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.partnerId});
+  const StepTwo({super.key, required this.partnerName, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.partnerId, required this.token});
 
   @override
   State<StepTwo> createState() => _StepTwoState();
@@ -61,7 +63,14 @@ class _StepTwoState extends State<StepTwo> {
                   )),
             )),
       ),
-      drawer: createDrawer(context),
+      // drawer: createDrawer(context,
+      //     onPressed: () {
+      //       Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token,)));
+      //     }
+      // ),
         body: Form(
           key: _formKey,
           child: Container(
@@ -353,6 +362,7 @@ class _StepTwoState extends State<StepTwo> {
                                       aramcoLicense: aramcoFile,
                                       partnerName: widget.partnerName,
                                       partnerId: widget.partnerId,
+                                      token: widget.token
                                     )));
                           }
                           },

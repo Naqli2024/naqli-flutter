@@ -1,20 +1,23 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/auth/stepTwo.dart';
+import 'package:flutter_naqli/Views/booking/booking_details.dart';
 
 class StepOne extends StatefulWidget {
   final String partnerName;
   final String name;
   final String unitType;
   final String partnerId;
+  final String token;
+  final String bookingId;
 
   const StepOne({
     Key? key,
     required this.partnerName,
     required this.name,
-    required this.unitType, required this.partnerId,
+    required this.unitType, required this.partnerId, required this.token, required this.bookingId,
   }) : super(key: key);
 
   @override
@@ -165,7 +168,14 @@ class _StepOneState extends State<StepOne> {
           ),
         ),
       ),
-      drawer: createDrawer(context),
+      // drawer: createDrawer(context,
+      //     onPressed: () {
+      //       Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token,)));
+      //     }
+      // ),
       body: Form(
         key: _formKey,
         child: Container(
@@ -236,6 +246,7 @@ class _StepOneState extends State<StepOne> {
                                                 .text,
                                             istimaraCard: istimaraCardFile,
                                             pictureOfVehicle: vehilePictureFile,
+                                            token: widget.token,
                                           )));
                             }
                         },

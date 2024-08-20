@@ -120,7 +120,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const ViewBooking()));
+                                  builder: (context) => const ViewBooking(partnerId: '',token: '',partnerName: '',bookingId: '', bookingDetails: [], quotePrice: '', paymentStatus: '', userId: '',)));
                         },
                         child: const Text(
                           'View',

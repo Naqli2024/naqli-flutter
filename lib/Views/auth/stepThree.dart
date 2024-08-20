@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
+import 'package:flutter_naqli/Views/booking/booking_details.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,10 +25,11 @@ class StepThree extends StatefulWidget {
   final String dateOfBirth;
   final String iqamaNo;
   final String panelInformation;
+  final String token;
   final PlatformFile? drivingLicense;
   final PlatformFile? nationalID;
   final PlatformFile? aramcoLicense;
-  const StepThree({super.key, required this.partnerName, required this.firstName, required this.lastName, required this.email, required this.mobileNo, required this.iqamaNo, this.drivingLicense, this.nationalID, this.aramcoLicense, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.dateOfBirth, required this.panelInformation, required this.partnerId});
+  const StepThree({super.key, required this.partnerName, required this.firstName, required this.lastName, required this.email, required this.mobileNo, required this.iqamaNo, this.drivingLicense, this.nationalID, this.aramcoLicense, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.dateOfBirth, required this.panelInformation, required this.partnerId, required this.token});
 
   @override
   State<StepThree> createState() => _StepThreeState();
@@ -85,6 +87,7 @@ class _StepThreeState extends State<StepThree> {
       context,
       partnerName: partnerNameController.text,
       partnerId: widget.partnerId,
+      token: widget.token,
       unitType: widget.unitType,
       unitClassification: widget.unitClassification,
       subClassification: widget.subClassification,
@@ -132,6 +135,14 @@ class _StepThreeState extends State<StepThree> {
                   )),
             )),
       ),
+      // drawer: createDrawer(context,
+      //     onPressed: () {
+      //       Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token, )));
+      //     }
+      // ),
       body: Container(
         color: Colors.white,
         child: Column(

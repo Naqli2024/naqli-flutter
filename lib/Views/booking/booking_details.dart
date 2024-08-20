@@ -1,17 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Model/bookingData.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
 class BookingDetails extends StatefulWidget {
   final String partnerName;
   final String partnerId;
-   const BookingDetails({super.key, required this.partnerName, required this.partnerId});
+  final String token;
+  final String quotePrice;
+  final String paymentStatus;
+
+   const BookingDetails({super.key, required this.partnerName, required this.partnerId, required this.token, required this.quotePrice, required this.paymentStatus});
 
   @override
   State<BookingDetails> createState() => _BookingDetailsState();
 }
 
 class _BookingDetailsState extends State<BookingDetails> {
+  Future<List<Map<String, dynamic>>>? _bookingDetailsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _bookingDetailsFuture = fetchBookingDetails();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
+    try {
+      final bookingIds = await AuthService().getBookingData(widget.partnerId, widget.token);
+
+      if (bookingIds.isEmpty) {
+        print("No booking IDs found.");
+        return [];
+      }
+
+      final bookingDetails = <Map<String, dynamic>>[];
+
+      for (var booking in bookingIds) {
+        final bookingId = booking['bookingId'] as String;
+        final paymentStatus = booking['paymentStatus'] as String;
+        final details = await AuthService().getBookingId(bookingId, widget.token, paymentStatus,widget.quotePrice);
+
+        if (details.isNotEmpty) {
+          bookingDetails.add(details);
+        } else {
+          print("No details found for booking ID $bookingId.");
+        }
+      }
+
+      if (bookingDetails.isEmpty) {
+        print("No booking details retrieved.");
+      }
+
+      return bookingDetails;
+    } catch (e) {
+      print("Error fetching booking details: $e");
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,60 +66,83 @@ class _BookingDetailsState extends State<BookingDetails> {
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(90.0),
-            child: AppBar(
-              toolbarHeight: 80,
-              backgroundColor: const Color(0xff6A66D1),
-              title: const Center(
-                child: Text('Booking',
-                  style: TextStyle(color: Colors.white),
-                ),
+          preferredSize: const Size.fromHeight(90.0),
+          child: AppBar(
+            toolbarHeight: 80,
+            backgroundColor: const Color(0xff6A66D1),
+            title: const Center(
+              child: Text(
+                'Booking',
+                style: TextStyle(color: Colors.white),
               ),
-              leading: IconButton(
-                  onPressed: (){
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(
-                    Icons.arrow_back_sharp,
-                    color: Colors.white,
-                  )),
-            )),
+            ),
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.arrow_back_sharp,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
       ),
-      drawer: createDrawer(
-          context,
-      ),
-      body: Container(
-        color: Colors.white,
-        child: ListView.builder(
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child:  Card(
-                  color: Colors.white,
-                  shadowColor: Colors.black,
-                  child: ListTile(
-                    leading: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.black, // Set to transparent to show the gradient
-                          width: 1.0,
-                        ),
-                      ),
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
+      drawer: createDrawer(context),
+      body: FutureBuilder<List<Map<String, dynamic>?>>(
+        future: _bookingDetailsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            final bookingDetails = snapshot.data!;
+            return ListView.builder(
+              itemCount: bookingDetails.length,
+              itemBuilder: (context, index) {
+                final booking = bookingDetails[index];
+                final id = booking?['_id'] ?? 'Unknown ID';
+                final date = booking?['date'] ?? 'No date available';
+                final time = booking?['time'] ?? 'No date available';
+                final quotePrice = booking?['quotePrice'] ?? 'No quotePrice available';
+                final paymentStatus = booking?['paymentStatus'] ?? 'No paymentStatus available';
+                final userId = booking?['userId'] ?? 'No userId available';
 
+                return Container(
+                  margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Card(
+                    color: Colors.white,
+                    shadowColor: Colors.black,
+                    child: ListTile(
+                      // leading: Container(
+                      //   decoration: BoxDecoration(
+                      //     shape: BoxShape.circle,
+                      //     border: Border.all(
+                      //       color: Colors.black,
+                      //       width: 1.0,
+                      //     ),
+                      //   ),
+                      //   child: const CircleAvatar(
+                      //     backgroundColor: Colors.white,
+                      //   ),
+                      // ),
+                      title: Text('Booking Id: $id'),
+                      subtitle: Row(
+                        children: [
+                          Text('$date'),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('$time'),
+                          ),
+                        ],
                       ),
-                    ),
-                    title: const Text('Booking Id: XXXXX'),
-                    subtitle: const Text('09 August 2024,12:00 PM'),
-                    trailing: Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.2,
-                        child: ElevatedButton(
+                      trailing: Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xff6A66D1),
                               shape: RoundedRectangleBorder(
@@ -80,27 +150,41 @@ class _BookingDetailsState extends State<BookingDetails> {
                               ),
                             ),
                             onPressed: () {
-                              AuthService().getBookingData(widget.partnerId);
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //         builder: (context) => const ViewBooking()));
+                              // AuthService().getUserName(userId, widget.token);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ViewBooking(
+                                    partnerName: widget.partnerName,
+                                    token: widget.token,partnerId:
+                                  widget.partnerId,bookingId: id,
+                                    bookingDetails: [booking?? {} ], quotePrice: quotePrice,paymentStatus: paymentStatus, userId: userId,),
+                                ),
+                              );
                             },
                             child: const Text(
                               'View',
                               style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.normal),
-                            )),
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }
-        ),
+                );
+              },
+            );
+          } else {
+            return Center(child: Text('No bookings found.'));
+          }
+        },
       ),
     );
   }
 }
+
+

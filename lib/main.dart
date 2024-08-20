@@ -22,7 +22,6 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Color(0xff6A66D1)),
         useMaterial3: true,
       ),
-      // home: const HomePage(partnerName: '',password: '',mobileNo: '',),
       home: FutureBuilder<Map<String, dynamic>?>(
         future: getUserData(),
         builder: (context, snapshot) {
@@ -31,16 +30,29 @@ class MyApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           } else if (snapshot.hasData) {
-            final userData = snapshot.data!;
-            final partnerName = userData['partnerName'];
-            final partnerId = userData['_id'];
-            // return StepOne(partnerName: partnerName, unitType: '', name: '',partnerId: partnerId,);
-            return BookingDetails(partnerName: partnerName, partnerId: partnerId);
-          } else {
-            return const HomePage(partnerName: '',password: '',mobileNo: '',);
+            final userData = snapshot.data;
+
+            // Ensure userData is not null and has the required fields
+            if (userData != null) {
+              final partnerName = userData['partnerName'] ?? '';
+              final partnerId = userData['_id'] ?? '';
+              final token = userData['token'] ?? '';
+
+              return BookingDetails(
+                partnerName: partnerName,
+                partnerId: partnerId,
+                token: token,
+                quotePrice: '',
+                paymentStatus: '',
+              );
+            }
           }
+
+          // Handle cases where snapshot has no data or is null
+          return HomePage(partnerName: '', password: '', mobileNo: '', partnerId: '');
         },
       ),
     );
   }
 }
+

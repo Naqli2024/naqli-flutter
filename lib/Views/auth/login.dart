@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Views/auth/role.dart';
 import 'package:flutter_naqli/Views/home_page.dart';
 
@@ -45,6 +45,9 @@ class _LoginPageState extends State<LoginPage> {
         partnerName: widget.partnerName,
         mobileNo: widget.mobileNo,
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -78,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: ''),
+                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: '',partnerId: '',),
                 ),
               );
             },

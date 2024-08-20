@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:http/http.dart' as http;
 
 class OtpScreen extends StatefulWidget {
@@ -10,8 +10,9 @@ class OtpScreen extends StatefulWidget {
   final String email;
   final String password;
   final String partnerName;
+  final String partnerId;
 
-  const OtpScreen({Key? key, required this.mobileNo, required this.email, required this.password, required this.partnerName}) : super(key: key);
+  const OtpScreen({Key? key, required this.mobileNo, required this.email, required this.password, required this.partnerName, required this.partnerId}) : super(key: key);
 
   @override
   _OtpScreenState createState() => _OtpScreenState();
@@ -63,7 +64,8 @@ class _OtpScreenState extends State<OtpScreen> {
               password: widget.password,
               mobileNo: widget.mobileNo,
               otp:otp,
-              partnerName: widget.partnerName
+              partnerName: widget.partnerName,
+              partnerId: widget.partnerId
     );
   }
 
@@ -78,7 +80,8 @@ class _OtpScreenState extends State<OtpScreen> {
         email: widget.email,
         password: widget.password,
         mobileNo: widget.mobileNo,
-        partnerName: widget.partnerName
+        partnerName: widget.partnerName,
+        partnerId: widget.partnerId
     );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('OTP Sent')),

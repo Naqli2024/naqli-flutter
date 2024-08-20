@@ -10,7 +10,8 @@ class HomePage extends StatefulWidget {
   final String mobileNo;
   final String partnerName;
   final String password;
-  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password});
+  final String partnerId;
+  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId});
 
   @override
   State<HomePage> createState() => _HomePageState();

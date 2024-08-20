@@ -23,6 +23,7 @@ class AuthService {
     required String email,
     required String password,
     required String role,
+    required String partnerId,
   }) async {
     final url = Uri.parse('${baseUrl}register');
 
@@ -41,11 +42,13 @@ class AuthService {
     );
     final responseBody = jsonDecode(response.body);
     if (response.statusCode == 200) {
+      final partnerId = responseBody['data']['partner']['_id'];
       print('Success');
+      print(partnerId);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OtpScreen(mobileNo: mobileNo,partnerName: partnerName,password: password, email: email,),
+          builder: (context) => OtpScreen(mobileNo: mobileNo,partnerName: partnerName,password: password, email: email,partnerId: partnerId,),
         ),
       );
     } else {
@@ -64,6 +67,7 @@ class AuthService {
     required String email,
     required String mobileNo,
     required String password,
+    required String partnerId,
   }) async {
     if (otp.length == 6) {
     final url = Uri.parse('${baseUrl}verify-otp');
@@ -83,7 +87,7 @@ class AuthService {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => LoginPage(mobileNo: mobileNo,partnerName: partnerName,password: password)
+          builder: (context) => StepOne(partnerName: partnerName, name: '', unitType: '', partnerId: partnerId, token: '', bookingId: '')
         ),
       );
     } else {
@@ -102,6 +106,7 @@ class AuthService {
     required String partnerName,
     required String password,
     required String mobileNo,
+    required String partnerId,
   }) async {
     final url = Uri.parse('${baseUrl}resend-otp');
 
@@ -123,7 +128,7 @@ class AuthService {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => LoginPage(mobileNo: mobileNo,partnerName: partnerName,password: password)
+            builder: (context) => StepOne(partnerName: partnerName, name: '', unitType: '', partnerId: partnerId, token: '', bookingId: '')
         ),
       );
     } else {
@@ -157,7 +162,7 @@ class AuthService {
     );
 
     final responseBody = jsonDecode(response.body);
-    final userData = responseBody['data']['partner'];
+    final userData = responseBody['data'];
     if (response.statusCode == 200) {
       print('Login successful');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,10 +174,11 @@ class AuthService {
 
       await storeUserData(token, userData);
       print(userData);
+      print(token);
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => StepOne(unitType:'',partnerName: partnerName, name: '', partnerId: partnerId,),
+          builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
         ),
       );
     } else {
@@ -207,12 +213,14 @@ class AuthService {
         required String iqamaNo,
         required String panelInformation,
         required String partnerId,
+        required String token,
         required TextEditingController controller,
 
       }) async {
 
     // Extract values from the StepThree instance
     var partnerName = stepThreeInstance.partnerName;
+    var partnerId= stepThreeInstance.partnerId;
     var unitType = stepThreeInstance.unitType;
     var unitClassification = stepThreeInstance.unitClassification;
     var subClassification = stepThreeInstance.subClassification;
@@ -246,12 +254,14 @@ class AuthService {
       nationalID: nationalID,
       pictureOfVehicle: pictureOfVehicle,
       partnerId:partnerId,
+      token: token
     );
     final url = Uri.parse('${baseUrl}add-operator');
 
     var request = http.MultipartRequest('POST', url);
     request.fields['partnerName'] = partnerNameController.text;
     request.fields['partnerId'] = partnerId;
+    request.fields['token'] = token;
     request.fields['unitType'] = unitType;
     request.fields['unitClassification'] = unitClassification;
     request.fields['subClassification'] = subClassification;
@@ -282,14 +292,16 @@ class AuthService {
       request.files.add(await http.MultipartFile.fromPath('aramcoLicense', aramcoLicense.path.toString()));
     }
 
-    try {
+
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       var parsedResponse = jsonDecode(responseBody);
+      // final partnerIdd = parsedResponse['data']['partner']['_id'];
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: $responseBody');
-
+      print('partnerId');
+      // print(partnerIdd);
       if (response.statusCode == 201) {
         globalPartnerId = partnerId;
         print('Upload successful');
@@ -305,13 +317,13 @@ class AuthService {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => BookingDetails(partnerId: partnerId,partnerName: partnerName,),
+            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: ''),
           ),
         );
       } else {
         var parsedResponse = jsonDecode(responseBody);
         var message = parsedResponse['message'] ?? 'Operation failed. Please try again.';
-
+        print('Failed to login user: ${response.statusCode}');
         Fluttertoast.showToast(
           msg: message,
           toastLength: Toast.LENGTH_LONG,
@@ -322,12 +334,15 @@ class AuthService {
           fontSize: 16.0,
         );
       }
-    } catch (e) {
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
-      );
-    }
+
+    // catch (e) {
+    //   print('Error: $e');
+    //   print('Failed to login user: ${response.statusCode}');
+    //   print('Response body: ${response.body}');
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('An error occurred. Please try again.')),
+    //   );
+    // }
   }
 
 
@@ -350,7 +365,9 @@ class AuthService {
     required PlatformFile? pictureOfVehicle,
     required PlatformFile? drivingLicense,
     required PlatformFile? nationalID,
-    required PlatformFile? aramcoLicense, required String partnerId,
+    required PlatformFile? aramcoLicense,
+    required String partnerId,
+    required String token,
   }) {
     print('Sending data:');
     print('partnerName: $partnerName');
@@ -371,6 +388,7 @@ class AuthService {
     print('nationalID: $nationalID');
     print('aramcoLicense: $aramcoLicense');
     print('partnerId: $partnerId');
+    print('token: $token');
   }
 
   Future<List<int>> streamToBytes(Stream<List<int>> stream) async {
@@ -428,36 +446,224 @@ class AuthService {
   }
 
 
-
-  Future<void> getBookingData(String partnerId) async {
-    final response = await http.get(Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'));
+  Future<List<Map<String, dynamic>>> getBookingData(String partnerId, String token) async {
+    final response = await http.get(
+      Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
     if (response.statusCode == 200) {
-      print(response.body);
-      final responseBody = response.body;
+      final responseBody = jsonDecode(response.body);
+      final partnerData = responseBody['data'];
+      await storeUserData(token, partnerData);
 
-      // Parse the JSON response
-      var parsedResponse = jsonDecode(responseBody);
+      if (partnerData['operators'] != null) {
+        final operators = partnerData['operators'] as List<dynamic>;
+        final bookingIds = <Map<String, dynamic>>[];
 
-      // Access partnerId
-      final partnerId = parsedResponse['_id'];
-      print("Partner ID: $partnerId");
+        for (var operator in operators) {
+          if (operator['bookingRequest'] != null) {
+            final bookingRequests = operator['bookingRequest'] as List<dynamic>;
 
-      // Access operators list
-      final operators = parsedResponse['operators'] as List;
-
-      // Iterate over operators to get booking requests
-      for (var operator in operators) {
-        final bookingRequests = operator['bookingRequest'] as List;
-
-        for (var booking in bookingRequests) {
-          // Access the bookingId
-          final bookingId = booking['bookingId'];
-          print("Booking ID: $bookingId");
+            for (var booking in bookingRequests) {
+              final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
+              final quotePrice = booking['quotePrice']?.toString() ?? '0';
+              final paymentStatus = booking['paymentStatus']?.toString() ?? '';
+              print(bookingId);
+              print(paymentStatus);
+              print(quotePrice);
+              await getBookingId(bookingId, token, paymentStatus,quotePrice);
+              bookingIds.add({
+                'bookingId': bookingId,
+                'paymentStatus': paymentStatus,
+                'quotePrice': quotePrice,
+              });
+            }
+          }
         }
+
+        return bookingIds;
+      } else {
+        print("No operators found for this partner.");
+        return [];
       }
+    } else if (response.statusCode == 401) {
+      print("Authorization failed: ${response.body}");
+      return [];
     } else {
       throw Exception('Failed to load booking data');
+    }
+  }
+
+
+
+  Future<Map<String, dynamic>> getBookingId(String bookingId, String token,String paymentStatus,String quotePrice) async {
+    final response = await http.get(
+      Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+      final data = responseBody['data'];
+      await storeUserData(token, data);
+      print(responseBody);
+      // Access the 'type' list
+      final typeList = data['type'] as List<dynamic>;
+      // Access the 'dropPoints' list
+      final dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
+
+      // Safely extract typeOfLoad from the first item
+      String typeOfLoad = 'No load available';
+      String typeName = 'No name';
+      // Safely access the first item in 'dropPoints'
+      String firstDropPoint = 'No drop point available';
+
+      if (dropPoints.isNotEmpty) {
+        firstDropPoint = dropPoints[0] as String? ?? 'No drop point available';
+      }
+      if (typeList.isNotEmpty) {
+        final typeItem = typeList[0] as Map<String, dynamic>;
+        typeOfLoad = typeItem['typeOfLoad'] ?? 'No load available';
+        typeName= typeItem['typeName'] ?? 'No name available';
+      }
+      final userId= data['user']??'';
+      await getUserName(userId, token);
+
+      print('userId: $userId');
+      print('paymentStatuss: $paymentStatus');
+      print('quotePrice: $quotePrice');
+      return {
+        '_id': data['_id'],
+        'date': data['date'],
+        'time': data['time'],
+        'productValue': data['productValue'],
+        'additionalLabour': data['additionalLabour'],
+        'pickup': data['pickup'],
+        'name': data['name'],
+        'typeName': typeName,
+        'dropPoints': firstDropPoint,
+        'typeOfLoad': typeOfLoad,
+        'quotePrice': quotePrice,
+        'paymentStatus': paymentStatus,
+        'userId': userId,
+      };
+
+    } else if (response.statusCode == 401) {
+      print("Authorization failed for booking ID $bookingId: ${response.body}");
+      throw Exception('Authorization failed');
+    } else {
+      throw Exception('Failed to load booking data for booking ID $bookingId');
+    }
+  }
+
+  Future<String?> getUserName(String userId, String token) async {
+    final response = await http.get(
+      Uri.parse('https://naqli.onrender.com/api/users/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+
+      // Check if 'data' exists and is not null
+      if (responseBody != null && responseBody['firstName'] != null) {
+        return responseBody['firstName'];
+      } else {
+        print("First name is not available.");
+        return null;
+      }
+    } else if (response.statusCode == 401) {
+      print("Authorization failed for user ID $userId: ${response.body}");
+      throw Exception('Authorization failed');
+    } else {
+      throw Exception('Failed to load user data for user ID $userId');
+    }
+  }
+
+  Future<void> sendQuotePrice(
+      BuildContext context, {
+        required String quotePrice,
+        required String partnerId,
+        required String bookingId,
+      }) async {
+    final url = Uri.parse('${baseUrl}update-quote');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'quotePrice': quotePrice,
+        'partnerId': partnerId,
+        'bookingId': bookingId,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+    final userData = responseBody['data'];
+    if (response.statusCode == 200) {
+      print('Send Quote Price successful');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Send successful')),
+      );
+      final token = responseBody['data']['token'];
+
+      await storeUserData(token, userData);
+      print(userData);
+      print(token);
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //       builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '',)
+      //   ),
+      // );
+    } else {
+      final message = responseBody['message'] ?? 'Send failed. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to Send price: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> deleteBookingRequest(BuildContext context,String partnerId, String bookingRequestId, String token) async {
+    final url = Uri.parse('${baseUrl}$partnerId/booking-request/$bookingRequestId');
+
+    final response = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    final responseBody = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final userData = responseBody['data'];
+      await storeUserData(token, userData);
+      print("Booking request deleted successfully.");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BookingDetails(partnerName: '', partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
+        ),
+      );
+    } else if (response.statusCode == 401) {
+      print("Authorization failed: ${response.body}");
+      throw Exception('Authorization failed');
+    } else {
+      print("Failed to delete booking request: ${response.body}");
+      throw Exception('Failed to delete booking request');
     }
   }
 

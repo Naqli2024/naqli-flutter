@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/services.dart';
+import 'package:flutter_naqli/Viewmodel/services.dart';
 
 class Register extends StatefulWidget {
   final String selectedRole;
+  final String partnerId;
 
-  const Register({Key? key, required this.selectedRole}) : super(key: key);
+  const Register({Key? key, required this.selectedRole, required this.partnerId}) : super(key: key);
 
   @override
   State<Register> createState() => _RegisterState();
@@ -31,6 +32,7 @@ class _RegisterState extends State<Register> {
           email: emailController.text,
           password: passwordController.text,
           role: widget.selectedRole,
+          partnerId: widget.partnerId
         );
         setState(() {
           isLoading = false;
