@@ -24,6 +24,7 @@ class AuthService {
     required String password,
     required String role,
     required String partnerId,
+    required String token,
   }) async {
     final url = Uri.parse('${baseUrl}register');
 
@@ -31,6 +32,7 @@ class AuthService {
       url,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
         'type': role,
@@ -147,6 +149,7 @@ class AuthService {
         required String mobileNo,
         required String partnerName,
         required String password,
+        required String token,
       }) async {
     final url = Uri.parse('${baseUrl}login');
 
@@ -154,6 +157,7 @@ class AuthService {
       url,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
         'emailOrMobile': emailOrMobile,
@@ -172,7 +176,7 @@ class AuthService {
       final partnerName = responseBody['data']['partner']['partnerName'];
       final partnerId = responseBody['data']['partner']['_id'];
 
-      await storeUserData(token, userData);
+      await getBookingData(partnerId,token);
       print(userData);
       print(token);
       Navigator.push(
@@ -181,6 +185,10 @@ class AuthService {
           builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
         ),
       );
+      await saveUserData(partnerId, token, partnerName);
+      print('ID$partnerId');
+      print('NAME$partnerName');
+      print('TOKEN$token');
     } else {
       final message = responseBody['message'] ?? 'Login failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -317,7 +325,7 @@ class AuthService {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: ''),
+            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: '',token: token,partnerId: partnerId,),
           ),
         );
       } else {
@@ -458,7 +466,7 @@ class AuthService {
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
       final partnerData = responseBody['data'];
-      await storeUserData(token, partnerData);
+
 
       if (partnerData['operators'] != null) {
         final operators = partnerData['operators'] as List<dynamic>;
@@ -475,6 +483,7 @@ class AuthService {
               print(bookingId);
               print(paymentStatus);
               print(quotePrice);
+              print(token);
               await getBookingId(bookingId, token, paymentStatus,quotePrice);
               bookingIds.add({
                 'bookingId': bookingId,
@@ -485,6 +494,9 @@ class AuthService {
           }
         }
 
+        print('ID$partnerId');
+        print('NAMEs$partnerData');
+        print('TOKEN$token');
         return bookingIds;
       } else {
         print("No operators found for this partner.");
@@ -494,13 +506,89 @@ class AuthService {
       print("Authorization failed: ${response.body}");
       return [];
     } else {
+      print('Failed to load booking data: ${response.statusCode} ${response.body}');
       throw Exception('Failed to load booking data');
     }
   }
 
+  Future<Map<String, dynamic>> getBookingId(String bookingId, String token, String paymentStatus, String quotePrice) async {
+    final response = await http.get(
+      Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+
+      // Ensure 'data' is a map
+      final Map<String, dynamic> data = responseBody['data'] as Map<String, dynamic>;
+
+      if (data.isEmpty) {
+        throw Exception('No data found for booking ID $bookingId');
+      }
+
+      final partnerId = data['_id'] ?? '';
 
 
-  Future<Map<String, dynamic>> getBookingId(String bookingId, String token,String paymentStatus,String quotePrice) async {
+      print(responseBody);
+
+      // Access the 'type' list
+      final List<dynamic> typeList = data['type'] as List<dynamic>;
+      // Access the 'dropPoints' list
+      final List<dynamic> dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
+
+      // Safely extract typeOfLoad from the first item
+      String typeOfLoad = 'No load available';
+      String typeName = 'No name';
+      // Safely access the first item in 'dropPoints'
+      String firstDropPoint = 'No drop point available';
+
+      if (dropPoints.isNotEmpty) {
+        firstDropPoint = dropPoints[0] as String? ?? 'No drop point available';
+      }
+      if (typeList.isNotEmpty) {
+        final typeItem = typeList[0] as Map<String, dynamic>;
+        typeOfLoad = typeItem['typeOfLoad'] ?? 'No load available';
+        typeName = typeItem['typeName'] ?? 'No name available';
+      }
+
+      final userId = data['user'] ?? '';
+      await getUserName(userId, token);
+
+      print('userId: $userId');
+      print('paymentStatus: $paymentStatus');
+      print('quotePrice: $quotePrice');
+      print('token: $token');
+
+      return {
+        '_id': data['_id'],
+        'date': data['date'],
+        'time': data['time'],
+        'productValue': data['productValue'],
+        'additionalLabour': data['additionalLabour'],
+        'pickup': data['pickup'],
+        'name': data['name'],
+        'typeName': typeName,
+        'dropPoints': firstDropPoint,
+        'typeOfLoad': typeOfLoad,
+        'quotePrice': quotePrice,
+        'paymentStatus': paymentStatus,
+        'userId': userId,
+      };
+
+    } else if (response.statusCode == 401) {
+      print("Authorization failed for booking ID $bookingId: ${response.body}");
+      throw Exception('Authorization failed');
+    } else {
+      throw Exception('Failed to load booking data for booking ID $bookingId');
+    }
+  }
+
+
+/*  Future<Map<String, dynamic>> getBookingId(String bookingId, String token,String paymentStatus,String quotePrice) async {
     final response = await http.get(
       Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
       headers: {
@@ -511,7 +599,8 @@ class AuthService {
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
       final data = responseBody['data'];
-      await storeUserData(token, data);
+      final partnerId = responseBody['data']['_id']??'';
+      await storeUserData(token, data,partnerId);
       print(responseBody);
       // Access the 'type' list
       final typeList = data['type'] as List<dynamic>;
@@ -538,6 +627,7 @@ class AuthService {
       print('userId: $userId');
       print('paymentStatuss: $paymentStatus');
       print('quotePrice: $quotePrice');
+      print('token: $token');
       return {
         '_id': data['_id'],
         'date': data['date'],
@@ -560,7 +650,7 @@ class AuthService {
     } else {
       throw Exception('Failed to load booking data for booking ID $bookingId');
     }
-  }
+  }*/
 
   Future<String?> getUserName(String userId, String token) async {
     final response = await http.get(
@@ -576,6 +666,7 @@ class AuthService {
 
       // Check if 'data' exists and is not null
       if (responseBody != null && responseBody['firstName'] != null) {
+        print('token: $token');
         return responseBody['firstName'];
       } else {
         print("First name is not available.");
@@ -585,6 +676,7 @@ class AuthService {
       print("Authorization failed for user ID $userId: ${response.body}");
       throw Exception('Authorization failed');
     } else {
+      print('Failed to load booking data: ${response.statusCode} ${response.body}');
       throw Exception('Failed to load user data for user ID $userId');
     }
   }
@@ -594,6 +686,7 @@ class AuthService {
         required String quotePrice,
         required String partnerId,
         required String bookingId,
+        required String token,
       }) async {
     final url = Uri.parse('${baseUrl}update-quote');
 
@@ -610,17 +703,16 @@ class AuthService {
     );
 
     final responseBody = jsonDecode(response.body);
-    final userData = responseBody['data'];
+    // final userData = responseBody['data'];
     if (response.statusCode == 200) {
       print('Send Quote Price successful');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Send successful')),
       );
-      final token = responseBody['data']['token'];
+      // final token = responseBody['data']['token'];
 
-      await storeUserData(token, userData);
-      print(userData);
-      print(token);
+
+      print('token: $token');
       // Navigator.push(
       //   context,
       //   MaterialPageRoute(
@@ -649,9 +741,12 @@ class AuthService {
     );
     final responseBody = jsonDecode(response.body);
     if (response.statusCode == 200) {
-      final userData = responseBody['data'];
-      await storeUserData(token, userData);
+      // final userData = responseBody['data'];
+      // await storeUserData(token, userData);
       print("Booking request deleted successfully.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted successfully')),
+      );
       Navigator.push(
         context,
         MaterialPageRoute(

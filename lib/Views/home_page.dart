@@ -11,7 +11,8 @@ class HomePage extends StatefulWidget {
   final String partnerName;
   final String password;
   final String partnerId;
-  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId});
+  final String token;
+  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId, required this.token});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => LoginPage(partnerName: widget.partnerName,mobileNo: widget.mobileNo,password: widget.password,)));
+                          builder: (context) => LoginPage(partnerName: widget.partnerName,mobileNo: widget.mobileNo,password: widget.password,token: widget.token, partnerId: widget.partnerId,)));
                 },
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

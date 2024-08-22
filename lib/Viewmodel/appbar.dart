@@ -171,6 +171,6 @@ void logout(BuildContext context) async {
   await clearUserData();
   Navigator.pushReplacement(
     context,
-    MaterialPageRoute(builder: (context) => const LoginPage(partnerName: '',mobileNo: '',password: '',)),
+    MaterialPageRoute(builder: (context) => const LoginPage(partnerName: '',mobileNo: '',password: '',token: '',partnerId: '',)),
   );
 }

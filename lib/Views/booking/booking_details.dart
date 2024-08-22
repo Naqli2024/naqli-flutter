@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Model/bookingData.dart';
+import 'package:flutter_naqli/Model/sharedPreferences.dart';
 import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
@@ -27,7 +28,9 @@ class _BookingDetailsState extends State<BookingDetails> {
 
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
+      print('Fetching booking details for partnerId: ${widget.partnerId}');
       final bookingIds = await AuthService().getBookingData(widget.partnerId, widget.token);
+      print('Booking IDs retrieved: $bookingIds');
 
       if (bookingIds.isEmpty) {
         print("No booking IDs found.");
@@ -35,21 +38,22 @@ class _BookingDetailsState extends State<BookingDetails> {
       }
 
       final bookingDetails = <Map<String, dynamic>>[];
-
       for (var booking in bookingIds) {
         final bookingId = booking['bookingId'] as String;
         final paymentStatus = booking['paymentStatus'] as String;
-        final details = await AuthService().getBookingId(bookingId, widget.token, paymentStatus,widget.quotePrice);
 
-        if (details.isNotEmpty) {
-          bookingDetails.add(details);
-        } else {
-          print("No details found for booking ID $bookingId.");
+        try {
+          print('Fetching details for booking ID: $bookingId');
+          final details = await AuthService().getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
+          print('Details retrieved: $details');
+          if (details.isNotEmpty) {
+            bookingDetails.add(details);
+          } else {
+            print("No details found for booking ID $bookingId.");
+          }
+        } catch (e) {
+          print("Error fetching details for booking ID $bookingId: $e");
         }
-      }
-
-      if (bookingDetails.isEmpty) {
-        print("No booking details retrieved.");
       }
 
       return bookingDetails;
@@ -58,7 +62,6 @@ class _BookingDetailsState extends State<BookingDetails> {
       return [];
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,7 +153,6 @@ class _BookingDetailsState extends State<BookingDetails> {
                               ),
                             ),
                             onPressed: () {
-                              // AuthService().getUserName(userId, widget.token);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

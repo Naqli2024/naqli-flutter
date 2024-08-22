@@ -3,21 +3,37 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-Future<void> storeUserData(String token, Map<String, dynamic> userData) async {
+Future<void> saveUserData(String partnerId, String token, String partnerName) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('auth_token', token);
-  await prefs.setString('user_data', jsonEncode(userData));
+  await prefs.setString('partnerId', partnerId);
+  await prefs.setString('token', token);
+  await prefs.setString('partnerName', partnerName);
 }
 
-Future<Map<String, dynamic>?> getUserData() async {
+Future<Map<String, String?>> getSavedUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  return {
+    'partnerId': prefs.getString('partnerId'),
+    'token': prefs.getString('token'),
+    'partnerName': prefs.getString('partnerName'),
+  };
+}
+
+
+// Retrieve and use token and user data on app startup
+Future<void> loadUserData() async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('auth_token');
-  final userData = prefs.getString('user_data');
+  final userDataString = prefs.getString('user_data');
 
-  if (token != null && userData != null) {
-    return jsonDecode(userData);
+  if (token != null && userDataString != null) {
+    final userData = jsonDecode(userDataString);
+    // Use the token and userData as needed
+    print('Token: $token');
+    print('User Data: $userData');
   } else {
-    return null;
+    // Handle missing data (e.g., navigate to login)
+    print('No token or user data found');
   }
 }
 

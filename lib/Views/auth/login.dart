@@ -7,11 +7,15 @@ import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Views/auth/role.dart';
 import 'package:flutter_naqli/Views/home_page.dart';
 
+import '../../Model/sharedPreferences.dart';
+
 class LoginPage extends StatefulWidget {
 final String partnerName;
 final String mobileNo;
 final String password;
-  const LoginPage({super.key, required this.partnerName, required this.mobileNo, required this.password});
+final String token;
+final String partnerId;
+  const LoginPage({super.key, required this.partnerName, required this.mobileNo, required this.password, required this.token, required this.partnerId});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -33,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void login() {
+  void login() async{
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
@@ -44,7 +48,9 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordController.text,
         partnerName: widget.partnerName,
         mobileNo: widget.mobileNo,
+        token: widget.token,
       );
+
       setState(() {
         isLoading = false;
       });
@@ -81,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: '',partnerId: '',),
+                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: '',partnerId: '', token: '',),
                 ),
               );
             },

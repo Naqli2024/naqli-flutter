@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Viewmodel/services.dart';
+import 'package:flutter_naqli/Views/booking/view_map.dart';
 
 class ViewBooking extends StatefulWidget {
   final String partnerName;
@@ -142,7 +143,16 @@ class _ViewBookingState extends State<ViewBooking> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(flex:7,child: Text(firstName != null?'$firstName':'no',style: TextStyle(color: Color(0xffAD1C86)))),
-                      Expanded(flex:2,child: Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86)))),
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ViewMap(partnerName: widget.partnerName)
+                            ),
+                          );
+                        },
+                          child: Expanded(flex:2,child: Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86))))),
                     ],
                   ),
                 ),
@@ -279,7 +289,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               setState(() {
                                 widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
                                     ? null
-                                    : AuthService().sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId);
+                                    : AuthService().sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
                               });
                               // Navigator.push(
                               //     context,
@@ -309,9 +319,10 @@ class _ViewBookingState extends State<ViewBooking> {
                             ),
                             onPressed: () {
                               setState(() {
-                                widget.quotePrice == '0'
-                                ?AuthService().deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token)
-                                :null;
+                                widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
+                                    ?null
+                                    :AuthService().deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
+
                               });
                               //   Navigator.push(
                               //       context,

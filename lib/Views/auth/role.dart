@@ -173,7 +173,7 @@ class _RoleState extends State<Role> {
                       MaterialPageRoute(
                         builder: (context) => Register(
                           selectedRole: selectedRole,
-                          partnerId: '',
+                          partnerId: '',token: '',
                         ),
                       ),
                     );
