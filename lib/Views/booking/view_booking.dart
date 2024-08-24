@@ -11,6 +11,7 @@ class ViewBooking extends StatefulWidget {
   final String quotePrice;
   final String paymentStatus;
   final String userId;
+  final String bookingStatus;
   final List<Map<String, dynamic>> bookingDetails;
 
   const ViewBooking({
@@ -19,7 +20,11 @@ class ViewBooking extends StatefulWidget {
     required this.partnerId,
     required this.token,
     required this.bookingId,
-    required this.bookingDetails, required this.quotePrice, required this.paymentStatus, required this.userId,
+    required this.bookingDetails,
+    required this.quotePrice,
+    required this.paymentStatus,
+    required this.userId,
+    required this.bookingStatus,
   });
 
   @override
@@ -30,6 +35,7 @@ class ViewBooking extends StatefulWidget {
 class _ViewBookingState extends State<ViewBooking> {
   Map<String, dynamic>? bookingDetails;
   String? firstName;
+  String? lastName;
   bool isLoading = true;
   String errorMessage = '';
   late TextEditingController quotePriceController = TextEditingController();
@@ -68,6 +74,7 @@ class _ViewBookingState extends State<ViewBooking> {
       final fetchedFirstName = await AuthService().getUserName(widget.userId, widget.token);
       setState(() {
         firstName = fetchedFirstName;
+        lastName = fetchedFirstName;
         isLoading = false;
       });
     } catch (e) {
@@ -142,17 +149,30 @@ class _ViewBookingState extends State<ViewBooking> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(flex:7,child: Text(firstName != null?'$firstName':'no',style: TextStyle(color: Color(0xffAD1C86)))),
+                      Expanded(flex:7,child: Text(firstName != null?'$firstName':'null'+ '${lastName != null ?'$lastName':'null'}',style: TextStyle(color: Color(0xffAD1C86)))),
                       GestureDetector(
                         onTap: (){
-                          Navigator.push(
+                          widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
+                          ?Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ViewMap(partnerName: widget.partnerName)
+                                builder: (context) => ViewMap(
+                                  partnerName: widget.partnerName,
+                                  userName: firstName != null?'$firstName':'null'+ '${lastName != null ?'$lastName':'null'}',
+                                  userId: widget.userId,
+                                  mode: '${bookingDetails?['name'] ?? 'No name available'}'+
+                                        ' ${bookingDetails?['typeName'] ?? ''}',
+                                  bookingStatus: widget.bookingStatus,
+                                  pickupPoint: '${bookingDetails?['pickup'] ?? 'No pickup available'}',
+                                  dropPoint: '${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
+                                  remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
+                                  bookingId: widget.bookingId,token: widget.token,
+                                )
                             ),
-                          );
+                          )
+                              :null;
                         },
-                          child: Expanded(flex:2,child: Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86))))),
+                          child: Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86)))),
                     ],
                   ),
                 ),
@@ -174,7 +194,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           children: [
                             const Expanded(flex:6,child: Text('Mode')),
                             Expanded(flex:2,child: Text('${bookingDetails?['name'] ?? 'No name available'}'+
-                                ' ${bookingDetails?['typeName'] ?? ''}')),
+                                ' ${bookingDetails?['typeName'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -182,7 +202,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(flex:6,child: Text('Load')),
-                            Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'No Load available'}')),
+                            Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'No Load available'}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -190,7 +210,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(flex:6,child: Text('Date')),
-                            Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'No date available'}')),
+                            Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'No date available'}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -198,7 +218,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(flex:6,child: Text('Time')),
-                            Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'No time available'}')),
+                            Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'No time available'}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -206,7 +226,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(flex:6,child: Text('Distance')),
-                            Expanded(flex:2,child: Text('50 km')),
+                            Expanded(flex:2,child: Text('50 km',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -214,7 +234,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(flex:6,child: Text('Additional Labour')),
-                            Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'No labour available'}')),
+                            Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'No labour available'}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                         const Divider(),
@@ -222,7 +242,7 @@ class _ViewBookingState extends State<ViewBooking> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Expanded(flex:6,child: Text('Value of the Product')),
-                            Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'No value available'}')),
+                            Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'No value available'}',style: TextStyle(color: Color(0xff79797C)),)),
                           ],
                         ),
                       ],
@@ -324,10 +344,6 @@ class _ViewBookingState extends State<ViewBooking> {
                                     :AuthService().deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
 
                               });
-                              //   Navigator.push(
-                              //       context,
-                              //       MaterialPageRoute(
-                              //           builder: (context) => const StepTwo()));
                             },
                             child: const Text(
                               'Cancel Quote',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_naqli/Views/auth/login.dart';
 import 'package:flutter_naqli/Views/auth/otp.dart';
@@ -9,7 +10,9 @@ import 'package:flutter_naqli/Views/home_page.dart';
 import 'Model/sharedPreferences.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+
   runApp(const MyApp());
 }
 

@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Model/sharedPreferences.dart';
 import 'package:flutter_naqli/Viewmodel/services.dart';
 import 'package:flutter_naqli/Viewmodel/appbar.dart';
 import 'package:flutter_naqli/Views/booking/view_booking.dart';
+import 'package:flutter_naqli/Views/payment/payment_details.dart';
 class BookingDetails extends StatefulWidget {
   final String partnerName;
   final String partnerId;
@@ -91,7 +92,14 @@ class _BookingDetailsState extends State<BookingDetails> {
           ),
         ),
       ),
-      drawer: createDrawer(context),
+      drawer: createDrawer(context,onPaymentPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+          ),
+        );
+      },),
       body: FutureBuilder<List<Map<String, dynamic>?>>(
         future: _bookingDetailsFuture,
         builder: (context, snapshot) {
@@ -111,6 +119,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                 final quotePrice = booking?['quotePrice'] ?? 'No quotePrice available';
                 final paymentStatus = booking?['paymentStatus'] ?? 'No paymentStatus available';
                 final userId = booking?['userId'] ?? 'No userId available';
+                final bookingStatus = booking?['bookingStatus'] ?? 'No userId available';
 
                 return Container(
                   margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -160,7 +169,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                     partnerName: widget.partnerName,
                                     token: widget.token,partnerId:
                                   widget.partnerId,bookingId: id,
-                                    bookingDetails: [booking?? {} ], quotePrice: quotePrice,paymentStatus: paymentStatus, userId: userId,),
+                                    bookingDetails: [booking?? {} ], quotePrice: quotePrice,paymentStatus: paymentStatus, userId: userId,bookingStatus: bookingStatus),
                                 ),
                               );
                             },

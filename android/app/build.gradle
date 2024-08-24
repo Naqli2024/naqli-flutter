@@ -28,6 +28,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        buildConfigField "String", "API_KEY", "\"${project.API_KEY}\""
+
     }
 
     buildTypes {
@@ -35,9 +37,18 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
+            buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
+
+        }
+        debug {
+            buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
         }
     }
 }
+dependencies {
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+}
+
 
 flutter {
     source = "../.."

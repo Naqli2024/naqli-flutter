@@ -577,6 +577,9 @@ class AuthService {
         'quotePrice': quotePrice,
         'paymentStatus': paymentStatus,
         'userId': userId,
+        'bookingStatus': data['bookingStatus'],
+        'remainingBalance': data['remainingBalance'],
+        'paymentAmount': data['paymentAmount'],
       };
 
     } else if (response.statusCode == 401) {
@@ -586,71 +589,6 @@ class AuthService {
       throw Exception('Failed to load booking data for booking ID $bookingId');
     }
   }
-
-
-/*  Future<Map<String, dynamic>> getBookingId(String bookingId, String token,String paymentStatus,String quotePrice) async {
-    final response = await http.get(
-      Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(response.body);
-      final data = responseBody['data'];
-      final partnerId = responseBody['data']['_id']??'';
-      await storeUserData(token, data,partnerId);
-      print(responseBody);
-      // Access the 'type' list
-      final typeList = data['type'] as List<dynamic>;
-      // Access the 'dropPoints' list
-      final dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
-
-      // Safely extract typeOfLoad from the first item
-      String typeOfLoad = 'No load available';
-      String typeName = 'No name';
-      // Safely access the first item in 'dropPoints'
-      String firstDropPoint = 'No drop point available';
-
-      if (dropPoints.isNotEmpty) {
-        firstDropPoint = dropPoints[0] as String? ?? 'No drop point available';
-      }
-      if (typeList.isNotEmpty) {
-        final typeItem = typeList[0] as Map<String, dynamic>;
-        typeOfLoad = typeItem['typeOfLoad'] ?? 'No load available';
-        typeName= typeItem['typeName'] ?? 'No name available';
-      }
-      final userId= data['user']??'';
-      await getUserName(userId, token);
-
-      print('userId: $userId');
-      print('paymentStatuss: $paymentStatus');
-      print('quotePrice: $quotePrice');
-      print('token: $token');
-      return {
-        '_id': data['_id'],
-        'date': data['date'],
-        'time': data['time'],
-        'productValue': data['productValue'],
-        'additionalLabour': data['additionalLabour'],
-        'pickup': data['pickup'],
-        'name': data['name'],
-        'typeName': typeName,
-        'dropPoints': firstDropPoint,
-        'typeOfLoad': typeOfLoad,
-        'quotePrice': quotePrice,
-        'paymentStatus': paymentStatus,
-        'userId': userId,
-      };
-
-    } else if (response.statusCode == 401) {
-      print("Authorization failed for booking ID $bookingId: ${response.body}");
-      throw Exception('Authorization failed');
-    } else {
-      throw Exception('Failed to load booking data for booking ID $bookingId');
-    }
-  }*/
 
   Future<String?> getUserName(String userId, String token) async {
     final response = await http.get(
@@ -664,19 +602,28 @@ class AuthService {
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(response.body);
 
-      // Check if 'data' exists and is not null
-      if (responseBody != null && responseBody['firstName'] != null) {
-        print('token: $token');
-        return responseBody['firstName'];
+      // Check if 'data' exists and contains 'firstName' and 'lastName'
+      if (responseBody != null) {
+        final firstName = responseBody['firstName'] ?? '';
+        final lastName = responseBody['lastName'] ?? '';
+
+        if (firstName.isNotEmpty && lastName.isNotEmpty) {
+          print('token: $token');
+          print('User name: $firstName $lastName');
+          return '$firstName $lastName';
+        } else {
+          print("First name or last name is not available.");
+          return null;
+        }
       } else {
-        print("First name is not available.");
+        print("Response body does not contain user data.");
         return null;
       }
     } else if (response.statusCode == 401) {
       print("Authorization failed for user ID $userId: ${response.body}");
       throw Exception('Authorization failed');
     } else {
-      print('Failed to load booking data: ${response.statusCode} ${response.body}');
+      print('Failed to load user data: ${response.statusCode} ${response.body}');
       throw Exception('Failed to load user data for user ID $userId');
     }
   }
@@ -705,20 +652,13 @@ class AuthService {
     final responseBody = jsonDecode(response.body);
     // final userData = responseBody['data'];
     if (response.statusCode == 200) {
+      await requestPayment(context, additionalCharges: 0, reason: '', bookingId: bookingId, token: token);
       print('Send Quote Price successful');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Send successful')),
       );
-      // final token = responseBody['data']['token'];
-
 
       print('token: $token');
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '',)
-      //   ),
-      // );
     } else {
       final message = responseBody['message'] ?? 'Send failed. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -728,6 +668,51 @@ class AuthService {
       print('Response body: ${response.body}');
     }
   }
+
+  Future<String?> requestPayment(
+      BuildContext context, {
+        required int additionalCharges,
+        required String reason,
+        required String bookingId,
+        required String token,
+      }) async {
+    final url = Uri.parse('https://naqli.onrender.com/api/bookings/$bookingId/additional-charges');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'additionalCharges': additionalCharges,
+          'reason': reason,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Response Data: $data'); // Print response data for debugging
+
+        // Check if the response contains the booking object and remainingBalance
+        if (data['booking'] != null && data['booking']['remainingBalance'] != null) {
+          return data['booking']['remainingBalance'].toString();
+        } else {
+          print('Remaining balance not found in response');
+          return null;
+        }
+      } else {
+        print('Failed to update payment, status code: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error making payment request: $e');
+      return null;
+    }
+  }
+
 
   Future<void> deleteBookingRequest(BuildContext context,String partnerId, String bookingRequestId, String token) async {
     final url = Uri.parse('${baseUrl}$partnerId/booking-request/$bookingRequestId');

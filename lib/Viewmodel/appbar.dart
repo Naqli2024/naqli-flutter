@@ -9,7 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom}) {
   return AppBar(
-      toolbarHeight: MediaQuery.of(context).size.height * 0.06,
+      toolbarHeight: MediaQuery.of(context).size.height * 0.065,
       leading: Builder(
         builder: (BuildContext context) => IconButton(
           onPressed: () {
@@ -78,7 +78,10 @@ AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bott
   );
 }
 
-Drawer createDrawer(BuildContext context,{VoidCallback ? onPressed,String ? partnerName, String ? partnerId}) {
+Drawer createDrawer(
+    BuildContext context,
+    {VoidCallback ? onBookingPressed,String ? partnerName, String ? partnerId,
+      VoidCallback ? onPaymentPressed}) {
   return Drawer(
     backgroundColor: Colors.white,
     child: ListView(
@@ -105,7 +108,7 @@ Drawer createDrawer(BuildContext context,{VoidCallback ? onPressed,String ? part
             padding: const EdgeInsets.only(left: 15),
             child: const Text('Booking',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          onTap: onPressed
+          onTap: onBookingPressed
           //     () {
           //   Navigator.push(
           //       context,
@@ -120,12 +123,7 @@ Drawer createDrawer(BuildContext context,{VoidCallback ? onPressed,String ? part
             padding: const EdgeInsets.only(left: 5),
             child: const Text('Payment',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const PaymentDetails()));
-          },
+          onTap: onPaymentPressed
         ),
         ListTile(
           leading: Image.asset('assets/report_logo.png',
@@ -135,7 +133,7 @@ Drawer createDrawer(BuildContext context,{VoidCallback ? onPressed,String ? part
             child: const Text('Report',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
           ),
           onTap: () {
-    
+
           },
         ),
         ListTile(
