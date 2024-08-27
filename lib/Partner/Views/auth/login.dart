@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Views/auth/role.dart';
-import 'package:flutter_naqli/Views/home_page.dart';
-
-import '../../Model/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/auth/role.dart';
+import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 
 class LoginPage extends StatefulWidget {
 final String partnerName;
@@ -21,11 +19,9 @@ final String partnerId;
   State<LoginPage> createState() => _LoginPageState();
 }
 
-final AuthService _authService = AuthService();
-
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
+  final AuthService _authService = AuthService();
   final TextEditingController emailOrMobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
@@ -47,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
         emailOrMobile: emailOrMobileController.text,
         password: passwordController.text,
         partnerName: widget.partnerName,
-        mobileNo: widget.mobileNo,
+        mobileNo: emailOrMobileController.text,
         token: widget.token,
       );
 
@@ -87,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const HomePage(mobileNo: '', partnerName: '', password: '',partnerId: '', token: '',),
+                  builder: (context) => const PartnerHomePage(mobileNo: '', partnerName: '', password: '',partnerId: '', token: '',),
                 ),
               );
             },
@@ -123,10 +119,10 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   children: [
                     Container(
-                      margin: const EdgeInsets.only(top: 40, bottom: 7),
+                      margin: const EdgeInsets.only(top: 25, bottom: 7),
                       child: const Text(
                         'Login',
-                        style: TextStyle(fontSize: 40),
+                        style: TextStyle(fontSize: 30),
                       ),
                     ),
                     const Text(
@@ -138,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         children: [
                           Container(
-                            margin: const EdgeInsets.fromLTRB(30, 40, 30, 10),
+                            margin: const EdgeInsets.fromLTRB(30, 30, 30, 10),
                             alignment: Alignment.topLeft,
                             child: const Text(
                               'Partner ID/Mobile No/Email ID',

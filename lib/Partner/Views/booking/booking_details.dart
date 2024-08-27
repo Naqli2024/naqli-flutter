@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/bookingData.dart';
-import 'package:flutter_naqli/Model/sharedPreferences.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Views/booking/view_booking.dart';
-import 'package:flutter_naqli/Views/payment/payment_details.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
+import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
+
 class BookingDetails extends StatefulWidget {
   final String partnerName;
   final String partnerId;
@@ -20,6 +19,8 @@ class BookingDetails extends StatefulWidget {
 
 class _BookingDetailsState extends State<BookingDetails> {
   Future<List<Map<String, dynamic>>>? _bookingDetailsFuture;
+  final AuthService _authService = AuthService();
+  final CommonWidgets commonWidgets = CommonWidgets();
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _BookingDetailsState extends State<BookingDetails> {
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
       print('Fetching booking details for partnerId: ${widget.partnerId}');
-      final bookingIds = await AuthService().getBookingData(widget.partnerId, widget.token);
+      final bookingIds = await _authService.getBookingData(widget.partnerId, widget.token);
       print('Booking IDs retrieved: $bookingIds');
 
       if (bookingIds.isEmpty) {
@@ -45,7 +46,7 @@ class _BookingDetailsState extends State<BookingDetails> {
 
         try {
           print('Fetching details for booking ID: $bookingId');
-          final details = await AuthService().getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
+          final details = await _authService.getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
           print('Details retrieved: $details');
           if (details.isNotEmpty) {
             bookingDetails.add(details);
@@ -66,7 +67,8 @@ class _BookingDetailsState extends State<BookingDetails> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      backgroundColor: Colors.white,
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
@@ -82,7 +84,7 @@ class _BookingDetailsState extends State<BookingDetails> {
             ),
             leading: IconButton(
               onPressed: () {
-                Navigator.pop(context);
+                commonWidgets.logout(context);
               },
               icon: const Icon(
                 Icons.arrow_back_sharp,
@@ -92,7 +94,7 @@ class _BookingDetailsState extends State<BookingDetails> {
           ),
         ),
       ),
-      drawer: createDrawer(context,onPaymentPressed: () {
+      drawer: commonWidgets.createDrawer(context,onPaymentPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -126,19 +128,8 @@ class _BookingDetailsState extends State<BookingDetails> {
                   child: Card(
                     color: Colors.white,
                     shadowColor: Colors.black,
+                    elevation: 3.0,
                     child: ListTile(
-                      // leading: Container(
-                      //   decoration: BoxDecoration(
-                      //     shape: BoxShape.circle,
-                      //     border: Border.all(
-                      //       color: Colors.black,
-                      //       width: 1.0,
-                      //     ),
-                      //   ),
-                      //   child: const CircleAvatar(
-                      //     backgroundColor: Colors.white,
-                      //   ),
-                      // ),
                       title: Text('Booking Id: $id'),
                       subtitle: Row(
                         children: [
@@ -177,7 +168,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                               'View',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
+                                fontSize: 12,
                                 fontWeight: FontWeight.normal,
                               ),
                             ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
 
 class ViewBooking extends StatefulWidget {
   final String partnerName;
@@ -39,6 +39,8 @@ class _ViewBookingState extends State<ViewBooking> {
   bool isLoading = true;
   String errorMessage = '';
   late TextEditingController quotePriceController = TextEditingController();
+  final AuthService _authService = AuthService();
+  final CommonWidgets commonWidgets = CommonWidgets();
 
   @override
   void initState() {
@@ -50,7 +52,7 @@ class _ViewBookingState extends State<ViewBooking> {
 
   Future<void> fetchBookingDetails() async {
     try {
-      final details = await AuthService().getBookingId(widget.bookingId, widget.token,widget.paymentStatus,widget.quotePrice);
+      final details = await _authService.getBookingId(widget.bookingId, widget.token,widget.paymentStatus,widget.quotePrice);
 
 
       setState(() {
@@ -71,7 +73,7 @@ class _ViewBookingState extends State<ViewBooking> {
 
   Future<void> fetchUserName() async {
     try {
-      final fetchedFirstName = await AuthService().getUserName(widget.userId, widget.token);
+      final fetchedFirstName = await _authService.getUserName(widget.userId, widget.token);
       setState(() {
         firstName = fetchedFirstName;
         lastName = fetchedFirstName;
@@ -88,7 +90,7 @@ class _ViewBookingState extends State<ViewBooking> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
@@ -114,7 +116,7 @@ class _ViewBookingState extends State<ViewBooking> {
           ),
         ),
       ),
-      drawer: createDrawer(context),
+      drawer: commonWidgets.createDrawer(context),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage.isNotEmpty
@@ -309,7 +311,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               setState(() {
                                 widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
                                     ? null
-                                    : AuthService().sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
+                                    : _authService.sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
                               });
                               // Navigator.push(
                               //     context,
@@ -320,7 +322,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               'Send Quote',
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.normal),
                             )),
                       ),
@@ -341,7 +343,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               setState(() {
                                 widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
                                     ?null
-                                    :AuthService().deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
+                                    :_authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
 
                               });
                             },
@@ -349,7 +351,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               'Cancel Quote',
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.normal),
                             )),
                       ),
@@ -405,19 +407,4 @@ class DottedDivider extends StatelessWidget {
     );
   }
 }
-//       Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Text('Booking ID: ${widget.bookingId}', ),
-//             Text('Date: ${bookingDetails?['date'] ?? 'No date available'}'),
-//             Text('Time: ${bookingDetails?['time'] ?? 'No time available'}'),
-//             // Add more fields as needed
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 

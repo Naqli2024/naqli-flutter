@@ -3,16 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Model/sharedPreferences.dart';
-import 'package:flutter_naqli/Views/auth/login.dart';
-import 'package:flutter_naqli/Views/auth/otp.dart';
-import 'package:flutter_naqli/Views/auth/stepOne.dart';
-import 'package:flutter_naqli/Views/auth/stepThree.dart';
-import 'package:flutter_naqli/Views/auth/stepTwo.dart';
-import 'package:flutter_naqli/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Views/auth/login.dart';
+import 'package:flutter_naqli/Partner/Views/auth/otp.dart';
+import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
+import 'package:flutter_naqli/Partner/Views/auth/stepThree.dart';
+import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 
 class AuthService {
   static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
@@ -267,7 +265,7 @@ class AuthService {
     final url = Uri.parse('${baseUrl}add-operator');
 
     var request = http.MultipartRequest('POST', url);
-    request.fields['partnerName'] = partnerNameController.text;
+    request.fields['partnerName'] = controller.text;
     request.fields['partnerId'] = partnerId;
     request.fields['token'] = token;
     request.fields['unitType'] = unitType;
@@ -342,15 +340,6 @@ class AuthService {
           fontSize: 16.0,
         );
       }
-
-    // catch (e) {
-    //   print('Error: $e');
-    //   print('Failed to login user: ${response.statusCode}');
-    //   print('Response body: ${response.body}');
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('An error occurred. Please try again.')),
-    //   );
-    // }
   }
 
 
@@ -542,7 +531,7 @@ class AuthService {
 
       // Safely extract typeOfLoad from the first item
       String typeOfLoad = 'No load available';
-      String typeName = 'No name';
+      String typeName = '';
       // Safely access the first item in 'dropPoints'
       String firstDropPoint = 'No drop point available';
 

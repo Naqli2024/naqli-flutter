@@ -39,6 +39,5 @@ Future<void> loadUserData() async {
 
 Future<void> clearUserData() async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove('auth_token');
-  await prefs.remove('user_data');
+  await prefs.clear();
 }

@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 
 class OtpScreen extends StatefulWidget {
   final String mobileNo;
@@ -22,6 +21,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
   int _seconds = 120; // Timer duration in seconds (e.g., 1 minute 30 seconds)
   Timer? _timer;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void validateOtp() async {
     String otp = _otpControllers.map((controller) => controller.text).join();
-    AuthService().validateOTP(
+    _authService.validateOTP(
               context,
               email: widget.email,
               password: widget.password,
@@ -75,7 +75,7 @@ class _OtpScreenState extends State<OtpScreen> {
       controller.clear();
     }
     String otp = _otpControllers.map((controller) => controller.text).join();
-    AuthService().resendOTP(
+    _authService.resendOTP(
         context,
         email: widget.email,
         password: widget.password,
@@ -87,7 +87,6 @@ class _OtpScreenState extends State<OtpScreen> {
       const SnackBar(content: Text('OTP Sent')),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

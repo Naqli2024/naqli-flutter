@@ -1,8 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Views/auth/stepThree.dart';
-import 'package:flutter_naqli/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Views/auth/stepThree.dart';
 
 class StepTwo extends StatefulWidget {
   final String partnerName;
@@ -20,29 +19,31 @@ class StepTwo extends StatefulWidget {
   @override
   State<StepTwo> createState() => _StepTwoState();
 }
-final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-final TextEditingController firstNameController = TextEditingController();
-final TextEditingController lastNameController = TextEditingController();
-final TextEditingController emailIdController = TextEditingController();
-final TextEditingController mobileNoController = TextEditingController();
-final TextEditingController dobController = TextEditingController();
-final TextEditingController iqamaNoController = TextEditingController();
-final TextEditingController panelInfoController = TextEditingController();
-bool licenseUpload = false;
-bool nationalIdUpload = false;
-bool aramcoUpload = false;
-bool licenseError = false;
-bool nationalIdError = false;
-bool aramcoError = false;
-PlatformFile? licenseFile;
-PlatformFile? nationalIdFile;
-PlatformFile? aramcoFile;
 
 class _StepTwoState extends State<StepTwo> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailIdController = TextEditingController();
+  final TextEditingController mobileNoController = TextEditingController();
+  final TextEditingController dobController = TextEditingController();
+  final TextEditingController iqamaNoController = TextEditingController();
+  final TextEditingController panelInfoController = TextEditingController();
+  final CommonWidgets commonWidgets = CommonWidgets();
+  bool licenseUpload = false;
+  bool nationalIdUpload = false;
+  bool aramcoUpload = false;
+  bool licenseError = false;
+  bool nationalIdError = false;
+  bool aramcoError = false;
+  PlatformFile? licenseFile;
+  PlatformFile? nationalIdFile;
+  PlatformFile? aramcoFile;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
@@ -80,14 +81,14 @@ class _StepTwoState extends State<StepTwo> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
-                    child: _buildTextField('First name',firstNameController),
+                    child: commonWidgets.buildTextField('First name',firstNameController),
                   ),
-                  _buildTextField('Last name',lastNameController),
-                  _buildTextField('Email id',emailIdController),
-                  _buildTextField('Mobile no',mobileNoController),
-                  _buildTextField('Date of Birth',dobController,hintText: 'dd/mm/yyyy'),
-                  _buildTextField('Iqama no',iqamaNoController),
-                  _buildTextField('Panel Information',panelInfoController),
+                  commonWidgets.buildTextField('Last name',lastNameController),
+                  commonWidgets.buildTextField('Email id',emailIdController),
+                  commonWidgets.buildTextField('Mobile no',mobileNoController),
+                  commonWidgets.buildTextField('Date of Birth',dobController,hintText: 'dd/mm/yyyy'),
+                  commonWidgets.buildTextField('Iqama no',iqamaNoController),
+                  commonWidgets.buildTextField('Panel Information',panelInfoController),
                   Container(
                       margin: const EdgeInsets.fromLTRB(30, 0, 40, 0),
                       alignment: Alignment.topLeft,
@@ -380,50 +381,6 @@ class _StepTwoState extends State<StepTwo> {
             ),
           ),
         ),
-    );
-  }
-  Widget _buildTextField(String label,controller,{String ? hintText}) {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-          alignment: Alignment.topLeft,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
-          child: TextFormField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: hintText??'',
-              hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter $label';
-              }
-              if(label == 'Email id') {
-                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                  return 'Please enter a valid email address';
-                }
-              }
-              return null;
-            },
-          ),
-        ),
-      ],
     );
   }
 }

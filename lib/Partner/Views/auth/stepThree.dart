@@ -2,11 +2,9 @@ import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Views/booking/booking_details.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+
 
 class StepThree extends StatefulWidget {
   final String partnerName;
@@ -35,10 +33,12 @@ class StepThree extends StatefulWidget {
   State<StepThree> createState() => _StepThreeState();
 }
 
-late TextEditingController partnerNameController = TextEditingController();
-bool isEditing = false;
-bool isLoading= false;
 class _StepThreeState extends State<StepThree> {
+  late TextEditingController partnerNameController = TextEditingController();
+  bool isEditing = false;
+  bool isLoading= false;
+  final AuthService _authService = AuthService();
+  final CommonWidgets commonWidgets = CommonWidgets();
 
   @override
   void initState() {
@@ -83,7 +83,7 @@ class _StepThreeState extends State<StepThree> {
     setState(() {
       isLoading = true;
     });
-    AuthService().addOperator(
+    _authService.addOperator(
       context,
       partnerName: partnerNameController.text,
       partnerId: widget.partnerId,
@@ -114,7 +114,7 @@ class _StepThreeState extends State<StepThree> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(

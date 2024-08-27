@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Views/auth/stepTwo.dart';
-import 'package:flutter_naqli/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/auth/stepTwo.dart';
+
 
 class StepOne extends StatefulWidget {
   final String partnerName;
@@ -40,6 +40,7 @@ class _StepOneState extends State<StepOne> {
   final TextEditingController istimaraNoController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final CommonWidgets commonWidgets = CommonWidgets();
   bool istimaraUpload = false;
   bool vehicleUpload = false;
   bool istimaraError = false;
@@ -145,7 +146,7 @@ class _StepOneState extends State<StepOne> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
@@ -514,7 +515,7 @@ class _StepOneState extends State<StepOne> {
         ),
         Container(
           alignment: Alignment.bottomLeft,
-          margin: const EdgeInsets.only(left: 40, bottom: 5),
+          margin: const EdgeInsets.only(left: 40, bottom: 10),
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.065,
             width: MediaQuery.of(context).size.width * 0.6,

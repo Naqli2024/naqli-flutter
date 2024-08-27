@@ -2,23 +2,23 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_naqli/Views/auth/login.dart';
-import 'package:flutter_naqli/Views/auth/role.dart';
+import 'package:flutter_naqli/Partner/Views/auth/login.dart';
+import 'package:flutter_naqli/Partner/Views/auth/role.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class HomePage extends StatefulWidget {
+class PartnerHomePage extends StatefulWidget {
   final String mobileNo;
   final String partnerName;
   final String password;
   final String partnerId;
   final String token;
-  const HomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId, required this.token});
+  const PartnerHomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId, required this.token});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<PartnerHomePage> createState() => _PartnerHomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _PartnerHomePageState extends State<PartnerHomePage> {
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;

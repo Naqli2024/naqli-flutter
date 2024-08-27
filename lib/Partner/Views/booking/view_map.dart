@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
@@ -46,6 +46,9 @@ class _ViewMapState extends State<ViewMap> {
   LatLng? pickupLatLng;
   LatLng? dropLatLng;
   late String remainingBalance;
+  final AuthService _authService = AuthService();
+  final CommonWidgets commonWidgets = CommonWidgets();
+
   @override
   void initState() {
     super.initState();
@@ -165,7 +168,7 @@ class _ViewMapState extends State<ViewMap> {
 
   Future<void> requestPayment() async {
     int additionalCharges = int.tryParse(chargesController.text) ?? 0;
-    String? updatedRemainingBalance = await AuthService().requestPayment(
+    String? updatedRemainingBalance = await _authService.requestPayment(
       context,
       additionalCharges: additionalCharges,
       reason: reasonController.text,
@@ -186,15 +189,15 @@ class _ViewMapState extends State<ViewMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
       ),
-      drawer: createDrawer(context),
+      drawer: commonWidgets.createDrawer(context),
       body: Stack(
         children: [
           Container(
-            height:340,
+            height: MediaQuery.sizeOf(context).height * 0.4,
             child: GoogleMap(
               onMapCreated: (GoogleMapController controller) {
                 mapController = controller;

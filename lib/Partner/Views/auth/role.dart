@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Views/auth/register.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 
 class Role extends StatefulWidget {
   const Role({Key? key}) : super(key: key);
@@ -11,7 +11,6 @@ class Role extends StatefulWidget {
 class _RoleState extends State<Role> {
   int _selectedValue = 1;
 
-  // Helper method to convert selected value to corresponding role string
   String _getRoleString(int value) {
     switch (value) {
       case 1:
@@ -81,7 +80,7 @@ class _RoleState extends State<Role> {
               child: RadioListTile(
                 title: const Text(
                   'Enterprise',
-                  style: TextStyle(fontSize: 23),
+                  style: TextStyle(fontSize: 20),
                 ),
                 value: 1,
                 groupValue: _selectedValue,
@@ -101,7 +100,7 @@ class _RoleState extends State<Role> {
               child: RadioListTile(
                 title: const Text(
                   'Multiple Units',
-                  style: TextStyle(fontSize: 23),
+                  style: TextStyle(fontSize: 20),
                 ),
                 value: 2,
                 groupValue: _selectedValue,
@@ -121,7 +120,7 @@ class _RoleState extends State<Role> {
               child: RadioListTile(
                 title: const Text(
                   'Single Unit + Operator',
-                  style: TextStyle(fontSize: 23),
+                  style: TextStyle(fontSize: 20),
                 ),
                 value: 3,
                 groupValue: _selectedValue,
@@ -141,7 +140,7 @@ class _RoleState extends State<Role> {
               child: RadioListTile(
                 title: const Text(
                   'Operator',
-                  style: TextStyle(fontSize: 23),
+                  style: TextStyle(fontSize: 20),
                 ),
                 value: 4,
                 groupValue: _selectedValue,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 
 class Register extends StatefulWidget {
   final String selectedRole;

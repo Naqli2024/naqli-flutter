@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Viewmodel/appbar.dart';
-import 'package:flutter_naqli/Viewmodel/services.dart';
-import 'package:flutter_naqli/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 
 class PaymentDetails extends StatefulWidget {
   final String partnerName;
@@ -19,6 +19,8 @@ class _PaymentDetailsState extends State<PaymentDetails> {
   Future<List<Map<String, dynamic>>>? _bookingDetailsFuture;
   String _currentFilter = 'All';
   bool isLoading = false;
+  final AuthService _authService = AuthService();
+  final CommonWidgets commonWidgets = CommonWidgets();
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
       print('Fetching booking details for partnerId: ${widget.partnerId}');
-      final bookingIds = await AuthService().getBookingData(widget.partnerId, widget.token);
+      final bookingIds = await _authService.getBookingData(widget.partnerId, widget.token);
       print('Booking IDs retrieved: $bookingIds');
 
       if (bookingIds.isEmpty) {
@@ -53,7 +55,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
 
         try {
           print('Fetching details for booking ID: $bookingId');
-          final details = await AuthService().getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
+          final details = await _authService.getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
           print('Details retrieved: $details');
           if (details.isNotEmpty) {
             bookingDetails.add(details);
@@ -244,56 +246,11 @@ class _PaymentDetailsState extends State<PaymentDetails> {
     );
   }
 
-/*  void showBookingDialog(BuildContext context, Map<String, dynamic> booking) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          contentPadding: const EdgeInsets.all(20),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRect(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  heightFactor: 0.10,
-                  child: Image.network(
-                    'https://via.placeholder.com/150',
-                    width: 150,
-                    height: 150,
-                  ),
-                ),
-              ),
-              Text('Booking ID: ${booking['_id']}'),
-              Text('Date: ${booking['date']}'),
-              Text('Time: ${booking['time']}'),
-              Text('Quote Price: ${booking['quotePrice']}'),
-              Text('Payment Status: ${booking['paymentStatus']}'),
-              Text('User ID: ${booking['userId']}'),
-              Text('Booking Status: ${booking['bookingStatus']}'),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }*/
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: commonAppBar(
+      appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
         bottom: PreferredSize(
@@ -372,7 +329,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           ),
         ),
       ),
-      drawer: createDrawer(context, onBookingPressed: () {
+      drawer: commonWidgets.createDrawer(context, onBookingPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -414,6 +371,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                   child: Card(
                     color: Colors.white,
                     shadowColor: Colors.black,
+                    elevation: 3.0,
                     child: ListTile(
                       title: Text('Booking Id: $id'),
                       subtitle: Row(
@@ -460,7 +418,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                               'View',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
+                                fontSize: 12,
                                 fontWeight: FontWeight.normal,
                               ),
                             ),
