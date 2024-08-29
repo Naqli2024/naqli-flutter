@@ -87,7 +87,6 @@ class _UserRegisterState extends State<UserRegister> {
               suffixIcon: IconButton(
                 icon: Icon(
                   isPasswordObscured ? Icons.visibility : Icons.visibility_off,
-                  color: Color(0xff6A66D1),
                 ),
                 onPressed: () {
                   setState(() {
@@ -102,7 +101,6 @@ class _UserRegisterState extends State<UserRegister> {
             suffixIcon: IconButton(
             icon: Icon(
               isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
-              color: Color(0xff6A66D1),
             ),
             onPressed: () {
               setState(() {
@@ -195,7 +193,7 @@ class _UserRegisterState extends State<UserRegister> {
                       style: const TextStyle(color: Colors.black),
                     ),
                     TextSpan(
-                      text: ' Sign up',
+                      text: ' Sign in',
                       style: const TextStyle(color: Color(0xff6A66D1)),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
@@ -225,7 +223,7 @@ class _UserRegisterState extends State<UserRegister> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.only(left: 10,bottom: 10),
             child: Text(
               'City',
               style: const TextStyle(
@@ -237,6 +235,7 @@ class _UserRegisterState extends State<UserRegister> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedCity,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(
@@ -270,7 +269,7 @@ class _UserRegisterState extends State<UserRegister> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.only(left: 10,bottom: 10),
             child: Text(
               'Account type',
               style: const TextStyle(
@@ -282,6 +281,7 @@ class _UserRegisterState extends State<UserRegister> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedAccount,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(
@@ -315,7 +315,7 @@ class _UserRegisterState extends State<UserRegister> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.only(left: 10,bottom: 10),
             child: Text(
               'Govt ID',
               style: const TextStyle(
@@ -327,6 +327,7 @@ class _UserRegisterState extends State<UserRegister> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedId,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(

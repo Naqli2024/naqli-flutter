@@ -47,7 +47,7 @@ dependencies:
   google_maps_flutter: ^2.1.1
   permission_handler: ^11.2.0
   flutter_polyline_points: ^2.1.0
-  material_dialogs: ^1.1.5
+  intl: ^0.18.1
 
 
 dev_dependencies:
@@ -73,6 +73,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/generated_logo.svg
     - assets/logo.png
     - assets/naqlee-logo.svg
     - assets/Earnings.jpg
@@ -92,7 +93,11 @@ flutter:
     - assets/equipment.png
     - assets/others.png
     - assets/otp_mobileno.png
-    - assets/otp_verified.png
+    - assets/otp_verified.svg
+    - assets/delivery-truck.png
+    - assets/moving_truck.png
+    - assets/confirm.svg
+    - assets/payment_success.svg
     - .env
   # To add assets to your application, add an assets section, like this:
   # assets:

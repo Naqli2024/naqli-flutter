@@ -216,7 +216,6 @@ class CommonWidgets{
         String? labelText,
         bool obscureText = false,
         Widget? suffixIcon,
-        bool readOnly = false,
       }) {
     return Column(
       children: [
@@ -234,12 +233,12 @@ class CommonWidgets{
         Padding(
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
           child: TextFormField(
-            readOnly: readOnly,
             controller: controller,
             obscureText: obscureText,
             decoration: InputDecoration(
               hintText: hintText ?? '',
               labelText: labelText ?? '',
+              labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
               hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
               border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -250,7 +249,7 @@ class CommonWidgets{
               if (value == null || value.isEmpty) {
                 return 'Please enter $label';
               }
-              if (label == 'Email id') {
+              if (label == 'Email id' || label == 'Email ID') {
                 if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                   return 'Please enter a valid email address';
                 }

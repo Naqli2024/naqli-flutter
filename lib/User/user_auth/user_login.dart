@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/User/user_auth/user_register.dart';
 import 'package:flutter_naqli/User/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/user_home_page.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserLogin extends StatefulWidget {
   const UserLogin({super.key});
@@ -13,10 +16,19 @@ class UserLogin extends StatefulWidget {
 
 class _UserLoginState extends State<UserLogin> {
   final _formKey = GlobalKey<FormState>();
+  final userOtpKey = GlobalKey<FormState>();
+  final userPasswordOtpKey = GlobalKey<FormState>();
+  final CommonWidgets commonWidgets = CommonWidgets();
   final AuthService _authService = AuthService();
   final TextEditingController emailOrMobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController forgotPasswordEmailController = TextEditingController();
+  final TextEditingController forgotPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isLoading = false;
+  bool isNewPasswordObscured = true;
+  bool isConfirmPasswordObscured = true;
 
   @override
   void dispose() {
@@ -124,7 +136,7 @@ class _UserLoginState extends State<UserLogin> {
                             alignment: Alignment.topLeft,
                             child: const Text(
                               'EMAIL ID',
-                              style: TextStyle(fontSize: 15,color: Color(0xffACACAD)),
+                              style: TextStyle(fontSize: 15,color: Color(0xff707070)),
                             ),
                           ),
                           Padding(
@@ -134,7 +146,7 @@ class _UserLoginState extends State<UserLogin> {
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderSide: const BorderSide(color: Color(0xffBCBCBC),width: 2),
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               validator: (value) {
@@ -150,7 +162,7 @@ class _UserLoginState extends State<UserLogin> {
                             alignment: Alignment.topLeft,
                             child: const Text(
                               'PASSWORD',
-                              style: TextStyle(fontSize: 15,color: Color(0xffACACAD)),
+                              style: TextStyle(fontSize: 15,color: Color(0xff707070)),
                             ),
                           ),
                           Padding(
@@ -161,7 +173,7 @@ class _UserLoginState extends State<UserLogin> {
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderSide: const BorderSide(color: Color(0xffBCBCBC),width: 2),
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               validator: (value) {
@@ -177,7 +189,7 @@ class _UserLoginState extends State<UserLogin> {
                     ),
                     GestureDetector(
                       onTap: (){
-
+                        showforgotPasswordBottomSheet(context);
                       },
                       child: const Padding(
                         padding: EdgeInsets.only(bottom: 10),
@@ -267,6 +279,268 @@ class _UserLoginState extends State<UserLogin> {
           ],
         ),
       ),
+    );
+  }
+
+  void showforgotPasswordBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.75,
+          minChildSize: 0,
+          maxChildSize: 0.75,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return  Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16.0),
+              width: MediaQuery.sizeOf(context).width,
+              child: SingleChildScrollView(
+                child:  Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Center(
+                          child: const Text(
+                            'Forgot password',
+                            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 30),
+                          child: Form(
+                            key: userOtpKey,
+                            child: Container(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  commonWidgets.buildTextField('Email ID', forgotPasswordEmailController),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.07,
+                                      width: MediaQuery.of(context).size.width * 0.5,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xff6A66D1),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          if (userOtpKey.currentState!.validate()) {
+                                            forgotPasswordResetBottomSheet(context);
+                                          }
+                                        },
+                                        child: const Text(
+                                          'Send',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.normal),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Positioned(
+                      top: -15,
+                      right: -10,
+                      child: IconButton(
+                          alignment: Alignment.topRight,
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(FontAwesomeIcons.multiply)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void forgotPasswordResetBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.75,
+          minChildSize: 0,
+          maxChildSize: 0.75,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return  StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState){
+                return Form(
+                  key: userPasswordOtpKey,
+                  child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(16.0),
+                    width: MediaQuery.sizeOf(context).width,
+                    child: SingleChildScrollView(
+                      child:  Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Center(
+                                child: const Text(
+                                  'Forgot password',
+                                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(top: 30),
+                                alignment: Alignment.center,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    'OTP',
+                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: List.generate(6, (index) {
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                spreadRadius: 2,
+                                                blurRadius: 5,
+                                                offset: const Offset(0, 3), // changes position of shadow
+                                              ),
+                                            ],
+                                          ),
+                                          child: SizedBox(
+                                            width: 40,
+                                            child: TextField(
+                                              controller: otpControllers[index],
+                                              maxLength: 1,
+                                              textAlign: TextAlign.center,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                              decoration: const InputDecoration(
+                                                counterText: '',
+                                              ),
+                                              onChanged: (value) {
+                                                if (value.length == 1 && index < 5) {
+                                                  FocusScope.of(context).nextFocus();
+                                                } else if (value.isEmpty && index > 0) {
+                                                  FocusScope.of(context).previousFocus();
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                                  commonWidgets.buildTextField(
+                                    'New Password',
+                                    forgotPasswordController,
+                                    obscureText: isNewPasswordObscured,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        isNewPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          isNewPasswordObscured = !isNewPasswordObscured;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  commonWidgets.buildTextField(
+                                    'Confirm New Password',
+                                    confirmPasswordController,
+                                    obscureText: isConfirmPasswordObscured,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          isConfirmPasswordObscured = !isConfirmPasswordObscured;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.07,
+                                      width: MediaQuery.of(context).size.width * 0.5,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xff6A66D1),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          userPasswordOtpKey.currentState!.validate();
+                                        },
+                                        child: const Text(
+                                          'Reset Password',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.normal),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            top: -15,
+                            right: -10,
+                            child: IconButton(
+                                alignment: Alignment.topRight,
+                                onPressed: (){
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => UserLogin()
+                                      )
+                                  );
+                                },
+                                icon: Icon(FontAwesomeIcons.multiply)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

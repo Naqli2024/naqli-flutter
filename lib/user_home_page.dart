@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/user_auth/user_register.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -40,9 +41,19 @@ class _UserHomePageState extends State<UserHomePage> {
         actions: [
           Row(
             children: [
-              const Text(
-                'Sign in',
-                style: TextStyle(fontWeight: FontWeight.w500),
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserLogin(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Sign in',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
               ),
               const Icon(Icons.chevron_right,
                 color: Color(0xff5D5151),
@@ -455,8 +466,8 @@ void _showModalBottomSheet(BuildContext context) {
     builder: (BuildContext context) {
       return DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.75, // 75% of screen height
-        minChildSize: 0, // Start with 75% height and remain there
+        initialChildSize: 0.75,
+        minChildSize: 0,
         maxChildSize: 0.75,
         builder: (BuildContext context, ScrollController scrollController) {
           return  Container(
@@ -505,8 +516,15 @@ Widget bottomCard(String imagePath, String title) {
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Card(
-      elevation: 10,
+      elevation: 5,
       color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0), // Rounded corners
+        side: const BorderSide(
+          color: Color(0xffE0E0E0), // Border color
+          width: 1, // Border width
+        ),
+      ),
       child: Row(
         children: [
           Padding(

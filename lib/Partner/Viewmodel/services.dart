@@ -141,6 +141,123 @@ class AuthService {
     }
   }
 
+  Future<void> forgotPassword(
+      BuildContext context,
+      WidgetBuilder builder, {
+        required String email,
+      }) async {
+    final url = Uri.parse('${baseUrl}forgot-password');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      print('Success');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: builder,
+        ),
+      );
+    } else {
+      final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to send OTP: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> forgotPasswordReset(
+      BuildContext context, {
+        required String otp,
+        required String newPassword,
+        required String confirmNewPassword,
+      }) async {
+    final url = Uri.parse('${baseUrl}verify-otp-update-password');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'otp': otp,
+        'newPassword': newPassword,
+        'confirmNewPassword': confirmNewPassword,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      print('Success');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context)=> LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: ''),
+        ),
+      );
+    } else {
+      final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to Reset Pwd: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> forgotPasswordResendOTP(context,{
+    required String email,
+  }) async {
+    final url = Uri.parse('${baseUrl}resend-otp');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+      }),
+    );
+    final responseBody = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      print('Success');
+      Fluttertoast.showToast(
+        msg: 'OTP Send Successfully',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //       builder: (context) => StepOne(partnerName: partnerName, name: '', unitType: '', partnerId: partnerId, token: '', bookingId: '')
+      //   ),
+      // );
+    } else {
+      final message = responseBody['message'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to register user: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
   Future<void> loginUser(
       BuildContext context, {
         required String emailOrMobile,

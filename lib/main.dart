@@ -4,6 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
+import 'package:flutter_naqli/User/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/user_auth/user_otp.dart';
+import 'package:flutter_naqli/User/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/User/user_createBooking/user_vendor.dart';
 import 'package:flutter_naqli/user_home_page.dart';
 
 void main() async {
@@ -51,14 +55,14 @@ class MyApp extends StatelessWidget {
               }
             }
           }
-          return UserHomePage();
-          // PartnerHomePage(
-          //   partnerName: '',
-          //   password: '',
-          //   mobileNo: '',
-          //   partnerId: '',
-          //   token: '',
-          // );
+          return
+          PartnerHomePage(
+            partnerName: '',
+            password: '',
+            mobileNo: '',
+            partnerId: '',
+            token: '',
+          );
         },
       ),
     );

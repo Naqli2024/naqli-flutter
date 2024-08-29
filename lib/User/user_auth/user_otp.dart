@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/User/user_auth/user_otp_verified.dart';
+import 'package:flutter_naqli/User/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/user_auth/user_success.dart';
 
 class UserOTP extends StatefulWidget {
   const UserOTP({super.key});
@@ -62,10 +63,18 @@ class _UserOTPState extends State<UserOTP> {
     //     partnerName: widget.partnerName,
     //     partnerId: widget.partnerId
     // );
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => OTPVerified()
+            builder: (context) => const UserLogin()
+        ),
+      );
+    });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const SuccessScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
         ),
       );
   }
