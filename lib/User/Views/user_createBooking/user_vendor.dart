@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/User/user_createBooking/user_booking.dart';
-import 'package:flutter_naqli/User/user_createBooking/user_pendingPayment.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -45,7 +45,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               backgroundColor: Colors.white,
                             child: IconButton(
                                 onPressed: (){},
-                                icon: Icon(Icons.more_vert_outlined)),
+                                icon: const Icon(Icons.more_vert_outlined)),
                           ),
                           Card(
                             shape: RoundedRectangleBorder(
@@ -65,7 +65,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                       alignment: Alignment.center,
                                         height: 50,
                                         width: MediaQuery.sizeOf(context).width * 0.55,
-                                        child: Text('Booking Id #343577585868')
+                                        child: const Text('Booking Id #343577585868')
                                     ),
                                   ],
                                 ),
@@ -104,7 +104,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => const CreateBooking()
+                                                    builder: (context) => const CreateBooking(firstName: '',lastName: '',)
                                                 ),
                                               );
                                             },
@@ -120,7 +120,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                     },
                                   );
                                 },
-                                icon: Icon(FontAwesomeIcons.multiply)),
+                                icon: const Icon(FontAwesomeIcons.multiply)),
                           ),
                         ],
                       ),
@@ -155,7 +155,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                         const Expanded(flex:4,child: Text(
                                           'Unit',
                                           style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)),
-                                        Expanded(flex:4,child: Text(
+                                        const Expanded(flex:4,child: Text(
                                           'Diana',
                                           style: TextStyle(fontSize: 14),
                                         )),
@@ -170,7 +170,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                             'Load',
                                           style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
                                         )),
-                                        Expanded(flex:4,child: Text(
+                                        const Expanded(flex:4,child: Text(
                                           'Wood',
                                           style: TextStyle(fontSize: 14),)),
                                       ],
@@ -183,7 +183,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                           'Unit type',
                                         style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
                                       )),
-                                      Expanded(flex:4,child: Text(
+                                      const Expanded(flex:4,child: Text(
                                         'Truck',
                                         style: TextStyle(fontSize: 14),)),
                                       Container(
@@ -197,7 +197,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                           'Size',
                                         style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),
                                       )),
-                                      Expanded(flex:4,child: Text(
+                                      const Expanded(flex:4,child: Text(
                                         '1 to 1.5',
                                         style: TextStyle(fontSize: 14),)),
                                     ],
@@ -317,7 +317,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                       fit: BoxFit.contain,
                                       width: MediaQuery.of(context).size.width * 0.7,
                                     ),
-                                    Positioned.fill(
+                                    const Positioned.fill(
                                       child: Center(
                                         child: Text('Thank you!',
                                           style: TextStyle(fontSize: 30),
@@ -326,14 +326,14 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                     ),
                                   ]
                                 ),
-                                Padding(
+                                const Padding(
                                   padding: EdgeInsets.only(bottom: 10,),
                                   child: Text(
                                     'Your booking is confirmed',
                                     style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                                Padding(
+                                const Padding(
                                   padding: EdgeInsets.only(bottom: 10,),
                                   child: Text(
                                     'with advance payment of SAR xxxx ',

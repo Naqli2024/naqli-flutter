@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/User/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_svg/svg.dart';
 
 class SuccessScreen extends StatefulWidget {

@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 class AuthService {
   static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
   String globalPartnerId = '';
+
   Future<void> registerUser(context,{
     required String partnerName,
     required String mobileNo,
@@ -236,18 +237,12 @@ class AuthService {
       Fluttertoast.showToast(
         msg: 'OTP Send Successfully',
         toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.CENTER,
+        gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 1,
         backgroundColor: Colors.black,
         textColor: Colors.white,
         fontSize: 16.0,
       );
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (context) => StepOne(partnerName: partnerName, name: '', unitType: '', partnerId: partnerId, token: '', bookingId: '')
-      //   ),
-      // );
     } else {
       final message = responseBody['message'];
       ScaffoldMessenger.of(context).showSnackBar(
@@ -300,7 +295,7 @@ class AuthService {
           builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
         ),
       );
-      await saveUserData(partnerId, token, partnerName);
+      await savePartnerData(partnerId, token, partnerName);
       print('ID$partnerId');
       print('NAME$partnerName');
       print('TOKEN$token');

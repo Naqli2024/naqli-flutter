@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/User/user_auth/user_success.dart';
-import 'package:flutter_naqli/User/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 

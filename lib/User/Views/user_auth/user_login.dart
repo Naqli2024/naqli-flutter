@@ -1,36 +1,28 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
-
-import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/Partner/Views/auth/forgotPassword.dart';
-import 'package:flutter_naqli/Partner/Views/auth/role.dart';
-import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
+import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/user_home_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class LoginPage extends StatefulWidget {
-final String partnerName;
-final String mobileNo;
-final String password;
-final String token;
-final String partnerId;
-  const LoginPage({super.key, required this.partnerName, required this.mobileNo, required this.password, required this.token, required this.partnerId});
+class UserLogin extends StatefulWidget {
+  const UserLogin({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<UserLogin> createState() => _UserLoginState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _UserLoginState extends State<UserLogin> {
   final _formKey = GlobalKey<FormState>();
-  final otpKey = GlobalKey<FormState>();
-  final passwordKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  final userOtpKey = GlobalKey<FormState>();
+  final userPasswordOtpKey = GlobalKey<FormState>();
   final CommonWidgets commonWidgets = CommonWidgets();
-  final TextEditingController emailOrMobileController = TextEditingController();
+  final UserService userService = UserService();
+  final TextEditingController emailAddressController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController forgotPasswordEmailController = TextEditingController();
   final TextEditingController forgotPasswordController = TextEditingController();
@@ -42,44 +34,29 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    emailOrMobileController.dispose();
+    emailAddressController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void login() async{
+  void userLogin() async{
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
       });
-      _authService.loginUser(
+      userService.userLogin(
         context,
-        emailOrMobile: emailOrMobileController.text,
+        emailAddress: emailAddressController.text,
         password: passwordController.text,
-        partnerName: widget.partnerName,
-        mobileNo: emailOrMobileController.text,
-        token: widget.token,
       );
-
       setState(() {
         isLoading = false;
       });
     }
   }
-
-
   @override
   Widget build(BuildContext context) {
-    return isLoading
-        ? Container(color: Colors.white,
-          child: const Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-            ],
-          ),
-        )
-        : Scaffold(
+    return Scaffold(
       appBar: AppBar(
         toolbarHeight: 250.0,
         backgroundColor: const Color(0xff6A66D1),
@@ -97,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const PartnerHomePage(mobileNo: '', partnerName: '', password: '',partnerId: '', token: '',),
+                  builder: (context) => const UserHomePage()
                 ),
               );
             },
@@ -117,7 +94,9 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-      body: Container(
+      body: isLoading
+        ?const Center(child: CircularProgressIndicator(),)
+        : Container(
         color: const Color(0xff6A66D1),
         child: Stack(
           children: [
@@ -136,12 +115,12 @@ class _LoginPageState extends State<LoginPage> {
                       margin: const EdgeInsets.only(top: 25, bottom: 7),
                       child: const Text(
                         'Login',
-                        style: TextStyle(fontSize: 30),
+                        style: TextStyle(fontSize: 28,fontWeight: FontWeight.bold),
                       ),
                     ),
                     const Text(
                       'Sign in to Continue',
-                      style: TextStyle(fontSize: 20),
+                      style: TextStyle(fontSize: 16),
                     ),
                     Form(
                       key: _formKey,
@@ -151,22 +130,23 @@ class _LoginPageState extends State<LoginPage> {
                             margin: const EdgeInsets.fromLTRB(30, 30, 30, 10),
                             alignment: Alignment.topLeft,
                             child: const Text(
-                              'Mobile No/Email ID',
-                              style: TextStyle(fontSize: 20),
+                              'EMAIL ID',
+                              style: TextStyle(fontSize: 15,color: Color(0xff707070)),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                             child: TextFormField(
-                              controller: emailOrMobileController,
+                              controller: emailAddressController,
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: const BorderSide(color: Color(0xffBCBCBC),width: 2),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter your ID, Mobile No, or Email';
+                                  return 'Please enter your Email ID';
                                 }
                                 return null;
                               },
@@ -176,8 +156,8 @@ class _LoginPageState extends State<LoginPage> {
                             margin: const EdgeInsets.fromLTRB(30, 15, 30, 10),
                             alignment: Alignment.topLeft,
                             child: const Text(
-                              'Password',
-                              style: TextStyle(fontSize: 20),
+                              'PASSWORD',
+                              style: TextStyle(fontSize: 15,color: Color(0xff707070)),
                             ),
                           ),
                           Padding(
@@ -187,7 +167,8 @@ class _LoginPageState extends State<LoginPage> {
                               obscureText: true,
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderSide: const BorderSide(color: Color(0xffBCBCBC),width: 2),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               validator: (value) {
@@ -206,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ForgotPassword(),
+                              builder: (context) => const UserForgotPassword()
                           ),
                         );
                       },
@@ -232,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           onPressed: () {
-                            login();
+                            userLogin();
                           },
                           child: const Text(
                             'Log in',
@@ -249,7 +230,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const Role(),
+                            builder: (context) => const UserRegister(),
                           ),
                         );
                       },
@@ -267,6 +248,26 @@ class _LoginPageState extends State<LoginPage> {
                           'Create Account',
                           style: TextStyle(
                             color: Color(0xff6A66D1),
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => const Role(),
+                        //   ),
+                        // );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.only(top: 7),
+                        child: const Text(
+                          'Use without Login',
+                          style: TextStyle(
+                            color: Color(0xff6A66D1),
+                            fontSize: 12
                           ),
                         ),
                       ),

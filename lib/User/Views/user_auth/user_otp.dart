@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/User/user_auth/user_login.dart';
-import 'package:flutter_naqli/User/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 
 class UserOTP extends StatefulWidget {
-  const UserOTP({super.key});
+  final String emailAddress;
+  final String contactNumber;
+  const UserOTP({super.key, required this.emailAddress, required this.contactNumber});
 
   @override
   State<UserOTP> createState() => _UserOTPState();
@@ -17,7 +20,7 @@ class _UserOTPState extends State<UserOTP> {
   final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
   int _seconds = 120; // Timer duration in seconds (e.g., 1 minute 30 seconds)
   Timer? _timer;
-  final AuthService _authService = AuthService();
+  final UserService userService = UserService();
 
   @override
   void initState() {
@@ -33,7 +36,7 @@ class _UserOTPState extends State<UserOTP> {
 
   void _startTimer() {
     _seconds = 120; // Reset the timer to the initial duration
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_seconds > 0) {
           _seconds--;
@@ -54,29 +57,10 @@ class _UserOTPState extends State<UserOTP> {
 
   void validateOtp() async {
     String otp = _otpControllers.map((controller) => controller.text).join();
-    // _authService.validateOTP(
-    //     context,
-    //     email: widget.email,
-    //     password: widget.password,
-    //     mobileNo: widget.mobileNo,
-    //     otp:otp,
-    //     partnerName: widget.partnerName,
-    //     partnerId: widget.partnerId
-    // );
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.push(
+    userService.verifyUserOTP(
         context,
-        MaterialPageRoute(
-            builder: (context) => const UserLogin()
-        ),
-      );
-    });
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => const SuccessScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
-        ),
-      );
+        otp:otp,
+    );
   }
 
   void resendOtp() async {
@@ -84,17 +68,9 @@ class _UserOTPState extends State<UserOTP> {
     for (var controller in _otpControllers) {
       controller.clear();
     }
-    String otp = _otpControllers.map((controller) => controller.text).join();
-    // _authService.resendOTP(
-    //     context,
-    //     email: widget.email,
-    //     password: widget.password,
-    //     mobileNo: widget.mobileNo,
-    //     partnerName: widget.partnerName,
-    //     partnerId: widget.partnerId
-    // );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP Sent')),
+    userService.resendUserOTP(
+      context,
+      emailAddress:widget.emailAddress,
     );
   }
 
@@ -148,13 +124,13 @@ class _UserOTPState extends State<UserOTP> {
                       fontSize: 20,
                       color: Colors.black,
                       fontWeight: FontWeight.w500)),
-              const Padding(
-                padding: EdgeInsets.all(15),
-                child: Text('Enter the OTP sent to xxxxxxxxx'),
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: Text('Enter the OTP sent to ${widget.contactNumber}'),
               ),
               Text(
                 "$_formattedTime",
-                style: TextStyle(fontSize: 16,color: Colors.blue),
+                style: const TextStyle(fontSize: 16,color: Colors.blue),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),

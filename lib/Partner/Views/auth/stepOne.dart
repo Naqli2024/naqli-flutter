@@ -70,7 +70,6 @@ class _StepOneState extends State<StepOne> {
 
   Future<void> fetchUnitData() async {
     try {
-      // final selectedUnitString = unitMap[selectedUnit] ?? '';
       String selectedUnitString = unitMap(selectedUnit);
       List<Map<String, dynamic>> data;
 
@@ -83,7 +82,7 @@ class _StepOneState extends State<StepOne> {
       } else if (selectedUnitString == 'special') {
         data = await authService.fetchSpecialData();
       } else if (selectedUnitString == 'others') {
-        data = await authService.fetchEquipmentData(); // Fetch Loaders data
+        data = await authService.fetchEquipmentData();
       } else {
         data = [];
       }

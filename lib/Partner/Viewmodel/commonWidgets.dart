@@ -190,7 +190,7 @@ class CommonWidgets{
             TextButton(
               child: const Text('Yes'),
               onPressed: () async {
-                await clearUserData();
+                await clearPartnerData();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginPage(partnerName: '',mobileNo: '',password: '',token: '',partnerId: '',)),
@@ -252,6 +252,16 @@ class CommonWidgets{
               if (label == 'Email id' || label == 'Email ID') {
                 if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                   return 'Please enter a valid email address';
+                }
+              }
+              if (label == 'Password' || label == 'Confirm Password') {
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters long';
+                }
+              }
+              if (label == 'Id Number') {
+                if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                  return 'ID number must be exactly 10 digits long';
                 }
               }
               return null;

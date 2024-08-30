@@ -1,107 +1,33 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class UserHomePage extends StatefulWidget {
-  const UserHomePage({super.key});
+class UserType extends StatefulWidget {
+  final String firstName;
+  final String lastName;
+  const UserType({super.key, required this.firstName, required this.lastName});
 
   @override
-  State<UserHomePage> createState() => _UserHomePageState();
+  State<UserType> createState() => _UserTypeState();
 }
 
-class _UserHomePageState extends State<UserHomePage> {
+class _UserTypeState extends State<UserType> {
   final CommonWidgets commonWidgets = CommonWidgets();
+  final UserService userService = UserService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (BuildContext context) => IconButton(
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-            icon: const Icon(
-              Icons.menu,
-              color: Color(0xff5D5151),
-              size: 45,
-            ),
-          ),
-        ),
-        title: SvgPicture.asset(
-          'assets/naqlee-logo.svg',
-          fit: BoxFit.fitWidth,
-          height: 40,
-        ),
-        actions: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: (){
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UserLogin(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Sign in',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-              const Icon(Icons.chevron_right,
-                color: Color(0xff5D5151),
-                size: 15,
-              ),
-              IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.person,
-                    color: Color(0xff5D5151),
-                    size: 30,
-                  )),
-              Stack(
-                children: [
-                  IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.notifications,
-                        color: Color(0xff6A66D1),
-                        size: 30,
-                      )),
-                  Positioned(
-                    right: 10,
-                    top: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: const Text(
-                        '1',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+      backgroundColor: Colors.white,
+      appBar: commonWidgets.commonAppBar(
+        context,
+        User: widget.firstName+widget.lastName,
       ),
       drawer: Drawer(
         backgroundColor: Colors.white,
@@ -123,43 +49,106 @@ class _UserHomePageState extends State<UserHomePage> {
             ),
             const Divider(),
             ListTile(
-              leading: Icon(FontAwesomeIcons.userGroup),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text('Partner',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
-              ),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> PartnerHomePage(mobileNo: '', partnerName: '', password: '', partnerId: '', token: '')));
-              },
+                leading: Image.asset('assets/booking_logo.png',
+                    height: MediaQuery.of(context).size.height * 0.05),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('Booking',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                ),
+                onTap: (){}
             ),
             ListTile(
-              leading: Icon(FontAwesomeIcons.car),
+                leading: Image.asset('assets/booking_logo.png',
+                    height: MediaQuery.of(context).size.height * 0.05),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('Booking History',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                ),
+                onTap: (){}
+            ),
+            ListTile(
+                leading: Image.asset('assets/payment_logo.png',
+                    height: MediaQuery.of(context).size.height * 0.05),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: Text('Payment',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                ),
+                onTap: (){}
+            ),
+            ListTile(
+              leading: Image.asset('assets/report_logo.png',
+                  height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Driver',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                child: Text('Report',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
 
               },
             ),
             ListTile(
-              leading: Icon(FontAwesomeIcons.phone),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text('Contact us',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
-              ),
-              onTap: () {
-
-              },
-            ),
-            ListTile(
-              leading: Icon(FontAwesomeIcons.handsHelping),
+              leading: Image.asset('assets/help_logo.png',
+                  height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
                 child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
 
+              },
+            ),
+            ListTile(
+              leading: const Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: Icon(Icons.logout,color: Color(0xff707070),size: 30,),
+              ),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 15),
+                child: Text('Logout',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(20),
+                      content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 30,bottom: 10),
+                            child: Text(
+                              'Are you sure you want to logout?',
+                              style: TextStyle(fontSize: 19),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Yes'),
+                          onPressed: () async {
+                            await clearUserData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName)),
+                            );
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('No'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
             ),
           ],
@@ -229,7 +218,7 @@ class _UserHomePageState extends State<UserHomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => UserLogin(),
+                            builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName), // Navigate to UserStepOne
                           ),
                         );
                       },
@@ -266,7 +255,7 @@ class _UserHomePageState extends State<UserHomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => UserLogin(),
+                            builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
                           ),
                         );
                       },
@@ -309,7 +298,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => UserLogin(),
+                    builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
                   ),
                 );
               },
@@ -353,7 +342,7 @@ class _UserHomePageState extends State<UserHomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => UserLogin(),
+                              builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
                             ),
                           );
                         },
@@ -397,7 +386,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => UserLogin(),
+                        builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
                       ),
                     );
                   },
@@ -458,6 +447,7 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 }
+
 void _showModalBottomSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,

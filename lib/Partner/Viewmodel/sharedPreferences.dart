@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-Future<void> saveUserData(String partnerId, String token, String partnerName) async {
+Future<void> savePartnerData(String partnerId, String token, String partnerName) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('partnerId', partnerId);
   await prefs.setString('token', token);
   await prefs.setString('partnerName', partnerName);
 }
 
-Future<Map<String, String?>> getSavedUserData() async {
+Future<Map<String, String?>> getSavedPartnerData() async {
   final prefs = await SharedPreferences.getInstance();
   return {
     'partnerId': prefs.getString('partnerId'),
@@ -19,25 +19,49 @@ Future<Map<String, String?>> getSavedUserData() async {
   };
 }
 
-
-// Retrieve and use token and user data on app startup
-Future<void> loadUserData() async {
+Future<void> clearPartnerData() async {
   final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-  final userDataString = prefs.getString('user_data');
+  await prefs.clear();
+}
 
-  if (token != null && userDataString != null) {
-    final userData = jsonDecode(userDataString);
-    // Use the token and userData as needed
-    print('Token: $token');
-    print('User Data: $userData');
-  } else {
-    // Handle missing data (e.g., navigate to login)
-    print('No token or user data found');
+Future<void> saveUserData(String firstName, String lastName, String token, String id) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('firstName', firstName);
+    await prefs.setString('lastName', lastName);
+    await prefs.setString('token', token);
+    await prefs.setString('id', id);
+    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+  } catch (e) {
+    print('Error saving data: $e');
+  }
+}
+
+Future<Map<String, String?>> getSavedUserData() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final firstName = prefs.getString('firstName');
+    final lastName = prefs.getString('lastName');
+    final token = prefs.getString('token');
+    final id = prefs.getString('id');
+
+    // Debugging
+    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'token': token,
+      'id': id,
+    };
+  } catch (e) {
+    print('Error retrieving data: $e');
+    return {};
   }
 }
 
 Future<void> clearUserData() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
+  print('SharedPreferences cleared.');
 }

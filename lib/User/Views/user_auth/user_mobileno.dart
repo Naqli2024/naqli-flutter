@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/User/user_auth/user_otp.dart';
-import 'package:flutter_naqli/User/user_auth/user_register.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
 
 class OTPMobileNo extends StatefulWidget {
   const OTPMobileNo({super.key});
@@ -116,7 +116,7 @@ class _OTPMobileNoState extends State<OTPMobileNo> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const UserOTP(),
+                            builder: (context) => const UserOTP(emailAddress: '',contactNumber: '',),
                           ),
                         );
                       },

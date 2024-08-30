@@ -29,86 +29,86 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-        Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16.0),
-        width: MediaQuery.sizeOf(context).width,
-        child: SingleChildScrollView(
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Center(
-                    child: const Text(
-                      'Forgot password',
-                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 30),
-                    child: Form(
-                      key: otpKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          commonWidgets.buildTextField('Email ID', forgotPasswordEmailController),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.07,
-                              width: MediaQuery.of(context).size.width * 0.5,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6A66D1),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  if (otpKey.currentState!.validate()) {
-                                    _authService.forgotPassword(
-                                      context,
-                                          (context) => ResetPassword(),
-                                      email: forgotPasswordEmailController.text,
-                                    );
-                                  }
-                                },
-                                child: const Text(
-                                  'Send',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+      appBar: commonWidgets.commonAppBar(
+        context,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(90.0),
+          child: AppBar(
+            toolbarHeight: 80,
+            backgroundColor: const Color(0xff6A66D1),
+            title: const Center(
+              child: Text(
+                'Forgot Password',
+                style: TextStyle(color: Colors.white),
               ),
-              Positioned(
-                top: -15,
-                right: -10,
-                child: IconButton(
-                  alignment: Alignment.topRight,
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(FontAwesomeIcons.multiply),
-                ),
+            ),
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(
+                Icons.arrow_back_sharp,
+                color: Colors.white,
               ),
-            ],
+            ),
           ),
         ),
-      )
-        ],
       ),
+      body: Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16.0),
+      width: MediaQuery.sizeOf(context).width,
+      child: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 30),
+              child: Form(
+                key: otpKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    commonWidgets.buildTextField('Email ID', forgotPasswordEmailController),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.07,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6A66D1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (otpKey.currentState!.validate()) {
+                              _authService.forgotPassword(
+                                context,
+                                    (context) => ResetPassword(),
+                                email: forgotPasswordEmailController.text,
+                              );
+                            }
+                          },
+                          child: const Text(
+                            'Send',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+            ),
     );
   }
 }
@@ -135,6 +135,32 @@ class _ResetPasswordState extends State<ResetPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              toolbarHeight: 80,
+              backgroundColor: const Color(0xff6A66D1),
+              title: const Center(
+                child: Text(
+                  'Forgot Password',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back_sharp,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
       body: Form(
         key: passwordKey,
         child: Container(
@@ -147,12 +173,6 @@ class _ResetPasswordState extends State<ResetPassword> {
                 Column(
                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Center(
-                      child: const Text(
-                        'Forgot password',
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                      ),
-                    ),
                     Container(
                       margin: const EdgeInsets.only(top: 30),
                       alignment: Alignment.center,
@@ -298,26 +318,6 @@ class _ResetPasswordState extends State<ResetPassword> {
                       ],
                     ),
                   ],
-                ),
-                Positioned(
-                  top: -15,
-                  right: -10,
-                  child: IconButton(
-                    alignment: Alignment.topRight,
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginPage(
-                          partnerName: '',
-                          mobileNo: '',
-                          password: '',
-                          token: '',
-                          partnerId: '',
-                        ),
-                      ),
-                    ),
-                    icon: Icon(FontAwesomeIcons.multiply),
-                  ),
                 ),
               ],
             ),
