@@ -48,6 +48,10 @@ dependencies:
   permission_handler: ^11.2.0
   flutter_polyline_points: ^2.1.0
   intl: ^0.18.1
+  path_provider: ^2.0.0
+  cached_network_image: ^3.2.0
+  flutter_cache_manager: ^3.0.0
+  dropdown_search: ^5.0.6
 
 
 dev_dependencies:
@@ -98,6 +102,50 @@ flutter:
     - assets/moving_truck.png
     - assets/confirm.svg
     - assets/payment_success.svg
+    - assets/images/short-sides.svg
+    - assets/images/curtain.svg
+    - assets/images/refrigerator.svg
+    - assets/images/flatbed.svg
+    - assets/images/high-sides.svg
+    - assets/images/freezer.svg
+    - assets/images/Six-Sides.svg
+    - assets/images/six-refrigerator.svg
+    - assets/images/lorry 7 meters-sides.svg
+    - assets/images/lorry-sides.svg
+    - assets/images/lorry-closed.svg
+    - assets/images/lorry-Refrigerator.svg
+    - assets/images/lorry-Crane 5 ton.svg
+    - assets/images/lorry-Crane 7 ton.svg
+    - assets/images/lorry-freezer.svg
+    - assets/images/lorry-Crane 7 ton.svg
+    - assets/images/Closed.svg
+    - assets/images/Crane.svg
+    - assets/images/Diana-Refrigerator.svg
+    - assets/images/Diana-Sides.svg
+    - assets/images/Diana-Freezer.svg
+    - assets/images/pick up.svg
+    - assets/images/regular.svg
+    - assets/images/hydraulic.svg
+    - assets/images/bus 15 pax.svg
+    - assets/images/bus +30 pax.svg
+    - assets/images/bus 15 - 30 pax.svg
+    - assets/images/concrete pump truck.svg
+    - assets/images/concrete mixer.svg
+    - assets/images/lorry crane.svg
+    - assets/images/power generators.svg
+    - assets/images/fuel truck.svg
+    - assets/images/crawler crane.svg
+    - assets/images/mobile crane.svg
+    - assets/images/excavator.svg
+    - assets/images/compactors.svg
+    - assets/images/bull dozers.svg
+    - assets/images/graders.svg
+    - assets/images/dump truck.svg
+    - assets/images/fork lift.svg
+    - assets/images/scissor lift.svg
+    - assets/images/backhoe.svg
+    - assets/images/front hoe.svg
+    - assets/images/skid steer.svg
     - .env
   # To add assets to your application, add an assets section, like this:
   # assets:

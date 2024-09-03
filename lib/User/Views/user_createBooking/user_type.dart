@@ -20,6 +20,7 @@ class UserType extends StatefulWidget {
 class _UserTypeState extends State<UserType> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
+  String _selectedType = '';
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +136,7 @@ class _UserTypeState extends State<UserType> {
                             await clearUserData();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName)),
+                              MaterialPageRoute(builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName,selectedType: '',)),
                             );
                           },
                         ),
@@ -212,13 +213,21 @@ class _UserTypeState extends State<UserType> {
                 children: [
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.18,
+                    height: MediaQuery.sizeOf(context).height * 0.20,
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
+                        setState(() {
+                          _selectedType = 'Vehicle';
+                        });
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName), // Navigate to UserStepOne
+                            builder: (context) => CreateBooking(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              selectedType: _selectedType, // Pass the selected type here
+                            ),
                           ),
                         );
                       },
@@ -249,13 +258,20 @@ class _UserTypeState extends State<UserType> {
                   ),
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.18,
+                    height: MediaQuery.sizeOf(context).height * 0.20,
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
+                        setState(() {
+                          _selectedType = 'Bus';
+                        });
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
+                            builder: (context) => CreateBooking(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              selectedType: _selectedType,
+                            ),
                           ),
                         );
                       },
@@ -294,11 +310,18 @@ class _UserTypeState extends State<UserType> {
               ),
             ),
             GestureDetector(
-              onTap: (){
+              onTap: () {
+                setState(() {
+                  _selectedType = 'Equipment';
+                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
+                    builder: (context) => CreateBooking(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      selectedType: _selectedType,
+                    ),
                   ),
                 );
               },
@@ -309,7 +332,7 @@ class _UserTypeState extends State<UserType> {
                   children: [
                     SizedBox(
                       width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.18,
+                      height: MediaQuery.sizeOf(context).height * 0.20,
                       child: Card(
                         shape: RoundedRectangleBorder(
                           side: const BorderSide(color: Color(0xffACACAD), width: 1),
@@ -336,13 +359,20 @@ class _UserTypeState extends State<UserType> {
                     ),
                     SizedBox(
                       width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.18,
+                      height: MediaQuery.sizeOf(context).height * 0.20,
                       child: GestureDetector(
-                        onTap: (){
+                        onTap: () {
+                          setState(() {
+                            _selectedType = 'Special';
+                          });
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
+                              builder: (context) => CreateBooking(
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                selectedType: _selectedType,
+                              ),
                             ),
                           );
                         },
@@ -380,13 +410,20 @@ class _UserTypeState extends State<UserType> {
               alignment: Alignment.bottomLeft,
               child: SizedBox(
                 width: MediaQuery.sizeOf(context).width * 0.35,
-                height: MediaQuery.sizeOf(context).height * 0.18,
+                height: MediaQuery.sizeOf(context).height * 0.20,
                 child: GestureDetector(
-                  onTap: (){
+                  onTap: () {
+                    setState(() {
+                      _selectedType = 'Others';
+                    });
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName),
+                        builder: (context) => CreateBooking(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          selectedType: _selectedType,
+                        ),
                       ),
                     );
                   },

@@ -223,7 +223,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 children: [
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.18,
+                    height: MediaQuery.sizeOf(context).height * 0.20,
                     child: GestureDetector(
                       onTap: (){
                         Navigator.push(
@@ -260,7 +260,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   ),
                   SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.18,
+                    height: MediaQuery.sizeOf(context).height * 0.20,
                     child: GestureDetector(
                       onTap: (){
                         Navigator.push(
@@ -320,7 +320,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   children: [
                     SizedBox(
                       width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.18,
+                      height: MediaQuery.sizeOf(context).height * 0.20,
                       child: Card(
                         shape: RoundedRectangleBorder(
                           side: const BorderSide(color: Color(0xffACACAD), width: 1),
@@ -347,7 +347,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     ),
                     SizedBox(
                       width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.18,
+                      height: MediaQuery.sizeOf(context).height * 0.20,
                       child: GestureDetector(
                         onTap: (){
                           Navigator.push(
@@ -391,7 +391,7 @@ class _UserHomePageState extends State<UserHomePage> {
               alignment: Alignment.bottomLeft,
               child: SizedBox(
                 width: MediaQuery.sizeOf(context).width * 0.35,
-                height: MediaQuery.sizeOf(context).height * 0.18,
+                height: MediaQuery.sizeOf(context).height * 0.20,
                 child: GestureDetector(
                   onTap: (){
                     Navigator.push(

@@ -321,16 +321,80 @@ class UserService{
     }
   }
 
+  // Future<List<Vehicle>> fetchUserVehicle() async {
+  //   final response = await http.get(Uri.parse('${baseUrl}vehicles'));
+  //
+  //   if (response.statusCode == 200) {
+  //     final List<dynamic> responseBody = jsonDecode(response.body);
+  //     print('Fetched vehicles: $responseBody'); // Debug statement
+  //     // Convert List<dynamic> to List<Vehicle>
+  //     return responseBody.map((data) => Vehicle.fromJson(data)).toList();
+  //   } else {
+  //     throw Exception('Failed to load vehicles');
+  //   }
+  // }
+
   Future<List<Vehicle>> fetchUserVehicle() async {
     final response = await http.get(Uri.parse('${baseUrl}vehicles'));
 
     if (response.statusCode == 200) {
       final List<dynamic> responseBody = jsonDecode(response.body);
       print('Fetched vehicles: $responseBody'); // Debug statement
-      // Convert List<dynamic> to List<Vehicle>
       return responseBody.map((data) => Vehicle.fromJson(data)).toList();
     } else {
       throw Exception('Failed to load vehicles');
+    }
+  }
+
+
+  Future<List<Vehicle>> fetchUserVehicleLoad(String typeName) async {
+    final response = await http.get(Uri.parse('${baseUrl}loads?typeName=$typeName'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> responseBody = jsonDecode(response.body);
+      print('Fetched load parameters: $responseBody'); // Debug statement
+      return responseBody.map((data) => Vehicle.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load load parameters');
+    }
+  }
+
+  Future<List<Buses>> fetchUserBuses() async {
+    final response = await http.get(Uri.parse('${baseUrl}buses'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> responseBody = jsonDecode(response.body);
+      print('Fetched buses: $responseBody');
+
+      return responseBody.map((data) => Buses.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load buses');
+    }
+  }
+
+  Future<List<Special>> fetchUserSpecialUnits() async {
+    final response = await http.get(Uri.parse('${baseUrl}special-units'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> responseBody = jsonDecode(response.body);
+      print('Fetched Special: $responseBody');
+
+      return responseBody.map((data) => Special.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load special-units');
+    }
+  }
+
+  Future<List<Equipment>> fetchUserEquipment() async {
+    final response = await http.get(Uri.parse('${baseUrl}equipments'));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> responseBody = jsonDecode(response.body);
+      print('Fetched Equipment: $responseBody');
+
+      return responseBody.map((data) => Equipment.fromJson(data)).toList();
+    } else {
+      throw Exception('Failed to load equipments');
     }
   }
 

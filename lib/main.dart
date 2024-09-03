@@ -44,42 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // _checkLoginState();
   }
-
-  // Future<void> _checkLoginState() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final partnerId = prefs.getString('partnerId');
-  //   final userId = prefs.getString('userId');
-  //   final token = prefs.getString('token');
-  //
-  //   if (partnerId != null && token != null) {
-  //     // Navigate to BookingDetails page
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => BookingDetails(
-  //           partnerName: prefs.getString('partnerName') ?? '',
-  //           partnerId: partnerId,
-  //           token: token,
-  //           quotePrice: '',
-  //           paymentStatus: '',
-  //         ),
-  //       ),
-  //     );
-  //   } else if (userId != null && token != null) {
-  //     // Navigate to CreateBooking page
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => CreateBooking(
-  //           firstName: prefs.getString('firstName') ?? '',
-  //           lastName: prefs.getString('lastName') ?? '',
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

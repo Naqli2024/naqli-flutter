@@ -46,10 +46,22 @@ android {
     }
 }
 dependencies {
-    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+
+    // Maps SDK for Android
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
 }
 
 
 flutter {
     source = "../.."
+}
+
+android {
+    // other configurations
+    compileSdkVersion 34
+    defaultConfig {
+        // other configurations
+        minSdkVersion 21
+        targetSdkVersion 33
+    }
 }
