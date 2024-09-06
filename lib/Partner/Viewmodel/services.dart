@@ -556,6 +556,7 @@ class AuthService {
 
 
   Future<List<Map<String, dynamic>>> getBookingData(String partnerId, String token) async {
+    // Send GET request to fetch partner data
     final response = await http.get(
       Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
       headers: {
@@ -565,42 +566,41 @@ class AuthService {
     );
 
     if (response.statusCode == 200) {
+      // Parse the response body
       final responseBody = jsonDecode(response.body);
       final partnerData = responseBody['data'];
 
-
-      if (partnerData['operators'] != null) {
-        final operators = partnerData['operators'] as List<dynamic>;
+      // Check if bookingRequest exists directly in the partner document
+      if (partnerData['bookingRequest'] != null) {
+        final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
         final bookingIds = <Map<String, dynamic>>[];
 
-        for (var operator in operators) {
-          if (operator['bookingRequest'] != null) {
-            final bookingRequests = operator['bookingRequest'] as List<dynamic>;
+        // Iterate over bookingRequest array and extract required fields
+        for (var booking in bookingRequests) {
+          final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
+          final quotePrice = booking['quotePrice']?.toString() ?? '0';
+          final paymentStatus = booking['paymentStatus']?.toString() ?? 'Pending';
 
-            for (var booking in bookingRequests) {
-              final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
-              final quotePrice = booking['quotePrice']?.toString() ?? '0';
-              final paymentStatus = booking['paymentStatus']?.toString() ?? '';
-              print(bookingId);
-              print(paymentStatus);
-              print(quotePrice);
-              print(token);
-              await getBookingId(bookingId, token, paymentStatus,quotePrice);
-              bookingIds.add({
-                'bookingId': bookingId,
-                'paymentStatus': paymentStatus,
-                'quotePrice': quotePrice,
-              });
-            }
-          }
+          // Log booking details for debugging
+          print('Booking ID: $bookingId');
+          print('Payment Status: $paymentStatus');
+          print('Quote Price: $quotePrice');
+
+          // Call getBookingId if needed (assuming this function exists)
+          await getBookingId(bookingId, token, paymentStatus, quotePrice);
+
+          // Add booking details to the list
+          bookingIds.add({
+            'bookingId': bookingId,
+            'paymentStatus': paymentStatus,
+            'quotePrice': quotePrice,
+          });
         }
 
-        print('ID$partnerId');
-        print('NAMEs$partnerData');
-        print('TOKEN$token');
+        // Return the list of bookings
         return bookingIds;
       } else {
-        print("No operators found for this partner.");
+        print("No booking requests found for this partner.");
         return [];
       }
     } else if (response.statusCode == 401) {
@@ -611,6 +611,7 @@ class AuthService {
       throw Exception('Failed to load booking data');
     }
   }
+
 
   Future<Map<String, dynamic>> getBookingId(String bookingId, String token, String paymentStatus, String quotePrice) async {
     final response = await http.get(

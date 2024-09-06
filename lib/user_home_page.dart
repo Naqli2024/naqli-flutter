@@ -170,10 +170,11 @@ class _UserHomePageState extends State<UserHomePage> {
           children: [
             Container(
               width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height * 0.2,
               decoration: const BoxDecoration(
                 color: Color(0xff6A66D1),
               ),
-              child: Column(
+              /*child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
@@ -214,7 +215,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     ),
                   ),
                 ],
-              ),
+              ),*/
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20),
@@ -427,34 +428,39 @@ class _UserHomePageState extends State<UserHomePage> {
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: (){
-                _showModalBottomSheet(context);
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(30, 7, 30, 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xff6069FF),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Get an estimate',
-                          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
-                        Icon(Icons.arrow_forward,color: Colors.white,)
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),
+        bottomNavigationBar: BottomAppBar(shadowColor: Colors.black,
+          color: Colors.white,
+          elevation: 3,
+          height: MediaQuery.of(context).size.height * 0.1,
+          child:  GestureDetector(
+            onTap: (){
+              _showModalBottomSheet(context);
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(25, 7, 25, 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xff6069FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Get an estimate',
+                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+                      Icon(Icons.arrow_forward,color: Colors.white,)
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
     );
   }
 }
@@ -465,7 +471,7 @@ void _showModalBottomSheet(BuildContext context) {
     builder: (BuildContext context) {
       return DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.75,
+        initialChildSize: 0.70,
         minChildSize: 0,
         maxChildSize: 0.75,
         builder: (BuildContext context, ScrollController scrollController) {

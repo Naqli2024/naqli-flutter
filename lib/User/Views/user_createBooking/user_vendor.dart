@@ -104,7 +104,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => const CreateBooking(firstName: '',lastName: '',selectedType: '',)
+                                                    builder: (context) => const CreateBooking(firstName: '',lastName: '',selectedType: '',token: '',)
                                                 ),
                                               );
                                             },

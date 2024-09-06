@@ -11,7 +11,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class UserType extends StatefulWidget {
   final String firstName;
   final String lastName;
-  const UserType({super.key, required this.firstName, required this.lastName});
+  final String token;
+  const UserType({super.key, required this.firstName, required this.lastName, required this.token});
 
   @override
   State<UserType> createState() => _UserTypeState();
@@ -136,7 +137,7 @@ class _UserTypeState extends State<UserType> {
                             await clearUserData();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => CreateBooking(firstName: widget.firstName, lastName: widget.lastName,selectedType: '',)),
+                              MaterialPageRoute(builder: (context) => UserLogin()),
                             );
                           },
                         ),
@@ -159,15 +160,15 @@ class _UserTypeState extends State<UserType> {
         child: Column(
           children: [
             Container(
+              height: MediaQuery.sizeOf(context).height * 0.2,
               width: MediaQuery.sizeOf(context).width,
               decoration: const BoxDecoration(
                 color: Color(0xff6A66D1),
               ),
-              child: Column(
+             /* child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.2,
                     child: CarouselSlider(
                       options: CarouselOptions(
                         enlargeCenterPage: true,
@@ -204,7 +205,7 @@ class _UserTypeState extends State<UserType> {
                     ),
                   ),
                 ],
-              ),
+              ),*/
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20),
@@ -217,7 +218,7 @@ class _UserTypeState extends State<UserType> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          _selectedType = 'Vehicle';
+                          _selectedType = 'vehicle';
                         });
 
                         Navigator.push(
@@ -226,7 +227,8 @@ class _UserTypeState extends State<UserType> {
                             builder: (context) => CreateBooking(
                               firstName: widget.firstName,
                               lastName: widget.lastName,
-                              selectedType: _selectedType, // Pass the selected type here
+                              selectedType: _selectedType,
+                              token: widget.token,
                             ),
                           ),
                         );
@@ -262,7 +264,7 @@ class _UserTypeState extends State<UserType> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          _selectedType = 'Bus';
+                          _selectedType = 'bus';
                         });
                         Navigator.push(
                           context,
@@ -271,6 +273,7 @@ class _UserTypeState extends State<UserType> {
                               firstName: widget.firstName,
                               lastName: widget.lastName,
                               selectedType: _selectedType,
+                              token: widget.token,
                             ),
                           ),
                         );
@@ -312,7 +315,7 @@ class _UserTypeState extends State<UserType> {
             GestureDetector(
               onTap: () {
                 setState(() {
-                  _selectedType = 'Equipment';
+                  _selectedType = 'equipment';
                 });
                 Navigator.push(
                   context,
@@ -321,6 +324,7 @@ class _UserTypeState extends State<UserType> {
                       firstName: widget.firstName,
                       lastName: widget.lastName,
                       selectedType: _selectedType,
+                      token: widget.token,
                     ),
                   ),
                 );
@@ -363,7 +367,7 @@ class _UserTypeState extends State<UserType> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
-                            _selectedType = 'Special';
+                            _selectedType = 'special';
                           });
                           Navigator.push(
                             context,
@@ -372,6 +376,7 @@ class _UserTypeState extends State<UserType> {
                                 firstName: widget.firstName,
                                 lastName: widget.lastName,
                                 selectedType: _selectedType,
+                                token: widget.token,
                               ),
                             ),
                           );
@@ -414,7 +419,7 @@ class _UserTypeState extends State<UserType> {
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      _selectedType = 'Others';
+                      _selectedType = 'others';
                     });
                     Navigator.push(
                       context,
@@ -423,6 +428,7 @@ class _UserTypeState extends State<UserType> {
                           firstName: widget.firstName,
                           lastName: widget.lastName,
                           selectedType: _selectedType,
+                          token: widget.token,
                         ),
                       ),
                     );
@@ -453,34 +459,39 @@ class _UserTypeState extends State<UserType> {
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: (){
-                _showModalBottomSheet(context);
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(30, 7, 30, 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xff6069FF),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Get an estimate',
-                          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
-                        Icon(Icons.arrow_forward,color: Colors.white,)
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),
+      bottomNavigationBar: BottomAppBar(shadowColor: Colors.black,
+        color: Colors.white,
+        elevation: 3,
+        height: MediaQuery.of(context).size.height * 0.1,
+        child:  GestureDetector(
+          onTap: (){
+            _showModalBottomSheet(context);
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(25, 7, 25, 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xff6069FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Get an estimate',
+                      style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
+                    Icon(Icons.arrow_forward,color: Colors.white,)
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
     );
   }
 }
@@ -492,7 +503,7 @@ void _showModalBottomSheet(BuildContext context) {
     builder: (BuildContext context) {
       return DraggableScrollableSheet(
         expand: false,
-        initialChildSize: 0.75,
+        initialChildSize: 0.70,
         minChildSize: 0,
         maxChildSize: 0.75,
         builder: (BuildContext context, ScrollController scrollController) {

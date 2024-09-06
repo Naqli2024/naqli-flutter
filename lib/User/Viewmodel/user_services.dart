@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
@@ -10,7 +11,9 @@ import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/user_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class UserService{
@@ -304,7 +307,7 @@ class UserService{
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserType(firstName: firstName,lastName: lastName,),
+            builder: (context) => UserType(firstName: firstName,lastName: lastName,token: token,),
           ),
         );
         await saveUserData(firstName,lastName, token, id);
@@ -321,19 +324,6 @@ class UserService{
     }
   }
 
-  // Future<List<Vehicle>> fetchUserVehicle() async {
-  //   final response = await http.get(Uri.parse('${baseUrl}vehicles'));
-  //
-  //   if (response.statusCode == 200) {
-  //     final List<dynamic> responseBody = jsonDecode(response.body);
-  //     print('Fetched vehicles: $responseBody'); // Debug statement
-  //     // Convert List<dynamic> to List<Vehicle>
-  //     return responseBody.map((data) => Vehicle.fromJson(data)).toList();
-  //   } else {
-  //     throw Exception('Failed to load vehicles');
-  //   }
-  // }
-
   Future<List<Vehicle>> fetchUserVehicle() async {
     final response = await http.get(Uri.parse('${baseUrl}vehicles'));
 
@@ -343,19 +333,6 @@ class UserService{
       return responseBody.map((data) => Vehicle.fromJson(data)).toList();
     } else {
       throw Exception('Failed to load vehicles');
-    }
-  }
-
-
-  Future<List<Vehicle>> fetchUserVehicleLoad(String typeName) async {
-    final response = await http.get(Uri.parse('${baseUrl}loads?typeName=$typeName'));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> responseBody = jsonDecode(response.body);
-      print('Fetched load parameters: $responseBody'); // Debug statement
-      return responseBody.map((data) => Vehicle.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load load parameters');
     }
   }
 
@@ -395,6 +372,242 @@ class UserService{
       return responseBody.map((data) => Equipment.fromJson(data)).toList();
     } else {
       throw Exception('Failed to load equipments');
+    }
+  }
+
+  Future<void> userVehicleCreateBooking(
+      BuildContext context, {
+        required String name,
+        required String unitType,
+        required String typeName,
+        required String scale,
+        required String typeImage,
+        required String typeOfLoad,
+        required String date,
+        required String additionalLabour,
+        required String time,
+        required String productValue,
+        required String pickup,
+        required List dropPoints,
+        required String token,
+      }) async {
+    final url = Uri.parse('${baseUrl}bookings');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'unitType': unitType,
+        'type':{
+          'typeName': typeName,
+          'scale': scale,
+          'typeImage': typeImage,
+          'typeOfLoad': typeOfLoad,
+        },
+        'date': date,
+        'additionalLabour': additionalLabour,
+        'time': time,
+        'productValue': productValue,
+        'pickup': pickup,
+        'dropPoints': dropPoints,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+
+    print('Full Response Body: $responseBody');
+
+    if (response.statusCode == 201) {
+      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+      print(' Vehicle Booking Created successful');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking Created successful')),
+      );
+      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+    } else {
+      final message = responseBody['message'] ?? 'Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to create booking: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> userBusCreateBooking(
+      BuildContext context, {
+        required String name,
+        required String unitType,
+        required String image,
+        required String date,
+        required String additionalLabour,
+        required String time,
+        required String productValue,
+        required String pickup,
+        required List dropPoints,
+        required String token,
+      }) async {
+    final url = Uri.parse('${baseUrl}bookings');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'unitType': unitType,
+        'image': image,
+        'date': date,
+        'additionalLabour': additionalLabour,
+        'time': time,
+        'productValue': productValue,
+        'pickup': pickup,
+        'dropPoints': dropPoints,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+
+    print('Full Response Body: $responseBody');
+
+    if (response.statusCode == 201) {
+      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+      print('Bus Booking Created successful');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking Created successful')),
+      );
+    } else {
+      final message = responseBody['message'] ?? 'Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to create booking: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> userEquipmentCreateBooking(
+      BuildContext context, {
+        required String name,
+        required String unitType,
+        required String typeName,
+        required String typeImage,
+        required String date,
+        required String additionalLabour,
+        required String fromTime,
+        required String toTime,
+        required String cityName,
+        required String address,
+        required String zipCode,
+        required String token,
+      }) async {
+    final url = Uri.parse('${baseUrl}bookings');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'unitType': unitType,
+        'type':{
+          'typeName': typeName,
+          'typeImage': typeImage,
+        },
+        'date': date,
+        'additionalLabour': additionalLabour,
+        'fromTime': fromTime,
+        'toTime': toTime,
+        'cityName': cityName,
+        'address': address,
+        'zipCode': zipCode,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+
+    print('Full Response Body: $responseBody');
+
+    if (response.statusCode == 201) {
+      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+      print('Equipment Booking Created successful');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking Created successful')),
+      );
+    } else {
+      final message = responseBody['message'] ?? 'Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to create booking: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+  }
+
+  Future<void> userSpecialCreateBooking(
+      BuildContext context, {
+        required String name,
+        required String unitType,
+        required String image,
+        required String date,
+        required String additionalLabour,
+        required String fromTime,
+        required String toTime,
+        required String cityName,
+        required String address,
+        required String zipCode,
+        required String token,
+      }) async {
+    final url = Uri.parse('${baseUrl}bookings');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'unitType': unitType,
+        'image': image,
+        'date': date,
+        'additionalLabour': additionalLabour,
+        'fromTime': fromTime,
+        'toTime': toTime,
+        'cityName': cityName,
+        'address': address,
+        'zipCode': zipCode,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+
+    print('Full Response Body: $responseBody');
+
+    if (response.statusCode == 201) {
+      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+      print('Special Booking Created successful');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Booking Created successful')),
+      );
+    } else {
+      final message = responseBody['message'] ?? 'Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to create booking: ${response.statusCode}');
+      print('Response body: ${response.body}');
     }
   }
 

@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
 
                   if (id.isNotEmpty && token.isNotEmpty) {
-                    return UserType(firstName: firstName, lastName: lastName);
+                    return UserType(firstName: firstName, lastName: lastName,token: token,);
                   }
                 }
               }
@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-
+// --enable-software-rendering
 
 /*
 import 'package:flutter/material.dart';

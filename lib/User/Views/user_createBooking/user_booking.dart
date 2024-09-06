@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_cache_manager/file.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
@@ -15,14 +16,21 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 
 class CreateBooking extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String selectedType;
-  const CreateBooking({super.key, required this.firstName, required this.lastName, required this.selectedType });
+  final String token;
+  const CreateBooking(
+      {super.key,
+      required this.firstName,
+      required this.lastName,
+      required this.selectedType, required this.token});
 
   @override
   State<CreateBooking> createState() => _CreateBookingState();
@@ -32,21 +40,40 @@ class _CreateBookingState extends State<CreateBooking> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
   final TextEditingController timeController = TextEditingController();
+  final TextEditingController productController = TextEditingController();
+  final TextEditingController pickUpController = TextEditingController();
+  final TextEditingController cityNameController = TextEditingController();
+  final TextEditingController zipCodeController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
   int _currentStep = 1;
   String? selectedLoad;
-  // final List<String> loadItems = ['Load 1', 'Load 2', 'Load 3'];
-  TimeOfDay _selectedTime = TimeOfDay.now();
+  TimeOfDay _selectedFromTime =  TimeOfDay.now();
+  TimeOfDay _selectedToTime = TimeOfDay.now();
   DateTime _selectedDate = DateTime.now();
   bool isChecked = false;
-  int selectedLabour = 1;
+  int selectedLabour = 0;
   late Future<List<Vehicle>> _futureVehicles;
   late Future<List<Buses>> _futureBuses;
   late Future<List<Equipment>> _futureEquipment;
   late Future<List<Special>> _futureSpecial;
   Map<String, String?> _selectedSubClassification = {};
   String? selectedTypeName;
+  String? selectedName;
+  String? scale;
+  String? typeImage;
+  String? typeOfLoad;
   List<String> loadItems = [];
   int? selectedBus;
+  int? selectedSpecial;
+  List<TextEditingController> _dropPointControllers = [
+    TextEditingController(),
+  ];
+  GoogleMapController? mapController;
+  final Set<Marker> markers = {};
+  final Set<Polyline> polylines = {};
+  LatLng? pickupLatLng;
+  LatLng? dropLatLng;
+  final List<LatLng> _dropLatLngs = [];
 
   @override
   void initState() {
@@ -55,19 +82,392 @@ class _CreateBookingState extends State<CreateBooking> {
     _futureBuses = userService.fetchUserBuses();
     _futureEquipment = userService.fetchUserEquipment();
     _futureSpecial = userService.fetchUserSpecialUnits();
-    fetchLoadsForSelectedType(selectedTypeName??'');
+    fetchLoadsForSelectedType(selectedTypeName ?? '');
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _dropPointControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addTextField() {
+    setState(() {
+      _dropPointControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeTextField(int index) {
+    setState(() {
+      _dropPointControllers[index].dispose();
+      _dropPointControllers.removeAt(index);
+    });
+  }
+
+  Future<void> _requestPermissions() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
+    }
+  }
+
+  Future<void> _fetchCoordinates() async {
+    try {
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+
+      String pickupPlace = pickUpController.text;
+      List<String> dropPlaces =
+          _dropPointControllers.map((controller) => controller.text).toList();
+
+      setState(() {
+        markers.clear();
+        polylines.clear();
+        _dropLatLngs.clear();
+      });
+      // Fetch pickup coordinates
+      String pickupUrl =
+          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
+      final pickupResponse = await http.get(Uri.parse(pickupUrl));
+
+      // Fetch drop coordinates
+      List<Future<http.Response>> dropResponses = dropPlaces.map((dropPlace) {
+        String dropUrl =
+            'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(dropPlace)}&key=$apiKey';
+        return http.get(Uri.parse(dropUrl));
+      }).toList();
+
+      final List<http.Response> dropResponsesList =
+          await Future.wait(dropResponses);
+
+      if (pickupResponse.statusCode == 200) {
+        final pickupData = json.decode(pickupResponse.body);
+
+        if (pickupData != null && pickupData['status'] == 'OK') {
+          final pickupLocation =
+              pickupData['results']?[0]['geometry']?['location'];
+          final pickupAddress = pickupData['results']?[0]['formatted_address'];
+
+          if (pickupLocation != null) {
+            setState(() {
+              pickupLatLng =
+                  LatLng(pickupLocation['lat'], pickupLocation['lng']);
+
+              markers.add(
+                Marker(
+                  markerId: const MarkerId('pickup'),
+                  position: pickupLatLng!,
+                  infoWindow: InfoWindow(
+                    title: 'Pickup Point',
+                    snippet: pickupAddress,
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen),
+                ),
+              );
+
+              // Clear existing polylines and drop points list
+              polylines.clear();
+              _dropLatLngs.clear();
+            });
+          } else {
+            print('Pickup location is null');
+          }
+        } else {
+          print('Error with pickup API response: ${pickupData?['status']}');
+        }
+
+        // Handle each drop point response
+        List<LatLng> waypoints = [];
+        for (int i = 0; i < dropResponsesList.length; i++) {
+          final dropResponse = dropResponsesList[i];
+          if (dropResponse.statusCode == 200) {
+            final dropData = json.decode(dropResponse.body);
+
+            if (dropData != null && dropData['status'] == 'OK') {
+              final dropLocation =
+                  dropData['results']?[0]['geometry']?['location'];
+              final dropAddress = dropData['results']?[0]['formatted_address'];
+
+              if (dropLocation != null) {
+                LatLng dropLatLng =
+                    LatLng(dropLocation['lat'], dropLocation['lng']);
+
+                setState(() {
+                  markers.add(
+                    Marker(
+                      markerId: MarkerId('dropPoint$i'),
+                      position: dropLatLng,
+                      infoWindow: InfoWindow(
+                        title: 'Drop Point ${i + 1}',
+                        snippet: dropAddress,
+                      ),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(
+                          BitmapDescriptor.hueRed),
+                    ),
+                  );
+
+                  // Add the drop point to the list
+                  _dropLatLngs.add(dropLatLng);
+                  waypoints.add(dropLatLng);
+                });
+              } else {
+                print('Drop location is null for point $i');
+              }
+            } else {
+              print(
+                  'Error with drop API response for point $i: ${dropData?['status']}');
+            }
+          } else {
+            print(
+                'Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
+          }
+        }
+
+        // Fetch route with Directions API
+        if (_dropLatLngs.isNotEmpty) {
+          String waypointsString = waypoints
+              .map((latLng) => '${latLng.latitude},${latLng.longitude}')
+              .join('|');
+          String directionsUrl =
+              'https://maps.googleapis.com/maps/api/directions/json?origin=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&destination=${_dropLatLngs.last.latitude},${_dropLatLngs.last.longitude}&waypoints=optimize:true|$waypointsString&key=$apiKey';
+          final directionsResponse = await http.get(Uri.parse(directionsUrl));
+
+          if (directionsResponse.statusCode == 200) {
+            final directionsData = json.decode(directionsResponse.body);
+            if (directionsData != null && directionsData['status'] == 'OK') {
+              final routes = directionsData['routes']?[0];
+              final legs = routes?['legs'] as List<dynamic>;
+              final polyline = routes?['overview_polyline']?['points'];
+              if (polyline != null) {
+                final decodedPoints = _decodePolyline(polyline);
+                setState(() {
+                  polylines.add(
+                    Polyline(
+                      polylineId: const PolylineId('route'),
+                      color: Colors.blue,
+                      width: 5,
+                      points: decodedPoints,
+                    ),
+                  );
+                });
+              }
+            } else {
+              print(
+                  'Error with directions API response: ${directionsData?['status']}');
+            }
+          } else {
+            print(
+                'Failed to load directions, status code: ${directionsResponse.statusCode}');
+          }
+        }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mapController != null && pickupLatLng != null) {
+            _moveCameraToFitAllMarkers();
+          }
+        });
+      } else {
+        print(
+            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching coordinates: $e');
+    }
+  }
+
+  Future<void> _fetchAddressCoordinates() async {
+    try {
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+
+      // Retrieve city name, address, and zip code
+      String cityName = cityNameController.text.trim();
+      String address = addressController.text.trim();
+      String zipCode = zipCodeController.text.trim();
+
+      // Validate city name and address
+      if (cityName.isEmpty || address.isEmpty) {
+        // Show an alert or a Snackbar to inform the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Please enter both city name and address to locate the place.'),
+          ),
+        );
+        return; // Exit the function if either is missing
+      }
+
+      // Combine city name, address, and zip code
+      String fullAddress = '$address, $cityName';
+      if (zipCode.isNotEmpty) {
+        fullAddress += ', $zipCode';
+      }
+
+      setState(() {
+        markers.clear();
+        polylines.clear();
+        _dropLatLngs.clear();
+      });
+
+      // Fetch pickup coordinates
+      String pickupUrl =
+          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(fullAddress)}&key=$apiKey';
+      final pickupResponse = await http.get(Uri.parse(pickupUrl));
+
+      if (pickupResponse.statusCode == 200) {
+        final pickupData = json.decode(pickupResponse.body);
+
+        if (pickupData != null && pickupData['status'] == 'OK') {
+          final pickupLocation =
+              pickupData['results']?[0]['geometry']?['location'];
+          final pickupAddress = pickupData['results']?[0]['formatted_address'];
+
+          if (pickupLocation != null) {
+            setState(() {
+              pickupLatLng =
+                  LatLng(pickupLocation['lat'], pickupLocation['lng']);
+
+              // Display the city name, address, and zip code in the snippet
+              String snippetText = '$address, $cityName';
+              if (zipCode.isNotEmpty) {
+                snippetText += ', $zipCode';
+              }
+
+              markers.add(
+                Marker(
+                  markerId: const MarkerId('pickup'),
+                  position: pickupLatLng!,
+                  infoWindow: InfoWindow(
+                    title: 'Pickup Point',
+                    snippet: snippetText,
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueGreen),
+                ),
+              );
+
+              // Clear existing polylines and drop points list
+              polylines.clear();
+              _dropLatLngs.clear();
+            });
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mapController != null && pickupLatLng != null) {
+                _moveCameraToFitAllMarkers();
+              }
+            });
+          } else {
+            print('Pickup location is null');
+          }
+        } else {
+          print('Error with pickup API response: ${pickupData?['status']}');
+        }
+      } else {
+        print(
+            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching coordinates: $e');
+    }
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> polylinePoints = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
+      polylinePoints.add(
+        LatLng(
+          (lat / 1E5),
+          (lng / 1E5),
+        ),
+      );
+    }
+
+    return polylinePoints;
+  }
+
+  void _moveCameraToFitAllMarkers() {
+    if (mapController != null) {
+      LatLngBounds bounds;
+      if (_dropLatLngs.isNotEmpty) {
+        bounds = _calculateBounds();
+      } else if (pickupLatLng != null) {
+        bounds = LatLngBounds(
+          southwest: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+          northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+        );
+      } else {
+        print('No coordinates to fit.');
+        return;
+      }
+
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 130), // Padding in pixels
+      );
+    } else {
+      print('mapController is not initialized');
+    }
+  }
+
+  LatLngBounds _calculateBounds() {
+    double southWestLat = [
+      pickupLatLng!.latitude,
+      ..._dropLatLngs.map((latLng) => latLng.latitude)
+    ].reduce((a, b) => a < b ? a : b);
+    double southWestLng = [
+      pickupLatLng!.longitude,
+      ..._dropLatLngs.map((latLng) => latLng.longitude)
+    ].reduce((a, b) => a < b ? a : b);
+    double northEastLat = [
+      pickupLatLng!.latitude,
+      ..._dropLatLngs.map((latLng) => latLng.latitude)
+    ].reduce((a, b) => a > b ? a : b);
+    double northEastLng = [
+      pickupLatLng!.longitude,
+      ..._dropLatLngs.map((latLng) => latLng.longitude)
+    ].reduce((a, b) => a > b ? a : b);
+
+    return LatLngBounds(
+      southwest: LatLng(southWestLat, southWestLng),
+      northeast: LatLng(northEastLat, northEastLng),
+    );
   }
 
   Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
     try {
-      List<Vehicle> vehicles = await userService.fetchUserVehicle(); // Fetch vehicles
+      List<Vehicle> vehicles =
+          await userService.fetchUserVehicle(); // Fetch vehicles
 
       var selectedType = vehicles
           .expand((vehicle) => vehicle.types) // Flatten the list of types
           .firstWhere(
             (type) => type.typeName == selectedTypeName,
-        orElse: () => VehicleType(typeName: '', typeOfLoad: [], typeImage: '', scale: ''), // Default value
-      );
+            orElse: () => VehicleType(
+                typeName: '',
+                typeOfLoad: [],
+                typeImage: '',
+                scale: ''), // Default value
+          );
 
       print('Selected Type: ${selectedType.typeOfLoad}'); // Debugging line
 
@@ -75,38 +475,6 @@ class _CreateBookingState extends State<CreateBooking> {
     } catch (e) {
       print('Error fetching loads: $e');
       return [];
-    }
-  }
-
-  Future<void> _fetchLoadParameters() async {
-    try {
-      const String baseUrl = 'https://naqli.onrender.com/api/';
-      final response = await http.get(Uri.parse('${baseUrl}vehicles?name=${selectedTypeName}'));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseBody = jsonDecode(response.body);
-        List<String> loads = [];
-
-        // Parse the response to extract typeOfLoad for the selected vehicle
-        for (var item in responseBody) {
-          if (item['name'] == selectedTypeName) {
-            for (var type in item['type']) {
-              for (var load in type['typeOfLoad']) {
-                loads.add(load['load']);
-              }
-            }
-          }
-        }
-
-        setState(() {
-          loadItems = loads;
-        });
-      } else {
-        throw Exception('Failed to load load parameters');
-      }
-    } catch (e) {
-      // Handle error
-      print('Error fetching load parameters: $e');
     }
   }
 
@@ -128,22 +496,50 @@ class _CreateBookingState extends State<CreateBooking> {
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _selectedTime,
+      initialTime: _selectedFromTime,
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: false,
+            alwaysUse24HourFormat: true,
           ),
           child: child!,
         );
       },
     );
 
-    if (picked != null && picked != _selectedTime) {
+    if (picked != null && picked != _selectedFromTime) {
       setState(() {
-        _selectedTime = picked;
+        _selectedFromTime = picked;
       });
     }
+  }
+
+  Future<void> _selectToTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedToTime,
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            alwaysUse24HourFormat: true,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _selectedToTime) {
+      setState(() {
+        _selectedToTime = picked;
+      });
+    }
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    return MaterialLocalizations.of(context).formatTimeOfDay(
+      time,
+      alwaysUse24HourFormat: true,
+    );
   }
 
   void _onCheckboxChanged(bool? value) {
@@ -200,10 +596,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SvgPicture.asset('assets/naqlee-logo.svg',
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.05),
+                      height: MediaQuery.of(context).size.height * 0.05),
                   GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
@@ -216,82 +609,76 @@ class _CreateBookingState extends State<CreateBooking> {
             const Divider(),
             ListTile(
                 leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.05),
+                    height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 15),
-                  child: Text('Booking', style: TextStyle(
-                      fontSize: 25, fontWeight: FontWeight.bold),),
+                  child: Text(
+                    'Booking',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                onTap: () {}
-            ),
+                onTap: () {}),
             ListTile(
                 leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.05),
+                    height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 15),
-                  child: Text('Booking History', style: TextStyle(
-                      fontSize: 25, fontWeight: FontWeight.bold),),
+                  child: Text(
+                    'Booking History',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                onTap: () {}
-            ),
+                onTap: () {}),
             ListTile(
                 leading: Image.asset('assets/payment_logo.png',
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.05),
+                    height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 5),
-                  child: Text('Payment', style: TextStyle(
-                      fontSize: 25, fontWeight: FontWeight.bold),),
+                  child: Text(
+                    'Payment',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                onTap: () {}
-            ),
+                onTap: () {}),
             ListTile(
               leading: Image.asset('assets/report_logo.png',
-                  height: MediaQuery
-                      .of(context)
-                      .size
-                      .height * 0.05),
+                  height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Report',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),),
+                child: Text(
+                  'Report',
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                ),
               ),
-              onTap: () {
-
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: Image.asset('assets/help_logo.png',
-                  height: MediaQuery
-                      .of(context)
-                      .size
-                      .height * 0.05),
+                  height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Help',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),),
+                child: Text(
+                  'Help',
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                ),
               ),
-              onTap: () {
-
-              },
+              onTap: () {},
             ),
             ListTile(
               leading: const Padding(
                 padding: EdgeInsets.only(left: 12),
-                child: Icon(Icons.logout, color: Color(0xff707070), size: 30,),
+                child: Icon(
+                  Icons.logout,
+                  color: Color(0xff707070),
+                  size: 30,
+                ),
               ),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Logout',
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),),
+                child: Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                ),
               ),
               onTap: () {
                 showDialog(
@@ -360,7 +747,6 @@ class _CreateBookingState extends State<CreateBooking> {
               ),
             ),
             const SizedBox(height: 20),
-            // Step Content
             Expanded(
               child: _buildStepContent(_currentStep),
             ),
@@ -368,8 +754,7 @@ class _CreateBookingState extends State<CreateBooking> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (_currentStep == 1)
-                  Container(),
+                if (_currentStep == 1) Container(),
                 if (_currentStep > 1)
                   Container(
                     padding: const EdgeInsets.only(left: 40, bottom: 20),
@@ -394,14 +779,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   Container(
                     padding: const EdgeInsets.only(right: 10, bottom: 15),
                     child: SizedBox(
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.055,
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width * 0.3,
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.3,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xff6269FE),
@@ -411,21 +790,72 @@ class _CreateBookingState extends State<CreateBooking> {
                         ),
                         onPressed: () {
                           setState(() {
-                              if (_currentStep < 3) {
-                              _currentStep++;
-                              print('Selected Type Name: $selectedTypeName'); // Debug print
-                              widget.selectedType == 'Vehicle'
-                                  ?  UserVehicleStepTwo(selectedName: selectedTypeName)
-                                  : null;
-                              widget.selectedType == 'Bus'
-                                  ?  selectedBus!= null ?UserBusStepTwo():null
-                                  : null;
-                              widget.selectedType == 'Equipment'
-                                  ?  UserEquipmentStepTwo()
-                                  : null;
-                              widget.selectedType == 'Special'
-                                  ?  UserSpecialStepTwo()
-                                  : null;
+                            if (widget.selectedType == 'vehicle') {
+                              if (_currentStep == 1) {
+                                if (selectedTypeName == null) {
+                                  commonWidgets.showToast('Please select an option');
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null ||
+                                    productController.text.isEmpty ||
+                                    selectedLoad == null) {
+                                  commonWidgets.showToast('Please fill all fields');
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'bus') {
+                              if (_currentStep == 1) {
+                                if (selectedBus == null) {
+                                  commonWidgets.showToast('Please select Bus');
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null ||
+                                    productController.text.isEmpty) {
+                                  commonWidgets.showToast('Please fill all fields');
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'equipment') {
+                              if (_currentStep == 1) {
+                                if (selectedTypeName ==null) {
+                                  commonWidgets.showToast('Please select an option');
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null) {
+                                  commonWidgets.showToast('Please fill all fields');
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                              if (_currentStep == 1) {
+                                if (selectedSpecial ==null) {
+                                  commonWidgets.showToast('Please select Special/Other Units');
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null) {
+                                  commonWidgets.showToast('Please fill all fields');
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
                             }
                           });
                         },
@@ -443,14 +873,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   Container(
                     padding: const EdgeInsets.only(right: 10, bottom: 15),
                     child: SizedBox(
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height * 0.055,
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width * 0.53,
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.53,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xff6269FE),
@@ -460,15 +884,154 @@ class _CreateBookingState extends State<CreateBooking> {
                         ),
                         onPressed: () {
                           setState(() {
-                            Future.delayed(const Duration(seconds: 2), () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const ChooseVendor()
-                                ),
-                              );
-                            });
-                            showDialog(
+                            String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                            String formattedTime = _formatTimeOfDay(_selectedFromTime);
+                            String formattedToTime = _formatTimeOfDay(_selectedToTime);
+                            List<String> dropPlaces = _dropPointControllers.map((controller) => controller.text).toList();
+                            if(widget.selectedType=='vehicle') {
+                              if (pickUpController.text.isEmpty ||
+                                  dropPlaces.contains('') ||
+                                  dropPlaces.isEmpty) {
+                                commonWidgets.showToast(
+                                    'Choose Pickup and DropPoints');
+                              }
+                              else {
+                                print('name$selectedName');
+                                print('unitType${widget.selectedType}');
+                                print('typeName$selectedTypeName');
+                                print('scale$scale');
+                                print('typeImage$typeImage');
+                                print('typeOfLoad$selectedLoad');
+                                print('date$formattedDate');
+                                print('additionalLabour$selectedLabour');
+                                print('time$formattedTime');
+                                print('productValue${productController.text}');
+                                print('pickup${pickUpController.text}');
+                                print('dropPoints${_dropPointControllers.map((
+                                    controller) => controller.text).toList()}');
+                                userService.userVehicleCreateBooking(
+                                    context,
+                                    name: selectedName.toString(),
+                                    unitType: widget.selectedType,
+                                    typeName: selectedTypeName.toString(),
+                                    scale: scale.toString(),
+                                    typeImage: typeImage.toString(),
+                                    typeOfLoad: selectedLoad.toString(),
+                                    date: formattedDate,
+                                    additionalLabour: selectedLabour.toString(),
+                                    time: formattedTime,
+                                    productValue: productController.text,
+                                    pickup: pickUpController.text,
+                                    dropPoints: dropPlaces,
+                                    token: widget.token);
+                              }
+                            }
+                            if(widget.selectedType=='bus') {
+                              if (pickUpController.text.isEmpty ||
+                                  dropPlaces.contains('') ||
+                                  dropPlaces.isEmpty) {
+                                commonWidgets.showToast(
+                                    'Choose Pickup and DropPoints');
+                              }
+                              else {
+                                print('unitType${widget.selectedType}');
+                                print('name$selectedName');
+                                print('typeImage$typeImage');
+                                print('date$formattedDate');
+                                print('additionalLabour$selectedLabour');
+                                print('time$formattedTime');
+                                print('productValue${productController.text}');
+                                print('pickup${pickUpController.text}');
+                                print('dropPoints${_dropPointControllers.map((
+                                    controller) => controller.text).toList()}');
+                                userService.userBusCreateBooking(
+                                    context,
+                                    name: selectedName.toString(),
+                                    unitType: widget.selectedType,
+                                    image: typeImage.toString(),
+                                    date: formattedDate,
+                                    additionalLabour: selectedLabour.toString(),
+                                    time: formattedTime,
+                                    productValue: productController.text,
+                                    pickup: pickUpController.text,
+                                    dropPoints: dropPlaces,
+                                    token: widget.token);
+                              }
+                            }
+                            if(widget.selectedType=='equipment') {
+                              if (cityNameController.text.isEmpty ||
+                                  addressController.text.isEmpty) {
+                                commonWidgets.showToast(
+                                    'Choose City name and Address');
+                              }
+                              else {
+                                print('unitType${widget.selectedType}');
+                                print('name$selectedName');
+                                print('typeImage$typeImage');
+                                print('FromTime$formattedTime');
+                                print('ToTime$formattedToTime');
+                                print('Date$formattedDate');
+                                print('additionalLabour$selectedLabour');
+                                print('city${cityNameController.text}');
+                                print('address${addressController.text}');
+                                print('zipcode${zipCodeController.text}');
+                                userService.userEquipmentCreateBooking(
+                                    context,
+                                    name: selectedName.toString(),
+                                    unitType: widget.selectedType,
+                                    typeName: selectedTypeName.toString(),
+                                    typeImage: typeImage.toString(),
+                                    date: formattedDate,
+                                    additionalLabour: selectedLabour.toString(),
+                                    fromTime: formattedTime,
+                                    toTime: formattedToTime,
+                                    cityName: cityNameController.text,
+                                    address: addressController.text,
+                                    zipCode: zipCodeController.text,
+                                    token: widget.token);
+                              }
+                            }
+                            if(widget.selectedType=='special') {
+                              if (cityNameController.text.isEmpty ||
+                                  addressController.text.isEmpty) {
+                                commonWidgets.showToast(
+                                    'Choose City name and Address');
+                              }
+                              else {
+                                print('unitType${widget.selectedType}');
+                                print('name$selectedName');
+                                print('typeImage$typeImage');
+                                print('FromTime$formattedTime');
+                                print('ToTime$formattedToTime');
+                                print('Date$formattedDate');
+                                print('additionalLabour$selectedLabour');
+                                print('city${cityNameController.text}');
+                                print('address${addressController.text}');
+                                print('zipcode${zipCodeController.text}');
+                                userService.userSpecialCreateBooking(
+                                    context,
+                                    name: selectedName.toString(),
+                                    unitType: widget.selectedType,
+                                    image: typeImage.toString(),
+                                    date: formattedDate,
+                                    additionalLabour: selectedLabour.toString(),
+                                    fromTime: formattedTime,
+                                    toTime: formattedToTime,
+                                    cityName: cityNameController.text,
+                                    address: addressController.text,
+                                    zipCode: zipCodeController.text,
+                                    token: widget.token);
+                              }
+                            }
+                            // Future.delayed(const Duration(seconds: 2), () {
+                            //   Navigator.push(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //         builder: (context) => const ChooseVendor()),
+                            //   );
+                            // });
+
+                            /*showDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
@@ -478,16 +1041,14 @@ class _CreateBookingState extends State<CreateBooking> {
                                   backgroundColor: Colors.white,
                                   title: Stack(
                                     children: [
-                                      Center(child: SvgPicture.asset(
+                                      Center(
+                                          child: SvgPicture.asset(
                                         'assets/generated_logo.svg',
-                                        width: MediaQuery
-                                            .of(context)
-                                            .size
-                                            .width,
-                                        height: MediaQuery
-                                            .of(context)
-                                            .size
-                                            .height * 0.2,
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        height:
+                                            MediaQuery.of(context).size.height *
+                                                0.2,
                                       )),
                                       Positioned(
                                         top: -15,
@@ -523,7 +1084,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   ),
                                 );
                               },
-                            );
+                            );*/
                           });
                         },
                         child: const Text(
@@ -549,7 +1110,9 @@ class _CreateBookingState extends State<CreateBooking> {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xffACACAD), width: 1),
+        border: Border.all(
+            color: isActive ? const Color(0xff6A66D1) : const Color(0xffACACAD),
+            width: 1),
       ),
       child: CircleAvatar(
         radius: 20,
@@ -572,7 +1135,7 @@ class _CreateBookingState extends State<CreateBooking> {
       case 2:
         return buildStepTwoContent(widget.selectedType);
       case 3:
-        return UserStepThree();
+        return buildStepThreeContent(widget.selectedType);
       default:
         return Container();
     }
@@ -580,55 +1143,277 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Widget buildStepOneContent(String selectedType) {
     switch (selectedType) {
-      case 'Vehicle':
+      case 'vehicle':
         return vehicleContent();
-      case 'Bus':
+      case 'bus':
         return busContent();
-      case 'Equipment':
+      case 'equipment':
         return equipmentContent();
-      case 'Special':
+      case 'special':
         return specialContent();
-      case 'Others':
+      case 'others':
         return specialContent();
       default:
-        return defaultContent(); // Default content if no type is selected
+        return defaultContent();
     }
   }
 
   Widget buildStepTwoContent(String selectedType) {
     switch (selectedType) {
-      case 'Vehicle':
-        return UserVehicleStepTwo(selectedName: selectedTypeName);
-      case 'Bus':
-        if (selectedBus != null) {
-          // If a bus is selected, return the UserBusStepTwo widget.
+      case 'vehicle':
+        return UserVehicleStepTwo(
+          selectedTypeName??'',
+          selectedName??'',
+          typeImage??'',
+          scale??''
+        );
+      case 'bus':
           return UserBusStepTwo();
-        } else {
-          // If no bus is selected, show a message or return an empty container.
-          Fluttertoast.showToast(
-            msg: 'Please Select Bus...',
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-          return Center(
-            child: Container(
-              child: Text('Please Select Bus...'),
-            ),
-          );
-        }
-      case 'Equipment':
+      case 'equipment':
         return UserEquipmentStepTwo();
-      case 'Special':
+      case 'special':
         return UserSpecialStepTwo();
-      case 'Others':
+      case 'others':
         return UserSpecialStepTwo();
       default:
-        return defaultContent(); // Default content if no type is selected
+        return defaultContent();
     }
+  }
+
+  Widget buildStepThreeContent(String selectedType) {
+    switch (selectedType) {
+      case 'vehicle':
+        return UserVehicleStepThree(
+            selectedTypeName??'',
+            selectedName??'',
+            typeImage??'',
+            scale??'',
+            _selectedDate .toString(),
+          _selectedFromTime.toString(),
+          productController.text,
+          selectedLoad??'',
+          selectedLabour.toString()
+        );
+      case 'bus':
+        return UserBusStepThree();
+      case 'equipment':
+        return UserEquipmentStepThree();
+      case 'special':
+        return UserSpecialStepThree();
+      case 'others':
+        return UserSpecialStepThree();
+      default:
+        return defaultContent();
+    }
+  }
+
+  Widget vehicleContent() {
+    return FutureBuilder<List<Vehicle>>(
+      future: _futureVehicles,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No vehicles available'));
+        } else {
+          final vehicles = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
+                child: const Text(
+                  'Available Vehicle Units',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: vehicles.length,
+                  itemBuilder: (context, index) {
+                    final vehicle = vehicles[index];
+                    final selectedType =
+                        _selectedSubClassification[vehicle.name] ?? '';
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Image.asset('assets/delivery-truck.png'),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: Text(
+                                vehicle.name,
+                                style: const TextStyle(
+                                    fontSize: 15.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.05,
+                                child: const VerticalDivider(
+                                  color: Colors.grey,
+                                  thickness: 1,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 7,
+                              child: Container(
+                                width: double.infinity,
+                                child: PopupMenuButton<String>(
+                                  elevation: 5,
+                                  constraints:
+                                      BoxConstraints.tightFor(width: 350),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  offset: const Offset(0, 55),
+                                  padding: EdgeInsets.zero,
+                                  color: Colors.white,
+                                  onSelected: (newValue) {
+                                    setState(() {
+                                      _selectedSubClassification[vehicle.name] = newValue;
+                                      selectedTypeName = newValue;
+                                      selectedName = vehicle.name;
+                                      scale = vehicle.types
+                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          .scale;
+                                      typeImage = vehicle.types
+                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          .typeImage;
+                                    });
+                                  },
+                                  itemBuilder: (context) {
+                                    return vehicle.types?.map((type) {
+                                          return PopupMenuItem<String>(
+                                            value: type.typeName,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(15),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: FutureBuilder(
+                                                      future: _loadSvg(
+                                                          type.typeImage),
+                                                      builder:
+                                                          (context, snapshot) {
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox(
+                                                            width: 24,
+                                                            height: 24,
+                                                            child: Icon(Icons
+                                                                .rotate_right),
+                                                          );
+                                                        } else if (snapshot
+                                                            .hasError) {
+                                                          return const Icon(
+                                                              Icons.error);
+                                                        } else {
+                                                          return SvgPicture
+                                                              .asset(
+                                                            type.typeImage,
+                                                            width: 40,
+                                                            height: 30,
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 20),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(type.typeName,
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        16.0)),
+                                                        Text(type.scale,
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontSize:
+                                                                        14.0)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList() ??
+                                        [];
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    width: double.infinity,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            selectedType.isEmpty
+                                                ? 'Select'
+                                                : selectedType.isNotEmpty
+                                                    ? selectedType
+                                                    : vehicle.types
+                                                                ?.isNotEmpty ==
+                                                            true
+                                                        ? vehicle.types!.first
+                                                            .typeName
+                                                        : 'No Data ',
+                                            style:
+                                                const TextStyle(fontSize: 16.0),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Icon(Icons.arrow_drop_down),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
   }
 
   Widget busContent() {
@@ -660,7 +1445,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     crossAxisCount: 2, // Two columns
                     crossAxisSpacing: 0, // Space between columns
                     mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio: 1, // Aspect ratio for card width and height
+                    childAspectRatio:
+                        1, // Aspect ratio for card width and height
                   ),
                   itemCount: buses.length,
                   itemBuilder: (context, index) {
@@ -672,56 +1458,65 @@ class _CreateBookingState extends State<CreateBooking> {
                         children: [
                           SizedBox(
                             width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.18,
+                            height: MediaQuery.sizeOf(context).height * 0.17,
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
+                                  selectedName = bus.name;
+                                  typeImage = bus.image;
                                   if (isBusSelected) {
-                                    selectedBus=null;
+                                    selectedBus = null;
                                   } else {
-                                    selectedBus=index;
+                                    selectedBus = index;
                                   }
                                 });
                               },
                               child: Card(
-                                color: isBusSelected ? Color(0xff6A66D1) : Colors.white,
+                                color: Colors.white,
                                 elevation: 4,
                                 shape: RoundedRectangleBorder(
-                                  side: const BorderSide(color: Color(0xffACACAD), width: 1),
+                                  side: BorderSide(
+                                      color: isBusSelected
+                                          ? Color(
+                                              0xff6A66D1,
+                                            )
+                                          : Color(0xffACACAD),
+                                      width: isBusSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     FutureBuilder(
                                       future: _loadSvg(bus.image),
                                       builder: (context, snapshot) {
-                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
                                           return const CircularProgressIndicator();
                                         } else if (snapshot.hasError) {
                                           return const Icon(Icons.error);
                                         } else {
-                                          return SvgPicture.asset(
-                                            bus.image,
-                                            width: 30,
-                                            height: 40,
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 45, bottom: 10),
+                                            child: SvgPicture.asset(
+                                              bus.image,
+                                              width: 30,
+                                              height: 40,
+                                            ),
                                           );
                                         }
                                       },
                                     ),
-                                    // SvgPicture.asset(bus.image??''),
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 10,bottom: 10),
-                                      child: Divider(
-                                        indent: 7,
-                                        endIndent: 7,
-                                        color: Color(0xffACACAD),
-                                        thickness: 2,
-                                      ),
+                                    Divider(
+                                      indent: 7,
+                                      endIndent: 7,
+                                      color: Color(0xffACACAD),
+                                      thickness: 1,
                                     ),
                                     Text(
                                       bus.name,
-                                      textAlign: TextAlign.center, // Center the text
+                                      textAlign:
+                                          TextAlign.center, // Center the text
                                     )
                                   ],
                                 ),
@@ -769,9 +1564,11 @@ class _CreateBookingState extends State<CreateBooking> {
                   itemCount: equipment.length,
                   itemBuilder: (context, index) {
                     final equipments = equipment[index];
-                    final selectedType = _selectedSubClassification[equipments.name] ?? '';
+                    final selectedType =
+                        _selectedSubClassification[equipments.name] ?? '';
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 10),
                       child: Container(
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey),
@@ -781,20 +1578,23 @@ class _CreateBookingState extends State<CreateBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Image.asset('assets/delivery-truck.png', width: 50, height: 50),
+                              child: Image.asset('assets/delivery-truck.png'),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 equipments.name,
-                                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold),
                               ),
                             ),
                             Expanded(
                               flex: 1,
                               child: Container(
-                                height: MediaQuery.of(context).size.height * 0.07,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.05,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -807,7 +1607,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                 width: double.infinity,
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
-                                  constraints: BoxConstraints.tightFor(width: 350),
+                                  constraints:
+                                      BoxConstraints.tightFor(width: 350),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -816,66 +1617,94 @@ class _CreateBookingState extends State<CreateBooking> {
                                   color: Colors.white,
                                   onSelected: (newValue) {
                                     setState(() {
-                                      _selectedSubClassification[equipments.name] = newValue;
+                                      _selectedSubClassification[
+                                          equipments.name] = newValue;
+                                      selectedTypeName = newValue;
+                                      selectedName = equipments.name;
+                                      typeImage = equipments.types
+                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          .typeImage;
                                     });
                                   },
                                   itemBuilder: (context) {
                                     return equipments.types?.map((type) {
-                                      return PopupMenuItem<String>(
-                                        value: type.typeName,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: FutureBuilder(
-                                                  future: _loadSvg(type.typeImage),
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot.connectionState == ConnectionState.waiting) {
-                                                      return const SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child: CircularProgressIndicator(),
-                                                      );
-                                                    } else if (snapshot.hasError) {
-                                                      return const Icon(Icons.error);
-                                                    } else {
-                                                      return SvgPicture.asset(
-                                                        type.typeImage,
-                                                        width: 40,
-                                                        height: 24,
-                                                      );
-                                                    }
-                                                  },
-                                                ),
+                                          return PopupMenuItem<String>(
+                                            value: type.typeName,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(15),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: FutureBuilder(
+                                                      future: _loadSvg(
+                                                          type.typeImage),
+                                                      builder:
+                                                          (context, snapshot) {
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox(
+                                                            width: 24,
+                                                            height: 24,
+                                                            child:
+                                                                CircularProgressIndicator(),
+                                                          );
+                                                        } else if (snapshot
+                                                            .hasError) {
+                                                          return const Icon(
+                                                              Icons.error);
+                                                        } else {
+                                                          return SvgPicture
+                                                              .asset(
+                                                            type.typeImage,
+                                                            width: 40,
+                                                            height: 30,
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 20),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: Text(type.typeName,
+                                                        style: const TextStyle(
+                                                            fontSize: 16.0)),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Text(type.typeName, style: const TextStyle(fontSize: 16.0)),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }).toList() ?? [];
+                                            ),
+                                          );
+                                        }).toList() ??
+                                        [];
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
                                     width: double.infinity,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          selectedType.isEmpty
-                                              ? 'Select an option'
-                                          : selectedType.isNotEmpty
-                                              ? selectedType
-                                              : equipments.types?.isNotEmpty == true
-                                              ? equipments.types!.first.typeName
-                                              : 'No Data for Sub Classification',
-                                          style: const TextStyle(fontSize: 16.0),
+                                        Expanded(
+                                          child: Text(
+                                            selectedType.isEmpty
+                                                ? 'Select'
+                                                : selectedType.isNotEmpty
+                                                    ? selectedType
+                                                    : equipments.types
+                                                                ?.isNotEmpty ==
+                                                            true
+                                                        ? equipments.types!
+                                                            .first.typeName
+                                                        : 'No Data for Sub Classification',
+                                            style:
+                                                const TextStyle(fontSize: 16.0),
+                                          ),
                                         ),
                                         const SizedBox(width: 10),
                                         const Icon(Icons.arrow_drop_down),
@@ -885,117 +1714,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                               ),
                             ),
-                          /*  Expanded(
-                              flex: 7,
-                              child: PopupMenuButton<String>(
-                                elevation: 5,
-                                constraints: BoxConstraints.tightFor(width: 350),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                offset: const Offset(0, 70), // Adjust as needed
-                                padding: EdgeInsets.zero,
-                                color: Colors.white,
-                                onSelected: (newValue) {
-                                  setState(() {
-                                    _selectedSubClassification[equipments.name] = newValue;
-                                  });
-                                },
-                                itemBuilder: (context) {
-                                  return equipments.types?.map((type) {
-                                    return PopupMenuItem<String>(
-                                      value: type.typeName,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(10),
-                                        width: MediaQuery.of(context).size.width -80, // Expand dropdown width
-                                        child: Row(
-                                          children: [
-                                            FutureBuilder(
-                                              future: _loadSvg(type.typeImage),
-                                              builder: (context, snapshot) {
-                                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                                  return const SizedBox(
-                                                    width: 24,
-                                                    height: 24,
-                                                    child: CircularProgressIndicator(),
-                                                  );
-                                                } else if (snapshot.hasError) {
-                                                  return const Icon(Icons.error);
-                                                } else {
-                                                  return SvgPicture.asset(
-                                                    type.typeImage,
-                                                    width: 24,
-                                                    height: 24,
-                                                  );
-                                                }
-                                              },
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Container(
-                                              child: Text(
-                                                type.typeName,
-                                                style: const TextStyle(fontSize: 16.0),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  }).toList() ?? [];
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Image.asset('assets/delivery-truck.png', width: 50, height: 50),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Row(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                equipments.name, // Static equipment name
-                                                style: const TextStyle(
-                                                  fontSize: 16.0,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height * 0.07,
-                                                child: const VerticalDivider(
-                                                  color: Colors.grey,
-                                                  thickness: 1,
-                                                ),
-                                              ),
-                                              Text(
-                                                _selectedSubClassification[equipments.name] ?? 'Select Type', // Dynamic hint text
-                                                style: const TextStyle(
-                                                  fontSize: 16.0,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const Icon(Icons.arrow_drop_down),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),*/
-
-
                           ],
                         ),
                       ),
@@ -1039,75 +1757,79 @@ class _CreateBookingState extends State<CreateBooking> {
                     crossAxisCount: 2, // Two columns
                     crossAxisSpacing: 0, // Space between columns
                     mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio: 1, // Aspect ratio for card width and height
+                    childAspectRatio:
+                        1, // Aspect ratio for card width and height
                   ),
                   itemCount: special.length,
                   itemBuilder: (context, index) {
                     final specials = special[index];
+                    final isSpecialSelected = selectedSpecial == index;
                     return Padding(
                       padding: const EdgeInsets.only(left: 27),
                       child: Row(
                         children: [
                           SizedBox(
                             width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.18,
+                            height: MediaQuery.sizeOf(context).height * 0.17,
                             child: GestureDetector(
                               onTap: () {
-                                // setState(() {
-                                //   _selectedType = 'Vehicle'; // Update the selected type
-                                // });
-                                //
-                                // // Navigate to CreateBooking with the selected type
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) => CreateBooking(
-                                //       firstName: widget.firstName,
-                                //       lastName: widget.lastName,
-                                //       selectedType: _selectedType, // Pass the selected type here
-                                //     ),
-                                //   ),
-                                // );
+                                setState(() {
+                                  selectedName = specials.name;
+                                  typeImage = specials.image;
+                                  if (isSpecialSelected) {
+                                    selectedSpecial = null;
+                                  } else {
+                                    selectedSpecial = index;
+                                  }
+                                });
                               },
                               child: Card(
                                 color: Colors.white,
                                 elevation: 4,
                                 shape: RoundedRectangleBorder(
-                                  side: const BorderSide(color: Color(0xffACACAD), width: 1),
+                                  side: BorderSide(
+                                      color: isSpecialSelected
+                                          ? Color(
+                                              0xff6A66D1,
+                                            )
+                                          : Color(0xffACACAD),
+                                      width: isSpecialSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     FutureBuilder(
                                       future: _loadSvg(specials.image),
                                       builder: (context, snapshot) {
-                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
                                           return const CircularProgressIndicator();
                                         } else if (snapshot.hasError) {
                                           return const Icon(Icons.error);
                                         } else {
-                                          return SvgPicture.asset(
-                                            specials.image,
-                                            width: 30,
-                                            height: 40,
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 45, bottom: 10),
+                                            child: SvgPicture.asset(
+                                              specials.image,
+                                              width: 30,
+                                              height: 40,
+                                            ),
                                           );
                                         }
                                       },
                                     ),
                                     // SvgPicture.asset(bus.image??''),
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 10,bottom: 10),
-                                      child: Divider(
-                                        indent: 7,
-                                        endIndent: 7,
-                                        color: Color(0xffACACAD),
-                                        thickness: 2,
-                                      ),
+                                    Divider(
+                                      indent: 7,
+                                      endIndent: 7,
+                                      color: Color(0xffACACAD),
+                                      thickness: 1,
                                     ),
                                     Text(
                                       specials.name,
-                                      textAlign: TextAlign.center, // Center the text
+                                      textAlign:
+                                          TextAlign.center, // Center the text
                                     )
                                   ],
                                 ),
@@ -1128,13 +1850,13 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget othersContent() {
-    // Your content for Others
     return Container(
       padding: const EdgeInsets.all(16),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Others Content', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Others Content',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           // Add more widgets as needed
         ],
       ),
@@ -1142,186 +1864,20 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget defaultContent() {
-    // Default content
     return Container(
       padding: const EdgeInsets.all(16),
-      child: const Text('Please select a type to see content', style: TextStyle(fontSize: 18)),
+      child: const Text('Please select a type to see content',
+          style: TextStyle(fontSize: 18)),
     );
   }
 
-  Widget vehicleContent() {
-    return FutureBuilder<List<Vehicle>>(
-      future: _futureVehicles,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No vehicles available'));
-        } else {
-          final vehicles = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: const Text(
-                  'Available Vehicle Units',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: vehicles.length,
-                  itemBuilder: (context, index) {
-                    final vehicle = vehicles[index];
-                    final selectedType = _selectedSubClassification[vehicle.name] ?? '';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Image.asset('assets/delivery-truck.png', width: 50, height: 50),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                vehicle.name,
-                                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                height: MediaQuery.of(context).size.height * 0.09,
-                                child: const VerticalDivider(
-                                  color: Colors.grey,
-                                  thickness: 1,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 7,
-                              child: Container(
-                                width: double.infinity,
-                                child: PopupMenuButton<String>(
-                                  elevation: 5,
-                                  constraints: BoxConstraints.tightFor(width: 350),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  offset: const Offset(0, 55),
-                                  padding: EdgeInsets.zero,
-                                  color: Colors.white,
-                                  onSelected: (newValue) {
-                                    setState(() {
-                                      _selectedSubClassification[vehicle.name] = newValue;
-                                      selectedTypeName = newValue;
-                                    });
-                                  },
-                                  itemBuilder: (context) {
-                                    return vehicle.types?.map((type) {
-                                      return PopupMenuItem<String>(
-                                        value: type.typeName,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                flex: 1,
-                                                child: FutureBuilder(
-                                                  future: _loadSvg(type.typeImage),
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot.connectionState == ConnectionState.waiting) {
-                                                      return const SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child: Icon(Icons.rotate_right),
-                                                      );
-                                                    } else if (snapshot.hasError) {
-                                                      return const Icon(Icons.error);
-                                                    } else {
-                                                      return SvgPicture.asset(
-                                                        type.typeImage,
-                                                        width: 40,
-                                                        height: 24,
-                                                      );
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(type.typeName, style: const TextStyle(fontSize: 16.0)),
-                                                    Text(type.scale, style: const TextStyle(fontSize: 14.0)),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }).toList() ?? [];
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                    width: double.infinity,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          selectedType.isEmpty
-                                          ? 'Select an option'
-                                          : selectedType.isNotEmpty
-                                              ? selectedType
-                                              : vehicle.types?.isNotEmpty == true
-                                              ? vehicle.types!.first.typeName
-                                              : 'No Data ',
-                                          style: const TextStyle(fontSize: 16.0),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        const Icon(Icons.arrow_drop_down),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-
-
-
-
-  Widget UserVehicleStepTwo({String? selectedName}) {
-    String formattedDate = DateFormat('dd/MM/yyyy').format(_selectedDate);
+  Widget UserVehicleStepTwo(
+      String selectedTypeName,
+      String name,
+      String typeImage,
+      String scale,
+      ) {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1357,9 +1913,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1395,9 +1956,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('$formattedDate'),
+                GestureDetector(
+                  onTap: (){
+                    _selectDate(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('$formattedDate'),
+                  ),
                 ),
               ],
             ),
@@ -1416,6 +1982,7 @@ class _CreateBookingState extends State<CreateBooking> {
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
             child: TextFormField(
+              controller: productController,
               decoration: const InputDecoration(
                 hintStyle: TextStyle(color: Color(0xffCCCCCC)),
                 border: OutlineInputBorder(
@@ -1438,7 +2005,7 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
             child: LoadTypeDropdown(
-              selectedName: selectedName,
+              selectedName: selectedTypeName,
               selectedLoad: selectedLoad,
               onLoadChanged: (newValue) {
                 setState(() {
@@ -1464,8 +2031,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'Need Additional Labour',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -1473,50 +2040,50 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           if (isChecked)
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Column(
-              children: [
-                RadioListTile(
-                  title: const Text('1'),
-                  value: 1,
-                  groupValue: selectedLabour,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLabour = value!;
-                    });
-                  },
-                ),
-                RadioListTile(
-                  title: const Text('2'),
-                  value: 2,
-                  groupValue: selectedLabour,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLabour = value!;
-                    });
-                  },
-                ),
-                RadioListTile(
-                  title: const Text('3'),
-                  value: 3,
-                  groupValue: selectedLabour,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedLabour = value!;
-                    });
-                  },
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: const Text('1'),
+                    value: 1,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('2'),
+                    value: 2,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('3'),
+                    value: 3,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
   Widget UserBusStepTwo() {
-    String formattedDate = DateFormat('dd/MM/yyyy').format(_selectedDate);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1552,9 +2119,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1590,9 +2162,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('$formattedDate'),
+                GestureDetector(
+                  onTap: (){
+                    _selectDate(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('$formattedDate'),
+                  ),
                 ),
               ],
             ),
@@ -1611,6 +2188,7 @@ class _CreateBookingState extends State<CreateBooking> {
           Padding(
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
             child: TextFormField(
+              controller: productController,
               decoration: const InputDecoration(
                 hintStyle: TextStyle(color: Color(0xffCCCCCC)),
                 border: OutlineInputBorder(
@@ -1635,8 +2213,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'Need Additional Labour',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -1687,7 +2265,7 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget UserEquipmentStepTwo() {
-    String formattedDate = DateFormat('dd/MM/yyyy').format(_selectedDate);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1723,9 +2301,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1751,7 +2334,7 @@ class _CreateBookingState extends State<CreateBooking> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  onPressed: () => _selectTime(context),
+                  onPressed: () => _selectToTime(context),
                   icon: const Icon(FontAwesomeIcons.clock),
                 ),
                 Container(
@@ -1761,9 +2344,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectToTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1799,9 +2387,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('$formattedDate'),
+                GestureDetector(
+                  onTap: (){
+                    _selectDate(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('$formattedDate'),
+                  ),
                 ),
               ],
             ),
@@ -1822,8 +2415,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'Need Additional Labour',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -1874,7 +2467,7 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget UserSpecialStepTwo() {
-    String formattedDate = DateFormat('dd/MM/yyyy').format(_selectedDate);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1910,9 +2503,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1938,7 +2536,7 @@ class _CreateBookingState extends State<CreateBooking> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  onPressed: () => _selectTime(context),
+                  onPressed: () => _selectToTime(context),
                   icon: const Icon(FontAwesomeIcons.clock),
                 ),
                 Container(
@@ -1948,9 +2546,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('${_selectedTime.format(context)}'),
+                GestureDetector(
+                  onTap: (){
+                    _selectToTime(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}'),
+                  ),
                 ),
               ],
             ),
@@ -1986,9 +2589,14 @@ class _CreateBookingState extends State<CreateBooking> {
                     thickness: 1.2,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('$formattedDate'),
+                GestureDetector(
+                  onTap: (){
+                    _selectDate(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('$formattedDate'),
+                  ),
                 ),
               ],
             ),
@@ -2009,8 +2617,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'Need Additional Labour',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2060,76 +2668,674 @@ class _CreateBookingState extends State<CreateBooking> {
     );
   }
 
-  Widget UserStepThree() {
+  Widget UserVehicleStepThree(
+      String selectedTypeName,
+      String name,
+      String typeImage,
+      String scale,
+      String selectedDate,
+      String selectedTime,
+      String valueOfProduct,
+      String selectedLoad,
+      String additionalLabour,
+      ) {
     return Center(
       child: Stack(
         children: [
           Container(
-            height: MediaQuery.sizeOf(context).height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.6,
             child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(0, 0),  // Default position
-                zoom: 10,
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                _requestPermissions();
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0), // Default position
+                zoom: 1,
               ),
+              markers: markers,
+              polylines: polylines,
             ),
           ),
           Positioned(
             top: 15,
             child: Container(
-              width: MediaQuery.sizeOf(context).width,
+              width: MediaQuery.of(context).size.width,
               padding: const EdgeInsets.only(left: 30, right: 30),
-              child: Card(
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    Row(
+              child: Column(
+                children: [
+                  Card(
+                    color: Colors.white,
+                    child: Column(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircleAvatar(backgroundColor: Color(0xff009E10), minRadius: 6),
+                        // Constant "Pick up" text field
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Color(0xff009E10),
+                                  minRadius: 6,
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: pickUpController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText: 'Pick up',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                    // onChanged: (value) => _updatePolylines(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        Container(
-                          height: 40,
-                          width: MediaQuery.sizeOf(context).width * 0.7,
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            inputFormatters: [LengthLimitingTextInputFormatter(30)],
-                            decoration: const InputDecoration(
-                              hintText: 'Pick up',
-                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: 15),
-                              border: InputBorder.none,
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        // Dynamic "Drop Point" text fields
+                        ..._dropPointControllers.asMap().entries.map((entry) {
+                          int i = entry.key;
+                          TextEditingController controller = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xffE20808),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 40,
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      controller: controller,
+                                      inputFormatters: [
+                                        LengthLimitingTextInputFormatter(30)
+                                      ],
+                                      decoration: InputDecoration(
+                                        hintText: 'Drop Point ${i + 1}',
+                                        hintStyle: const TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15),
+                                        border: InputBorder.none,
+                                        suffixIcon: i ==
+                                                _dropPointControllers.length - 1
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (_dropPointControllers
+                                                          .length >
+                                                      1)
+                                                    IconButton(
+                                                      onPressed: () =>
+                                                          _removeTextField(i),
+                                                      icon: Icon(Icons.cancel,
+                                                          color: Colors.red),
+                                                    ),
+                                                  if (_dropPointControllers
+                                                          .length ==
+                                                      1)
+                                                    IconButton(
+                                                      onPressed: _addTextField,
+                                                      icon: Icon(
+                                                          FontAwesomeIcons
+                                                              .circlePlus),
+                                                    ),
+                                                ],
+                                              )
+                                            : null,
+                                      ),
+                                      // onChanged: (value) => _updatePolylines(),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          _fetchCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserBusStepThree() {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                _requestPermissions();
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0), // Default position
+                zoom: 1,
+              ),
+              markers: markers,
+              polylines: polylines,
+            ),
+          ),
+          Positioned(
+            top: 15,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: Column(
+                children: [
+                  Card(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        // Constant "Pick up" text field
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Color(0xff009E10),
+                                  minRadius: 6,
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: pickUpController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText: 'Pick up',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                    // onChanged: (value) => _updatePolylines(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        // Dynamic "Drop Point" text fields
+                        ..._dropPointControllers.asMap().entries.map((entry) {
+                          int i = entry.key;
+                          TextEditingController controller = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xffE20808),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 40,
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: TextFormField(
+                                      controller: controller,
+                                      inputFormatters: [
+                                        LengthLimitingTextInputFormatter(30)
+                                      ],
+                                      decoration: InputDecoration(
+                                        hintText: 'Drop Point ${i + 1}',
+                                        hintStyle: const TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize: 15),
+                                        border: InputBorder.none,
+                                        suffixIcon: i ==
+                                                _dropPointControllers.length - 1
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (_dropPointControllers
+                                                          .length >
+                                                      1)
+                                                    IconButton(
+                                                      onPressed: () =>
+                                                          _removeTextField(i),
+                                                      icon: Icon(Icons.cancel,
+                                                          color: Colors.red),
+                                                    ),
+                                                  if (_dropPointControllers
+                                                          .length ==
+                                                      1)
+                                                    IconButton(
+                                                      onPressed: _addTextField,
+                                                      icon: Icon(
+                                                          FontAwesomeIcons
+                                                              .circlePlus),
+                                                    ),
+                                                ],
+                                              )
+                                            : null,
+                                      ),
+                                      // onChanged: (value) => _updatePolylines(),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          _fetchCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserEquipmentStepThree() {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                _requestPermissions();
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0), // Default position
+                zoom: 1,
+              ),
+              markers: markers,
+              polylines: polylines,
+            ),
+          ),
+          Positioned(
+            top: 10,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: Column(
+                children: [
+                  Card(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SvgPicture.asset('assets/search.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: cityNameController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter city name',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SvgPicture.asset('assets/address.svg')),
+                            Expanded(
+                              child: Container(
+                                height: 40,
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextFormField(
+                                  controller: addressController,
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(30)
+                                  ],
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your address',
+                                    hintStyle: const TextStyle(
+                                        color: Color(0xff707070), fontSize: 15),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child:
+                                      SvgPicture.asset('assets/zipCode.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: zipCodeController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText:
+                                          'Zip code for construction site',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const Divider(
-                      indent: 5,
-                      endIndent: 5,
-                    ),
-                    Row(
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: CircleAvatar(backgroundColor: Color(0xffE20808), minRadius: 6),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        Container(
-                          height: 40,
-                          width: MediaQuery.sizeOf(context).width * 0.7,
-                          padding: const EdgeInsets.all(8.0),
-                          child: TextFormField(
-                            inputFormatters: [LengthLimitingTextInputFormatter(30)],
-                            decoration: const InputDecoration(
-                              hintText: 'Drop Point',
-                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: 15),
-                              border: InputBorder.none,
+                        onPressed: () {
+                          _fetchAddressCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserSpecialStepThree() {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                _requestPermissions();
+              },
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0), // Default position
+                zoom: 1,
+              ),
+              markers: markers,
+              polylines: polylines,
+            ),
+          ),
+          Positioned(
+            top: 10,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(left: 30, right: 30),
+              child: Column(
+                children: [
+                  Card(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SvgPicture.asset('assets/search.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: cityNameController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter city name',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SvgPicture.asset('assets/address.svg')),
+                            Expanded(
+                              child: Container(
+                                height: 40,
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextFormField(
+                                  controller: addressController,
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(30)
+                                  ],
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your address',
+                                    hintStyle: const TextStyle(
+                                        color: Color(0xff707070), fontSize: 15),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
                             ),
+                          ],
+                        ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child:
+                                      SvgPicture.asset('assets/zipCode.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 40,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    controller: zipCodeController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(30)
+                                    ],
+                                    decoration: InputDecoration(
+                                      hintText:
+                                          'Zip code for construction site',
+                                      hintStyle: const TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          _fetchAddressCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
               ),
             ),
           ),
@@ -2148,9 +3354,7 @@ class _CreateBookingState extends State<CreateBooking> {
 }
 
 Future<void> _loadSvg(String asset) async {
-  // Simulate network delay for SVG loading
-  await Future.delayed(const Duration(milliseconds: 300));
-  // Normally, here you'd handle actual asset loading if needed
+  await Future.delayed(const Duration(milliseconds: 500));
 }
 
 class LoadTypeDropdown extends StatefulWidget {
@@ -2176,7 +3380,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
   @override
   void initState() {
     super.initState();
-    _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+    _loadTypesFuture =
+        widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
   }
 
   @override
@@ -2184,7 +3389,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedName != oldWidget.selectedName) {
       setState(() {
-        _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+        _loadTypesFuture =
+            widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
       });
     }
   }
@@ -2205,7 +3411,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
           print('Load Items: $loadItems'); // Debugging line
 
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            padding: const EdgeInsets.only(top: 15, bottom: 15, left: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8.0),
@@ -2216,13 +3422,15 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
               },
               elevation: 5,
               color: Colors.white,
-              constraints: BoxConstraints.tightFor(width: 300),
+              constraints: BoxConstraints.tightFor(width: 350),
               offset: const Offset(0, -280),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    (widget.selectedLoad?.isNotEmpty ?? false) ? widget.selectedLoad! : 'Load type',
+                    (widget.selectedLoad?.isNotEmpty ?? false)
+                        ? widget.selectedLoad!
+                        : 'Load type',
                     style: TextStyle(fontSize: 16),
                   ),
                   const Icon(Icons.arrow_drop_down),
@@ -2245,6 +3453,3 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     );
   }
 }
-
-
-
