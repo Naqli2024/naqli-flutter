@@ -50,6 +50,7 @@ class _StepTwoState extends State<StepTwo> {
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
               toolbarHeight: 80,
+              automaticallyImplyLeading: false,
               backgroundColor: const Color(0xff6A66D1),
               title: const Text('Operator/Owner',
                 style: TextStyle(color: Colors.white),

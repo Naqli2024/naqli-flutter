@@ -68,6 +68,7 @@ class _UserRegisterState extends State<UserRegister> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: SvgPicture.asset(
           'assets/naqlee-logo.svg',
           fit: BoxFit.fitWidth,
@@ -77,6 +78,7 @@ class _UserRegisterState extends State<UserRegister> {
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
             toolbarHeight: 80,
+            automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
             title: const Center(
               child: Text(

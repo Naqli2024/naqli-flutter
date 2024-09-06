@@ -7,6 +7,8 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/user_home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'User/Views/user_createBooking/user_vendor.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -20,12 +22,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Naqli',
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 0.95),
+          child: child ?? const LoginScreen(),
+        );
+      },
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff6A66D1)),
         useMaterial3: true,
         textTheme: Theme.of(context).textTheme.apply(
-          fontSizeFactor: 1.0,
+          fontSizeFactor: 0.95,
         ),
       ),
       home: const LoginScreen(),
@@ -89,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
 
                   if (id.isNotEmpty && token.isNotEmpty) {
+                    // return ChooseVendor(unit: '', load: '',size: '',bookingId: '',unitType: '',);
                     return UserType(firstName: firstName, lastName: lastName,token: token,);
                   }
                 }

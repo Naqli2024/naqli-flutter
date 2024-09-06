@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,7 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CommonWidgets{
   AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom}) {
     return AppBar(
-        toolbarHeight: MediaQuery.of(context).size.height * 0.065,
+        automaticallyImplyLeading: false,
+        // toolbarHeight: MediaQuery.of(context).size.height * 0.065,
         leading: Builder(
           builder: (BuildContext context) => IconButton(
             onPressed: () {

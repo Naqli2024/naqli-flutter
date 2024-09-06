@@ -52,6 +52,7 @@ dependencies:
   cached_network_image: ^3.2.0
   flutter_cache_manager: ^3.0.0
   geocoding: ^3.0.0
+  google_maps_flutter_web: ^0.3.0
   flutter_launcher_icons: ^0.13.1
 
 
@@ -60,11 +61,11 @@ dev_dependencies:
     sdk: flutter
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: "launcher_icons"
   ios: true
-  image_path: "assets/app_logo.png"
-  adaptive_icon_background: "0xff6A66D1"
-  adaptive_icon_foreground: "assets/app_logo.png"
+  image_path: "assets/logo.png"
+  adaptive_icon_background: "#6A66D1"
+  adaptive_icon_foreground: "assets/logo.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -86,7 +87,6 @@ flutter:
 
   assets:
     - assets/generated_logo.svg
-    - assets/app_logo.png
     - assets/logo.png
     - assets/naqlee-logo.svg
     - assets/Earnings.jpg

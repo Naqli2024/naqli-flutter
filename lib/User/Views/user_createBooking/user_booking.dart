@@ -559,6 +559,7 @@ class _CreateBookingState extends State<CreateBooking> {
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
             toolbarHeight: 80,
+            automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
             title: Container(
               alignment: Alignment.topLeft,
@@ -750,354 +751,357 @@ class _CreateBookingState extends State<CreateBooking> {
             Expanded(
               child: _buildStepContent(_currentStep),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (_currentStep == 1) Container(),
-                if (_currentStep > 1)
-                  Container(
-                    padding: const EdgeInsets.only(left: 40, bottom: 20),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (_currentStep > 1) {
-                            _currentStep--;
-                          }
-                        });
-                      },
-                      child: const Text(
-                        'Back',
-                        style: TextStyle(
-                            color: Color(0xff6269FE),
-                            fontSize: 21,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                if (_currentStep < 3)
-                  Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 15),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_currentStep == 1) Container(),
+                  if (_currentStep > 1)
+                    Container(
+                      padding: const EdgeInsets.only(left: 40, bottom: 20),
+                      child: GestureDetector(
+                        onTap: () {
                           setState(() {
-                            if (widget.selectedType == 'vehicle') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName == null) {
-                                  commonWidgets.showToast('Please select an option');
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty ||
-                                    selectedLoad == null) {
-                                  commonWidgets.showToast('Please fill all fields');
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'bus') {
-                              if (_currentStep == 1) {
-                                if (selectedBus == null) {
-                                  commonWidgets.showToast('Please select Bus');
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields');
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'equipment') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName ==null) {
-                                  commonWidgets.showToast('Please select an option');
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields');
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
-                              if (_currentStep == 1) {
-                                if (selectedSpecial ==null) {
-                                  commonWidgets.showToast('Please select Special/Other Units');
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields');
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
+                            if (_currentStep > 1) {
+                              _currentStep--;
                             }
                           });
                         },
                         child: const Text(
-                          'Next',
+                          'Back',
                           style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xff6269FE),
                               fontSize: 21,
-                              fontWeight: FontWeight.bold),
+                              fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
-                  ),
-                if (_currentStep == 3)
-                  Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 15),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.53,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  if (_currentStep < 3)
+                    Container(
+                      padding: const EdgeInsets.only(right: 10, bottom: 15),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (widget.selectedType == 'vehicle') {
+                                if (_currentStep == 1) {
+                                  if (selectedTypeName == null) {
+                                    commonWidgets.showToast('Please select an option');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null ||
+                                      productController.text.isEmpty ||
+                                      selectedLoad == null) {
+                                    commonWidgets.showToast('Please fill all fields');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'bus') {
+                                if (_currentStep == 1) {
+                                  if (selectedBus == null) {
+                                    commonWidgets.showToast('Please select Bus');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null ||
+                                      productController.text.isEmpty) {
+                                    commonWidgets.showToast('Please fill all fields');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'equipment') {
+                                if (_currentStep == 1) {
+                                  if (selectedTypeName ==null) {
+                                    commonWidgets.showToast('Please select an option');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null) {
+                                    commonWidgets.showToast('Please fill all fields');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                                if (_currentStep == 1) {
+                                  if (selectedSpecial ==null) {
+                                    commonWidgets.showToast('Please select Special/Other Units');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null) {
+                                    commonWidgets.showToast('Please fill all fields');
+                                  } else {
+                                    _currentStep++;
+                                  }
+                                }
+                              }
+                            });
+                          },
+                          child: const Text(
+                            'Next',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 21,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-                            String formattedTime = _formatTimeOfDay(_selectedFromTime);
-                            String formattedToTime = _formatTimeOfDay(_selectedToTime);
-                            List<String> dropPlaces = _dropPointControllers.map((controller) => controller.text).toList();
-                            if(widget.selectedType=='vehicle') {
-                              if (pickUpController.text.isEmpty ||
-                                  dropPlaces.contains('') ||
-                                  dropPlaces.isEmpty) {
-                                commonWidgets.showToast(
-                                    'Choose Pickup and DropPoints');
+                      ),
+                    ),
+                  if (_currentStep == 3)
+                    Container(
+                      padding: const EdgeInsets.only(right: 10, bottom: 15),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.53,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+                              String formattedTime = _formatTimeOfDay(_selectedFromTime);
+                              String formattedToTime = _formatTimeOfDay(_selectedToTime);
+                              List<String> dropPlaces = _dropPointControllers.map((controller) => controller.text).toList();
+                              if(widget.selectedType=='vehicle') {
+                                if (pickUpController.text.isEmpty ||
+                                    dropPlaces.contains('') ||
+                                    dropPlaces.isEmpty) {
+                                  commonWidgets.showToast(
+                                      'Choose Pickup and DropPoints');
+                                }
+                                else {
+                                  print('name$selectedName');
+                                  print('unitType${widget.selectedType}');
+                                  print('typeName$selectedTypeName');
+                                  print('scale$scale');
+                                  print('typeImage$typeImage');
+                                  print('typeOfLoad$selectedLoad');
+                                  print('date$formattedDate');
+                                  print('additionalLabour$selectedLabour');
+                                  print('time$formattedTime');
+                                  print('productValue${productController.text}');
+                                  print('pickup${pickUpController.text}');
+                                  print('dropPoints${_dropPointControllers.map((
+                                      controller) => controller.text).toList()}');
+                                  userService.userVehicleCreateBooking(
+                                      context,
+                                      name: selectedName.toString(),
+                                      unitType: widget.selectedType,
+                                      typeName: selectedTypeName.toString(),
+                                      scale: scale.toString(),
+                                      typeImage: typeImage.toString(),
+                                      typeOfLoad: selectedLoad.toString(),
+                                      date: formattedDate,
+                                      additionalLabour: selectedLabour.toString(),
+                                      time: formattedTime,
+                                      productValue: productController.text,
+                                      pickup: pickUpController.text,
+                                      dropPoints: dropPlaces,
+                                      token: widget.token);
+                                }
                               }
-                              else {
-                                print('name$selectedName');
-                                print('unitType${widget.selectedType}');
-                                print('typeName$selectedTypeName');
-                                print('scale$scale');
-                                print('typeImage$typeImage');
-                                print('typeOfLoad$selectedLoad');
-                                print('date$formattedDate');
-                                print('additionalLabour$selectedLabour');
-                                print('time$formattedTime');
-                                print('productValue${productController.text}');
-                                print('pickup${pickUpController.text}');
-                                print('dropPoints${_dropPointControllers.map((
-                                    controller) => controller.text).toList()}');
-                                userService.userVehicleCreateBooking(
-                                    context,
-                                    name: selectedName.toString(),
-                                    unitType: widget.selectedType,
-                                    typeName: selectedTypeName.toString(),
-                                    scale: scale.toString(),
-                                    typeImage: typeImage.toString(),
-                                    typeOfLoad: selectedLoad.toString(),
-                                    date: formattedDate,
-                                    additionalLabour: selectedLabour.toString(),
-                                    time: formattedTime,
-                                    productValue: productController.text,
-                                    pickup: pickUpController.text,
-                                    dropPoints: dropPlaces,
-                                    token: widget.token);
+                              if(widget.selectedType=='bus') {
+                                if (pickUpController.text.isEmpty ||
+                                    dropPlaces.contains('') ||
+                                    dropPlaces.isEmpty) {
+                                  commonWidgets.showToast(
+                                      'Choose Pickup and DropPoints');
+                                }
+                                else {
+                                  print('unitType${widget.selectedType}');
+                                  print('name$selectedName');
+                                  print('typeImage$typeImage');
+                                  print('date$formattedDate');
+                                  print('additionalLabour$selectedLabour');
+                                  print('time$formattedTime');
+                                  print('productValue${productController.text}');
+                                  print('pickup${pickUpController.text}');
+                                  print('dropPoints${_dropPointControllers.map((
+                                      controller) => controller.text).toList()}');
+                                  userService.userBusCreateBooking(
+                                      context,
+                                      name: selectedName.toString(),
+                                      unitType: widget.selectedType,
+                                      image: typeImage.toString(),
+                                      date: formattedDate,
+                                      additionalLabour: selectedLabour.toString(),
+                                      time: formattedTime,
+                                      productValue: productController.text,
+                                      pickup: pickUpController.text,
+                                      dropPoints: dropPlaces,
+                                      token: widget.token);
+                                }
                               }
-                            }
-                            if(widget.selectedType=='bus') {
-                              if (pickUpController.text.isEmpty ||
-                                  dropPlaces.contains('') ||
-                                  dropPlaces.isEmpty) {
-                                commonWidgets.showToast(
-                                    'Choose Pickup and DropPoints');
+                              if(widget.selectedType=='equipment') {
+                                if (cityNameController.text.isEmpty ||
+                                    addressController.text.isEmpty) {
+                                  commonWidgets.showToast(
+                                      'Choose City name and Address');
+                                }
+                                else {
+                                  print('unitType${widget.selectedType}');
+                                  print('name$selectedName');
+                                  print('typeImage$typeImage');
+                                  print('FromTime$formattedTime');
+                                  print('ToTime$formattedToTime');
+                                  print('Date$formattedDate');
+                                  print('additionalLabour$selectedLabour');
+                                  print('city${cityNameController.text}');
+                                  print('address${addressController.text}');
+                                  print('zipcode${zipCodeController.text}');
+                                  userService.userEquipmentCreateBooking(
+                                      context,
+                                      name: selectedName.toString(),
+                                      unitType: widget.selectedType,
+                                      typeName: selectedTypeName.toString(),
+                                      typeImage: typeImage.toString(),
+                                      date: formattedDate,
+                                      additionalLabour: selectedLabour.toString(),
+                                      fromTime: formattedTime,
+                                      toTime: formattedToTime,
+                                      cityName: cityNameController.text,
+                                      address: addressController.text,
+                                      zipCode: zipCodeController.text,
+                                      token: widget.token);
+                                }
                               }
-                              else {
-                                print('unitType${widget.selectedType}');
-                                print('name$selectedName');
-                                print('typeImage$typeImage');
-                                print('date$formattedDate');
-                                print('additionalLabour$selectedLabour');
-                                print('time$formattedTime');
-                                print('productValue${productController.text}');
-                                print('pickup${pickUpController.text}');
-                                print('dropPoints${_dropPointControllers.map((
-                                    controller) => controller.text).toList()}');
-                                userService.userBusCreateBooking(
-                                    context,
-                                    name: selectedName.toString(),
-                                    unitType: widget.selectedType,
-                                    image: typeImage.toString(),
-                                    date: formattedDate,
-                                    additionalLabour: selectedLabour.toString(),
-                                    time: formattedTime,
-                                    productValue: productController.text,
-                                    pickup: pickUpController.text,
-                                    dropPoints: dropPlaces,
-                                    token: widget.token);
+                              if(widget.selectedType=='special') {
+                                if (cityNameController.text.isEmpty ||
+                                    addressController.text.isEmpty) {
+                                  commonWidgets.showToast(
+                                      'Choose City name and Address');
+                                }
+                                else {
+                                  print('unitType${widget.selectedType}');
+                                  print('name$selectedName');
+                                  print('typeImage$typeImage');
+                                  print('FromTime$formattedTime');
+                                  print('ToTime$formattedToTime');
+                                  print('Date$formattedDate');
+                                  print('additionalLabour$selectedLabour');
+                                  print('city${cityNameController.text}');
+                                  print('address${addressController.text}');
+                                  print('zipcode${zipCodeController.text}');
+                                  userService.userSpecialCreateBooking(
+                                      context,
+                                      name: selectedName.toString(),
+                                      unitType: widget.selectedType,
+                                      image: typeImage.toString(),
+                                      date: formattedDate,
+                                      additionalLabour: selectedLabour.toString(),
+                                      fromTime: formattedTime,
+                                      toTime: formattedToTime,
+                                      cityName: cityNameController.text,
+                                      address: addressController.text,
+                                      zipCode: zipCodeController.text,
+                                      token: widget.token);
+                                }
                               }
-                            }
-                            if(widget.selectedType=='equipment') {
-                              if (cityNameController.text.isEmpty ||
-                                  addressController.text.isEmpty) {
-                                commonWidgets.showToast(
-                                    'Choose City name and Address');
-                              }
-                              else {
-                                print('unitType${widget.selectedType}');
-                                print('name$selectedName');
-                                print('typeImage$typeImage');
-                                print('FromTime$formattedTime');
-                                print('ToTime$formattedToTime');
-                                print('Date$formattedDate');
-                                print('additionalLabour$selectedLabour');
-                                print('city${cityNameController.text}');
-                                print('address${addressController.text}');
-                                print('zipcode${zipCodeController.text}');
-                                userService.userEquipmentCreateBooking(
-                                    context,
-                                    name: selectedName.toString(),
-                                    unitType: widget.selectedType,
-                                    typeName: selectedTypeName.toString(),
-                                    typeImage: typeImage.toString(),
-                                    date: formattedDate,
-                                    additionalLabour: selectedLabour.toString(),
-                                    fromTime: formattedTime,
-                                    toTime: formattedToTime,
-                                    cityName: cityNameController.text,
-                                    address: addressController.text,
-                                    zipCode: zipCodeController.text,
-                                    token: widget.token);
-                              }
-                            }
-                            if(widget.selectedType=='special') {
-                              if (cityNameController.text.isEmpty ||
-                                  addressController.text.isEmpty) {
-                                commonWidgets.showToast(
-                                    'Choose City name and Address');
-                              }
-                              else {
-                                print('unitType${widget.selectedType}');
-                                print('name$selectedName');
-                                print('typeImage$typeImage');
-                                print('FromTime$formattedTime');
-                                print('ToTime$formattedToTime');
-                                print('Date$formattedDate');
-                                print('additionalLabour$selectedLabour');
-                                print('city${cityNameController.text}');
-                                print('address${addressController.text}');
-                                print('zipcode${zipCodeController.text}');
-                                userService.userSpecialCreateBooking(
-                                    context,
-                                    name: selectedName.toString(),
-                                    unitType: widget.selectedType,
-                                    image: typeImage.toString(),
-                                    date: formattedDate,
-                                    additionalLabour: selectedLabour.toString(),
-                                    fromTime: formattedTime,
-                                    toTime: formattedToTime,
-                                    cityName: cityNameController.text,
-                                    address: addressController.text,
-                                    zipCode: zipCodeController.text,
-                                    token: widget.token);
-                              }
-                            }
-                            // Future.delayed(const Duration(seconds: 2), () {
-                            //   Navigator.push(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) => const ChooseVendor()),
-                            //   );
-                            // });
+                              // Future.delayed(const Duration(seconds: 2), () {
+                              //   Navigator.push(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //         builder: (context) => const ChooseVendor()),
+                              //   );
+                              // });
 
-                            /*showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  backgroundColor: Colors.white,
-                                  title: Stack(
-                                    children: [
-                                      Center(
-                                          child: SvgPicture.asset(
-                                        'assets/generated_logo.svg',
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.2,
-                                      )),
-                                      Positioned(
-                                        top: -15,
-                                        right: -10,
-                                        child: IconButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            icon: const Icon(
-                                                FontAwesomeIcons.multiply)),
-                                      )
-                                    ],
-                                  ),
-                                  content: const Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                            top: 10, bottom: 10),
-                                        child: Text(
-                                          'Booking Generated',
-                                          style: TextStyle(fontSize: 20),
+                              /*showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    title: Stack(
+                                      children: [
+                                        Center(
+                                            child: SvgPicture.asset(
+                                          'assets/generated_logo.svg',
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          height:
+                                              MediaQuery.of(context).size.height *
+                                                  0.2,
+                                        )),
+                                        Positioned(
+                                          top: -15,
+                                          right: -10,
+                                          child: IconButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              icon: const Icon(
+                                                  FontAwesomeIcons.multiply)),
+                                        )
+                                      ],
+                                    ),
+                                    content: const Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                              top: 10, bottom: 10),
+                                          child: Text(
+                                            'Booking Generated',
+                                            style: TextStyle(fontSize: 20),
+                                          ),
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.only(bottom: 10),
-                                        child: Text(
-                                          'Booking id #1233445',
-                                          style: TextStyle(fontSize: 14),
+                                        Padding(
+                                          padding: EdgeInsets.only(bottom: 10),
+                                          child: Text(
+                                            'Booking id #1233445',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );*/
-                          });
-                        },
-                        child: const Text(
-                          'Create Booking',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );*/
+                            });
+                          },
+                          child: const Text(
+                            'Create Booking',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 21,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -1458,7 +1462,7 @@ class _CreateBookingState extends State<CreateBooking> {
                         children: [
                           SizedBox(
                             width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.17,
+                            height: MediaQuery.sizeOf(context).height * 0.21,
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
@@ -1770,7 +1774,7 @@ class _CreateBookingState extends State<CreateBooking> {
                         children: [
                           SizedBox(
                             width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.17,
+                            height: MediaQuery.sizeOf(context).height * 0.21,
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
@@ -2679,86 +2683,45 @@ class _CreateBookingState extends State<CreateBooking> {
       String selectedLoad,
       String additionalLabour,
       ) {
-    return Center(
-      child: Stack(
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height * 0.6,
-            child: GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
-                _requestPermissions();
-              },
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(0, 0), // Default position
-                zoom: 1,
+    return SingleChildScrollView(
+      child: Center(
+        child: Stack(
+          children: [
+            Container(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: GoogleMap(
+                onMapCreated: (GoogleMapController controller) {
+                  mapController = controller;
+                  _requestPermissions();
+                },
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(0, 0), // Default position
+                  zoom: 1,
+                ),
+                markers: markers,
+                polylines: polylines,
               ),
-              markers: markers,
-              polylines: polylines,
             ),
-          ),
-          Positioned(
-            top: 15,
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.only(left: 30, right: 30),
-              child: Column(
-                children: [
-                  Card(
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        // Constant "Pick up" text field
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: CircleAvatar(
-                                  backgroundColor: Color(0xff009E10),
-                                  minRadius: 6,
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  height: 40,
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    controller: pickUpController,
-                                    inputFormatters: [
-                                      LengthLimitingTextInputFormatter(30)
-                                    ],
-                                    decoration: InputDecoration(
-                                      hintText: 'Pick up',
-                                      hintStyle: const TextStyle(
-                                          color: Color(0xff707070),
-                                          fontSize: 15),
-                                      border: InputBorder.none,
-                                    ),
-                                    // onChanged: (value) => _updatePolylines(),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          indent: 5,
-                          endIndent: 5,
-                        ),
-                        // Dynamic "Drop Point" text fields
-                        ..._dropPointControllers.asMap().entries.map((entry) {
-                          int i = entry.key;
-                          TextEditingController controller = entry.value;
-                          return Padding(
+            Positioned(
+              top: 15,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                padding: const EdgeInsets.only(left: 30, right: 30),
+                child: Column(
+                  children: [
+                    Card(
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          // Constant "Pick up" text field
+                          Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: CircleAvatar(
-                                    backgroundColor: Color(0xffE20808),
+                                    backgroundColor: Color(0xff009E10),
                                     minRadius: 6,
                                   ),
                                 ),
@@ -2767,42 +2730,16 @@ class _CreateBookingState extends State<CreateBooking> {
                                     height: 40,
                                     padding: const EdgeInsets.all(8.0),
                                     child: TextFormField(
-                                      controller: controller,
+                                      controller: pickUpController,
                                       inputFormatters: [
                                         LengthLimitingTextInputFormatter(30)
                                       ],
                                       decoration: InputDecoration(
-                                        hintText: 'Drop Point ${i + 1}',
+                                        hintText: 'Pick up',
                                         hintStyle: const TextStyle(
                                             color: Color(0xff707070),
                                             fontSize: 15),
                                         border: InputBorder.none,
-                                        suffixIcon: i ==
-                                                _dropPointControllers.length - 1
-                                            ? Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  if (_dropPointControllers
-                                                          .length >
-                                                      1)
-                                                    IconButton(
-                                                      onPressed: () =>
-                                                          _removeTextField(i),
-                                                      icon: Icon(Icons.cancel,
-                                                          color: Colors.red),
-                                                    ),
-                                                  if (_dropPointControllers
-                                                          .length ==
-                                                      1)
-                                                    IconButton(
-                                                      onPressed: _addTextField,
-                                                      icon: Icon(
-                                                          FontAwesomeIcons
-                                                              .circlePlus),
-                                                    ),
-                                                ],
-                                              )
-                                            : null,
                                       ),
                                       // onChanged: (value) => _updatePolylines(),
                                     ),
@@ -2810,42 +2747,111 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                               ],
                             ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.05,
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6A66D1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ),
-                        onPressed: () {
-                          _fetchCoordinates();
-                        },
-                        child: const Text(
-                          'Get Location',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
+                          const Divider(
+                            indent: 5,
+                            endIndent: 5,
+                          ),
+                          // Dynamic "Drop Point" text fields
+                          ..._dropPointControllers.asMap().entries.map((entry) {
+                            int i = entry.key;
+                            TextEditingController controller = entry.value;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: CircleAvatar(
+                                      backgroundColor: Color(0xffE20808),
+                                      minRadius: 6,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      height: 45,
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextFormField(
+                                        controller: controller,
+                                        inputFormatters: [
+                                          LengthLimitingTextInputFormatter(30)
+                                        ],
+                                        decoration: InputDecoration(
+                                          hintText: 'Drop Point ${i + 1}',
+                                          hintStyle: const TextStyle(
+                                              color: Color(0xff707070),
+                                              fontSize: 15),
+                                          border: InputBorder.none,
+                                          suffixIcon: i ==
+                                                  _dropPointControllers.length - 1
+                                              ? Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    if (_dropPointControllers
+                                                            .length >
+                                                        1)
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            _removeTextField(i),
+                                                        icon: Icon(Icons.cancel,
+                                                            color: Colors.red),
+                                                      ),
+                                                    if (_dropPointControllers
+                                                            .length ==
+                                                        1)
+                                                      IconButton(
+                                                        onPressed: _addTextField,
+                                                        icon: Icon(
+                                                            FontAwesomeIcons
+                                                                .circlePlus),
+                                                      ),
+                                                  ],
+                                                )
+                                              : null,
+                                        ),
+                                        // onChanged: (value) => _updatePolylines(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6A66D1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            _fetchCoordinates();
+                          },
+                          child: const Text(
+                            'Get Location',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2880,7 +2886,6 @@ class _CreateBookingState extends State<CreateBooking> {
                     color: Colors.white,
                     child: Column(
                       children: [
-                        // Constant "Pick up" text field
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: Row(
@@ -2894,7 +2899,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               ),
                               Expanded(
                                 child: Container(
-                                  height: 40,
+                                  height: 45,
                                   padding: const EdgeInsets.all(8.0),
                                   child: TextFormField(
                                     controller: pickUpController,

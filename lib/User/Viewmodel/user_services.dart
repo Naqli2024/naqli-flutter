@@ -10,6 +10,7 @@ import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_naqli/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -428,6 +429,23 @@ class UserService{
         const SnackBar(content: Text('Booking Created successful')),
       );
       CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChooseVendor(
+                bookingId: bookingId??'',
+                size: scale,
+                unitType: unitType,
+                load: typeOfLoad,
+                unit: name,
+                pickup: pickup,
+                dropPoints: dropPoints,
+                token: token
+              )
+          ),
+        );
+      });
     } else {
       final message = responseBody['message'] ?? 'Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(

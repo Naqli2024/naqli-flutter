@@ -95,7 +95,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) => const ChooseVendor()
+                                                builder: (context) => const ChooseVendor(token:'',unit: '', load: '',size: '',bookingId: '',unitType: '',dropPoints: [],pickup: '',)
                                             ),
                                           );
                                         },
@@ -341,7 +341,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const ChooseVendor()
+                                    builder: (context) => const ChooseVendor(token:'',unit: '', load: '',size: '',bookingId: '',unitType: '',dropPoints: [],pickup: '',)
                                 ),
                               );
                             });

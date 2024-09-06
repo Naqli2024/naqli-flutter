@@ -81,6 +81,7 @@ class _UserOTPState extends State<UserOTP> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,
         title: Stack(
           children: [

@@ -1,3 +1,17 @@
+// Place the buildscript block first
+buildscript {
+    ext.kotlin_version = '1.8.22'  // Ensure you use the correct Kotlin version
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.2' // Latest Android Gradle Plugin version
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+// plugins block comes after buildscript
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -5,9 +19,11 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Start the android block here
 android {
     namespace = "com.example.flutter_naqli"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34  // Specify the compileSdkVersion here directly
+
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -16,52 +32,52 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "1.8"  // Use the correct syntax for the JVM target
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.flutter_naqli"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-        buildConfigField "String", "API_KEY", "\"${project.API_KEY}\""
-
+        minSdk = 21
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+        // API key from project properties
+        buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
     }
 
+//    signingConfigs {
+//        release {
+//            keyAlias = keystoreProperties['keyAlias']
+//            keyPassword = keystoreProperties['keyPassword']
+//            storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+//            storePassword = keystoreProperties['storePassword']
+//        }
+//    }
+    signingConfigs {
+        release {
+            storeFile file("../app/upload-keystore.jks")
+            storePassword "naqli@123"
+            keyAlias "upload"
+            keyPassword "naqli@123"
+        }
+    }
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
-            buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
-
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
         }
     }
 }
+
 dependencies {
-
-    // Maps SDK for Android
-    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation "com.google.android.gms:play-services-maps:19.0.0"
 }
-
 
 flutter {
     source = "../.."
-}
-
-android {
-    // other configurations
-    compileSdkVersion 34
-    defaultConfig {
-        // other configurations
-        minSdkVersion 21
-        targetSdkVersion 33
-    }
 }

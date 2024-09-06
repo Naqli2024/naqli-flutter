@@ -24,6 +24,7 @@ class _OTPMobileNoState extends State<OTPMobileNo> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,
         title: Stack(

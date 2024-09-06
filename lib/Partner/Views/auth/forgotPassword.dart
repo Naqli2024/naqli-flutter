@@ -34,6 +34,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            automaticallyImplyLeading: false,
             toolbarHeight: 80,
             backgroundColor: const Color(0xff6A66D1),
             title: const Center(
@@ -141,6 +142,7 @@ class _ResetPasswordState extends State<ResetPassword> {
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
+              automaticallyImplyLeading: false,
               toolbarHeight: 80,
               backgroundColor: const Color(0xff6A66D1),
               title: const Center(

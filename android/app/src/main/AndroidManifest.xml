@@ -5,7 +5,7 @@
     <application
         android:label="naqlee"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon"
+        android:icon="@mipmap/launcher_icons"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"

@@ -24,6 +24,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
     Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Container(
             margin: const EdgeInsets.only(top: 20),
             child: SvgPicture.asset(

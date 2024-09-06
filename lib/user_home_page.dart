@@ -20,6 +20,7 @@ class _UserHomePageState extends State<UserHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         leading: Builder(
           builder: (BuildContext context) => IconButton(
             onPressed: () {
@@ -440,14 +441,14 @@ class _UserHomePageState extends State<UserHomePage> {
               _showModalBottomSheet(context);
             },
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(25, 7, 25, 10),
+              padding: const EdgeInsets.fromLTRB(25, 0, 25, 10),
               child: Container(
                 decoration: BoxDecoration(
                   color: const Color(0xff6069FF),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Padding(
-                  padding: EdgeInsets.all(12.0),
+                  padding: EdgeInsets.all(8.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

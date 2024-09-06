@@ -259,6 +259,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
             children: [
               AppBar(
                 toolbarHeight: 80,
+                automaticallyImplyLeading: false,
                 backgroundColor: const Color(0xffA09CEC),
                 title: const Center(
                   child: Text(
