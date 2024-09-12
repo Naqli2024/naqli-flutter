@@ -4,7 +4,8 @@ import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
-import 'package:flutter_naqli/user_home_page.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'User/Views/user_createBooking/user_vendor.dart';
@@ -12,6 +13,7 @@ import 'User/Views/user_createBooking/user_vendor.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   runApp(const MyApp());
 }
 
@@ -98,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   if (id.isNotEmpty && token.isNotEmpty) {
                     // return ChooseVendor(unit: '', load: '',size: '',bookingId: '',unitType: '',);
-                    return UserType(firstName: firstName, lastName: lastName,token: token,);
+                    return UserType(firstName: firstName, lastName: lastName,token: token,id: id,);
                   }
                 }
               }

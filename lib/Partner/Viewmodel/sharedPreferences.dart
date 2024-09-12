@@ -60,6 +60,41 @@ Future<Map<String, String?>> getSavedUserData() async {
   }
 }
 
+
+Future<void> saveBookingId(String id, String token) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('_id', id);
+    await prefs.setString('token', token);
+    print('Data saved: id=$id, token: $token');
+  } catch (e) {
+    print('Error saving data: $e');
+  }
+}
+
+Future<Map<String, String?>> getSavedBookingId() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString('_id');
+    final token = prefs.getString('token');
+
+    if (id == null || token == null) {
+      print('No data found for bookingId or token');
+    } else {
+      print('Data retrieved: _id=$id, token=$token');
+    }
+
+    return {
+      '_id': id,
+      'token': token,
+    };
+  } catch (e) {
+    print('Error retrieving data: $e');
+    return {};
+  }
+}
+
+
 Future<void> clearUserData() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();

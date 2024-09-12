@@ -4,15 +4,24 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
+import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class UserType extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String token;
-  const UserType({super.key, required this.firstName, required this.lastName, required this.token});
+  final String id;
+  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id});
 
   @override
   State<UserType> createState() => _UserTypeState();
@@ -22,6 +31,36 @@ class _UserTypeState extends State<UserType> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
   String _selectedType = '';
+  Future<Map<String, dynamic>?>? booking;
+
+  @override
+  void initState() {
+    super.initState();
+    booking = _fetchBookingDetails();
+  }
+  // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+  //   try {
+  //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
+  //     return history; // Return the complete data
+  //   } catch (e) {
+  //     print('Error fetching booking details: $e');
+  //     return null; // Return null if an error occurs
+  //   }
+  // }
+
+  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+    final data = await getSavedBookingId();
+    final String? bookingId = data['_id'];
+    final String? token = data['token'];
+
+    if (bookingId != null && token != null) {
+      print('Fetching details with bookingId=$bookingId and token=$token');
+      return await userService.fetchBookingDetails(bookingId, token);
+    } else {
+      print('No bookingId or token found in shared preferences.');
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,34 +94,144 @@ class _UserTypeState extends State<UserType> {
                     height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 15),
-                  child: Text('Booking',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Booking',style: TextStyle(fontSize: 25),),
                 ),
-                onTap: (){}
+                onTap: ()async {
+                  try {
+                    final bookingData = await booking;
+
+                    if (bookingData != null) {
+                      bookingData['paymentStatus']== 'Pending'
+                      ? Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChooseVendor(
+                            id: widget.id,
+                            bookingId: bookingData['_id'] ?? '',
+                            size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
+                            unitType: bookingData['unitType'] ?? '',
+                            unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
+                            load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
+                            unit: bookingData['name'] ?? '',
+                            pickup: bookingData['pickup'] ?? '',
+                            dropPoints: bookingData['dropPoints'] ?? [],
+                            token: widget.token,
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            selectedType: _selectedType,
+                            cityName: bookingData['cityName'] ?? '',
+                            address: bookingData['address'] ?? '',
+                            zipCode: bookingData['zipCode'] ?? '',
+                          ),
+                        ),
+                      )
+                      : bookingData['paymentStatus']== 'HalfPaid'
+                      ? Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PendingPayment(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            selectedType: _selectedType,
+                            token: widget.token,
+                            unit: bookingData['name'] ?? '',
+                            load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
+                            size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
+                            bookingId: bookingData['_id'] ?? '',
+                            unitType: bookingData['unitType'] ?? '',
+                            pickup: bookingData['pickup'] ?? '',
+                            dropPoints: bookingData['dropPoints'] ?? [],
+                            cityName: bookingData['cityName'] ?? '',
+                            address: bookingData['address'] ?? '',
+                            zipCode: bookingData['zipCode'] ?? '',
+                            unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
+                            id: widget.id,
+                          )
+                        ),
+                      )
+                      : Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PaymentCompleted(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            selectedType: _selectedType,
+                            token: widget.token,
+                            unit: bookingData['name'] ?? '',
+                            load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
+                            size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
+                            bookingId: bookingData['_id'] ?? '',
+                            unitType: bookingData['unitType'] ?? '',
+                            pickup: bookingData['pickup'] ?? '',
+                            dropPoints: bookingData['dropPoints'] ?? [],
+                            cityName: bookingData['cityName'] ?? '',
+                            address: bookingData['address'] ?? '',
+                            zipCode: bookingData['zipCode'] ?? '',
+                            unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
+                            id: widget.id,
+                            partnerId: bookingData['partner'] ?? '',
+                          )
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id)
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Handle errors here
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error fetching booking details: $e')),
+                    );
+                  }
+                }
             ),
             ListTile(
                 leading: Image.asset('assets/booking_logo.png',
                     height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 15),
-                  child: Text('Booking History',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Booking History',style: TextStyle(fontSize: 25),),
                 ),
-                onTap: (){}
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                    ),
+                  );
+                }
             ),
             ListTile(
                 leading: Image.asset('assets/payment_logo.png',
                     height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 5),
-                  child: Text('Payment',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Payment',style: TextStyle(fontSize: 25),),
                 ),
-                onTap: (){}
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                    ),
+                  );
+                }
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.only(left: 20,bottom: 10,top: 15),
+              child: Text('More info and support',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold)),
             ),
             ListTile(
               leading: Image.asset('assets/report_logo.png',
                   height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Report',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                child: Text('Report',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
 
@@ -93,20 +242,60 @@ class _UserTypeState extends State<UserType> {
                   height: MediaQuery.of(context).size.height * 0.05),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ChooseVendor(
+                        bookingId: '',
+                        size: '',
+                        unitType:'',
+                        unitTypeName: '',
+                        load: '',
+                        unit: '',
+                        pickup: '',
+                        dropPoints: [],
+                        token: widget.token,
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        selectedType: '',
+                        cityName: '',
+                        address: '',
+                        zipCode: '',
+                        id: widget.id,
+                      ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
+              ),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 17),
+                child: Text('Contact us',style: TextStyle(fontSize: 25),),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MakePayment()
+                  ),
+                );
               },
             ),
             ListTile(
               leading: const Padding(
                 padding: EdgeInsets.only(left: 12),
-                child: Icon(Icons.logout,color: Color(0xff707070),size: 30,),
+                child: Icon(Icons.logout,color: Colors.red,size: 30,),
               ),
               title: const Padding(
                 padding: EdgeInsets.only(left: 15),
-                child: Text('Logout',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
               ),
               onTap: () {
                 showDialog(
@@ -229,6 +418,7 @@ class _UserTypeState extends State<UserType> {
                               lastName: widget.lastName,
                               selectedType: _selectedType,
                               token: widget.token,
+                              id: widget.id,
                             ),
                           ),
                         );
@@ -274,6 +464,7 @@ class _UserTypeState extends State<UserType> {
                               lastName: widget.lastName,
                               selectedType: _selectedType,
                               token: widget.token,
+                              id: widget.id,
                             ),
                           ),
                         );
@@ -325,6 +516,7 @@ class _UserTypeState extends State<UserType> {
                       lastName: widget.lastName,
                       selectedType: _selectedType,
                       token: widget.token,
+                      id: widget.id,
                     ),
                   ),
                 );
@@ -377,6 +569,7 @@ class _UserTypeState extends State<UserType> {
                                 lastName: widget.lastName,
                                 selectedType: _selectedType,
                                 token: widget.token,
+                                id: widget.id,
                               ),
                             ),
                           );
@@ -429,6 +622,7 @@ class _UserTypeState extends State<UserType> {
                           lastName: widget.lastName,
                           selectedType: _selectedType,
                           token: widget.token,
+                          id: widget.id,
                         ),
                       ),
                     );
@@ -577,3 +771,5 @@ Widget bottomCard(String imagePath, String title) {
     ),
   );
 }
+
+

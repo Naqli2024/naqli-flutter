@@ -23,26 +23,17 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
-    }
-    ext {
-        API_KEY = project.hasProperty('API_KEY') ? project.API_KEY : ''
-    }
-}
+        classpath 'com.android.tools.build:gradle:8.0.2'
 
-buildscript {
-    ext.kotlin_version = '1.8.22'
-    dependencies {
+        // Kotlin Gradle Plugin configuration
+        ext.kotlin_version = '1.9.0' // Replace with the latest Kotlin version
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+
+        // Google Services Plugin
+        classpath 'com.google.gms:google-services:4.4.2'
     }
 }
 
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
 
 

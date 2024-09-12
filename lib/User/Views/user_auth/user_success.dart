@@ -38,22 +38,18 @@ class _SuccessScreenState extends State<SuccessScreen> {
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UserLogin()
-                ),
-              );
+              Navigator.pop(context);
             },
             child: Container(
-              margin: const EdgeInsets.only(right: 10),
+              margin: const EdgeInsets.only(right: 15,top: 15),
               child: const Align(
                 alignment: Alignment.topRight,
                 child: CircleAvatar(
                   backgroundColor: Color(0xffFFFFFF),
                   child: Icon(
-                    Icons.clear,
+                    Icons.close_rounded,
                     color: Colors.black,
+                    size: 24,
                   ),
                 ),
               ),
@@ -68,7 +64,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
             Stack(
               children: [
                 Container(
-                  margin: const EdgeInsets.only(top: 90, bottom: 20),
+                  margin: EdgeInsets.only(top: MediaQuery.sizeOf(context).height * 0.15, bottom: 20),
                   alignment: Alignment.bottomCenter,
                   child: SvgPicture.asset(
                     widget.Image,
@@ -80,18 +76,16 @@ class _SuccessScreenState extends State<SuccessScreen> {
               ],
             ),
             Padding(
-              padding: EdgeInsets.only(top: 0),
+              padding: EdgeInsets.only(bottom: 20),
               child: Text(widget.title,
                   style: TextStyle(
-                      fontSize: 25,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500)),
+                      fontSize: 26)),
             ),
             Padding(
               padding: EdgeInsets.only(top: 30),
               child: Text(widget.subTitle,
                 style: TextStyle(
-                  fontSize: 17)),
+                  fontSize: 25,fontWeight: FontWeight.w500)),
             ),
           ],
         ),

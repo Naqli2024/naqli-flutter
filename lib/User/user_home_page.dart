@@ -1,5 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
@@ -140,7 +141,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 child: Text('Driver',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
-
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverHomePage()));
               },
             ),
             ListTile(

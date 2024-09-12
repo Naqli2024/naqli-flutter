@@ -6,7 +6,23 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class PendingPayment extends StatefulWidget {
-  const PendingPayment({super.key});
+  final String bookingId;
+  final String unit;
+  final String unitType;
+  final String unitTypeName;
+  final String load;
+  final String size;
+  final String pickup;
+  final List dropPoints;
+  final String cityName;
+  final String address;
+  final String zipCode;
+  final String token;
+  final String firstName;
+  final String lastName;
+  final String selectedType;
+  final String id;
+  const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id});
 
   @override
   State<PendingPayment> createState() => _PendingPaymentState();
@@ -20,6 +36,7 @@ class _PendingPaymentState extends State<PendingPayment> {
     return Scaffold(
       appBar: commonWidgets.commonAppBar(
         context,
+        User: widget.firstName + widget.lastName,
       ),
       body: SingleChildScrollView(
         child: Stack(
@@ -52,11 +69,19 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   padding: const EdgeInsets.only(left: 10,right: 15),
                                   child: Image.asset('assets/moving_truck.png'),
                                 ),
-                                Container(
-                                    alignment: Alignment.centerLeft,
-                                    height: 50,
-                                    width: MediaQuery.sizeOf(context).width * 0.55,
-                                    child: Text('Booking Id #343577585868')
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                      alignment: Alignment.center,
+                                      // height: 50,
+                                      width: MediaQuery.sizeOf(context).width * 0.55,
+                                      child: Column(
+                                        children: [
+                                          Text('Booking Id'),
+                                          Text(widget.bookingId),
+                                        ],
+                                      )
+                                  ),
                                 ),
                               ],
                             ),
@@ -95,7 +120,24 @@ class _PendingPaymentState extends State<PendingPayment> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) => const ChooseVendor(token:'',unit: '', load: '',size: '',bookingId: '',unitType: '',dropPoints: [],pickup: '',)
+                                                builder: (context) => ChooseVendor(
+                                                  id: widget.id,
+                                                  firstName: widget.firstName,
+                                                  lastName: widget.lastName,
+                                                  selectedType: widget.selectedType,
+                                                  token: widget.token,
+                                                  unit: widget.unit,
+                                                  load: widget.load,
+                                                  size: widget.size,
+                                                  bookingId: widget.bookingId,
+                                                  unitType: widget.unitType,
+                                                  dropPoints: widget.dropPoints,
+                                                  pickup: widget.pickup,
+                                                  cityName: widget.cityName,
+                                                  address: widget.address,
+                                                  zipCode: widget.zipCode,
+                                                  unitTypeName: widget.unitTypeName,
+                                                )
                                             ),
                                           );
                                         },
@@ -341,7 +383,8 @@ class _PendingPaymentState extends State<PendingPayment> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const ChooseVendor(token:'',unit: '', load: '',size: '',bookingId: '',unitType: '',dropPoints: [],pickup: '',)
+                                    builder: (context) => ChooseVendor(token:'',unit: '', load: '',size: '',bookingId: '',unitType: '',dropPoints: [],pickup: '',firstName: '', lastName: '', selectedType: '', cityName: '', address: '', zipCode: '', unitTypeName: widget.unitTypeName,id: widget.id,
+                                    )
                                 ),
                               );
                             });

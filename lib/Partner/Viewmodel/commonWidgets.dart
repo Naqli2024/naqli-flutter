@@ -8,11 +8,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CommonWidgets{
-  AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom}) {
+  AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom,bool showLeading = true}) {
     return AppBar(
         automaticallyImplyLeading: false,
         // toolbarHeight: MediaQuery.of(context).size.height * 0.065,
-        leading: Builder(
+        leading: showLeading
+            ? Builder(
           builder: (BuildContext context) => IconButton(
             onPressed: () {
               Scaffold.of(context).openDrawer();
@@ -23,7 +24,8 @@ class CommonWidgets{
               size: 45,
             ),
           ),
-        ),
+        )
+            : null,
         title: Padding(
           padding: const EdgeInsets.only(top: 10),
           child: SvgPicture.asset('assets/naqlee-logo.svg',

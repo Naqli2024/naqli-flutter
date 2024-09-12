@@ -146,8 +146,14 @@ class _ViewMapState extends State<ViewMap> {
   void _moveCameraToFitAllMarkers() {
     if (mapController != null && pickupLatLng != null && dropLatLng != null) {
       LatLngBounds bounds = _calculateBounds();
+      // mapController!.animateCamera(
+      //   CameraUpdate.newLatLngBounds(bounds, 130), // Padding in pixels
+      // );
       mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 130), // Padding in pixels
+        CameraUpdate.newCameraPosition(CameraPosition(
+          target: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+          zoom: 5,
+        )), // Padding in pixels
       );
     } else {
       print('mapController or coordinates are not initialized');

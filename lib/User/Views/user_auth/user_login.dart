@@ -6,7 +6,7 @@ import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
-import 'package:flutter_naqli/user_home_page.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserLogin extends StatefulWidget {
@@ -69,6 +69,7 @@ class _UserLoginState extends State<UserLogin> {
                       Stack(
                         children: [
                           Container(
+                            height: MediaQuery.sizeOf(context).height * 0.3,
                             padding: const EdgeInsets.all(20),
                             color: const Color(0xff6A66D1),
                             child: Row(
@@ -274,7 +275,7 @@ class _UserLoginState extends State<UserLogin> {
 
                                       },
                                       child: Container(
-                                        padding: const EdgeInsets.only(top: 7),
+                                        padding: const EdgeInsets.only(top: 7,bottom: 10),
                                         child: const Text(
                                           'Use without Login',
                                           style: TextStyle(

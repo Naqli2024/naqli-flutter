@@ -11,14 +11,14 @@ import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
-import 'package:flutter_naqli/user_home_page.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class UserService{
-  static const String baseUrl = 'https://naqli.onrender.com/api/';
+  static const String baseUrl = 'http://10.0.2.2:4000/api/';
 
   Future<void> userRegister(context,{
     required String firstName,
@@ -293,7 +293,7 @@ class UserService{
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login successful')),
       );
-
+      // I/flutter (12075): Full Response Body: {success: true, data: [{_id: 66dc0b53e920fbed22e09d37, name: Lorry 7 metres, unitType: vehicle, type: [{typeName: Slide, scale: (7m to 7.5m), typeImage: assets/images/lorry 7 meters-sides.svg, typeOfLoad: Auto parts, _id: 66dc0b53e920fbed22e09d38}], pickup: chennai, dropPoints: [coimbatore], productValue: 123, date: 2024-09-07, time: 13:43, additionalLabour: 2, bookingStatus: Running, user: 66d15f161946cb9cbadf3912, paymentStatus: Paid, paymentAmount: 0, remainingBalance: 0, additionalCharges: 0, additionalChargesReason: [], payout: 0, initialPayout: 0, finalPayout: 0, bookingId: 2c139b08-5879-413b-a194-2e5c0b8333da, createdAt: 2024-09-07T08:14:11.025Z, updatedAt: 2024-09-07T08:14:11.025Z, __v: 0}]}
       final userData = responseBody['data']['user'];
       final tokenData = responseBody['data'];
 
@@ -302,15 +302,14 @@ class UserService{
         final lastName = userData['lastName'] ?? '';
         final token = tokenData['token'] ?? '';
         final id = userData['_id'] ?? '';
-
         print(userData);
-
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserType(firstName: firstName,lastName: lastName,token: token,),
+            builder: (context) => UserType(firstName: firstName,lastName: lastName,token: token,id: id,),
           ),
         );
+        // await fetchPaymentBookingHistory(id,token);
         await saveUserData(firstName,lastName, token, id);
       } else {
         print('User data is null');
@@ -376,7 +375,7 @@ class UserService{
     }
   }
 
-  Future<void> userVehicleCreateBooking(
+  Future<String?> userVehicleCreateBooking(
       BuildContext context, {
         required String name,
         required String unitType,
@@ -392,7 +391,7 @@ class UserService{
         required List dropPoints,
         required String token,
       }) async {
-    final url = Uri.parse('${baseUrl}bookings');
+    final url = Uri.parse('http://10.0.2.2:4000/api/bookings');
 
     final response = await http.post(
       url,
@@ -428,24 +427,8 @@ class UserService{
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Booking Created successful')),
       );
-      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ChooseVendor(
-                bookingId: bookingId??'',
-                size: scale,
-                unitType: unitType,
-                load: typeOfLoad,
-                unit: name,
-                pickup: pickup,
-                dropPoints: dropPoints,
-                token: token
-              )
-          ),
-        );
-      });
+      await saveBookingId(bookingId,token);
+      return bookingId;
     } else {
       final message = responseBody['message'] ?? 'Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -454,9 +437,10 @@ class UserService{
       print('Failed to create booking: ${response.statusCode}');
       print('Response body: ${response.body}');
     }
+    return null;
   }
 
-  Future<void> userBusCreateBooking(
+  Future<String?> userBusCreateBooking(
       BuildContext context, {
         required String name,
         required String unitType,
@@ -496,11 +480,12 @@ class UserService{
 
     if (response.statusCode == 201) {
       String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
       print('Bus Booking Created successful');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Booking Created successful')),
       );
+      await saveBookingId(bookingId,token);
+      return bookingId;
     } else {
       final message = responseBody['message'] ?? 'Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -509,9 +494,10 @@ class UserService{
       print('Failed to create booking: ${response.statusCode}');
       print('Response body: ${response.body}');
     }
+    return null;
   }
 
-  Future<void> userEquipmentCreateBooking(
+  Future<String?> userEquipmentCreateBooking(
       BuildContext context, {
         required String name,
         required String unitType,
@@ -557,11 +543,12 @@ class UserService{
 
     if (response.statusCode == 201) {
       String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
       print('Equipment Booking Created successful');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Booking Created successful')),
       );
+      await saveBookingId(bookingId,token);
+      return bookingId;
     } else {
       final message = responseBody['message'] ?? 'Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -570,9 +557,10 @@ class UserService{
       print('Failed to create booking: ${response.statusCode}');
       print('Response body: ${response.body}');
     }
+    return null;
   }
 
-  Future<void> userSpecialCreateBooking(
+  Future<String?> userSpecialCreateBooking(
       BuildContext context, {
         required String name,
         required String unitType,
@@ -614,11 +602,12 @@ class UserService{
 
     if (response.statusCode == 201) {
       String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
       print('Special Booking Created successful');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Booking Created successful')),
       );
+      await saveBookingId(bookingId,token);
+      return bookingId;
     } else {
       final message = responseBody['message'] ?? 'Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
@@ -626,6 +615,217 @@ class UserService{
       );
       print('Failed to create booking: ${response.statusCode}');
       print('Response body: ${response.body}');
+    }
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>?> userVehicleVendor(
+      BuildContext context, {
+        required String bookingId,
+        required String unitType,
+        required String unitClassification,
+        required String subClassification,
+      }) async {
+    final url = Uri.parse('http://10.0.2.2:4000/api/partner/filtered-vendors');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'bookingId': bookingId,
+        'unitType': unitType,
+        'unitClassification': unitClassification,
+        'subClassification': subClassification,
+      }),
+    );
+
+    final responseBody = jsonDecode(response.body);
+
+    print('Full Response Body: $responseBody');
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = responseBody['data'];
+      List<Map<String, dynamic>> vendors = [];
+
+      for (var item in data) {
+        vendors.add({
+          'partnerName': item['partnerName'],
+          'quotePrice': item['quotePrice'],
+        });
+      }
+
+      print('Fetched Vendors: $vendors');
+      CommonWidgets().showToast('Fetching Vendor...');
+      return vendors;
+    } else {
+      final message = responseBody['message'] ?? 'Please try again.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      print('Failed to fetch booking: ${response.statusCode}');
+      print('Response body: ${response.body}');
+    }
+    return null;
+  }
+
+  void fetchSavedPaymentBookingHistory() async {
+    final data = await getSavedUserData();
+
+    final String? id = data['id'];
+    final String? token = data['token'];
+
+    if (id != null && token != null) {
+      print('Fetching details with bookingId=$id and token=$token');
+      await fetchPaymentBookingHistory(id, token);
+    } else {
+      print('No id or token found in shared preferences.');
+    }
+  }
+
+  Future<List<dynamic>> fetchPaymentBookingHistory(String id, String token) async {
+    final url = Uri.parse('http://10.0.2.2:4000/api/bookings/user/$id/completed');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (responseBody.containsKey('data')) {
+          final List<dynamic> bookingData = responseBody['data'];
+          print('Fetched booking history: $bookingData');
+          print('Full Response Body: $responseBody');
+          return bookingData;
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } else {
+        throw Exception('Failed to load booking history: ${response.body}');
+      }
+    } catch (e) {
+      print('Error occurred while fetching booking history: $e');
+      return []; // Return an empty list in case of error
+    }
+  }
+
+  void fetchSavedBookingDetails() async {
+    final data = await getSavedBookingId();
+
+    final String? bookingId = data['_id'];
+    final String? token = data['token'];
+
+    if (bookingId != null && token != null) {
+      print('Fetching details with bookingId=$bookingId and token=$token');
+      await fetchBookingDetails(bookingId, token);
+    } else {
+      print('No bookingId or token found in shared preferences.');
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
+    final url = Uri.parse('http://10.0.2.2:4000/api/getBookingsByBookingId/$id');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    print('Fetching from URL: ${url.toString()}');
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+        if (responseBody.containsKey('data')) {
+          final Map<String, dynamic> bookingData = responseBody['data'];
+          print('Booking Data: $bookingData');
+          return bookingData;
+        } else {
+          throw Exception('Unexpected response format: $responseBody');
+        }
+      } else {
+        throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error occurred while fetching booking details: $e');
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token) async {
+    final response = await http.get(
+      Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    // Print the entire response body
+    print('API Response: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+
+      // Print decoded response
+      print('Decoded API Response: $responseBody');
+
+      final partnerId = responseBody['data']['_id'] ?? 'Unknown Partner ID';
+      final partnerName = responseBody['data']['partnerName'] ?? 'Unknown Partner Name';
+      final operators = responseBody['data']['operators'] ?? [];
+
+      // Check if operators are available
+      if (operators.isEmpty) {
+        print('No operators available for this partner.');
+        return [];
+      }
+
+      final partnerDetails = <Map<String, dynamic>>[];
+
+      // Iterate over the operators array
+      for (var operator in operators) {
+        final firstName = operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty
+            ? operator['operatorsDetail'][0]['firstName'] ?? 'Unknown'
+            : 'Unknown';
+        final lastName = operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty
+            ? operator['operatorsDetail'][0]['lastName'] ?? 'Unknown'
+            : 'Unknown';
+        final mode = operator['unitType'] ?? 'Unknown Mode';
+        final bookingRequests = operator['bookingRequest'] ?? [];
+        final fullName = '$firstName $lastName';
+
+        for (var booking in bookingRequests) {
+          final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
+          final bookingStatus = booking['bookingStatus']?.toString() ?? 'Pending';
+
+          // Add booking and operator details to partnerDetails
+          partnerDetails.add({
+            'partnerId': partnerId,
+            'partnerName': partnerName,
+            'operatorName': fullName,
+            'lastName': lastName,
+            'mode': mode,
+            'bookingId': bookingId,
+            'bookingStatus': bookingStatus,
+          });
+        }
+      }
+
+      return partnerDetails;
+    } else {
+      print('Failed to load partner data: ${response.statusCode} ${response.body}');
+      return [];
     }
   }
 
