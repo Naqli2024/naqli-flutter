@@ -32,11 +32,15 @@ class _UserTypeState extends State<UserType> {
   final UserService userService = UserService();
   String _selectedType = '';
   Future<Map<String, dynamic>?>? booking;
+  List<Map<String, dynamic>>? partnerData;
+  String? partnerId;
+
 
   @override
   void initState() {
     super.initState();
     booking = _fetchBookingDetails();
+    fetchPartnerData();
   }
   // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
   //   try {
@@ -59,6 +63,26 @@ class _UserTypeState extends State<UserType> {
     } else {
       print('No bookingId or token found in shared preferences.');
       return null;
+    }
+  }
+
+  Future<void> fetchPartnerData() async {
+    try {
+      final data = await userService.getPartnerData(partnerId??'', widget.token);
+
+      // Log the fetched data to see if it's correct
+      print('Fetched Partner Data: $data');
+
+      if (data.isNotEmpty) {
+        setState(() {
+          partnerData = data;
+        });
+      } else {
+        // If data is empty, log it
+        print('No partner data available');
+      }
+    } catch (e) {
+      print('Error loading partner data: $e');
     }
   }
 
@@ -99,7 +123,7 @@ class _UserTypeState extends State<UserType> {
                 onTap: ()async {
                   try {
                     final bookingData = await booking;
-
+                    partnerId = bookingData?['partner']??'';
                     if (bookingData != null) {
                       bookingData['paymentStatus']== 'Pending'
                       ? Navigator.push(
@@ -146,6 +170,12 @@ class _UserTypeState extends State<UserType> {
                             zipCode: bookingData['zipCode'] ?? '',
                             unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
                             id: widget.id,
+                            partnerName: '',
+                            partnerId: bookingData['partner'] ?? '',
+                            oldQuotePrice: '',
+                            paymentStatus: bookingData['paymentStatus'] ?? '',
+                            quotePrice: '',
+                            advanceOrPay: bookingData['remainingBalance'] ?? 0,
                           )
                         ),
                       )
@@ -245,29 +275,7 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChooseVendor(
-                        bookingId: '',
-                        size: '',
-                        unitType:'',
-                        unitTypeName: '',
-                        load: '',
-                        unit: '',
-                        pickup: '',
-                        dropPoints: [],
-                        token: widget.token,
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        selectedType: '',
-                        cityName: '',
-                        address: '',
-                        zipCode: '',
-                        id: widget.id,
-                      ),
-                  ),
-                );
+
               },
             ),
             ListTile(

@@ -1062,6 +1062,12 @@ class _CreateBookingState extends State<CreateBooking> {
                               zipCode: bookingData['zipCode'] ?? '',
                               unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
                               id: widget.id,
+                              partnerName: '',
+                              partnerId: '',
+                              oldQuotePrice: '',
+                              paymentStatus: '',
+                              quotePrice: '',
+                              advanceOrPay: ''
                             )
                         ),
                       )

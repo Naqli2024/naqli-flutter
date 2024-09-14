@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_notification.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -15,6 +17,14 @@ class DriverHomePage extends StatefulWidget {
 class _DriverHomePageState extends State<DriverHomePage> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
+  bool isOnline = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +32,8 @@ class _DriverHomePageState extends State<DriverHomePage> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
+        showLeading: false
       ),
-
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -76,7 +86,9 @@ class _DriverHomePageState extends State<DriverHomePage> {
                             child: CircleAvatar(
                               backgroundColor: Colors.white,
                               child: IconButton(
-                                  onPressed: (){},
+                                  onPressed: (){
+
+                                  },
                                   icon: Icon(Icons.search)),
                             ),
                           ),
@@ -85,92 +97,110 @@ class _DriverHomePageState extends State<DriverHomePage> {
                     )),
                 Positioned(
                     bottom: 30,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Color(0xff6069FF),
-                          width: 6,
-                        ),
-                      ),
+                    child: GestureDetector(
+                      onTap: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DriverNotification()
+                          ),
+                        );
+                      },
                       child: Container(
+                        width: MediaQuery.sizeOf(context).width,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white,
-                            width: 2,
+                            color: Color(0xff6069FF),
+                            width: 6,
                           ),
                         ),
-                        child: CircleAvatar(
-                          minRadius: 45,
-                          maxRadius: double.maxFinite,
-                          backgroundColor: Color(0xff6069FF),
-                          child: Text(
-                            'Move',
-                            style: TextStyle(color: Colors.white,fontSize: 20),
-                          )
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            minRadius: 45,
+                            maxRadius: double.maxFinite,
+                            backgroundColor: Color(0xff6069FF),
+                            child: Text(
+                              'Move',
+                              style: TextStyle(color: Colors.white,fontSize: 20),
+                            )
+                          ),
                         ),
                       ),
                     )),
               ],
             ),
-            // Container(
-            //   margin: const EdgeInsets.only(top:20,bottom: 20),
-            //   child: SizedBox(
-            //     height: MediaQuery.of(context).size.height * 0.07,
-            //     width: MediaQuery.of(context).size.width * 0.45,
-            //     child: ElevatedButton(
-            //         style: ElevatedButton.styleFrom(
-            //           backgroundColor: Colors.white,
-            //           shape: RoundedRectangleBorder(
-            //               borderRadius: BorderRadius.circular(10),
-            //               side: const BorderSide(color: Color(0xff6069FF))),
-            //         ),
-            //         onPressed: () {
-            //
-            //         },
-            //         child: Row(
-            //           mainAxisAlignment: MainAxisAlignment.spaceAround,
-            //           children: [
-            //             SvgPicture.asset('assets/car.svg',height: 35),
-            //             Text(
-            //               'Offline',
-            //               style: TextStyle(
-            //                   fontSize: 23,color: Colors.black),
-            //             ),
-            //           ],
-            //         )),
-            //   ),
-            // ),
-            Container(
-              margin: const EdgeInsets.only(top:20,bottom: 20),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.07,
-                width: MediaQuery.of(context).size.width * 0.45,
-                child: ElevatedButton(
+            if (!isOnline) // Show Offline button when the user is offline
+              Container(
+                margin: const EdgeInsets.only(top: 20, bottom: 20),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width * 0.45,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: const BorderSide(color: Color(0xff6069FF)),
+                      ),
+                    ),
+                    onPressed: () async {
+                      setState(() {
+                        isOnline = !isOnline;
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        SvgPicture.asset('assets/carOffline.svg', height: 35),
+                        Text(
+                          'Offline',
+                          style: TextStyle(fontSize: 23, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (isOnline)
+              Container(
+                margin: const EdgeInsets.only(top: 20, bottom: 20),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width * 0.45,
+                  child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff6069FF),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Color(0xff6069FF))),
+                        borderRadius: BorderRadius.circular(10),
+                        side: const BorderSide(color: Color(0xff6069FF)),
+                      ),
                     ),
-                    onPressed: () {
-
+                    onPressed: () async {
+                      setState(() {
+                        isOnline = !isOnline;
+                      });
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Text(
                           'Online',
-                          style: TextStyle(
-                              fontSize: 23,color: Colors.black),
+                          style: TextStyle(fontSize: 23, color: Colors.black),
                         ),
-                        SvgPicture.asset('assets/carOnline.svg',height: 35),
+                        SvgPicture.asset('assets/carOnline.svg', height: 35),
                       ],
-                    )),
+                    ),
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

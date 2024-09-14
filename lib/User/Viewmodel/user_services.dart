@@ -18,7 +18,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class UserService{
-  static const String baseUrl = 'http://10.0.2.2:4000/api/';
+  static const String baseUrl = 'https://naqli.onrender.com/api/';
 
   Future<void> userRegister(context,{
     required String firstName,
@@ -391,7 +391,7 @@ class UserService{
         required List dropPoints,
         required String token,
       }) async {
-    final url = Uri.parse('http://10.0.2.2:4000/api/bookings');
+    final url = Uri.parse('https://naqli.onrender.com/api/bookings');
 
     final response = await http.post(
       url,
@@ -618,7 +618,7 @@ class UserService{
     }
     return null;
   }
-
+  // http://10.0.2.2:4000/api/partner/filtered-vendors
   Future<List<Map<String, dynamic>>?> userVehicleVendor(
       BuildContext context, {
         required String bookingId,
@@ -626,7 +626,7 @@ class UserService{
         required String unitClassification,
         required String subClassification,
       }) async {
-    final url = Uri.parse('http://10.0.2.2:4000/api/partner/filtered-vendors');
+    final url = Uri.parse('${baseUrl}partner/filtered-vendors');
 
     final response = await http.post(
       url,
@@ -650,9 +650,20 @@ class UserService{
       List<Map<String, dynamic>> vendors = [];
 
       for (var item in data) {
+        final partnerName = item['partnerName'];
+        final partnerId = item['partnerId'];
+        final quotePrice = item['quotePrice'];
+        final oldQuotePrice = item['oldQuotePrice'];
+
         vendors.add({
           'partnerName': item['partnerName'],
+          'partnerId': item['partnerId'],
           'quotePrice': item['quotePrice'],
+          'unitType': item['unitType'],
+          'unitClassification': item['unitClassification'],
+          'subClassification': item['subClassification'],
+          'bookingId': item['bookingId'],
+          'oldQuotePrice': item['oldQuotePrice'],
         });
       }
 
@@ -670,6 +681,70 @@ class UserService{
     return null;
   }
 
+
+  Future<dynamic> updatePayment(String token,int amount, String status, String partnerId,String bookingId, String totalAmount,String oldQuotePrice) async {
+    final url = Uri.parse('${baseUrl}bookings/$bookingId/payment');
+    try {
+      final response = await http.put(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'amount': amount,
+          'status': status,
+          'partnerId': partnerId,
+          'totalAmount': totalAmount,
+          'oldQuotePrice': oldQuotePrice,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Payment update successful: ${response.body}');
+        return jsonDecode(response.body);  // return the decoded response
+      } else {
+        print('Failed to update payment: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return null; // Avoid returning null, handle error properly
+      }
+    } catch (error) {
+      print('Error updating payment: $error');
+      return null;
+    }
+  }
+
+  Future<dynamic> updatePaymentCompleted(String token,String amount, String status, String partnerId,String bookingId) async {
+    final url = Uri.parse('${baseUrl}bookings/$bookingId/payment');
+    try {
+      final response = await http.put(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'status': status,
+          'bookingId': bookingId,
+          'amount': amount,
+          'partnerId': partnerId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Payment Complete successful: ${response.body}');
+        return jsonDecode(response.body);  // return the decoded response
+      } else {
+        print('Failed to update payment: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return null; // Avoid returning null, handle error properly
+      }
+    } catch (error) {
+      print('Error updating payment: $error');
+      return null;
+    }
+  }
+
   void fetchSavedPaymentBookingHistory() async {
     final data = await getSavedUserData();
 
@@ -685,7 +760,7 @@ class UserService{
   }
 
   Future<List<dynamic>> fetchPaymentBookingHistory(String id, String token) async {
-    final url = Uri.parse('http://10.0.2.2:4000/api/bookings/user/$id/completed');
+    final url = Uri.parse('${baseUrl}bookings/user/$id/completed');
 
     final headers = {
       'Content-Type': 'application/json',
@@ -730,7 +805,7 @@ class UserService{
   }
 
   Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
-    final url = Uri.parse('http://10.0.2.2:4000/api/getBookingsByBookingId/$id');
+    final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
 
     final headers = {
       'Content-Type': 'application/json',
@@ -765,7 +840,7 @@ class UserService{
 
   Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token) async {
     final response = await http.get(
-      Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
+      Uri.parse('${baseUrl}partner/$partnerId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
