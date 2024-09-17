@@ -56,6 +56,7 @@ dependencies:
   flutter_stripe: ^11.0.0
   google_maps_flutter: ^2.1.1
   google_places_flutter_api: ^1.0.2
+  slide_to_act: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -115,6 +116,9 @@ flutter:
     - assets/credit_card.svg
     - assets/naqleeBorder.svg
     - assets/direction.svg
+    - assets/person.svg
+    - assets/upArrow.svg
+    - assets/notified.svg
     - assets/card.svg
     - assets/search.svg
     - assets/zipCode.svg

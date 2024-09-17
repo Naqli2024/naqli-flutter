@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_svg/svg.dart';
 
 class SuccessScreen extends StatefulWidget {
+  final String? token;
+  final String? firstName;
+  final String? lastName;
+  final String? id;
   final String title;
   final String subTitle;
   final Image;
 
-  const SuccessScreen({super.key, required this.title, required this.subTitle, this.Image, });
+  const SuccessScreen({super.key, required this.title, required this.subTitle, this.Image, this.token,this.firstName, this.lastName, this.id,});
 
   @override
   State<SuccessScreen> createState() => _SuccessScreenState();
@@ -34,11 +39,19 @@ class _SuccessScreenState extends State<SuccessScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
-        // toolbarHeight: MediaQuery.of(context).size.height * 0.5,
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          UserType(
+                            firstName: widget.firstName??'',
+                            lastName: widget.lastName??'',
+                            token: widget.token??'',
+                            id: widget.id??'',
+                          )));
             },
             child: Container(
               margin: const EdgeInsets.only(right: 15,top: 15),

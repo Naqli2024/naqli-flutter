@@ -40,7 +40,7 @@ class _UserTypeState extends State<UserType> {
   void initState() {
     super.initState();
     booking = _fetchBookingDetails();
-    fetchPartnerData();
+    // fetchPartnerData();
   }
   // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
   //   try {
@@ -65,26 +65,26 @@ class _UserTypeState extends State<UserType> {
       return null;
     }
   }
-
-  Future<void> fetchPartnerData() async {
-    try {
-      final data = await userService.getPartnerData(partnerId??'', widget.token);
-
-      // Log the fetched data to see if it's correct
-      print('Fetched Partner Data: $data');
-
-      if (data.isNotEmpty) {
-        setState(() {
-          partnerData = data;
-        });
-      } else {
-        // If data is empty, log it
-        print('No partner data available');
-      }
-    } catch (e) {
-      print('Error loading partner data: $e');
-    }
-  }
+  //
+  // Future<void> fetchPartnerData() async {
+  //   try {
+  //     final data = await userService.getPartnerData(partnerId??'', widget.token);
+  //
+  //     // Log the fetched data to see if it's correct
+  //     print('Fetched Partner Data: $data');
+  //
+  //     if (data.isNotEmpty) {
+  //       setState(() {
+  //         partnerData = data;
+  //       });
+  //     } else {
+  //       // If data is empty, log it
+  //       print('No partner data available');
+  //     }
+  //   } catch (e) {
+  //     print('Error loading partner data: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +92,7 @@ class _UserTypeState extends State<UserType> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName+widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
       ),
       drawer: Drawer(
         backgroundColor: Colors.white,
@@ -175,7 +175,7 @@ class _UserTypeState extends State<UserType> {
                             oldQuotePrice: '',
                             paymentStatus: bookingData['paymentStatus'] ?? '',
                             quotePrice: '',
-                            advanceOrPay: bookingData['remainingBalance'] ?? 0,
+                            advanceOrPay: bookingData['remainingBalance']?? 0,
                           )
                         ),
                       )
@@ -275,7 +275,6 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
               },
             ),
             ListTile(
@@ -288,12 +287,6 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Contact us',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => MakePayment()
-                  ),
-                );
               },
             ),
             ListTile(

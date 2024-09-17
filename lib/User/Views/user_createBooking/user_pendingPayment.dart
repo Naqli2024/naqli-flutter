@@ -36,7 +36,7 @@ class PendingPayment extends StatefulWidget {
   final String oldQuotePrice;
   final String paymentStatus;
   final String quotePrice;
-  final String advanceOrPay;
+  final int advanceOrPay;
 
   const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay});
 
@@ -75,12 +75,13 @@ class _PendingPaymentState extends State<PendingPayment> {
     print(widget.quotePrice);
     print(widget.oldQuotePrice);
     fetchPaymentData();
+    fetchAddressCoordinates();
+    fetchCoordinates();
     fetchPartnerData();
-    final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
-    final int amount = int.tryParse(cleanedValue) ?? 0;
-    userService.updatePayment(widget.token, amount, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
-    // userService.updatePaymentCompleted(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId, widget.bookingId);
-   super.initState();
+    // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), '');
+    // final int amount = int.tryParse(cleanedValue) ?? 0;
+    userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
+    super.initState();
   }
 
   Future<void> initiateStripePayment(
@@ -136,7 +137,11 @@ class _PendingPaymentState extends State<PendingPayment> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const SuccessScreen(
+          builder: (context) => SuccessScreen(
+            id: widget.id,
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            token: widget.token,
             Image: 'assets/payment_success.svg',
             title: 'Thank you!',
             subTitle: 'Your Payment was successful',
@@ -216,12 +221,10 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   Future<void> fetchPaymentData() async {
     try {
-      final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
-      final int amount = int.tryParse(cleanedValue) ?? 0;
-      // Call the API and fetch the response
+
       final response = await userService.updatePayment(
         widget.token,
-        amount,
+        widget.advanceOrPay,
         widget.paymentStatus,
         widget.partnerId,
         widget.bookingId,
@@ -242,11 +245,11 @@ class _PendingPaymentState extends State<PendingPayment> {
       // Parse the response and update the UI
       setState(() {
         print(response);
-        remainingBalance = response['booking']['remainingBalance']?.toString() ?? '0';
+        // remainingBalance = response['booking']['remainingBalance']?.toString() ?? '0';
         unit = response['booking']['name'] ?? ' ';
         bookingStatus = response['booking']['bookingStatus'] ?? '';
         paymentStatus = response['booking']['paymentStatus'] ?? '';
-        remainingBalance = response['booking']['remainingBalance'] ?? '';
+        remainingBalance = (response['booking']['remainingBalance'] as num?)?.toString() ?? '0';
         isLoading = false;
       });
     } catch (e) {
@@ -261,7 +264,7 @@ class _PendingPaymentState extends State<PendingPayment> {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token);
 
-      // Log the fetched data to see if it's correct
+      // Log the fetched data to check what's being returned
       print('Fetched Partner Data: $data');
 
       if (data.isNotEmpty) {
@@ -269,11 +272,11 @@ class _PendingPaymentState extends State<PendingPayment> {
           partnerData = data;
         });
       } else {
-        // If data is empty, log it
+        // If the data is empty, log it
         print('No partner data available');
       }
     } catch (e) {
-      print('Error loading partner data: $e');
+      print('Error fetching partner data: $e');
     }
   }
 
@@ -624,7 +627,7 @@ class _PendingPaymentState extends State<PendingPayment> {
     return Scaffold(
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName + widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
       ),
       body: SingleChildScrollView(
         child: Stack(
@@ -809,7 +812,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      widget.partnerName,
+                                      partnerData?[0]['partnerName'] ?? 'N/A',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -835,7 +838,11 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      partnerData?[0]['partnerName'] ?? 'Unknown',
+                                      partnerData != null && partnerData!.isNotEmpty
+                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                          ? (partnerData?[0]['operatorName'] ?? '')
+                                          : (partnerData?[0]['assignOperatorName'] ?? ''))
+                                          : 'No Data',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -861,7 +868,11 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      'Box truck',
+                                      partnerData != null && partnerData!.isNotEmpty
+                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                          ? (partnerData?[0]['mobileNo'] ?? '')
+                                          : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
+                                          : 'No Data',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -1044,7 +1055,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      widget.partnerName,
+                                      partnerData?[0]['partnerName'] ?? 'N/A',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -1070,7 +1081,11 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      partnerData?[0]['partnerName'] ?? 'Unknown',
+                                      partnerData != null && partnerData!.isNotEmpty
+                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                          ? (partnerData?[0]['operatorName'] ?? '')
+                                          : (partnerData?[0]['assignOperatorName'] ?? ''))
+                                          : 'No Data',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -1096,7 +1111,11 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      'Box truck',
+                                      partnerData != null && partnerData!.isNotEmpty
+                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                          ? (partnerData?[0]['mobileNo'] ?? '')
+                                          : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
+                                          : 'No Data',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -1148,7 +1167,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   Expanded(
                                     flex: 2,
                                     child: Text(
-                                      bookingStatus.isNotEmpty ? bookingStatus:'',
+                                      bookingStatus.isNotEmpty ? bookingStatus:'N/A',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -1200,14 +1219,14 @@ class _PendingPaymentState extends State<PendingPayment> {
                                 ),
                               ),
                               onPressed: (){
-                                final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
-                                final int amount = int.tryParse(cleanedValue) ?? 0;
-                                print(amount);
+                                // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
+                                // final int amount = int.tryParse(cleanedValue) ?? 0;
+                                print(widget.advanceOrPay);
                                 initiateStripePayment(
                                     context,
                                     'Completed',
                                     widget.bookingId,
-                                    amount,
+                                    widget.advanceOrPay,
                                     widget.partnerId
                                 );
                               },

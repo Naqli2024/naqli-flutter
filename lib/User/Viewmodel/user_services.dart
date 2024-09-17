@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -35,79 +36,138 @@ class UserService{
     required String govtId,
     required String idNumber,
   }) async {
+    try{
     final url = Uri.parse('${baseUrl}register');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'firstName': firstName,
-        'lastName': lastName,
-        'emailAddress': emailAddress,
-        'password': password,
-        'confirmPassword': confirmPassword,
-        'contactNumber': contactNumber,
-        'alternateNumber': alternateNumber,
-        'address1': address1,
-        'address2': address2,
-        'city': city,
-        'accountType': accountType,
-        'govtId': govtId,
-        'idNumber': idNumber,
-      }),
-    );
-    final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print('Success');
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => UserOTP(emailAddress: emailAddress,contactNumber: contactNumber)
-        ),
-      );
-    } else {
-      final message = responseBody['message'] ?? responseBody;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to register user: ${response.statusCode}');
-      print('Response body: ${response.body}');
-    }
-  }
-
-  Future<void> verifyUserOTP(context,{
-    required String otp,
-  }) async {
-    if (otp.length == 6) {
-      final url = Uri.parse('${baseUrl}verify-otp');
-
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'otp': otp,
+          'firstName': firstName,
+          'lastName': lastName,
+          'emailAddress': emailAddress,
+          'password': password,
+          'confirmPassword': confirmPassword,
+          'contactNumber': contactNumber,
+          'alternateNumber': alternateNumber,
+          'address1': address1,
+          'address2': address2,
+          'city': city,
+          'accountType': accountType,
+          'govtId': govtId,
+          'idNumber': idNumber,
         }),
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         print('Success');
-        Future.delayed(const Duration(seconds: 3), () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const UserLogin()
-            ),
-          );
-        });
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => const SuccessScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
+              builder: (context) => UserOTP(emailAddress: emailAddress,contactNumber: contactNumber)
           ),
+        );
+      } else {
+        final message = responseBody['message'] ?? responseBody;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to register user: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+      print('Network error: No Internet connection');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<void> verifyUserOTP(context,{
+    required String otp,
+  }) async {
+    try{
+    if (otp.length == 6) {
+      final url = Uri.parse('${baseUrl}verify-otp');
+        final response = await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'otp': otp,
+          }),
+        );
+        final responseBody = jsonDecode(response.body);
+        if (response.statusCode == 200) {
+          print('Success');
+          Future.delayed(const Duration(seconds: 3), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const UserLogin()
+              ),
+            );
+          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SuccessScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
+            ),
+          );
+        } else {
+          final message = responseBody['message'];
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+          print('Failed to register user: ${response.statusCode}');
+          print('Response body: ${response.body}');
+        }
+      }
+    }on SocketException {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+        );
+        print('Network error: No Internet connection');
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An unexpected error occurred: $e')),
+        );
+        print('Error: $e');
+      }
+  }
+
+  Future<void> resendUserOTP(context,{
+    required String emailAddress,
+  }) async {
+    try{
+    final url = Uri.parse('${baseUrl}resend-otp');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+        }),
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Fluttertoast.showToast(
+          msg: 'OTP Send Successfully',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       } else {
         final message = responseBody['message'];
@@ -117,42 +177,15 @@ class UserService{
         print('Failed to register user: ${response.statusCode}');
         print('Response body: ${response.body}');
       }
-    }
-  }
-
-  Future<void> resendUserOTP(context,{
-    required String emailAddress,
-  }) async {
-    final url = Uri.parse('${baseUrl}resend-otp');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'emailAddress': emailAddress,
-      }),
-    );
-    final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print('Success');
-      Fluttertoast.showToast(
-        msg: 'OTP Send Successfully',
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    } else {
-      final message = responseBody['message'];
+    }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Failed to register user: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 
@@ -160,34 +193,44 @@ class UserService{
       BuildContext context, {
         required String emailAddress,
       }) async {
+    try{
     final url = Uri.parse('${baseUrl}forgot-password');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'emailAddress': emailAddress,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print('Success');
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context)=> UserResetPassword(emailAddress: emailAddress),
-        ),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+        }),
       );
-    } else {
-      final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context)=> UserResetPassword(emailAddress: emailAddress),
+          ),
+        );
+      } else {
+        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to send OTP: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Failed to send OTP: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 
@@ -197,72 +240,92 @@ class UserService{
         required String newPassword,
         required String confirmNewPassword,
       }) async {
+    try{
     final url = Uri.parse('${baseUrl}verify-otp-update-password');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'otp': otp,
-        'newPassword': newPassword,
-        'confirmNewPassword': confirmNewPassword,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print('Success');
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context)=> UserLogin(),
-        ),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'otp': otp,
+          'newPassword': newPassword,
+          'confirmNewPassword': confirmNewPassword,
+        }),
       );
-    } else {
-      final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context)=> UserLogin(),
+          ),
+        );
+      } else {
+        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to Reset Pwd: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Failed to Reset Pwd: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 
   Future<void> userForgotPasswordResendOTP(context,{
     required String emailAddress,
   }) async {
+    try{
     final url = Uri.parse('${baseUrl}resend-otp');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'emailAddress': emailAddress,
-      }),
-    );
-    final responseBody = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print('Success');
-      Fluttertoast.showToast(
-        msg: 'OTP Send Successfully',
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        fontSize: 16.0,
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+        }),
       );
-    } else {
-      final message = responseBody['message'];
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Fluttertoast.showToast(
+          msg: 'OTP Send Successfully',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      } else {
+        final message = responseBody['message'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to register user: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Failed to register user: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 
@@ -271,107 +334,157 @@ class UserService{
         required String emailAddress,
         required String password,
       }) async {
-    final url = Uri.parse('${baseUrl}login');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'emailAddress': emailAddress,
-        'password': password,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 200) {
-      print('Login successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful')),
+    try {
+      final url = Uri.parse('${baseUrl}login');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+          'password': password,
+        }),
       );
-      // I/flutter (12075): Full Response Body: {success: true, data: [{_id: 66dc0b53e920fbed22e09d37, name: Lorry 7 metres, unitType: vehicle, type: [{typeName: Slide, scale: (7m to 7.5m), typeImage: assets/images/lorry 7 meters-sides.svg, typeOfLoad: Auto parts, _id: 66dc0b53e920fbed22e09d38}], pickup: chennai, dropPoints: [coimbatore], productValue: 123, date: 2024-09-07, time: 13:43, additionalLabour: 2, bookingStatus: Running, user: 66d15f161946cb9cbadf3912, paymentStatus: Paid, paymentAmount: 0, remainingBalance: 0, additionalCharges: 0, additionalChargesReason: [], payout: 0, initialPayout: 0, finalPayout: 0, bookingId: 2c139b08-5879-413b-a194-2e5c0b8333da, createdAt: 2024-09-07T08:14:11.025Z, updatedAt: 2024-09-07T08:14:11.025Z, __v: 0}]}
-      final userData = responseBody['data']['user'];
-      final tokenData = responseBody['data'];
 
-      if (userData != null) {
-        final firstName = userData['firstName'] ?? '';
-        final lastName = userData['lastName'] ?? '';
-        final token = tokenData['token'] ?? '';
-        final id = userData['_id'] ?? '';
-        print(userData);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => UserType(firstName: firstName,lastName: lastName,token: token,id: id,),
-          ),
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        print('Login successful');
+        final message = responseBody['message'] ?? 'Login successful';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
         );
-        // await fetchPaymentBookingHistory(id,token);
-        await saveUserData(firstName,lastName, token, id);
+
+        final userData = responseBody['data']['user'];
+        final tokenData = responseBody['data'];
+
+        if (userData != null) {
+          final firstName = userData['firstName'] ?? '';
+          final lastName = userData['lastName'] ?? '';
+          final token = tokenData['token'] ?? '';
+          final id = userData['_id'] ?? '';
+          print(userData);
+
+          // Show CircularProgressIndicator while navigating
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => UserType(
+                firstName: firstName,
+                lastName: lastName,
+                token: token,
+                id: id,
+              ),
+            ),
+          );
+          await saveUserData(firstName, lastName, token, id);
+        } else {
+          print('User data is null');
+        }
       } else {
-        print('User data is null');
+        final message = responseBody['message'] ?? 'Login failed. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to login user: ${response.statusCode}');
+        print('Response body: ${response.body}');
       }
-    } else {
-      final message = responseBody['message'] ?? 'Login failed. Please try again.';
+    } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Failed to login user: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      print('Network error: No Internet connection');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 
-  Future<List<Vehicle>> fetchUserVehicle() async {
-    final response = await http.get(Uri.parse('${baseUrl}vehicles'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> responseBody = jsonDecode(response.body);
-      print('Fetched vehicles: $responseBody'); // Debug statement
-      return responseBody.map((data) => Vehicle.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load vehicles');
+  Future<List<Vehicle>> fetchUserVehicle() async {
+    try {
+      final response = await http.get(Uri.parse('${baseUrl}vehicles'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseBody = jsonDecode(response.body);
+        print('Fetched vehicles: $responseBody');
+        return responseBody.map((data) => Vehicle.fromJson(data)).toList();
+      } else {
+        throw Exception('Failed to load vehicles');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
   Future<List<Buses>> fetchUserBuses() async {
-    final response = await http.get(Uri.parse('${baseUrl}buses'));
+    try{
+      final response = await http.get(Uri.parse('${baseUrl}buses'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> responseBody = jsonDecode(response.body);
-      print('Fetched buses: $responseBody');
+      if (response.statusCode == 200) {
+        final List<dynamic> responseBody = jsonDecode(response.body);
+        print('Fetched buses: $responseBody');
 
-      return responseBody.map((data) => Buses.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load buses');
+        return responseBody.map((data) => Buses.fromJson(data)).toList();
+      } else {
+        throw Exception('Failed to load buses');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
   Future<List<Special>> fetchUserSpecialUnits() async {
-    final response = await http.get(Uri.parse('${baseUrl}special-units'));
+    try{
+      final response = await http.get(Uri.parse('${baseUrl}special-units'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> responseBody = jsonDecode(response.body);
-      print('Fetched Special: $responseBody');
+      if (response.statusCode == 200) {
+        final List<dynamic> responseBody = jsonDecode(response.body);
+        print('Fetched Special: $responseBody');
 
-      return responseBody.map((data) => Special.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load special-units');
+        return responseBody.map((data) => Special.fromJson(data)).toList();
+      } else {
+        throw Exception('Failed to load special-units');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
   Future<List<Equipment>> fetchUserEquipment() async {
-    final response = await http.get(Uri.parse('${baseUrl}equipments'));
+    try{
+      final response = await http.get(Uri.parse('${baseUrl}equipments'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> responseBody = jsonDecode(response.body);
-      print('Fetched Equipment: $responseBody');
+      if (response.statusCode == 200) {
+        final List<dynamic> responseBody = jsonDecode(response.body);
+        print('Fetched Equipment: $responseBody');
 
-      return responseBody.map((data) => Equipment.fromJson(data)).toList();
-    } else {
-      throw Exception('Failed to load equipments');
+        return responseBody.map((data) => Equipment.fromJson(data)).toList();
+      } else {
+        throw Exception('Failed to load equipments');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
@@ -391,53 +504,61 @@ class UserService{
         required List dropPoints,
         required String token,
       }) async {
-    final url = Uri.parse('https://naqli.onrender.com/api/bookings');
+    try{
+      final url = Uri.parse('https://naqli.onrender.com/api/bookings');
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'name': name,
-        'unitType': unitType,
-        'type':{
-          'typeName': typeName,
-          'scale': scale,
-          'typeImage': typeImage,
-          'typeOfLoad': typeOfLoad,
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-        'date': date,
-        'additionalLabour': additionalLabour,
-        'time': time,
-        'productValue': productValue,
-        'pickup': pickup,
-        'dropPoints': dropPoints,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 201) {
-      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      print(' Vehicle Booking Created successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking Created successful')),
+        body: jsonEncode({
+          'name': name,
+          'unitType': unitType,
+          'type':{
+            'typeName': typeName,
+            'scale': scale,
+            'typeImage': typeImage,
+            'typeOfLoad': typeOfLoad,
+          },
+          'date': date,
+          'additionalLabour': additionalLabour,
+          'time': time,
+          'productValue': productValue,
+          'pickup': pickup,
+          'dropPoints': dropPoints,
+        }),
       );
-      await saveBookingId(bookingId,token);
-      return bookingId;
-    } else {
-      final message = responseBody['message'] ?? 'Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to create booking: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 201) {
+        String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+        print(' Vehicle Booking Created successful');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Booking Created successful')),
+        );
+        await saveBookingId(bookingId,token);
+        return bookingId;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to create booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
-    return null;
   }
 
   Future<String?> userBusCreateBooking(
@@ -453,48 +574,56 @@ class UserService{
         required List dropPoints,
         required String token,
       }) async {
-    final url = Uri.parse('${baseUrl}bookings');
+    try{
+      final url = Uri.parse('${baseUrl}bookings');
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'name': name,
-        'unitType': unitType,
-        'image': image,
-        'date': date,
-        'additionalLabour': additionalLabour,
-        'time': time,
-        'productValue': productValue,
-        'pickup': pickup,
-        'dropPoints': dropPoints,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 201) {
-      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      print('Bus Booking Created successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking Created successful')),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'unitType': unitType,
+          'image': image,
+          'date': date,
+          'additionalLabour': additionalLabour,
+          'time': time,
+          'productValue': productValue,
+          'pickup': pickup,
+          'dropPoints': dropPoints,
+        }),
       );
-      await saveBookingId(bookingId,token);
-      return bookingId;
-    } else {
-      final message = responseBody['message'] ?? 'Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to create booking: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 201) {
+        String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+        print('Bus Booking Created successful');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Booking Created successful')),
+        );
+        await saveBookingId(bookingId,token);
+        return bookingId;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to create booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
-    return null;
   }
 
   Future<String?> userEquipmentCreateBooking(
@@ -512,52 +641,60 @@ class UserService{
         required String zipCode,
         required String token,
       }) async {
-    final url = Uri.parse('${baseUrl}bookings');
+    try{
+      final url = Uri.parse('${baseUrl}bookings');
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'name': name,
-        'unitType': unitType,
-        'type':{
-          'typeName': typeName,
-          'typeImage': typeImage,
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-        'date': date,
-        'additionalLabour': additionalLabour,
-        'fromTime': fromTime,
-        'toTime': toTime,
-        'cityName': cityName,
-        'address': address,
-        'zipCode': zipCode,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 201) {
-      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      print('Equipment Booking Created successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking Created successful')),
+        body: jsonEncode({
+          'name': name,
+          'unitType': unitType,
+          'type':{
+            'typeName': typeName,
+            'typeImage': typeImage,
+          },
+          'date': date,
+          'additionalLabour': additionalLabour,
+          'fromTime': fromTime,
+          'toTime': toTime,
+          'cityName': cityName,
+          'address': address,
+          'zipCode': zipCode,
+        }),
       );
-      await saveBookingId(bookingId,token);
-      return bookingId;
-    } else {
-      final message = responseBody['message'] ?? 'Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to create booking: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 201) {
+        String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+        print('Equipment Booking Created successful');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Booking Created successful')),
+        );
+        await saveBookingId(bookingId,token);
+        return bookingId;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to create booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
-    return null;
   }
 
   Future<String?> userSpecialCreateBooking(
@@ -574,50 +711,60 @@ class UserService{
         required String zipCode,
         required String token,
       }) async {
-    final url = Uri.parse('${baseUrl}bookings');
+    try{
+      final url = Uri.parse('${baseUrl}bookings');
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode({
-        'name': name,
-        'unitType': unitType,
-        'image': image,
-        'date': date,
-        'additionalLabour': additionalLabour,
-        'fromTime': fromTime,
-        'toTime': toTime,
-        'cityName': cityName,
-        'address': address,
-        'zipCode': zipCode,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 201) {
-      String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-      print('Special Booking Created successful');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking Created successful')),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'unitType': unitType,
+          'image': image,
+          'date': date,
+          'additionalLabour': additionalLabour,
+          'fromTime': fromTime,
+          'toTime': toTime,
+          'cityName': cityName,
+          'address': address,
+          'zipCode': zipCode,
+        }),
       );
-      await saveBookingId(bookingId,token);
-      return bookingId;
-    } else {
-      final message = responseBody['message'] ?? 'Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-      print('Failed to create booking: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 201) {
+        String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+        print('Special Booking Created successful');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Booking Created successful')),
+        );
+        await saveBookingId(bookingId,token);
+        return bookingId;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to create booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
-    return null;
   }
+
+
   // http://10.0.2.2:4000/api/partner/filtered-vendors
   Future<List<Map<String, dynamic>>?> userVehicleVendor(
       BuildContext context, {
@@ -626,59 +773,60 @@ class UserService{
         required String unitClassification,
         required String subClassification,
       }) async {
-    final url = Uri.parse('${baseUrl}partner/filtered-vendors');
+    try{
+      final url = Uri.parse('${baseUrl}partner/filtered-vendors');
 
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'bookingId': bookingId,
-        'unitType': unitType,
-        'unitClassification': unitClassification,
-        'subClassification': subClassification,
-      }),
-    );
-
-    final responseBody = jsonDecode(response.body);
-
-    print('Full Response Body: $responseBody');
-
-    if (response.statusCode == 200) {
-      List<dynamic> data = responseBody['data'];
-      List<Map<String, dynamic>> vendors = [];
-
-      for (var item in data) {
-        final partnerName = item['partnerName'];
-        final partnerId = item['partnerId'];
-        final quotePrice = item['quotePrice'];
-        final oldQuotePrice = item['oldQuotePrice'];
-
-        vendors.add({
-          'partnerName': item['partnerName'],
-          'partnerId': item['partnerId'],
-          'quotePrice': item['quotePrice'],
-          'unitType': item['unitType'],
-          'unitClassification': item['unitClassification'],
-          'subClassification': item['subClassification'],
-          'bookingId': item['bookingId'],
-          'oldQuotePrice': item['oldQuotePrice'],
-        });
-      }
-
-      print('Fetched Vendors: $vendors');
-      CommonWidgets().showToast('Fetching Vendor...');
-      return vendors;
-    } else {
-      final message = responseBody['message'] ?? 'Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'bookingId': bookingId,
+          'unitType': unitType,
+          'unitClassification': unitClassification,
+          'subClassification': subClassification,
+        }),
       );
-      print('Failed to fetch booking: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = responseBody['data'];
+        List<Map<String, dynamic>> vendors = [];
+
+        for (var item in data) {
+          vendors.add({
+            'partnerName': item['partnerName'],
+            'partnerId': item['partnerId'],
+            'quotePrice': item['quotePrice'],
+            'unitType': item['unitType'],
+            'unitClassification': item['unitClassification'],
+            'subClassification': item['subClassification'],
+            'bookingId': item['bookingId'],
+            'oldQuotePrice': item['oldQuotePrice'],
+          });
+        }
+        print('Fetched Vendors: $vendors');
+        return vendors;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to fetch booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
-    return null;
   }
 
 
@@ -708,40 +856,12 @@ class UserService{
         print('Response body: ${response.body}');
         return null; // Avoid returning null, handle error properly
       }
-    } catch (error) {
-      print('Error updating payment: $error');
-      return null;
-    }
-  }
-
-  Future<dynamic> updatePaymentCompleted(String token,String amount, String status, String partnerId,String bookingId) async {
-    final url = Uri.parse('${baseUrl}bookings/$bookingId/payment');
-    try {
-      final response = await http.put(
-        url,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'status': status,
-          'bookingId': bookingId,
-          'amount': amount,
-          'partnerId': partnerId,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        print('Payment Complete successful: ${response.body}');
-        return jsonDecode(response.body);  // return the decoded response
-      } else {
-        print('Failed to update payment: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        return null; // Avoid returning null, handle error properly
-      }
-    } catch (error) {
-      print('Error updating payment: $error');
-      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
@@ -760,33 +880,35 @@ class UserService{
   }
 
   Future<List<dynamic>> fetchPaymentBookingHistory(String id, String token) async {
-    final url = Uri.parse('${baseUrl}bookings/user/$id/completed');
+    try{
+      final url = Uri.parse('${baseUrl}bookings/user/$id/completed');
 
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+        final response = await http.get(url, headers: headers);
 
-    try {
-      final response = await http.get(url, headers: headers);
+        if (response.statusCode == 200) {
+          final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-
-        if (responseBody.containsKey('data')) {
-          final List<dynamic> bookingData = responseBody['data'];
-          print('Fetched booking history: $bookingData');
-          print('Full Response Body: $responseBody');
-          return bookingData;
+          if (responseBody.containsKey('data')) {
+            final List<dynamic> bookingData = responseBody['data'];
+            print('Fetched booking history: $bookingData');
+            print('Full Response Body: $responseBody');
+            return bookingData;
+          } else {
+            throw Exception('Unexpected response format');
+          }
         } else {
-          throw Exception('Unexpected response format');
+          throw Exception('Failed to load booking history: ${response.body}');
         }
-      } else {
-        throw Exception('Failed to load booking history: ${response.body}');
-      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('Error occurred while fetching booking history: $e');
-      return []; // Return an empty list in case of error
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
@@ -805,104 +927,171 @@ class UserService{
   }
 
   Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
-    final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
+    try{
+      final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
 
-    final headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    };
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
 
-    print('Fetching from URL: ${url.toString()}');
+      print('Fetching from URL: ${url.toString()}');
 
-    try {
-      final response = await http.get(url, headers: headers);
+        final response = await http.get(url, headers: headers);
 
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+        print('Status Code: ${response.statusCode}');
+        print('Response Body: ${response.body}');
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-        if (responseBody.containsKey('data')) {
-          final Map<String, dynamic> bookingData = responseBody['data'];
-          print('Booking Data: $bookingData');
-          return bookingData;
+        if (response.statusCode == 200) {
+          final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+          if (responseBody.containsKey('data')) {
+            final Map<String, dynamic> bookingData = responseBody['data'];
+            print('Booking Data: $bookingData');
+            return bookingData;
+          } else {
+            throw Exception('Unexpected response format: $responseBody');
+          }
         } else {
-          throw Exception('Unexpected response format: $responseBody');
+          throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
         }
-      } else {
-        throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
-      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('Error occurred while fetching booking details: $e');
-      return null;
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
   Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token) async {
-    final response = await http.get(
-      Uri.parse('${baseUrl}partner/$partnerId'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}partner/$partnerId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      print('API Response Body: ${response.body}');
 
-    // Print the entire response body
-    print('API Response: ${response.body}');
+      if (response.statusCode == 200) {
 
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(response.body);
+        final responseBody = jsonDecode(response.body);
 
-      // Print decoded response
-      print('Decoded API Response: $responseBody');
+        if (responseBody['data'] != null) {
+          final partnerData = responseBody['data'];
+          print('Decoded Partner Data: $partnerData');
 
-      final partnerId = responseBody['data']['_id'] ?? 'Unknown Partner ID';
-      final partnerName = responseBody['data']['partnerName'] ?? 'Unknown Partner Name';
-      final operators = responseBody['data']['operators'] ?? [];
+          final partnerId = partnerData['_id'] ?? 'N/A';
+          final partnerName = partnerData['partnerName'] ?? 'N/A';
+          final mobileNo = partnerData['mobileNo'] ?? 'N/A';
+          final type = partnerData['type'] ?? 'N/A';
+          final operators = partnerData['operators'] ?? [];
 
-      // Check if operators are available
-      if (operators.isEmpty) {
-        print('No operators available for this partner.');
+          if (operators.isEmpty) {
+            print('No operators available for this partner.');
+            return [];
+          }
+
+          final partnerDetails = <Map<String, dynamic>>[];
+
+          for (var operator in operators) {
+            if (operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty) {
+              final operatorDetails = operator['operatorsDetail'][0] ?? {};
+              final firstName = operatorDetails['firstName'] ?? 'N/A';
+              final lastName = operatorDetails['lastName'] ?? 'N/A';
+              final mode = operator['unitType'] ?? 'N/A';
+              final fullName = '$firstName $lastName';
+              final bookingRequests = partnerData['bookingRequest'] ?? [];
+
+              if (bookingRequests.isNotEmpty) {
+                for (var booking in bookingRequests) {
+                  final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
+                  final paymentStatus = booking['paymentStatus']?.toString() ?? 'Unknown Payment Status';
+                  final assignedOperator = booking['assignedOperator'] ?? {};
+                  final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
+                  final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
+
+                  print(assignOperatorName);
+                  print(assignOperatorMobileNo);
+                  partnerDetails.add({
+                    'type': type,
+                    'assignOperatorName': assignOperatorName,
+                    'assignOperatorMobileNo': assignOperatorMobileNo,
+                    'partnerId': partnerId,
+                    'partnerName': partnerName,
+                    'mobileNo': mobileNo,
+                    'operatorName': fullName,
+                    'lastName': lastName,
+                    'mode': mode,
+                    'bookingId': bookingId,
+                    'paymentStatus': paymentStatus,
+                  });
+                }
+              } else {
+                partnerDetails.add({
+                  'type': type,
+                  'partnerId': partnerId,
+                  'partnerName': partnerName,
+                  'mobileNo': mobileNo,
+                  'operatorName': fullName,
+                  'lastName': lastName,
+                  'mode': mode,
+                  'bookingId': 'No bookingId',
+                  'paymentStatus': 'No paymentStatus',
+                });
+              }
+            } else {
+              print('No operator details found for operator: ${operator}');
+            }
+          }
+          return partnerDetails;
+        } else {
+          print('No data field found in the response.');
+          return [];
+        }
+      } else {
+        print('Failed to load partner data: ${response.statusCode} ${response.body}');
         return [];
       }
-
-      final partnerDetails = <Map<String, dynamic>>[];
-
-      // Iterate over the operators array
-      for (var operator in operators) {
-        final firstName = operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty
-            ? operator['operatorsDetail'][0]['firstName'] ?? 'Unknown'
-            : 'Unknown';
-        final lastName = operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty
-            ? operator['operatorsDetail'][0]['lastName'] ?? 'Unknown'
-            : 'Unknown';
-        final mode = operator['unitType'] ?? 'Unknown Mode';
-        final bookingRequests = operator['bookingRequest'] ?? [];
-        final fullName = '$firstName $lastName';
-
-        for (var booking in bookingRequests) {
-          final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
-          final bookingStatus = booking['bookingStatus']?.toString() ?? 'Pending';
-
-          // Add booking and operator details to partnerDetails
-          partnerDetails.add({
-            'partnerId': partnerId,
-            'partnerName': partnerName,
-            'operatorName': fullName,
-            'lastName': lastName,
-            'mode': mode,
-            'bookingId': bookingId,
-            'bookingStatus': bookingStatus,
-          });
-        }
-      }
-
-      return partnerDetails;
-    } else {
-      print('Failed to load partner data: ${response.statusCode} ${response.body}');
-      return [];
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 
+  Future<void> deleteBooking(context,String bookingId, String token) async {
+    final String url = '${baseUrl}bookings/$bookingId';
+
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? responseBody;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Delete successful: $responseBody');
+      } else {
+        print('Failed to delete booking: ${response.statusCode} ${response.body}');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 
 }

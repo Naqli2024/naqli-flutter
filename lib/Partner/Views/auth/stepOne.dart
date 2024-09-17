@@ -145,6 +145,7 @@ class _StepOneState extends State<StepOne> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,

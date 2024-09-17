@@ -39,21 +39,25 @@ class _UserLoginState extends State<UserLogin> {
     super.dispose();
   }
 
-  void userLogin() async{
+  void userLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoading = true;
       });
-      userService.userLogin(
+
+      // Call the async method and await its completion
+      await userService.userLogin(
         context,
         emailAddress: emailAddressController.text,
         password: passwordController.text,
       );
+
       setState(() {
         isLoading = false;
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +73,7 @@ class _UserLoginState extends State<UserLogin> {
                       Stack(
                         children: [
                           Container(
-                            height: MediaQuery.sizeOf(context).height * 0.3,
+                            height: MediaQuery.sizeOf(context).height * 0.35,
                             padding: const EdgeInsets.all(20),
                             color: const Color(0xff6A66D1),
                             child: Row(

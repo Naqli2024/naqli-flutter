@@ -114,6 +114,7 @@ class _StepThreeState extends State<StepThree> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,

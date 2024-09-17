@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         isLoading = true;
       });
-      _authService.loginUser(
+      await _authService.loginUser(
         context,
         emailOrMobile: emailOrMobileController.text,
         password: passwordController.text,
@@ -88,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
               Stack(
                 children: [
                   Container(
-                    height: MediaQuery.sizeOf(context).height * 0.3,
+                    height: MediaQuery.sizeOf(context).height * 0.35,
                     padding: const EdgeInsets.all(20),
                     color: const Color(0xff6A66D1),
                     child: Row(

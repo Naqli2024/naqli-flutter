@@ -76,8 +76,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
   final List<LatLng> _dropLatLngs = [];
   List<Map<String, dynamic>> vendors = [];
   String? selectedVendorId;
-  String fullAmount = '0.00';
-  String advanceAmount = '0.00';
+  int fullAmount = 0;
+  int advanceAmount = 0;
   bool isLoading = true;
   bool isFetching = false;
   Timer? timer;
@@ -115,6 +115,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     });
 
     try {
+      // Fetch vendor data from the userService
       final fetchedVendorsNullable = await userService.userVehicleVendor(
         context,
         bookingId: widget.bookingId,
@@ -123,7 +124,29 @@ class _ChooseVendorState extends State<ChooseVendor> {
         subClassification: widget.unitTypeName,
       );
 
-      final fetchedVendors = fetchedVendorsNullable ?? [];
+      // Log the fetched response
+      print('Fetched Vendor Response: $fetchedVendorsNullable');
+
+      // Handle null response
+      if (fetchedVendorsNullable == null) {
+        print('Received null response from userService');
+        setState(() {
+          isFetching = false;
+        });
+        return;
+      }
+
+      // Parse the response
+      List<Map<String, dynamic>> fetchedVendors;
+      try {
+        fetchedVendors = List<Map<String, dynamic>>.from(fetchedVendorsNullable);
+      } catch (e) {
+        print('Error parsing response: $e');
+        setState(() {
+          isFetching = false;
+        });
+        return;
+      }
 
       List<Map<String, dynamic>> newVendors = [];
       for (var vendor in fetchedVendors) {
@@ -162,6 +185,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
       print('Error fetching vendor: $e');
     }
   }
+
 
   void startRefreshing() {
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
@@ -241,10 +265,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
       String oldQuotePrice,
       String quotePrice,
       String paymentStatus,
-      String advanceOrPay,
+      int advanceOrPay,
       ) async {
     try {
-      // Create a payment intent with the specified amount
+
       var paymentIntent = await createPaymentIntent(
         amount.toStringAsFixed(2),
         'INR',
@@ -831,7 +855,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(context,
-          User: widget.firstName + widget.lastName, showLeading: false),
+          User: widget.firstName +' '+ widget.lastName, showLeading: false),
       drawer: Drawer(
         backgroundColor: Colors.white,
         child: ListView(
@@ -949,7 +973,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                         oldQuotePrice: '',
                                         paymentStatus: '',
                                         quotePrice: '',
-                                          advanceOrPay: ''
+                                          advanceOrPay: 0
                                           )),
                                 )
                               : Navigator.push(
@@ -1288,32 +1312,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                           TextButton(
                                             child: const Text('Yes'),
                                             onPressed: () async {
-                                              widget.selectedType ==
-                                                          'vehicle' ||
-                                                      widget.selectedType ==
-                                                          'bus' ||
-                                                      widget.selectedType ==
-                                                          'equipment' ||
-                                                      widget.selectedType ==
-                                                          'special' ||
-                                                      widget.selectedType ==
-                                                          'others'
-                                                  ? Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              CreateBooking(
-                                                                firstName: widget
-                                                                    .firstName,
-                                                                lastName: widget
-                                                                    .lastName,
-                                                                selectedType: widget
-                                                                    .selectedType,
-                                                                token: widget
-                                                                    .token,
-                                                                id: widget.id,
-                                                              )))
-                                                  : Navigator.push(
+                                              await userService.deleteBooking(context,widget.bookingId, widget.token);
+                                              stopFetching();
+                                              await clearUserData();
+                                               Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                           builder: (context) =>
@@ -1501,12 +1503,29 @@ class _ChooseVendorState extends State<ChooseVendor> {
                       return Padding(
                         padding: const EdgeInsets.only(left: 10),
                         child: RadioListTile<String>(
-                          title: Text(
-                            '$partnerName $quotePrice SAR',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
-                            ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                flex:2,
+                                child: Text(
+                                  '$partnerName',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex:4,
+                                child: Text(
+                                  '$quotePrice SAR',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           value: index.toString(),
                           groupValue: selectedVendorId,
@@ -1518,11 +1537,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               selectedQuotePrice = quotePrice.toStringAsFixed(2);
                               selectedOldQuotePrice = oldQuotePrice;
                               selectedVendorId = value;
-                              fullAmount = quotePrice.toStringAsFixed(2);
-                              advanceAmount = (quotePrice / 2).toStringAsFixed(2);
+                              fullAmount = quotePrice.round();
+                              advanceAmount = (quotePrice / 2).round();
                               try {
-                                fullPayAmount = double.parse(fullAmount);
-                                advancePayAmount = double.parse(advanceAmount);
+                                fullPayAmount = fullAmount.toDouble();
+                                advancePayAmount = advanceAmount.toDouble();
                               } catch (e) {
                                 print('Error parsing amount: $e');
                                 fullPayAmount = 0.0;

@@ -127,7 +127,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ListTile(
               leading: Icon(FontAwesomeIcons.userGroup),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 15,top: 5),
                 child: Text('Partner',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
@@ -137,7 +137,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ListTile(
               leading: Icon(FontAwesomeIcons.car),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 15,top: 5),
                 child: Text('Driver',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
@@ -147,7 +147,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ListTile(
               leading: Icon(FontAwesomeIcons.phone),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 15,top: 5),
                 child: Text('Contact us',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
@@ -157,7 +157,7 @@ class _UserHomePageState extends State<UserHomePage> {
             ListTile(
               leading: Icon(FontAwesomeIcons.handsHelping),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 15,top: 5),
                 child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {

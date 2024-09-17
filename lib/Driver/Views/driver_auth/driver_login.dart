@@ -71,7 +71,7 @@ class _UserLoginState extends State<UserLogin> {
               Stack(
                 children: [
                   Container(
-                    height: MediaQuery.sizeOf(context).height * 0.3,
+                    height: MediaQuery.sizeOf(context).height * 0.35,
                     padding: const EdgeInsets.all(20),
                     color: const Color(0xff6A66D1),
                     child: Row(

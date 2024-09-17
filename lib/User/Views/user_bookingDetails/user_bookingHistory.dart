@@ -64,7 +64,7 @@ class _BookingHistoryState extends State<BookingHistory> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName + widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
         showLeading: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),

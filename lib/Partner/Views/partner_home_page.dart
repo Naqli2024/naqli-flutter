@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class PartnerHomePage extends StatefulWidget {
@@ -25,13 +26,23 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Container(
-            margin: const EdgeInsets.only(top: 20),
-            child: SvgPicture.asset(
-              'assets/naqlee-logo.svg',
-              fit: BoxFit.fitWidth,
-              height: 40,
-            )),
+        title: GestureDetector(
+          onTap: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => UserHomePage()
+              ),
+            );
+          },
+          child: Container(
+              margin: const EdgeInsets.only(top: 20),
+              child: SvgPicture.asset(
+                'assets/naqlee-logo.svg',
+                fit: BoxFit.fitWidth,
+                height: 40,
+              )),
+        ),
         actions: [
           IconButton(
               onPressed: () {},

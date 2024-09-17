@@ -43,6 +43,7 @@ class _StepTwoState extends State<StepTwo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,

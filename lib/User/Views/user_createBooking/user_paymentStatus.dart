@@ -38,7 +38,7 @@ class _NewBookingState extends State<NewBooking> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName + widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
         showLeading: false,
       ),
       body: Center(
@@ -164,7 +164,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token);
 
-      // Log the fetched data to see if it's correct
+      // Log the fetched data to check what's being returned
       print('Fetched Partner Data: $data');
 
       if (data.isNotEmpty) {
@@ -172,13 +172,16 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
           partnerData = data;
         });
       } else {
-        // If data is empty, log it
+        // If the data is empty, log it
         print('No partner data available');
       }
     } catch (e) {
-      print('Error loading partner data: $e');
+      print('Error fetching partner data: $e');
     }
   }
+
+
+
 
   Future<void> fetchCoordinates() async {
     try {
@@ -528,7 +531,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName + widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
         showLeading: false
       ),
       body: SingleChildScrollView(
@@ -701,7 +704,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                                 'Mode', partnerData![0]['mode'] ?? 'Unknown'),
                             Divider(),
                             _buildDetailRow('Booking status',
-                                partnerData![0]['bookingStatus'] ?? 'Pending'),
+                                partnerData![0]['paymentStatus'] ?? 'Pending'),
                           ],
                         ),
                 ),

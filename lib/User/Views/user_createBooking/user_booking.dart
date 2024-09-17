@@ -576,10 +576,10 @@ class _CreateBookingState extends State<CreateBooking> {
   Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
     try {
       List<Vehicle> vehicles =
-          await userService.fetchUserVehicle(); // Fetch vehicles
+          await userService.fetchUserVehicle();
 
       var selectedType = vehicles
-          .expand((vehicle) => vehicle.types) // Flatten the list of types
+          .expand((vehicle) => vehicle.types)
           .firstWhere(
             (type) => type.typeName == selectedTypeName,
             orElse: () => VehicleType(
@@ -949,7 +949,7 @@ class _CreateBookingState extends State<CreateBooking> {
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName + widget.lastName,
+        User: widget.firstName +' '+ widget.lastName,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
@@ -1067,7 +1067,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               oldQuotePrice: '',
                               paymentStatus: '',
                               quotePrice: '',
-                              advanceOrPay: ''
+                              advanceOrPay: 0
                             )
                         ),
                       )
@@ -1323,7 +1323,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async{
                             setState(() {
                               if (widget.selectedType == 'vehicle') {
                                 if (_currentStep == 1) {
@@ -1332,14 +1332,32 @@ class _CreateBookingState extends State<CreateBooking> {
                                   } else {
                                     _currentStep++;
                                   }
-                                } else if (_currentStep == 2) {
+                                }else if (_currentStep == 2) {
+                                  // Check if required fields are filled
                                   if (_selectedFromTime == null ||
                                       _selectedDate == null ||
-                                      productController.text.isEmpty ||
-                                      selectedLoad == null) {
+                                      productController.text.isEmpty) {
                                     commonWidgets.showToast('Please fill all fields');
                                   } else {
-                                    _currentStep++;
+                                    // Await the fetchLoadsForSelectedType function
+                                    fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
+                                      print('Fetched loadTypes: $loadTypes');
+                                      if (loadTypes.isEmpty) {
+
+                                        setState(() {
+                                          _currentStep++;
+                                        });
+                                      } else {
+                                        if (loadTypes.isNotEmpty) {
+                                          commonWidgets.showToast(
+                                              'Please select Load type');
+                                        }
+                                      }
+                                    }).catchError((error) {
+                                      // Handle errors
+                                      print('Error fetching load types: $error');
+                                      commonWidgets.showToast('Error fetching load types');
+                                    });
                                   }
                                 }
                               }
@@ -1986,8 +2004,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                                           return const SizedBox(
                                                             width: 24,
                                                             height: 24,
-                                                            child:
-                                                                CircularProgressIndicator(),
+                                                            child:Icon(Icons
+                                                                .rotate_right),
                                                           );
                                                         } else if (snapshot
                                                             .hasError) {
