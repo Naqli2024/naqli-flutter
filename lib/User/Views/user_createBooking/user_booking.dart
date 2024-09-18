@@ -1292,11 +1292,14 @@ class _CreateBookingState extends State<CreateBooking> {
                   if (_currentStep == 1) Container(),
                   if (_currentStep > 1)
                     Container(
-                      padding: const EdgeInsets.only(left: 40, bottom: 20),
+                      padding: const EdgeInsets.only(left: 40, bottom: 15),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
                             if (_currentStep > 1) {
+                              if (_currentStep == 2) {
+                                selectedLoad = null;
+                              }
                               _currentStep--;
                             }
                           });
@@ -1312,7 +1315,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     ),
                   if (_currentStep < 3)
                     Container(
-                      padding: const EdgeInsets.only(right: 10, bottom: 15),
+                      padding: const EdgeInsets.only(right: 10, bottom: 12,top:5),
                       child: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.055,
                         width: MediaQuery.of(context).size.width * 0.3,
@@ -1333,7 +1336,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                     _currentStep++;
                                   }
                                 }else if (_currentStep == 2) {
-                                  // Check if required fields are filled
                                   if (_selectedFromTime == null ||
                                       _selectedDate == null ||
                                       productController.text.isEmpty) {
@@ -1342,7 +1344,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                     // Await the fetchLoadsForSelectedType function
                                     fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
                                       print('Fetched loadTypes: $loadTypes');
-                                      if (loadTypes.isEmpty) {
+                                      if (loadTypes.isEmpty || selectedLoad !=null) {
 
                                         setState(() {
                                           _currentStep++;
@@ -1424,10 +1426,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     ),
                   if (_currentStep == 3)
                     Container(
-                      padding: const EdgeInsets.only(right: 10, bottom: 15),
+                      padding: const EdgeInsets.only(right: 10, bottom: 5),
                       child: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.055,
-                        width: MediaQuery.of(context).size.width * 0.53,
+                        width: MediaQuery.of(context).size.width * 0.52,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff6269FE),
@@ -2237,7 +2239,7 @@ class _CreateBookingState extends State<CreateBooking> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2258,7 +2260,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
                 ),
                 Container(
                   height: 50,
@@ -2280,7 +2282,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2301,7 +2303,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar),
+                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2323,7 +2325,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2337,16 +2339,27 @@ class _CreateBookingState extends State<CreateBooking> {
             padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
             child: TextFormField(
               controller: productController,
-              decoration: const InputDecoration(
-                hintStyle: TextStyle(color: Color(0xffCCCCCC)),
+              decoration: InputDecoration(
+                hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC), // Border color
+                    width: 1.0, // Border width
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC), // Border color when enabled
+                    width: 1.0, // Border width
+                  ),
                 ),
               ),
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2443,7 +2456,7 @@ class _CreateBookingState extends State<CreateBooking> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2464,7 +2477,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2486,7 +2499,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2507,7 +2520,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar),
+                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2529,7 +2542,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2546,7 +2559,18 @@ class _CreateBookingState extends State<CreateBooking> {
               decoration: const InputDecoration(
                 hintStyle: TextStyle(color: Color(0xffCCCCCC)),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC),
+                    width: 1.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC),
+                    width: 1.0,
+                  ),
                 ),
               ),
             ),
@@ -2625,7 +2649,7 @@ class _CreateBookingState extends State<CreateBooking> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2646,7 +2670,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2668,7 +2692,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2689,7 +2713,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectToTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2711,7 +2735,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2732,7 +2756,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar),
+                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2827,7 +2851,7 @@ class _CreateBookingState extends State<CreateBooking> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2848,7 +2872,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2870,7 +2894,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2891,7 +2915,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectToTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock),
+                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -2913,7 +2937,7 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
@@ -2934,7 +2958,7 @@ class _CreateBookingState extends State<CreateBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar),
+                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                 ),
                 Container(
                   height: 50,
@@ -3132,21 +3156,25 @@ class _CreateBookingState extends State<CreateBooking> {
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                         suffixIcon: i == _dropPointControllers.length - 1
-                                            ? Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            if (_dropPointControllers.length > 1)
-                                              GestureDetector(
-                                                onTap: () => _removeTextField(i),
-                                                child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                            ? Padding(
+                                              padding: const EdgeInsets.only(right: 15),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                              if (_dropPointControllers.length > 1)
+                                                GestureDetector(
+                                                  onTap: () => _removeTextField(i),
+                                                  child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                ),
+                                              if (_dropPointControllers.length == 1)
+                                                GestureDetector(
+                                                  onTap: _addTextField,
+                                                  child: Icon(Icons.add_circle_outline_sharp),
+                                                ),
+                                                ],
                                               ),
-                                            if (_dropPointControllers.length == 1)
-                                              GestureDetector(
-                                                onTap: _addTextField,
-                                                child: Icon(Icons.add_circle_outline_sharp),
-                                              ),
-                                          ],
-                                        )
+                                            )
                                             : null,
                                       ),
                                     ),
@@ -3188,6 +3216,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             ),
                           ),
                           onPressed: () {
+                            FocusScope.of(context).unfocus();
                             _fetchCoordinates();
                           },
                           child: const Text(
@@ -3311,20 +3340,24 @@ class _CreateBookingState extends State<CreateBooking> {
                                             hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                             border: InputBorder.none,
                                             suffixIcon: i == _dropPointControllers.length - 1
-                                                ? Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (_dropPointControllers.length > 1)
-                                                  GestureDetector(
-                                                    onTap: () => _removeTextField(i),
-                                                    child: Icon(Icons.cancel_outlined, color: Colors.red),
-                                                  ),
-                                                if (_dropPointControllers.length == 1)
-                                                  GestureDetector(
-                                                    onTap: _addTextField,
-                                                    child: Icon(Icons.add_circle_outline_sharp),
-                                                  ),
-                                              ],
+                                                ? Padding(
+                                              padding: const EdgeInsets.only(right: 15),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (_dropPointControllers.length > 1)
+                                                    GestureDetector(
+                                                      onTap: () => _removeTextField(i),
+                                                      child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                    ),
+                                                  if (_dropPointControllers.length == 1)
+                                                    GestureDetector(
+                                                      onTap: _addTextField,
+                                                      child: Icon(Icons.add_circle_outline_sharp),
+                                                    ),
+                                                ],
+                                              ),
                                             )
                                                 : null,
                                           ),
@@ -3367,6 +3400,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             ),
                           ),
                           onPressed: () {
+                            FocusScope.of(context).unfocus();
                             _fetchCoordinates();
                           },
                           child: const Text(
@@ -3393,10 +3427,177 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserEquipmentStepThree() {
     return SingleChildScrollView(
       child: Center(
-        child: Stack(
+        child: Column(
           children: [
             Container(
-              height: MediaQuery.of(context).size.height * 0.7,
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
+              child: Column(
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: const BorderSide(
+                        color: Color(0xffE0E0E0),
+                        width: 1,
+                      ),
+                    ),
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                  child: SvgPicture.asset('assets/search.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 33,
+                                  child: TextFormField(
+                                    controller: cityNameController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter city name',
+                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _cityNameSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_cityNameSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
+                                );
+                              },
+                            ),
+                          ),
+                        const Divider(indent: 5, endIndent: 5),
+                        Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                child: SvgPicture.asset('assets/address.svg')),
+                            Expanded(
+                              child: Container(
+                                // color: Colors.green,
+                                height: 33,
+                                child: TextFormField(
+                                  controller: addressController,
+                                  onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your address',
+                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                    border: InputBorder.none,
+                                    // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _addressSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_addressSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
+                                );
+                              },
+                            ),
+                          ),
+                        const Divider(indent: 5, endIndent: 5),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,8,7,0),
+                                  child: SvgPicture.asset('assets/zipCode.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 33,
+                                  child: TextFormField(
+                                    controller: zipCodeController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
+                                    decoration: InputDecoration(
+                                      hintText: 'Zip code for construction site',
+                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 100,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _zipCodeSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_zipCodeSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          _fetchAddressCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.4,
               child: GoogleMap(
                 onMapCreated: (GoogleMapController controller) {
                   mapController = controller;
@@ -3408,166 +3609,6 @@ class _CreateBookingState extends State<CreateBooking> {
                 ),
                 markers: markers,
                 polylines: polylines,
-              ),
-            ),
-            Positioned(
-              top: 10,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                child: Column(
-                  children: [
-                    Card(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                    child: SvgPicture.asset('assets/search.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    child: TextFormField(
-                                      controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Enter city name',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_cityNameSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                  child: SvgPicture.asset('assets/address.svg')),
-                              Expanded(
-                                child: Container(
-                                  height: 40,
-                                  child: TextFormField(
-                                    controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter your address',
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _addressSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                    child: SvgPicture.asset('assets/zipCode.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    child: TextFormField(
-                                      controller: zipCodeController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Zip code for construction site',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 100,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _zipCodeSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_zipCodeSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            _fetchAddressCoordinates();
-                          },
-                          child: const Text(
-                            'Get Location',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
               ),
             ),
           ],
@@ -3579,10 +3620,177 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserSpecialStepThree() {
     return SingleChildScrollView(
       child: Center(
-        child: Stack(
+        child: Column(
           children: [
             Container(
-              height: MediaQuery.of(context).size.height * 0.7,
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
+              child: Column(
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: const BorderSide(
+                        color: Color(0xffE0E0E0), // Border color
+                        width: 1, // Border width
+                      ),
+                    ),
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                  child: SvgPicture.asset('assets/search.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 33,
+                                  child: TextFormField(
+                                    controller: cityNameController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter city name',
+                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _cityNameSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_cityNameSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
+                                );
+                              },
+                            ),
+                          ),
+                        const Divider(indent: 5, endIndent: 5),
+                        Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                child: SvgPicture.asset('assets/address.svg')),
+                            Expanded(
+                              child: Container(
+                                // color: Colors.green,
+                                height: 33,
+                                child: TextFormField(
+                                  controller: addressController,
+                                  onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your address',
+                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                    border: InputBorder.none,
+                                    // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _addressSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_addressSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
+                                );
+                              },
+                            ),
+                          ),
+                        const Divider(indent: 5, endIndent: 5),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,8,7,0),
+                                  child: SvgPicture.asset('assets/zipCode.svg')),
+                              Expanded(
+                                child: Container(
+                                  height: 33,
+                                  child: TextFormField(
+                                    controller: zipCodeController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
+                                    decoration: InputDecoration(
+                                      hintText: 'Zip code for construction site',
+                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 100,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _zipCodeSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_zipCodeSuggestions[index]),
+                                  onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.05,
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6A66D1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          _fetchAddressCoordinates();
+                        },
+                        child: const Text(
+                          'Get Location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.4,
               child: GoogleMap(
                 onMapCreated: (GoogleMapController controller) {
                   mapController = controller;
@@ -3594,166 +3802,6 @@ class _CreateBookingState extends State<CreateBooking> {
                 ),
                 markers: markers,
                 polylines: polylines,
-              ),
-            ),
-            Positioned(
-              top: 10,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                child: Column(
-                  children: [
-                    Card(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                    child: SvgPicture.asset('assets/search.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    child: TextFormField(
-                                      controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Enter city name',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_cityNameSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                  child: SvgPicture.asset('assets/address.svg')),
-                              Expanded(
-                                child: Container(
-                                  height: 40,
-                                  child: TextFormField(
-                                    controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter your address',
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _addressSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,10,5,5),
-                                    child: SvgPicture.asset('assets/zipCode.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    child: TextFormField(
-                                      controller: zipCodeController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Zip code for construction site',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 100,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _zipCodeSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_zipCodeSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            _fetchAddressCoordinates();
-                          },
-                          child: const Text(
-                            'Get Location',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
               ),
             ),
           ],

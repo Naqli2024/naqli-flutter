@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -78,8 +79,6 @@ class _PendingPaymentState extends State<PendingPayment> {
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
-    // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), '');
-    // final int amount = int.tryParse(cleanedValue) ?? 0;
     userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
     super.initState();
   }
@@ -88,13 +87,12 @@ class _PendingPaymentState extends State<PendingPayment> {
       BuildContext context,
       String status,
       String bookingId,
-      int amount, // Ensure amount is an int
+      int amount,
       String partnerId,
       ) async {
     try {
-      // Convert the integer amount to a string when creating the payment intent
       var paymentIntent = await createPaymentIntent(
-        amount, // Pass amount as an integer
+        amount,
         'INR',
       );
 
@@ -119,19 +117,17 @@ class _PendingPaymentState extends State<PendingPayment> {
         ),
       );
 
-      // Display the payment sheet
       await Stripe.instance.presentPaymentSheet();
 
-      // Show success message
       Fluttertoast.showToast(msg: 'Payment successfully completed');
       await userService.updatePayment(
         widget.token,
-        amount, // Convert amount to String for updatePayment call if required
+        amount,
         'Completed',
         partnerId,
         bookingId,
-        zeroQuotePrice.toString(), // Convert zeroQuotePrice to String if needed
-        zeroQuotePrice.toString(), // Convert zeroQuotePrice to String if needed
+        zeroQuotePrice.toString(),
+        zeroQuotePrice.toString(),
       );
 
       Navigator.push(
@@ -153,18 +149,30 @@ class _PendingPaymentState extends State<PendingPayment> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserType(
+            builder: (context) => PaymentCompleted(
               firstName: widget.firstName,
               lastName: widget.lastName,
               token: widget.token,
               id: widget.id,
+              selectedType: widget.selectedType,
+              unit: widget.unit,
+              load: widget.load,
+              bookingId: widget.bookingId,
+              unitType: widget.unitType,
+              dropPoints: widget.dropPoints,
+              pickup: widget.pickup,
+              cityName: widget.cityName,
+              address: widget.address,
+              zipCode: widget.zipCode,
+              unitTypeName: widget.unitTypeName,
+              partnerId: widget.partnerId,
+              size: widget.size,
             ),
           ),
         );
       });
 
     } catch (e) {
-      // Show error message
       if (e is StripeException) {
         Fluttertoast.showToast(
           msg: 'Error from Stripe: ${e.error.localizedMessage}',
@@ -178,7 +186,7 @@ class _PendingPaymentState extends State<PendingPayment> {
   }
 
   Future<Map<String, dynamic>> createPaymentIntent(
-      int amount, // Ensure amount is an integer
+      int amount,
       String currency,
       ) async {
     try {
@@ -211,7 +219,7 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   String calculateAmount(int amount) {
     try {
-      final intAmount = amount * 100; // Convert to smallest currency unit
+      final intAmount = amount * 100;
       return intAmount.toString();
     } catch (e) {
       throw Exception('Invalid amount format: $amount');
@@ -624,640 +632,593 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-      ),
-      body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Container(
-              height: MediaQuery.sizeOf(context).height * 0.4,
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(0, 0), // Default position
-                  zoom: 1,
-                ),
-                markers: markers,
-                polylines: polylines,
-              )
-            ),
-            Positioned(
-                top: 15,
-                child: Container(
-                  width: MediaQuery.sizeOf(context).width,
-                  padding: const EdgeInsets.only(left: 10,right: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Container(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.push(context, MaterialPageRoute(builder:  (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id)));
+        return false;
+      },
+      child: Scaffold(
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+        ),
+        body: SingleChildScrollView(
+          child: Stack(
+            children: [
+              Container(
+                height: MediaQuery.sizeOf(context).height * 0.4,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0), // Default position
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                )
+              ),
+              Positioned(
+                  top: 15,
+                  child: Container(
+                    width: MediaQuery.sizeOf(context).width,
+                    padding: const EdgeInsets.only(left: 10,right: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Container(
+                          decoration: ShapeDecoration(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(80),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 10,right: 15),
+                                    child: Image.asset('assets/moving_truck.png'),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Container(
+                                        alignment: Alignment.center,
+                                        // height: 50,
+                                        width: MediaQuery.sizeOf(context).width * 0.55,
+                                        child: Column(
+                                          children: [
+                                            Text('Booking Id'),
+                                            Text(widget.bookingId),
+                                          ],
+                                        )
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: IconButton(
+                              onPressed: (){
+                                Navigator.push(context,
+                                    MaterialPageRoute(builder:  (context) => UserType(
+                                        firstName: widget.firstName,
+                                        lastName: widget.lastName,
+                                        token: widget.token,
+                                        id: widget.id
+                                    )));
+                              },
+                              icon: Icon(FontAwesomeIcons.multiply)),
+                        ),
+                      ],
+                    ),
+                  )),
+              widget.selectedType ==
+                  'vehicle' ||
+                  widget.selectedType ==
+                      'bus' ||
+                  widget.selectedType ==
+                      'equipment' ||
+                  widget.selectedType ==
+                      'special' ||
+                  widget.selectedType ==
+                      'others'
+              ?Center(
+                child: Column(
+                  children: [
+                    Container(
+                      // height: MediaQuery.sizeOf(context).height * 0.37,
+                      margin: EdgeInsets.only(
+                          top: MediaQuery.sizeOf(context).height * 0.25,
+                          left: 15,
+                          right: 15,
+                          bottom: 10
+                      ),
+                      child: Container(
                         decoration: ShapeDecoration(
                           color: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(80),
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Color(0xffE0E0E0), // Border color
+                              width: 1, // Border width
+                            ),
                           ),
                         ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 10,right: 15),
-                                  child: Image.asset('assets/moving_truck.png'),
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Vendor name',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData?[0]['partnerName'] ?? 'N/A',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                      alignment: Alignment.center,
-                                      // height: 50,
-                                      width: MediaQuery.sizeOf(context).width * 0.55,
-                                      child: Column(
-                                        children: [
-                                          Text('Booking Id'),
-                                          Text(widget.bookingId),
-                                        ],
-                                      )
-                                  ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Operator name',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData != null && partnerData!.isNotEmpty
+                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                            ? (partnerData?[0]['operatorName'] ?? '')
+                                            : (partnerData?[0]['assignOperatorName'] ?? ''))
+                                            : 'No Data',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Operator mobile No',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData != null && partnerData!.isNotEmpty
+                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                            ? (partnerData?[0]['mobileNo'] ?? '')
+                                            : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
+                                            : 'No Data',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Unit',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        unit.isNotEmpty ? unit : "No unit data",
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Booking status',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        bookingStatus.isNotEmpty ? bookingStatus:'',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: IconButton(
-                            onPressed: (){
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    backgroundColor: Colors.white,
-                                    contentPadding: const EdgeInsets.all(20),
-                                    content: const Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Padding(
-                                          padding: EdgeInsets.only(top: 30,bottom: 10),
-                                          child: Text(
-                                            'Are you sure you want to cancel ?',
-                                            style: TextStyle(fontSize: 19),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: const Text('Yes'),
-                                        onPressed: () async {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => ChooseVendor(
-                                                  id: widget.id,
-                                                  firstName: widget.firstName,
-                                                  lastName: widget.lastName,
-                                                  selectedType: widget.selectedType,
-                                                  token: widget.token,
-                                                  unit: widget.unit,
-                                                  load: widget.load,
-                                                  size: widget.size,
-                                                  bookingId: widget.bookingId,
-                                                  unitType: widget.unitType,
-                                                  dropPoints: widget.dropPoints,
-                                                  pickup: widget.pickup,
-                                                  cityName: widget.cityName,
-                                                  address: widget.address,
-                                                  zipCode: widget.zipCode,
-                                                  unitTypeName: widget.unitTypeName,
-                                                )
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      TextButton(
-                                        child: const Text('No'),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
+                    ),
+                    widget.paymentStatus == 'HalfPaid'
+                    ?Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 50,right: 50,top: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                'Pending Amount',
+                                style: TextStyle(fontSize: 21),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                '${remainingBalance} SAR',
+                                style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 20,left: 10),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.054,
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xff6269FE),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                onPressed: (){
+                                  initiateStripePayment(
+                                      context,
+                                      'Completed',
+                                      widget.bookingId,
+                                      remainingBalance as int,
+                                      widget.partnerId
                                   );
                                 },
-                              );
-                            },
-                            icon: Icon(FontAwesomeIcons.multiply)),
+                                child: Text(
+                                  'Pay : ${remainingBalance} SAR',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.normal),
+                                )),
+                          ),
+                        ),
+                      ],
+                    )
+                     : Padding(
+                      padding: const EdgeInsets.only(top: 30),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
-            widget.selectedType ==
-                'vehicle' ||
-                widget.selectedType ==
-                    'bus' ||
-                widget.selectedType ==
-                    'equipment' ||
-                widget.selectedType ==
-                    'special' ||
-                widget.selectedType ==
-                    'others'
-            ?Center(
-              child: Column(
-                children: [
-                  Container(
-                    // height: MediaQuery.sizeOf(context).height * 0.37,
-                    margin: EdgeInsets.only(
-                        top: MediaQuery.sizeOf(context).height * 0.25,
-                        left: 15,
-                        right: 15,
-                        bottom: 10
-                    ),
-                    child: Container(
-                      decoration: ShapeDecoration(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(
-                            color: Color(0xffE0E0E0), // Border color
-                            width: 1, // Border width
+                    )
+                  ],
+                ),
+              )
+              :Center(
+                child: Column(
+                  children: [
+                    Container(
+                      // height: MediaQuery.sizeOf(context).height * 0.37,
+                      margin: EdgeInsets.only(
+                          top: MediaQuery.sizeOf(context).height * 0.25,
+                          left: 15,
+                          right: 15,
+                          bottom: 10
+                      ),
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(
+                              color: Color(0xffE0E0E0), // Border color
+                              width: 1, // Border width
+                            ),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Vendor name',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData?[0]['partnerName'] ?? 'N/A',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Operator name',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData != null && partnerData!.isNotEmpty
+                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                            ? (partnerData?[0]['operatorName'] ?? '')
+                                            : (partnerData?[0]['assignOperatorName'] ?? ''))
+                                            : 'No Data',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Operator mobile No',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        partnerData != null && partnerData!.isNotEmpty
+                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                            ? (partnerData?[0]['mobileNo'] ?? '')
+                                            : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
+                                            : 'No Data',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Unit',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        widget.unit,
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Booking status',
+                                        style: TextStyle(
+                                            color: Color(0xff79797C),
+                                            fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        bookingStatus.isNotEmpty ? bookingStatus:'N/A',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Vendor name',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData?[0]['partnerName'] ?? 'N/A',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Operator name',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData != null && partnerData!.isNotEmpty
-                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                          ? (partnerData?[0]['operatorName'] ?? '')
-                                          : (partnerData?[0]['assignOperatorName'] ?? ''))
-                                          : 'No Data',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Operator mobile No',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData != null && partnerData!.isNotEmpty
-                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                          ? (partnerData?[0]['mobileNo'] ?? '')
-                                          : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
-                                          : 'No Data',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Unit',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      unit.isNotEmpty ? unit : "No unit data",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Booking status',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      bookingStatus.isNotEmpty ? bookingStatus:'',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
-                  ),
-                  widget.paymentStatus == 'HalfPaid'
-                  ?Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 50,right: 50,top: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              'Pending Amount',
-                              style: TextStyle(fontSize: 21),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              '${remainingBalance} SAR',
-                              style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 20,left: 10),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.054,
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xff6269FE),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                              onPressed: (){
-                                initiateStripePayment(
-                                    context,
-                                    'Completed',
-                                    widget.bookingId,
-                                    remainingBalance as int,
-                                    widget.partnerId
-                                );
-                              },
-                              child: Text(
-                                'Pay : ${remainingBalance} SAR',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.normal),
-                              )),
-                        ),
-                      ),
-                    ],
-                  )
-                   : Padding(
-                    padding: const EdgeInsets.only(top: 30),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    widget.paymentStatus == 'HalfPaid'
+                    ?Column(
                       children: [
-                        Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                         Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            )
-            :Center(
-              child: Column(
-                children: [
-                  Container(
-                    // height: MediaQuery.sizeOf(context).height * 0.37,
-                    margin: EdgeInsets.only(
-                        top: MediaQuery.sizeOf(context).height * 0.25,
-                        left: 15,
-                        right: 15,
-                        bottom: 10
-                    ),
-                    child: Container(
-                      decoration: ShapeDecoration(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(
-                            color: Color(0xffE0E0E0), // Border color
-                            width: 1, // Border width
+                          padding: EdgeInsets.only(left: 50,right: 50,top: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                'Pending Amount',
+                                style: TextStyle(fontSize: 21),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Vendor name',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData?[0]['partnerName'] ?? 'N/A',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Operator name',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData != null && partnerData!.isNotEmpty
-                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                          ? (partnerData?[0]['operatorName'] ?? '')
-                                          : (partnerData?[0]['assignOperatorName'] ?? ''))
-                                          : 'No Data',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Operator mobile No',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      partnerData != null && partnerData!.isNotEmpty
-                                          ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                          ? (partnerData?[0]['mobileNo'] ?? '')
-                                          : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
-                                          : 'No Data',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Unit',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      widget.unit,
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(),
-                            Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Booking status',
-                                      style: TextStyle(
-                                          color: Color(0xff79797C),
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      bookingStatus.isNotEmpty ? bookingStatus:'N/A',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  widget.paymentStatus == 'HalfPaid'
-                  ?Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 50,right: 50,top: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              'Pending Amount',
-                              style: TextStyle(fontSize: 21),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              '${widget.advanceOrPay} SAR',
-                              style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 20,left: 10),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.054,
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xff6269FE),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                              onPressed: (){
-                                // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
-                                // final int amount = int.tryParse(cleanedValue) ?? 0;
-                                print(widget.advanceOrPay);
-                                initiateStripePayment(
-                                    context,
-                                    'Completed',
-                                    widget.bookingId,
-                                    widget.advanceOrPay,
-                                    widget.partnerId
-                                );
-                              },
-                              child: Text(
-                                'Pay : ${widget.advanceOrPay} SAR',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.normal),
-                              )),
-                        ),
-                      ),
-                    ],
-                  )
-                   : Padding(
-                    padding: const EdgeInsets.only(top: 30),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                         Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                          padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                '${widget.advanceOrPay} SAR',
+                                style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.only(top: 20,left: 10),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.054,
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xff6269FE),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                onPressed: (){
+                                  // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
+                                  // final int amount = int.tryParse(cleanedValue) ?? 0;
+                                  print(widget.advanceOrPay);
+                                  initiateStripePayment(
+                                      context,
+                                      'Completed',
+                                      widget.bookingId,
+                                      widget.advanceOrPay,
+                                      widget.partnerId
+                                  );
+                                },
+                                child: Text(
+                                  'Pay : ${widget.advanceOrPay} SAR',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.normal),
+                                )),
+                          ),
                         ),
                       ],
-                    ),
-                  )
-                ],
-              ),
-            )
-          ],
+                    )
+                     : Padding(
+                      padding: const EdgeInsets.only(top: 30),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

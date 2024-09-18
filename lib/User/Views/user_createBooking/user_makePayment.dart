@@ -18,7 +18,6 @@ class _MakePaymentState extends State<MakePayment> {
   @override
   void initState() {
     super.initState();
-    // Initialize Stripe with your publishable key
     Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
   }
 

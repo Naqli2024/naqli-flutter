@@ -65,195 +65,197 @@ class _DriverHomePageState extends State<DriverHomePage>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(context, showLeading: false),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    height: MediaQuery.sizeOf(context).height * 0.78,
-                    child: const GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(0, 0), // Default position
-                        zoom: 1,
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      height: MediaQuery.sizeOf(context).height * 0.78,
+                      child: const GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(0, 0), // Default position
+                          zoom: 1,
+                        ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(
-                                      0, 5), // changes position of shadow
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: () {
-                                    Navigator.push(context,
-                                        MaterialPageRoute(builder: (context) => OrderAccept()));
-                                  },
-                                  icon: Icon(Icons.menu)),
-                            ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(
-                                      0, 5), // changes position of shadow
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: () {}, icon: Icon(Icons.search)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    child: GestureDetector(
-                      onTap: _toggleNotification, // Toggle the notification screen
+                    Positioned(
+                      top: 15,
                       child: Container(
                         width: MediaQuery.sizeOf(context).width,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(
-                                  0, 5), // changes position of shadow
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(
+                                        0, 5), // changes position of shadow
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: () {
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) => OrderAccept()));
+                                    },
+                                    icon: Icon(Icons.menu)),
+                              ),
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(
+                                        0, 5), // changes position of shadow
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: () {}, icon: Icon(Icons.search)),
+                              ),
                             ),
                           ],
-                          border: Border.all(
-                            color: Color(0xff6069FF),
-                            width: 6,
-                          ),
                         ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 20,
+                      child: GestureDetector(
+                        onTap: _toggleNotification, // Toggle the notification screen
                         child: Container(
+                          width: MediaQuery.sizeOf(context).width,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: const Offset(
+                                    0, 5), // changes position of shadow
+                              ),
+                            ],
                             border: Border.all(
-                              color: Colors.white,
-                              width: 2,
+                              color: Color(0xff6069FF),
+                              width: 6,
                             ),
                           ),
-                          child: CircleAvatar(
-                              minRadius: 45,
-                              maxRadius: double.maxFinite,
-                              backgroundColor: Color(0xff6069FF),
-                              child: Text(
-                                'Move',
-                                style:
-                                TextStyle(color: Colors.white, fontSize: 20),
-                              )),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (!isOnline) // Show Offline button when the user is offline
-                Container(
-                  margin: const EdgeInsets.only(top: 30, bottom: 20),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.07,
-                    width: MediaQuery.of(context).size.width * 0.45,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Color(0xff6069FF)),
-                        ),
-                      ),
-                      onPressed: () async {
-                        setState(() {
-                          isOnline = !isOnline;
-                        });
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          SvgPicture.asset('assets/carOffline.svg', height: 35),
-                          Text(
-                            'Offline',
-                            style:
-                            TextStyle(fontSize: 23, color: Colors.black),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                                minRadius: 45,
+                                maxRadius: double.maxFinite,
+                                backgroundColor: Color(0xff6069FF),
+                                child: Text(
+                                  'Move',
+                                  style:
+                                  TextStyle(color: Colors.white, fontSize: 20),
+                                )),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              if (isOnline)
-                Container(
-                  margin: const EdgeInsets.only(top: 30, bottom: 20),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.07,
-                    width: MediaQuery.of(context).size.width * 0.45,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff6069FF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Color(0xff6069FF)),
                         ),
                       ),
-                      onPressed: () async {
-                        setState(() {
-                          isOnline = !isOnline;
-                        });
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Text(
-                            'Online',
-                            style:
-                            TextStyle(fontSize: 23, color: Colors.black),
+                    ),
+                  ],
+                ),
+                if (!isOnline) // Show Offline button when the user is offline
+                  Container(
+                    margin: const EdgeInsets.only(top: 30, bottom: 20),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.07,
+                      width: MediaQuery.of(context).size.width * 0.45,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Color(0xff6069FF)),
                           ),
-                          SvgPicture.asset('assets/carOnline.svg', height: 35),
-                        ],
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            isOnline = !isOnline;
+                          });
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            SvgPicture.asset('assets/carOffline.svg', height: 35),
+                            Text(
+                              'Offline',
+                              style:
+                              TextStyle(fontSize: 23, color: Colors.black),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          // SlideTransition widget for notification screen
-          if (_showNotification)
-            SlideTransition(
-              position: _slideAnimation,
-              child: DriverNotification(),
+                if (isOnline)
+                  Container(
+                    margin: const EdgeInsets.only(top: 30, bottom: 20),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.07,
+                      width: MediaQuery.of(context).size.width * 0.45,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xff6069FF),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Color(0xff6069FF)),
+                          ),
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            isOnline = !isOnline;
+                          });
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Text(
+                              'Online',
+                              style:
+                              TextStyle(fontSize: 23, color: Colors.black),
+                            ),
+                            SvgPicture.asset('assets/carOnline.svg', height: 35),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-        ],
+            // SlideTransition widget for notification screen
+            if (_showNotification)
+              SlideTransition(
+                position: _slideAnimation,
+                child: DriverNotification(),
+              ),
+          ],
+        ),
       ),
     );
   }

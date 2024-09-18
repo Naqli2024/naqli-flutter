@@ -254,7 +254,8 @@ class _UserHomePageState extends State<UserHomePage> {
                             ),
                             const Text(
                               'Vehicle',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -297,7 +298,8 @@ class _UserHomePageState extends State<UserHomePage> {
                             ),
                             const Text(
                               'Bus',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -342,7 +344,8 @@ class _UserHomePageState extends State<UserHomePage> {
                             ),
                             const Text(
                               'Equipment',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -378,7 +381,8 @@ class _UserHomePageState extends State<UserHomePage> {
                               ),
                               const Text(
                                 'Special',
-                                textAlign: TextAlign.center, // Center the text
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
                               )
                             ],
                           ),
@@ -422,7 +426,8 @@ class _UserHomePageState extends State<UserHomePage> {
                         ),
                         const Text(
                           'Others',
-                          textAlign: TextAlign.center, // Center the text
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
                         ),
                       ],
                     ),

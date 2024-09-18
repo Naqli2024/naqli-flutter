@@ -164,7 +164,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token);
 
-      // Log the fetched data to check what's being returned
       print('Fetched Partner Data: $data');
 
       if (data.isNotEmpty) {
@@ -557,18 +556,10 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                     top: 15,
                     child: Container(
                       width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10, right: 10),
+                      padding: const EdgeInsets.only(left: 35, right: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                                onPressed: () {
-
-                                },
-                                icon: const Icon(Icons.more_vert_outlined)),
-                          ),
                           Card(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(80),
@@ -609,58 +600,16 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                             backgroundColor: Colors.white,
                             child: IconButton(
                                 onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        backgroundColor: Colors.white,
-                                        contentPadding:
-                                            const EdgeInsets.all(20),
-                                        content: const Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsets.only(
-                                                  top: 30, bottom: 10),
-                                              child: Text(
-                                                'Are you sure you want to cancel ?',
-                                                style: TextStyle(fontSize: 19),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('Yes'),
-                                            onPressed: () async {
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          UserType(
-                                                            firstName: widget
-                                                                .firstName,
-                                                            lastName:
-                                                                widget.lastName,
-                                                            token: widget.token,
-                                                            id: widget.id,
-                                                          )));
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: const Text('No'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              UserType(
+                                                firstName: widget.firstName,
+                                                lastName: widget.lastName,
+                                                token: widget.token,
+                                                id: widget.id,
+                                              )));
                                 },
                                 icon: const Icon(FontAwesomeIcons.multiply)),
                           ),
@@ -711,7 +660,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 30),
+              padding: const EdgeInsets.only(top: 15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

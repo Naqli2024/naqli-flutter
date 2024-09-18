@@ -89,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Container(
                     height: MediaQuery.sizeOf(context).height * 0.35,
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.only(left: 50),
                     color: const Color(0xff6A66D1),
                     child: Row(
                       children: [

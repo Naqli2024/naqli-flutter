@@ -61,7 +61,7 @@ class _BookingHistoryState extends State<BookingHistory> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color(0xffFEFEFE),
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.firstName +' '+ widget.lastName,
@@ -142,18 +142,21 @@ class _BookingHistoryState extends State<BookingHistory> {
               itemBuilder: (context, index) {
                 final booking = bookingHistory[index];
                 return Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.fromLTRB(8,20,8,20),
                   child: Stack(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(30, 20, 30, 10),
+                        padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
                         child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
                           color: Colors.white,
                           elevation: 5,
                           child: Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(17, 40, 17, 8),
+                                padding: const EdgeInsets.fromLTRB(30, 40, 17, 2),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -175,11 +178,11 @@ class _BookingHistoryState extends State<BookingHistory> {
                                 ),
                               ),
                               Divider(
-                                indent: 15,
-                                endIndent: 15,
+                                indent: 20,
+                                endIndent: 20,
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(17, 8, 17, 8),
+                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 2),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -201,11 +204,11 @@ class _BookingHistoryState extends State<BookingHistory> {
                                 ),
                               ),
                               Divider(
-                                indent: 15,
-                                endIndent: 15,
+                                indent: 20,
+                                endIndent: 20,
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(17, 8, 17, 8),
+                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 2),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -227,11 +230,11 @@ class _BookingHistoryState extends State<BookingHistory> {
                                 ),
                               ),
                               Divider(
-                                indent: 15,
-                                endIndent: 15,
+                                indent: 20,
+                                endIndent: 20,
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(17, 8, 17, 8),
+                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 2),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -253,11 +256,11 @@ class _BookingHistoryState extends State<BookingHistory> {
                                 ),
                               ),
                               Divider(
-                                indent: 15,
-                                endIndent: 15,
+                                indent: 20,
+                                endIndent: 20,
                               ),
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(17, 8, 17, 8),
+                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 20),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -283,14 +286,51 @@ class _BookingHistoryState extends State<BookingHistory> {
                         ),
                       ),
                       Positioned(
-                        top: 5,
+                        top: 2,
                         left: 170,
                         child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                spreadRadius: 2,
+                                blurRadius: 1,
+                                offset: const Offset(
+                                    0, -3),
+                              ),
+                            ],
+                          ),
                           alignment: Alignment.center,
                           child: SvgPicture.asset(
                             'assets/history_truck.svg',
-                            height: 70,
+                            height: 60,
                           ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 35,
+                        left: 40,
+                        child: CircleAvatar(
+                            backgroundColor: Color(0xff8B4C97),
+                            minRadius: 6,
+                            maxRadius: double.maxFinite,
+                           ),
+                      ),
+                      Positioned(
+                        top: 60,
+                        left: 20,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: List.generate(8, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6.0),
+                              child: CircleAvatar(
+                                backgroundColor: Color(0xffD4D4D4),
+                                radius: 9,
+                              ),
+                            );
+                          }),
                         ),
                       ),
                     ],

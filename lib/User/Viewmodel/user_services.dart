@@ -821,7 +821,6 @@ class UserService{
       }
       return null;
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');

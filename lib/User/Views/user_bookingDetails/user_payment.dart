@@ -48,13 +48,13 @@ class _PaymentState extends State<Payment> {
       BuildContext context,
       String status,
       String bookingId,
-      int amount, // Ensure amount is an int
+      int amount,
       String partnerId,
       ) async {
     try {
-      // Convert the integer amount to a string when creating the payment intent
+
       var paymentIntent = await createPaymentIntent(
-        amount, // Pass amount as an integer
+        amount,
         'INR',
       );
 
@@ -79,19 +79,17 @@ class _PaymentState extends State<Payment> {
         ),
       );
 
-      // Display the payment sheet
       await Stripe.instance.presentPaymentSheet();
 
-      // Show success message
       Fluttertoast.showToast(msg: 'Payment successfully completed');
       await userService.updatePayment(
         widget.token,
-        amount, // Convert amount to String for updatePayment call if required
+        amount,
         'Completed',
         partnerId,
         bookingId,
-        zeroQuotePrice.toString(), // Convert zeroQuotePrice to String if needed
-        zeroQuotePrice.toString(), // Convert zeroQuotePrice to String if needed
+        zeroQuotePrice.toString(),
+        zeroQuotePrice.toString(),
       );
 
       Navigator.push(
@@ -113,7 +111,7 @@ class _PaymentState extends State<Payment> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserType(
+            builder: (context) => Payment(
               firstName: widget.firstName,
               lastName: widget.lastName,
               token: widget.token,
@@ -124,7 +122,6 @@ class _PaymentState extends State<Payment> {
       });
 
     } catch (e) {
-      // Show error message
       if (e is StripeException) {
         Fluttertoast.showToast(
           msg: 'Error from Stripe: ${e.error.localizedMessage}',
@@ -200,6 +197,14 @@ class _PaymentState extends State<Payment> {
                     child: Container(
                       decoration: ShapeDecoration(
                         color: Colors.white,
+                        shadows: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                           side: const BorderSide(
@@ -305,6 +310,19 @@ class _PaymentState extends State<Payment> {
                       child: Text('${booking?['paymentStatus'] ?? 'No paymentStatus'}',style: const TextStyle(fontSize: 19)),
                     ),
                   ),
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: GestureDetector(
+                      onTap: (){
+                        Navigator.of(context).pop();
+                      },
+                        child: CircleAvatar(
+                          backgroundColor: Colors.red,
+                            minRadius: 20,
+                            maxRadius: double.maxFinite,
+                            child: Icon(Icons.cancel_outlined, color: Colors.white,size: 30,))),
+                  ),
                 ],
               ),
               booking?['paymentStatus'] == 'Paid' || booking?['paymentStatus'] == 'Completed'
@@ -377,14 +395,6 @@ class _PaymentState extends State<Payment> {
                   : Container()
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );

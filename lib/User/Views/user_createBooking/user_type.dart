@@ -442,7 +442,8 @@ class _UserTypeState extends State<UserType> {
                             ),
                             const Text(
                               'Vehicle',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -494,7 +495,8 @@ class _UserTypeState extends State<UserType> {
                             ),
                             const Text(
                               'Bus',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -548,7 +550,8 @@ class _UserTypeState extends State<UserType> {
                             ),
                             const Text(
                               'Equipment',
-                              textAlign: TextAlign.center, // Center the text
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
                             )
                           ],
                         ),
@@ -593,7 +596,8 @@ class _UserTypeState extends State<UserType> {
                               ),
                               const Text(
                                 'Special',
-                                textAlign: TextAlign.center, // Center the text
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
                               )
                             ],
                           ),
@@ -646,7 +650,8 @@ class _UserTypeState extends State<UserType> {
                         ),
                         const Text(
                           'Others',
-                          textAlign: TextAlign.center, // Center the text
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
                         ),
                       ],
                     ),
