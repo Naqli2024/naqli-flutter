@@ -66,14 +66,6 @@ class _StepTwoState extends State<StepTwo> {
                   )),
             )),
       ),
-      // drawer: createDrawer(context,
-      //     onPressed: () {
-      //       Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token,)));
-      //     }
-      // ),
         body: Form(
           key: _formKey,
           child: Container(
@@ -329,7 +321,7 @@ class _StepTwoState extends State<StepTwo> {
                       width: MediaQuery.of(context).size.width * 0.55,
                       child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
+                            backgroundColor: const Color(0xff6269FE),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),

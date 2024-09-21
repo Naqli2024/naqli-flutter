@@ -18,13 +18,14 @@ class Payment extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String id;
+  final String? quotePrice;
 
   const Payment({
     super.key,
     required this.token,
     required this.firstName,
     required this.lastName,
-    required this.id,
+    required this.id, this.quotePrice,
   });
 
   @override
@@ -249,30 +250,6 @@ class _PaymentState extends State<Payment> {
                                 const Expanded(
                                   flex: 3,
                                   child: Text(
-                                    'Contract Type',
-                                    style: TextStyle(
-                                        fontSize: 16),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    '-',
-                                    style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Expanded(
-                                  flex: 3,
-                                  child: Text(
                                     'Date',
                                     style: TextStyle(fontSize: 16),
                                   ),
@@ -470,7 +447,7 @@ class _PaymentState extends State<Payment> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context)=> UserType(
                       firstName: widget.firstName,
-                      lastName: widget.lastName, token: widget.token, id: widget.id,)));
+                      lastName: widget.lastName, token: widget.token, id: widget.id,quotePrice: widget.quotePrice,)));
               },
               icon: const Icon(
                 Icons.arrow_back_sharp,

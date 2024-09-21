@@ -20,13 +20,13 @@ final AuthService _authService = AuthService();
 bool isLoading = false;
 
 class _RegisterState extends State<Register> {
-  final _formKey = GlobalKey<FormState>(); // Global key for form validation
+  final _formKey = GlobalKey<FormState>();
 
   Future<void> _submitForm() async {
       setState(() {
         isLoading = true;
       });
-        _authService.registerUser(
+        await _authService.registerUser(
           context,
           partnerName: nameController.text,
           mobileNo: mobileController.text,
@@ -80,12 +80,12 @@ class _RegisterState extends State<Register> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Form(
           key: _formKey,
-          child: isLoading
-              ? Center(child: CircularProgressIndicator())
-              : Column(
+          child: Column(
             children: [
               _buildTextField(
                 context: context,
@@ -142,7 +142,7 @@ class _RegisterState extends State<Register> {
                   width: MediaQuery.of(context).size.width * 0.8,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6A66D1),
+                      backgroundColor: const Color(0xff6269FE),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),

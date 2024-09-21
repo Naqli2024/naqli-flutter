@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 
 class ViewBooking extends StatefulWidget {
   final String partnerName;
@@ -117,7 +119,24 @@ class _ViewBookingState extends State<ViewBooking> {
           ),
         ),
       ),
-      drawer: commonWidgets.createDrawer(context),
+      drawer: commonWidgets.createDrawer(context,
+        onPaymentPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+          ),
+        );
+      },
+        onBookingPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+            ),
+          );
+        }
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : errorMessage.isNotEmpty
@@ -170,6 +189,9 @@ class _ViewBookingState extends State<ViewBooking> {
                                   dropPoint: '${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
                                   remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
                                   bookingId: widget.bookingId,token: widget.token,
+                                  partnerId: widget.partnerId,
+                                  quotePrice: widget.quotePrice,
+                                  paymentStatus: widget.paymentStatus,
                                 )
                             ),
                           )

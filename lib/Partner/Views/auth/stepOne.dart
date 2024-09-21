@@ -25,8 +25,6 @@ class StepOne extends StatefulWidget {
 }
 
 class _StepOneState extends State<StepOne> {
-  final AuthService authService = AuthService();
-
   int selectedUnit = 1;
   String? unitDropdownValue;
   String? subDropdownValue;
@@ -41,10 +39,12 @@ class _StepOneState extends State<StepOne> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final CommonWidgets commonWidgets = CommonWidgets();
+  final AuthService authService = AuthService();
   bool istimaraUpload = false;
   bool vehicleUpload = false;
   bool istimaraError = false;
   bool vehicleError = false;
+  bool isLoading = false;
 
 
   String unitMap(int value) {
@@ -70,6 +70,9 @@ class _StepOneState extends State<StepOne> {
 
   Future<void> fetchUnitData() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
       String selectedUnitString = unitMap(selectedUnit);
       List<Map<String, dynamic>> data;
 
@@ -96,6 +99,9 @@ class _StepOneState extends State<StepOne> {
         _selectedUnitClassification = _unitClassifications.isNotEmpty ? _unitClassifications[0] : null;
 
         _updateSubClassifications();
+      });
+      setState(() {
+        isLoading = false;
       });
     } catch (error) {
       print('Failed to load unit data: $error');
@@ -170,15 +176,9 @@ class _StepOneState extends State<StepOne> {
           ),
         ),
       ),
-      // drawer: createDrawer(context,
-      //     onPressed: () {
-      //       Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token,)));
-      //     }
-      // ),
-      body: Form(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Form(
         key: _formKey,
         child: Container(
           color: Colors.white,
@@ -210,7 +210,7 @@ class _StepOneState extends State<StepOne> {
                     width: MediaQuery.of(context).size.width * 0.55,
                     child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6A66D1),
+                          backgroundColor: const Color(0xff6269FE),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),

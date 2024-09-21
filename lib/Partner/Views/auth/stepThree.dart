@@ -76,14 +76,10 @@ class _StepThreeState extends State<StepThree> {
     print('iqamaNo: $widget.iqamaNo');
     print('panelInformation: $widget.panelInformation');
     print('id: $widget.partnerId');
-    // Navigator.push(
-    //     context,
-    //     MaterialPageRoute(
-    //         builder: (context) => const LoginPage()));
     setState(() {
       isLoading = true;
     });
-    _authService.addOperator(
+    await _authService.addOperator(
       context,
       partnerName: partnerNameController.text,
       partnerId: widget.partnerId,
@@ -108,7 +104,9 @@ class _StepThreeState extends State<StepThree> {
       stepThreeInstance: widget,
       controller: partnerNameController,
     );
-
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -137,15 +135,9 @@ class _StepThreeState extends State<StepThree> {
                   )),
             )),
       ),
-      // drawer: createDrawer(context,
-      //     onPressed: () {
-      //       Navigator.push(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (context) => BookingDetails(partnerId: widget.partnerId,partnerName: widget.partnerName,token: widget.token, )));
-      //     }
-      // ),
-      body: Container(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Container(
         color: Colors.white,
         child: Column(
           children: [
@@ -188,7 +180,7 @@ class _StepThreeState extends State<StepThree> {
           margin: const EdgeInsets.fromLTRB(60, 0, 60, 20),
           child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xff6A66D1),
+                backgroundColor: const Color(0xff6269FE),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),

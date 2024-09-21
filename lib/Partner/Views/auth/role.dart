@@ -82,7 +82,7 @@ class _RoleState extends State<Role> {
               ),
               child: RadioListTile(
                 title: const Text(
-                  'Enterprise',
+                  'Single Unit + Operator',
                   style: TextStyle(fontSize: 20),
                 ),
                 value: 1,
@@ -95,103 +95,40 @@ class _RoleState extends State<Role> {
               ),
             ),
           ),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.only(
-                left: MediaQuery.of(context).size.width * 0.08,
-              ),
-              child: RadioListTile(
-                title: const Text(
-                  'Multiple Units',
-                  style: TextStyle(fontSize: 20),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        height: MediaQuery.of(context).size.height * 0.11,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(60, 0, 60, 20),
+          child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff6269FE),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                value: 2,
-                groupValue: _selectedValue,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedValue = value!;
-                  });
-                },
               ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.only(
-                left: MediaQuery.of(context).size.width * 0.08,
-              ),
-              child: RadioListTile(
-                title: const Text(
-                  'Single Unit + Operator',
-                  style: TextStyle(fontSize: 20),
-                ),
-                value: 3,
-                groupValue: _selectedValue,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedValue = value!;
-                  });
-                },
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.only(
-                left: MediaQuery.of(context).size.width * 0.08,
-              ),
-              child: RadioListTile(
-                title: const Text(
-                  'Operator',
-                  style: TextStyle(fontSize: 20),
-                ),
-                value: 4,
-                groupValue: _selectedValue,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedValue = value!;
-                  });
-                },
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.08,
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff6A66D1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              onPressed: () {
+                String selectedRole = _getRoleString(_selectedValue);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Register(
+                      selectedRole: selectedRole,
+                      partnerId: '',token: '',
                     ),
                   ),
-                  onPressed: () {
-                    String selectedRole = _getRoleString(_selectedValue);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Register(
-                          selectedRole: selectedRole,
-                          partnerId: '',token: '',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+                );
+              },
+              child: const Text(
+                'Next',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500),
+              )),
+        ),
       ),
     );
   }

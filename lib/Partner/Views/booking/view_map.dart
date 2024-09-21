@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
@@ -18,6 +20,9 @@ class ViewMap extends StatefulWidget {
   final String remainingBalance;
   final String bookingId;
   final String token;
+  final String partnerId;
+  final String quotePrice;
+  final String paymentStatus;
 
   const ViewMap({
     super.key,
@@ -31,6 +36,9 @@ class ViewMap extends StatefulWidget {
     required this.remainingBalance,
     required this.bookingId,
     required this.token,
+    required this.partnerId,
+    required this.quotePrice,
+    required this.paymentStatus,
   });
 
   @override
@@ -199,7 +207,24 @@ class _ViewMapState extends State<ViewMap> {
         context,
         User: widget.partnerName,
       ),
-      drawer: commonWidgets.createDrawer(context),
+      drawer: commonWidgets.createDrawer(context,
+          onPaymentPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+              ),
+            );
+          },
+          onBookingPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+              ),
+            );
+          }
+      ),
       body: Stack(
         children: [
           Container(

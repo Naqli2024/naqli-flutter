@@ -62,7 +62,7 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         print('Success');
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
               builder: (context) => UserOTP(emailAddress: emailAddress,contactNumber: contactNumber)
@@ -118,7 +118,7 @@ class UserService{
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => SuccessScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
+                builder: (context) => VerifiedScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
             ),
           );
         } else {
@@ -926,6 +926,63 @@ class UserService{
   }
 
   Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
+    try {
+      final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      print('Fetching from URL: ${url.toString()}');
+
+      final response = await http.get(url, headers: headers);
+
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      // Check if the response body is empty
+      if (response.body.isEmpty) {
+        throw Exception('Empty response body');
+      }
+
+      // Handle successful status code
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (responseBody.containsKey('data')) {
+          final Map<String, dynamic> bookingData = responseBody['data'];
+          print('Booking Data: $bookingData');
+          return bookingData;
+        } else {
+          throw Exception('Unexpected response format: $responseBody');
+        }
+      }
+      // Handle specific errors such as booking not found
+      else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
+        print('Booking not found');
+        return null;
+      }
+      // Handle service unavailable error
+      else if (response.statusCode == 503) {
+        print('Service unavailable. Please try again later.');
+        throw Exception('Service is temporarily unavailable. Please try again later.');
+      } else {
+        throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet connection and try again.');
+    } on FormatException {
+      print('An error occurred: Invalid JSON format or empty response body.');
+      throw Exception('Invalid response format or empty response body.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+
+/*  Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
     try{
       final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
 
@@ -960,7 +1017,7 @@ class UserService{
       print('An error occurred: $e');
       throw Exception('An unexpected error occurred: $e');
     }
-  }
+  }*/
 
   Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token) async {
     try {
@@ -974,7 +1031,6 @@ class UserService{
       print('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-
         final responseBody = jsonDecode(response.body);
 
         if (responseBody['data'] != null) {
@@ -994,6 +1050,7 @@ class UserService{
 
           final partnerDetails = <Map<String, dynamic>>[];
 
+          // Iterate through operators
           for (var operator in operators) {
             if (operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty) {
               final operatorDetails = operator['operatorsDetail'][0] ?? {};
@@ -1001,33 +1058,40 @@ class UserService{
               final lastName = operatorDetails['lastName'] ?? 'N/A';
               final mode = operator['unitType'] ?? 'N/A';
               final fullName = '$firstName $lastName';
-              final bookingRequests = partnerData['bookingRequest'] ?? [];
 
+              // Iterate through booking requests
+              final bookingRequests = partnerData['bookingRequest'] ?? [];
               if (bookingRequests.isNotEmpty) {
                 for (var booking in bookingRequests) {
                   final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
                   final paymentStatus = booking['paymentStatus']?.toString() ?? 'Unknown Payment Status';
                   final assignedOperator = booking['assignedOperator'] ?? {};
-                  final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
-                  final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
 
-                  print(assignOperatorName);
-                  print(assignOperatorMobileNo);
-                  partnerDetails.add({
-                    'type': type,
-                    'assignOperatorName': assignOperatorName,
-                    'assignOperatorMobileNo': assignOperatorMobileNo,
-                    'partnerId': partnerId,
-                    'partnerName': partnerName,
-                    'mobileNo': mobileNo,
-                    'operatorName': fullName,
-                    'lastName': lastName,
-                    'mode': mode,
-                    'bookingId': bookingId,
-                    'paymentStatus': paymentStatus,
-                  });
+                  // If assignedOperator matches the current booking's bookingId
+                  if (assignedOperator['bookingId'] == bookingId) {
+                    final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
+                    final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
+
+                    print('Operator for Booking ID $bookingId: $assignOperatorName, Mobile: $assignOperatorMobileNo');
+
+                    // Add to partnerDetails list
+                    partnerDetails.add({
+                      'type': type,
+                      'assignOperatorName': assignOperatorName,
+                      'assignOperatorMobileNo': assignOperatorMobileNo,
+                      'partnerId': partnerId,
+                      'partnerName': partnerName,
+                      'mobileNo': mobileNo,
+                      'operatorName': fullName,
+                      'lastName': lastName,
+                      'mode': mode,
+                      'bookingId': bookingId,
+                      'paymentStatus': paymentStatus,
+                    });
+                  }
                 }
               } else {
+                // No booking requests
                 partnerDetails.add({
                   'type': type,
                   'partnerId': partnerId,
@@ -1055,12 +1119,13 @@ class UserService{
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('An error occurred: $e');
       throw Exception('An unexpected error occurred: $e');
     }
   }
+
 
   Future<void> deleteBooking(context,String bookingId, String token) async {
     final String url = '${baseUrl}bookings/$bookingId';

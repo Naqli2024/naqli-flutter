@@ -48,7 +48,7 @@ class AuthService {
         final partnerId = responseBody['data']['partner']['_id'];
         print('Success');
         print(partnerId);
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => OtpScreen(mobileNo: mobileNo,partnerName: partnerName,password: password, email: email,partnerId: partnerId,),
@@ -149,14 +149,9 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         print('Success');
+        final message = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP Sent')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => StepOne(partnerName: partnerName, name: '', unitType: '', partnerId: partnerId, token: '', bookingId: '')
-          ),
+          SnackBar(content: Text(message)),
         );
       } else {
         final message = responseBody['message'];
@@ -352,26 +347,32 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       final userData = responseBody['data'];
       if (response.statusCode == 200) {
-        print('Login successful');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful')),
-        );
         final token = responseBody['data']['token'];
         final partnerName = responseBody['data']['partner']['partnerName'];
         final partnerId = responseBody['data']['partner']['_id'];
+        final type = responseBody['data']['partner']['type'];
 
-        await getBookingData(partnerId,token);
-        print(userData);
-        print(token);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
-          ),
-        );
-        await savePartnerData(partnerId, token, partnerName);
-        print('ID$partnerId');
-        print('NAME$partnerName');
-        print('TOKEN$token');
+        if(type == 'singleUnit + operator')
+          {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                  builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
+              ),
+            );
+            print('Login successful');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Login successful')),
+            );
+            await getBookingData(partnerId,token);
+            print(userData);
+            print(token);
+            await savePartnerData(partnerId, token, partnerName);
+          }
+        else{
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Only "singleUnit + operator" Operator can allowed...')),
+          );
+        }
       } else {
         final message = responseBody['message'] ?? 'Login failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(

@@ -14,6 +14,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class UserType extends StatefulWidget {
@@ -21,7 +22,10 @@ class UserType extends StatefulWidget {
   final String lastName;
   final String token;
   final String id;
-  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id});
+  final String? paymentStatus;
+  final String? quotePrice;
+  final String? oldQuotePrice;
+  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id, this.paymentStatus, this.quotePrice, this.oldQuotePrice});
 
   @override
   State<UserType> createState() => _UserTypeState();
@@ -35,20 +39,20 @@ class _UserTypeState extends State<UserType> {
   List<Map<String, dynamic>>? partnerData;
   String? partnerId;
 
-
   @override
   void initState() {
     super.initState();
     booking = _fetchBookingDetails();
+
     // fetchPartnerData();
   }
   // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
   //   try {
   //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
-  //     return history; // Return the complete data
+  //     return history;
   //   } catch (e) {
   //     print('Error fetching booking details: $e');
-  //     return null; // Return null if an error occurs
+  //     return null;
   //   }
   // }
 
@@ -65,26 +69,6 @@ class _UserTypeState extends State<UserType> {
       return null;
     }
   }
-  //
-  // Future<void> fetchPartnerData() async {
-  //   try {
-  //     final data = await userService.getPartnerData(partnerId??'', widget.token);
-  //
-  //     // Log the fetched data to see if it's correct
-  //     print('Fetched Partner Data: $data');
-  //
-  //     if (data.isNotEmpty) {
-  //       setState(() {
-  //         partnerData = data;
-  //       });
-  //     } else {
-  //       // If data is empty, log it
-  //       print('No partner data available');
-  //     }
-  //   } catch (e) {
-  //     print('Error loading partner data: $e');
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -172,10 +156,11 @@ class _UserTypeState extends State<UserType> {
                             id: widget.id,
                             partnerName: '',
                             partnerId: bookingData['partner'] ?? '',
-                            oldQuotePrice: '',
+                            oldQuotePrice: widget.oldQuotePrice??'',
                             paymentStatus: bookingData['paymentStatus'] ?? '',
-                            quotePrice: '',
-                            advanceOrPay: bookingData['remainingBalance']?? 0,
+                            quotePrice: widget.quotePrice??'',
+                            advanceOrPay: bookingData['remainingBalance'] ?? 0,
+                            bookingStatus: bookingData['bookingStatus'] ?? '',
                           )
                         ),
                       )
@@ -204,6 +189,7 @@ class _UserTypeState extends State<UserType> {
                         ),
                       );
                     } else {
+                      if (bookingData == null)
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -246,7 +232,7 @@ class _UserTypeState extends State<UserType> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,quotePrice: widget.quotePrice??'',),
                     ),
                   );
                 }
@@ -398,13 +384,11 @@ class _UserTypeState extends State<UserType> {
               ),*/
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 20),
+              padding: const EdgeInsets.only(top: 20,left: 35,right: 35),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.20,
+                  Expanded(
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -440,19 +424,21 @@ class _UserTypeState extends State<UserType> {
                               color: Color(0xffACACAD),
                               thickness: 2,
                             ),
-                            const Text(
-                              'Vehicle',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Vehicle',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.20,
+                  SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
+                  Expanded(
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
@@ -493,10 +479,13 @@ class _UserTypeState extends State<UserType> {
                                 thickness: 2,
                               ),
                             ),
-                            const Text(
-                              'Bus',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Bus',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
@@ -525,13 +514,11 @@ class _UserTypeState extends State<UserType> {
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.only(top: 15),
+                padding: const EdgeInsets.only(top: 15,left: 35,right: 35),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.20,
+                    Expanded(
                       child: Card(
                         shape: RoundedRectangleBorder(
                           side: const BorderSide(color: Color(0xffACACAD), width: 1),
@@ -548,18 +535,20 @@ class _UserTypeState extends State<UserType> {
                               color: Color(0xffACACAD),
                               thickness: 2,
                             ),
-                            const Text(
-                              'Equipment',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Equipment',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.20,
+                    SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
+                    Expanded(
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
@@ -594,10 +583,13 @@ class _UserTypeState extends State<UserType> {
                                 color: Color(0xffACACAD),
                                 thickness: 2,
                               ),
-                              const Text(
-                                'Special',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 16),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 22),
+                                child: const Text(
+                                  'Special',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
+                                ),
                               )
                             ],
                           ),
@@ -609,51 +601,56 @@ class _UserTypeState extends State<UserType> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(left: 33,top: 15),
+              margin: const EdgeInsets.only(left: 35, top: 15),
               alignment: Alignment.bottomLeft,
-              child: SizedBox(
-                width: MediaQuery.sizeOf(context).width * 0.35,
-                height: MediaQuery.sizeOf(context).height * 0.20,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedType = 'others';
-                    });
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CreateBooking(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          selectedType: _selectedType,
-                          token: widget.token,
-                          id: widget.id,
-                        ),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedType = 'others';
+                  });
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreateBooking(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        selectedType: _selectedType,
+                        token: widget.token,
+                        id: widget.id,
                       ),
-                    );
-                  },
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: MediaQuery.sizeOf(context).width * 0.36,
+                  // height: MediaQuery.sizeOf(context).height * 0.21,
                   child: Card(
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(color: Color(0xffACACAD), width: 1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Image.asset('assets/others.png'),
-                        const Divider(
-                          indent: 7,
-                          endIndent: 7,
-                          color: Color(0xffACACAD),
-                          thickness: 2,
-                        ),
-                        const Text(
-                          'Others',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Image.asset('assets/others.png'),
+                          const Divider(
+                            indent: 7,
+                            endIndent: 7,
+                            color: Color(0xffACACAD),
+                            thickness: 2,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 22),
+                            child: const Text(
+                              'Others',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

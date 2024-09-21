@@ -154,30 +154,6 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                                 const Expanded(
                                   flex: 3,
                                   child: Text(
-                                    'Contract Type',
-                                    style: TextStyle(
-                                        fontSize: 16),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    '-',
-                                    style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Expanded(
-                                  flex: 3,
-                                  child: Text(
                                     'Date',
                                     style: TextStyle(fontSize: 16),
                                   ),
@@ -215,6 +191,19 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                       child: Text('${booking?['paymentStatus'] ?? 'No paymentStatus'}',style: const TextStyle(fontSize: 19)),
                     ),
                   ),
+                  Positioned(
+                    top: -40,
+                    right: -30,
+                    child: GestureDetector(
+                        onTap: (){
+                          Navigator.of(context).pop();
+                        },
+                        child: CircleAvatar(
+                            backgroundColor: Colors.red,
+                            minRadius: 20,
+                            maxRadius: double.maxFinite,
+                            child: Icon(Icons.cancel_outlined, color: Colors.white,size: 30,))),
+                  ),
                 ],
               ),
               Padding(
@@ -233,14 +222,6 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               ),
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -311,7 +292,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => _updateFilter('Pending Payment'),
+                      onTap: () => _updateFilter('Pending'),
                       child: Padding(
                         padding: const EdgeInsets.only(right: 30),
                         child: Text(
@@ -339,7 +320,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               partnerId: widget.partnerId,
               token: widget.token,
               quotePrice: widget.quotePrice,
-              paymentStatus: '',
+              paymentStatus: widget.paymentStatus,
             ),
           ),
         );
@@ -398,22 +379,6 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                             ),
                             onPressed: () {
                               showBookingDialog(context, booking!);
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder: (context) => ViewBooking(
-                              //       partnerName: widget.partnerName,
-                              //       token: widget.token,
-                              //       partnerId: widget.partnerId,
-                              //       bookingId: id,
-                              //       bookingDetails: [booking ?? {}],
-                              //       quotePrice: quotePrice,
-                              //       paymentStatus: paymentStatus,
-                              //       userId: userId,
-                              //       bookingStatus: bookingStatus,
-                              //     ),
-                              //   ),
-                              // );
                             },
                             child: const Text(
                               'View',

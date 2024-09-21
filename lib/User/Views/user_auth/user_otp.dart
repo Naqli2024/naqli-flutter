@@ -21,6 +21,7 @@ class _UserOTPState extends State<UserOTP> {
   int _seconds = 120; // Timer duration in seconds (e.g., 1 minute 30 seconds)
   Timer? _timer;
   final UserService userService = UserService();
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -57,10 +58,16 @@ class _UserOTPState extends State<UserOTP> {
 
   void validateOtp() async {
     String otp = _otpControllers.map((controller) => controller.text).join();
-    userService.verifyUserOTP(
+    setState(() {
+      isLoading = true;
+    });
+    await userService.verifyUserOTP(
         context,
         otp:otp,
     );
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void resendOtp() async {
@@ -68,7 +75,7 @@ class _UserOTPState extends State<UserOTP> {
     for (var controller in _otpControllers) {
       controller.clear();
     }
-    userService.resendUserOTP(
+    await userService.resendUserOTP(
       context,
       emailAddress:widget.emailAddress,
     );
@@ -114,7 +121,10 @@ class _UserOTPState extends State<UserOTP> {
           ],
         ),
       ),
-      body: Padding(
+      body: isLoading
+          ? const Center(
+          child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(

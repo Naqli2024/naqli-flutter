@@ -354,17 +354,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
       String address = widget.address.trim();
       String zipCode = widget.zipCode.trim();
 
-      // Validate city name and address
-      if (cityName.isEmpty || address.isEmpty) {
-        // Show an alert or a Snackbar to inform the user
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Please enter both city name and address to locate the place.'),
-          ),
-        );
-        return; // Exit the function if either is missing
-      }
 
       // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
@@ -556,9 +545,9 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                     top: 15,
                     child: Container(
                       width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 35, right: 10),
+                      // padding: const EdgeInsets.only(left: 35, right: 10),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Card(
                             shape: RoundedRectangleBorder(
@@ -647,7 +636,11 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                                 partnerData![0]['partnerId'] ?? 'Unknown'),
                             Divider(),
                             _buildDetailRow('Operator name',
-                                partnerData![0]['operatorName']?? 'Unknown'),
+                              partnerData != null && partnerData!.isNotEmpty
+                                  ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                  ? (partnerData?[0]['operatorName'] ?? '')
+                                  : (partnerData?[0]['assignOperatorName'] ?? ''))
+                                  : 'No Data'),
                             Divider(),
                             _buildDetailRow(
                                 'Mode', partnerData![0]['mode'] ?? 'Unknown'),
@@ -660,7 +653,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: 15,bottom: 15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

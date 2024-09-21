@@ -1063,11 +1063,12 @@ class _CreateBookingState extends State<CreateBooking> {
                               unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
                               id: widget.id,
                               partnerName: '',
-                              partnerId: '',
+                              partnerId: bookingData['partner'] ?? '',
                               oldQuotePrice: '',
-                              paymentStatus: '',
+                              paymentStatus: bookingData['paymentStatus'] ?? '',
                               quotePrice: '',
-                              advanceOrPay: 0
+                              advanceOrPay: bookingData['remainingBalance'] ?? 0,
+                              bookingStatus: bookingData['bookingStatus'] ?? '',
                             )
                         ),
                       )
@@ -1167,29 +1168,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChooseVendor(
-                      bookingId: '',
-                      size: '',
-                      unitType:'',
-                      unitTypeName: '',
-                      load: '',
-                      unit: '',
-                      pickup: '',
-                      dropPoints: [],
-                      token: widget.token,
-                      firstName: widget.firstName,
-                      lastName: widget.lastName,
-                      selectedType: '',
-                      cityName: '',
-                      address: '',
-                      zipCode: '',
-                      id: widget.id,
-                    ),
-                  ),
-                );
+
               },
             ),
             ListTile(
@@ -1292,7 +1271,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   if (_currentStep == 1) Container(),
                   if (_currentStep > 1)
                     Container(
-                      padding: const EdgeInsets.only(left: 40, bottom: 15),
+                      padding: const EdgeInsets.only(left: 40, bottom: 10),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
@@ -1634,8 +1613,10 @@ class _CreateBookingState extends State<CreateBooking> {
                                 width: double.infinity,
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
-                                  constraints:
-                                      BoxConstraints.tightFor(width: 350),
+                                  constraints: BoxConstraints(
+                                    minWidth:350,
+                                    maxWidth:350,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -2175,7 +2156,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                         }
                                       },
                                     ),
-                                    // SvgPicture.asset(bus.image??''),
                                     Divider(
                                       indent: 7,
                                       endIndent: 7,

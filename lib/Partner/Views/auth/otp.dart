@@ -22,6 +22,7 @@ class _OtpScreenState extends State<OtpScreen> {
   int _seconds = 120; // Timer duration in seconds (e.g., 1 minute 30 seconds)
   Timer? _timer;
   final AuthService _authService = AuthService();
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -58,7 +59,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void validateOtp() async {
     String otp = _otpControllers.map((controller) => controller.text).join();
-    _authService.validateOTP(
+    setState(() {
+      isLoading = true;
+    });
+    await _authService.validateOTP(
               context,
               email: widget.email,
               password: widget.password,
@@ -67,6 +71,9 @@ class _OtpScreenState extends State<OtpScreen> {
               partnerName: widget.partnerName,
               partnerId: widget.partnerId
     );
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void resendOtp() async {
@@ -75,16 +82,13 @@ class _OtpScreenState extends State<OtpScreen> {
       controller.clear();
     }
     String otp = _otpControllers.map((controller) => controller.text).join();
-    _authService.resendOTP(
+    await _authService.resendOTP(
         context,
         email: widget.email,
         password: widget.password,
         mobileNo: widget.mobileNo,
         partnerName: widget.partnerName,
         partnerId: widget.partnerId
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP Sent')),
     );
   }
 
@@ -127,7 +131,9 @@ class _OtpScreenState extends State<OtpScreen> {
           ],
         ),
       ),
-      body: Padding(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
@@ -213,7 +219,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   width: MediaQuery.of(context).size.width * 0.8,
                   child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff6A66D1),
+                        backgroundColor: const Color(0xff6269FE),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

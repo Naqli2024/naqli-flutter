@@ -55,7 +55,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
           ),
         ),
       ),
-      body: Container(
+      body: isLoading
+          ? const Center(
+          child: CircularProgressIndicator())
+          : Container(
       color: Colors.white,
       padding: const EdgeInsets.all(16.0),
       width: MediaQuery.sizeOf(context).width,
@@ -82,13 +85,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async{
                             if (otpKey.currentState!.validate()) {
-                              _authService.forgotPassword(
+                              setState(() {
+                                isLoading = true;
+                              });
+                              await _authService.forgotPassword(
                                 context,
                                     (context) => ResetPassword(),
                                 email: forgotPasswordEmailController.text,
                               );
+                              setState(() {
+                                isLoading = false;
+                              });
                             }
                           },
                           child: const Text(
@@ -132,6 +141,7 @@ class _ResetPasswordState extends State<ResetPassword> {
   final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isNewPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +173,10 @@ class _ResetPasswordState extends State<ResetPassword> {
             ),
           ),
         ),
-      body: Form(
+      body: isLoading
+          ? const Center(
+          child: CircularProgressIndicator())
+          : Form(
         key: passwordKey,
         child: Container(
           color: Colors.white,
@@ -275,12 +288,18 @@ class _ResetPasswordState extends State<ResetPassword> {
                               onPressed: () {
                                 if (passwordKey.currentState!.validate()) {
                                   String otp = otpControllers.map((controller) => controller.text).join();
+                                  setState(() {
+                                    isLoading = true;
+                                  });
                                   _authService.forgotPasswordReset(
                                       context,
                                       otp: otp,
                                       newPassword: forgotPasswordController.text,
                                       confirmNewPassword: confirmPasswordController.text
                                   );
+                                  setState(() {
+                                    isLoading = false;
+                                  });
                                 }
                               },
                               child: const Text(

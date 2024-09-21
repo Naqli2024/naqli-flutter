@@ -57,7 +57,10 @@ class _UserForgotPasswordState extends State<UserForgotPassword> {
           ),
         ),
       ),
-      body: Container(
+      body: isLoading
+          ? const Center(
+          child: CircularProgressIndicator())
+          : Container(
         color: Colors.white,
         padding: const EdgeInsets.all(16.0),
         width: MediaQuery.sizeOf(context).width,
@@ -84,12 +87,18 @@ class _UserForgotPasswordState extends State<UserForgotPassword> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               if (otpKey.currentState!.validate()) {
-                                userService.userForgotPassword(
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                await userService.userForgotPassword(
                                   context,
                                   emailAddress: emailController.text,
                                 );
+                                setState(() {
+                                  isLoading = false;
+                                });
                               }
                             },
                             child: const Text(
@@ -133,6 +142,7 @@ class _UserResetPasswordState extends State<UserResetPassword> {
   final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isNewPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +174,12 @@ class _UserResetPasswordState extends State<UserResetPassword> {
             ),
           ),
         ),
-        body: Form(
-          key: passwordKey,
-          child: Container(
+        body:  isLoading
+            ? const Center(
+            child: CircularProgressIndicator())
+            : Form(
+              key: passwordKey,
+              child: Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16.0),
             width: MediaQuery.sizeOf(context).width,
@@ -273,15 +286,21 @@ class _UserResetPasswordState extends State<UserResetPassword> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                onPressed: () {
+                                onPressed: () async{
                                   if (passwordKey.currentState!.validate()) {
                                     String otp = otpControllers.map((controller) => controller.text).join();
-                                    userService.userForgotPasswordReset(
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    await userService.userForgotPasswordReset(
                                         context,
                                         otp: otp,
                                         newPassword: passwordController.text,
                                         confirmNewPassword: confirmPasswordController.text
                                     );
+                                    setState(() {
+                                      isLoading = false;
+                                    });
                                   }
                                 },
                                 child: const Text(
@@ -306,11 +325,11 @@ class _UserResetPasswordState extends State<UserResetPassword> {
                                   text: 'Resend',
                                   style: const TextStyle(color: Color(0xff6A66D1),fontSize: 17),
                                   recognizer: TapGestureRecognizer()
-                                    ..onTap = () {
+                                    ..onTap = () async{
                                       for (var controller in otpControllers) {
                                         controller.clear();
                                       }
-                                      userService.userForgotPasswordResendOTP(
+                                      await userService.userForgotPasswordResendOTP(
                                           context,
                                           emailAddress: widget.emailAddress);
                                     },
@@ -325,8 +344,8 @@ class _UserResetPasswordState extends State<UserResetPassword> {
                 ],
               ),
             ),
-          ),
-        )
+              ),
+            )
     );
   }
 }

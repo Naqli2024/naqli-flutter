@@ -28,6 +28,7 @@ class _UserRegisterState extends State<UserRegister> {
   final TextEditingController idNoController =TextEditingController();
   final registerKey = GlobalKey<FormState>();
   bool _isChecked = false;
+  bool isLoading = false;
   bool isPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
   String? selectedAccount;
@@ -36,9 +37,16 @@ class _UserRegisterState extends State<UserRegister> {
   final List<String> govtIdItems = ['iqama No', 'national ID'];
   final UserService userService = UserService();
 
-  void registerUser(){
+  void registerUser()async{
+    if (!_isChecked) {
+      commonWidgets.showToast('Please agree to the terms and conditions to proceed');
+      return;
+    }
     if (registerKey.currentState!.validate()) {
-      userService.userRegister(
+      setState(() {
+        isLoading = true;
+      });
+      await userService.userRegister(
           context,
           firstName: firstNameController.text,
           lastName: lastNameController.text,
@@ -54,6 +62,9 @@ class _UserRegisterState extends State<UserRegister> {
           govtId: selectedId.toString(),
           idNumber: idNoController.text
       );
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -98,7 +109,10 @@ class _UserRegisterState extends State<UserRegister> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(
+        child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Form(
           key: registerKey,
           child: Column(
@@ -139,9 +153,55 @@ class _UserRegisterState extends State<UserRegister> {
               },
             ),),
             commonWidgets.buildTextField('Contact Number', contactNoController),
-            commonWidgets.buildTextField('Alternate Number', alternateNoController),
+              Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Alternate Number',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+                child: TextFormField(
+                  controller: alternateNoController,
+                  decoration: InputDecoration(
+                    labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                    hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
             commonWidgets.buildTextField('Address 1', address1Controller),
-            commonWidgets.buildTextField('Address 2', address2Controller),
+              Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Address 2',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+                child: TextFormField(
+                  controller: address2Controller,
+                  decoration: InputDecoration(
+                    labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                    hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
             commonWidgets.buildTextField('City', cityController),
             accountDropdownWidget(),
             govtIdDropdownWidget(),

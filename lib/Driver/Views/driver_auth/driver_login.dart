@@ -72,11 +72,10 @@ class _UserLoginState extends State<UserLogin> {
                 children: [
                   Container(
                     height: MediaQuery.sizeOf(context).height * 0.35,
-                    padding: const EdgeInsets.only(left: 50),
                     color: const Color(0xff6A66D1),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(width: 48),
                         Image.asset(
                           'assets/logo.png',
                           fit: BoxFit.fitWidth,

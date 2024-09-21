@@ -287,7 +287,7 @@ class _BookingHistoryState extends State<BookingHistory> {
                       ),
                       Positioned(
                         top: 2,
-                        left: 170,
+                        left: MediaQuery.sizeOf(context).width * 0.38,
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,

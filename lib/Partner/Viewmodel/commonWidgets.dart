@@ -250,7 +250,7 @@ class CommonWidgets{
               ),
               Positioned(
                 top: -15,
-                right: -10,
+                right: -15,
                 child: IconButton(
                   onPressed: () {
                     Navigator.pop(context);

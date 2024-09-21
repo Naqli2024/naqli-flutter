@@ -14,6 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PendingPayment extends StatefulWidget {
   final String bookingId;
@@ -38,8 +39,9 @@ class PendingPayment extends StatefulWidget {
   final String paymentStatus;
   final String quotePrice;
   final int advanceOrPay;
+  final String bookingStatus;
 
-  const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay});
+  const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay, required this.bookingStatus});
 
   @override
   State<PendingPayment> createState() => _PendingPaymentState();
@@ -52,7 +54,7 @@ class _PendingPaymentState extends State<PendingPayment> {
   String unit = 'unit';
   String operatorName = 'Operator Name';
   String mode = 'Mode';
-  String remainingBalance = '0';
+  int remainingBalance = 0;
   String bookingStatus = 'Booking status';
   String paymentStatus = 'payment Status';
   String pendingAmount = 'XXXXX SAR';
@@ -75,12 +77,27 @@ class _PendingPaymentState extends State<PendingPayment> {
     print(widget.bookingId);
     print(widget.quotePrice);
     print(widget.oldQuotePrice);
-    fetchPaymentData();
+    widget.paymentStatus == 'HalfPaid'
+    ? null
+    :fetchPaymentData();
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
-    userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
+    // userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
+    _savePaymentDetailsToSharedPreferences(widget.paymentStatus, widget.advanceOrPay);
     super.initState();
+  }
+
+  Future<void> _savePaymentDetailsToSharedPreferences(String paymentStatus, int advanceOrPay) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (advanceOrPay > 0) {
+      await prefs.setString('paymentStatus', paymentStatus);
+      await prefs.setInt('advanceOrPay', advanceOrPay);
+      print('Payment status and advance/pay saved to SharedPreferences.');
+    } else {
+      print('Advance or Pay is 0, not saving to SharedPreferences.');
+    }
   }
 
   Future<void> initiateStripePayment(
@@ -257,7 +274,7 @@ class _PendingPaymentState extends State<PendingPayment> {
         unit = response['booking']['name'] ?? ' ';
         bookingStatus = response['booking']['bookingStatus'] ?? '';
         paymentStatus = response['booking']['paymentStatus'] ?? '';
-        remainingBalance = (response['booking']['remainingBalance'] as num?)?.toString() ?? '0';
+        // remainingBalance = response['booking']['remainingBalance']?? 0;
         isLoading = false;
       });
     } catch (e) {
@@ -460,17 +477,6 @@ class _PendingPaymentState extends State<PendingPayment> {
       String address = widget.address.trim();
       String zipCode = widget.zipCode.trim();
 
-      // Validate city name and address
-      if (cityName.isEmpty || address.isEmpty) {
-        // Show an alert or a Snackbar to inform the user
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Please enter both city name and address to locate the place.'),
-          ),
-        );
-        return; // Exit the function if either is missing
-      }
 
       // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
@@ -634,7 +640,14 @@ class _PendingPaymentState extends State<PendingPayment> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Navigator.push(context, MaterialPageRoute(builder:  (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id)));
+        Navigator.push(context, MaterialPageRoute(builder:  (context) => UserType(
+          firstName: widget.firstName,
+          lastName: widget.lastName,
+          token: widget.token,
+          id: widget.id,
+          quotePrice: widget.quotePrice,
+          oldQuotePrice: widget.oldQuotePrice,
+        )));
         return false;
       },
       child: Scaffold(
@@ -710,7 +723,8 @@ class _PendingPaymentState extends State<PendingPayment> {
                                         firstName: widget.firstName,
                                         lastName: widget.lastName,
                                         token: widget.token,
-                                        id: widget.id
+                                        id: widget.id,
+                                      quotePrice: widget.quotePrice,
                                     )));
                               },
                               icon: Icon(FontAwesomeIcons.multiply)),
@@ -718,7 +732,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                       ],
                     ),
                   )),
-              widget.selectedType ==
+              /*widget.selectedType ==
                   'vehicle' ||
                   widget.selectedType ==
                       'bus' ||
@@ -728,250 +742,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                       'special' ||
                   widget.selectedType ==
                       'others'
-              ?Center(
-                child: Column(
-                  children: [
-                    Container(
-                      // height: MediaQuery.sizeOf(context).height * 0.37,
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.sizeOf(context).height * 0.25,
-                          left: 15,
-                          right: 15,
-                          bottom: 10
-                      ),
-                      child: Container(
-                        decoration: ShapeDecoration(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(
-                              color: Color(0xffE0E0E0), // Border color
-                              width: 1, // Border width
-                            ),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Vendor name',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData?[0]['partnerName'] ?? 'N/A',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Operator name',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData != null && partnerData!.isNotEmpty
-                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                            ? (partnerData?[0]['operatorName'] ?? '')
-                                            : (partnerData?[0]['assignOperatorName'] ?? ''))
-                                            : 'No Data',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Operator mobile No',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData != null && partnerData!.isNotEmpty
-                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                            ? (partnerData?[0]['mobileNo'] ?? '')
-                                            : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
-                                            : 'No Data',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Unit',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        unit.isNotEmpty ? unit : "No unit data",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Booking status',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        bookingStatus.isNotEmpty ? bookingStatus:'',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    widget.paymentStatus == 'HalfPaid'
-                    ?Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(left: 50,right: 50,top: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                'Pending Amount',
-                                style: TextStyle(fontSize: 21),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                '${remainingBalance} SAR',
-                                style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 20,left: 10),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.054,
-                            width: MediaQuery.of(context).size.width * 0.5,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6269FE),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                ),
-                                onPressed: (){
-                                  initiateStripePayment(
-                                      context,
-                                      'Completed',
-                                      widget.bookingId,
-                                      remainingBalance as int,
-                                      widget.partnerId
-                                  );
-                                },
-                                child: Text(
-                                  'Pay : ${remainingBalance} SAR',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                      ],
-                    )
-                     : Padding(
-                      padding: const EdgeInsets.only(top: 30),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-              )
-              :Center(
+              ?*/Center(
                 child: Column(
                   children: [
                     Container(
@@ -1127,7 +898,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                     Expanded(
                                       flex: 2,
                                       child: Text(
-                                        bookingStatus.isNotEmpty ? bookingStatus:'N/A',
+                                        widget.bookingStatus,
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     ),
@@ -1179,9 +950,6 @@ class _PendingPaymentState extends State<PendingPayment> {
                                   ),
                                 ),
                                 onPressed: (){
-                                  // final cleanedValue = widget.advanceOrPay.split('.').first.replaceAll(RegExp(r'[^\d]'), ''); // Remove all non-digit characters before the decimal point
-                                  // final int amount = int.tryParse(cleanedValue) ?? 0;
-                                  print(widget.advanceOrPay);
                                   initiateStripePayment(
                                       context,
                                       'Completed',
@@ -1217,6 +985,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                   ],
                 ),
               )
+
             ],
           ),
         ),

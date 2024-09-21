@@ -2,8 +2,10 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -219,20 +221,19 @@ class _UserHomePageState extends State<UserHomePage> {
                 ],
               ),*/
             ),
+
             Padding(
-              padding: const EdgeInsets.only(top: 20),
+              padding: const EdgeInsets.only(top: 20,left: 35,right: 35),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.20,
+                  Expanded(
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => UserLogin(),
+                            builder: (context) => UserLogin(),
                           ),
                         );
                       },
@@ -252,21 +253,23 @@ class _UserHomePageState extends State<UserHomePage> {
                               color: Color(0xffACACAD),
                               thickness: 2,
                             ),
-                            const Text(
-                              'Vehicle',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Vehicle',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.35,
-                    height: MediaQuery.sizeOf(context).height * 0.20,
+                  SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
+                  Expanded(
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -296,10 +299,13 @@ class _UserHomePageState extends State<UserHomePage> {
                                 thickness: 2,
                               ),
                             ),
-                            const Text(
-                              'Bus',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Bus',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
@@ -310,22 +316,20 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
             ),
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => UserLogin(),
+                    builder: (context) => UserLogin(),
                   ),
                 );
               },
               child: Padding(
-                padding: const EdgeInsets.only(top: 15),
+                padding: const EdgeInsets.only(top: 15,left: 35,right: 35),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.20,
+                    Expanded(
                       child: Card(
                         shape: RoundedRectangleBorder(
                           side: const BorderSide(color: Color(0xffACACAD), width: 1),
@@ -342,24 +346,26 @@ class _UserHomePageState extends State<UserHomePage> {
                               color: Color(0xffACACAD),
                               thickness: 2,
                             ),
-                            const Text(
-                              'Equipment',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 22),
+                              child: const Text(
+                                'Equipment',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16),
+                              ),
                             )
                           ],
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.35,
-                      height: MediaQuery.sizeOf(context).height * 0.20,
+                    SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
+                    Expanded(
                       child: GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => UserLogin(),
+                              builder: (context) => UserLogin(),
                             ),
                           );
                         },
@@ -379,10 +385,13 @@ class _UserHomePageState extends State<UserHomePage> {
                                 color: Color(0xffACACAD),
                                 thickness: 2,
                               ),
-                              const Text(
-                                'Special',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 16),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 22),
+                                child: const Text(
+                                  'Special',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 16),
+                                ),
                               )
                             ],
                           ),
@@ -394,42 +403,47 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(left: 33,top: 15),
+              margin: const EdgeInsets.only(left: 35, top: 15),
               alignment: Alignment.bottomLeft,
-              child: SizedBox(
-                width: MediaQuery.sizeOf(context).width * 0.35,
-                height: MediaQuery.sizeOf(context).height * 0.20,
-                child: GestureDetector(
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => UserLogin(),
-                      ),
-                    );
-                  },
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserLogin(),
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: MediaQuery.sizeOf(context).width * 0.36,
+                  // height: MediaQuery.sizeOf(context).height * 0.21,
                   child: Card(
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(color: Color(0xffACACAD), width: 1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Image.asset('assets/others.png'),
-                        const Divider(
-                          indent: 7,
-                          endIndent: 7,
-                          color: Color(0xffACACAD),
-                          thickness: 2,
-                        ),
-                        const Text(
-                          'Others',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Image.asset('assets/others.png'),
+                          const Divider(
+                            indent: 7,
+                            endIndent: 7,
+                            color: Color(0xffACACAD),
+                            thickness: 2,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 22),
+                            child: const Text(
+                              'Others',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

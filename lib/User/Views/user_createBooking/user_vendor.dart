@@ -7,6 +7,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
@@ -79,6 +80,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
   int fullAmount = 0;
   int advanceAmount = 0;
   bool isLoading = true;
+  bool isDeleting = false;
   bool isFetching = false;
   Timer? timer;
   Map<String, dynamic>? paymentIntent;
@@ -94,7 +96,12 @@ class _ChooseVendorState extends State<ChooseVendor> {
   String? selectedPartnerId;
   String? selectedOldQuotePrice;
   String? selectedQuotePrice;
-
+  String? paymentStatus;
+  String? bookingStatus;
+  Timer? _cycleTimer;
+  Timer? _timeoutTimer;
+  int fetchedVendorsCount = 0;
+  String zeroQuotePrice = '0';
   @override
   void initState() {
     startVendorFetching();
@@ -107,7 +114,110 @@ class _ChooseVendorState extends State<ChooseVendor> {
     super.initState();
   }
 
+
   Future<void> fetchVendor() async {
+    if (!mounted || isStopped || isFetching) return;
+
+    setState(() {
+      isFetching = true;
+    });
+
+    try {
+      // Fetch vendor data from the userService
+      final fetchedVendorsNullable = await userService.userVehicleVendor(
+        context,
+        bookingId: widget.bookingId,
+        unitType: widget.unitType,
+        unitClassification: widget.unit,
+        subClassification: widget.unitTypeName,
+      );
+
+      print('Fetched Vendor Response: $fetchedVendorsNullable');
+
+      if (fetchedVendorsNullable == null) {
+        print('Received null response from userService');
+        setState(() {
+          isFetching = false;
+        });
+        return;
+      }
+
+      List<Map<String, dynamic>> fetchedVendors;
+      try {
+        fetchedVendors = List<Map<String, dynamic>>.from(fetchedVendorsNullable);
+      } catch (e) {
+        print('Error parsing response: $e');
+        setState(() {
+          isFetching = false;
+        });
+        return;
+      }
+
+      // Replace the old vendors with new fetched vendors
+      setState(() {
+        vendors.clear();           // Clear the old vendors list
+        vendors.addAll(fetchedVendors);  // Add the new vendors
+        isFetching = false;        // Set isFetching to false after completion
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        isFetching = false;
+      });
+      print('Error fetching vendor: $e');
+    }
+  }
+
+  void startVendorFetching() {
+    // Timeout timer for 3 minutes
+    _timeoutTimer = Timer(Duration(minutes: 3), () {
+      if (!mounted) return;
+
+      setState(() {
+        isStopped = true;
+      });
+
+      // Stop fetching after 3 minutes
+      stopFetching();
+    });
+
+    // Start the fetch-pause cycle
+    _startFetchPauseCycle();
+  }
+
+  void _startFetchPauseCycle() {
+    // Start the fetch-pause cycle (Fetch for 5 seconds, pause for 5 seconds)
+    _cycleTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
+      if (isStopped) {
+        timer.cancel(); // Stop the cycle if fetching is stopped
+        return;
+      }
+
+      if (!isFetching) {
+        // Fetch vendor data for 5 seconds
+        await fetchVendor();
+
+        // Wait for 5 seconds before next fetch
+        await Future.delayed(Duration(seconds: 5));
+      }
+    });
+  }
+
+  void stopFetching() {
+    setState(() {
+      isStopped = true;
+    });
+
+    // Cancel both the cycle timer and the timeout timer
+    _cycleTimer?.cancel();
+    _timeoutTimer?.cancel();
+    _cycleTimer = null;
+    _timeoutTimer = null;
+  }
+
+
+
+  /*Future<void> fetchVendor() async {
     if (!mounted || isStopped) return; // Prevent fetching if stopped
 
     setState(() {
@@ -173,11 +283,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
         vendors.addAll(newVendors);
         isFetching = false;
         if (vendors.length >= 3) {
-          startRefreshing();  // Start refreshing only if we have 3 vendors
+          startRefreshing();
         }
       });
     } catch (e) {
-      if (!mounted) return; // Check if the widget is still mounted
+      if (!mounted) return;
 
       setState(() {
         isFetching = false;
@@ -185,7 +295,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       print('Error fetching vendor: $e');
     }
   }
-
 
   void startRefreshing() {
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
@@ -197,7 +306,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
     });
   }
 
-  // Start Vendor Fetching
   void startVendorFetching() {
     setState(() {
       isFetching = true;
@@ -232,22 +340,22 @@ class _ChooseVendorState extends State<ChooseVendor> {
 
     _refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
       if (isTimeout || isStopped) {
-        t.cancel(); // Stop refreshing if timeout or stopped
+        t.cancel();
       } else {
         fetchVendor();
       }
     });
   }
 
-  // Stop fetching when vendor is selected
   void stopFetching() {
     setState(() {
       isStopped = true;
       isFetching = false;
     });
-    _fetchTimer?.cancel();  // Cancel fetch timer
-    _refreshTimer?.cancel();  // Cancel refresh timer
+    _fetchTimer?.cancel();
+    _refreshTimer?.cancel();
   }
+*/
 
   @override
   void dispose() {
@@ -356,7 +464,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
-                        'with advance payment of SAR ${amount.toStringAsFixed(2)}', // Display the amount here
+                        'with advance payment of \n SAR ${amount.toStringAsFixed(2)}',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -366,11 +474,19 @@ class _ChooseVendorState extends State<ChooseVendor> {
             );
           },
         );
-
+        await userService.updatePayment(
+            widget.token,
+            advanceOrPay,
+            paymentStatus,
+            partnerId,
+            widget.bookingId,
+            quotePrice,
+            oldQuotePrice);
         // Wait for 2 seconds before navigating
         await Future.delayed(const Duration(seconds: 2));
-
-        // Navigate to PendingPayment screen with partnerName and partnerId
+        final bookingData = await booking;
+        if (bookingData != null)
+          bookingStatus = bookingData['bookingStatus']??'No bookingStatus';
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -396,12 +512,12 @@ class _ChooseVendorState extends State<ChooseVendor> {
               oldQuotePrice: oldQuotePrice,
               paymentStatus: paymentStatus,
               quotePrice: quotePrice,
-              advanceOrPay: advanceOrPay
+              advanceOrPay: advanceOrPay,
+              bookingStatus: bookingStatus??'',
             ),
           ),
         );
       } else {
-        // Directly navigate to PendingPayment for full payment without dialog
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -422,12 +538,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
               zipCode: widget.zipCode,
               unitTypeName: widget.unitTypeName,
               id: widget.id,
-              partnerName: partnerName, // Pass partnerName
+              partnerName: partnerName,
               partnerId: partnerId,
               oldQuotePrice: oldQuotePrice,
               paymentStatus: paymentStatus,
               quotePrice: quotePrice,
-              advanceOrPay: advanceOrPay
+              advanceOrPay: advanceOrPay,
+              bookingStatus: bookingStatus??'',
             ),
           ),
         );
@@ -446,13 +563,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
     }
   }
 
-
-
-
   Future<Map<String, dynamic>> createPaymentIntent(
       String amount, String currency) async {
     try {
-      // Validate and calculate amount in the smallest currency unit (e.g., cents)
       final calculatedAmount = calculateAmount(amount);
 
       // Prepare request body
@@ -461,7 +574,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
         'currency': currency,
       };
 
-      // Make POST request to Stripe API
       final response = await http.post(
         Uri.parse('https://api.stripe.com/v1/payment_intents'),
         headers: {
@@ -471,12 +583,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
         body: body,
       );
 
-      // Check for errors in response
       if (response.statusCode != 200) {
         throw Exception('Failed to create payment intent: ${response.body}');
       }
 
-      // Parse and return the response body
       return json.decode(response.body);
     } catch (err) {
       throw Exception('Error creating payment intent: $err');
@@ -487,7 +597,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     try {
       final doubleAmount = double.tryParse(amount) ?? 0.0;
       final intAmount =
-      (doubleAmount * 100).toInt(); // Convert to smallest currency unit
+      (doubleAmount * 100).toInt();
       return intAmount.toString();
     } catch (e) {
       throw Exception('Invalid amount format: $amount');
@@ -666,17 +776,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       String address = widget.address.trim();
       String zipCode = widget.zipCode.trim();
 
-      // Validate city name and address
-      if (cityName.isEmpty || address.isEmpty) {
-        // Show an alert or a Snackbar to inform the user
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Please enter both city name and address to locate the place.'),
-          ),
-        );
-        return; // Exit the function if either is missing
-      }
 
       // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
@@ -836,6 +935,17 @@ class _ChooseVendorState extends State<ChooseVendor> {
     );
   }
 
+  // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+  //   try {
+  //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
+  //     return history;
+  //   } catch (e) {
+  //     print('Error fetching booking details: $e');
+  //     return null;
+  //   }
+  // }
+
+
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
     final String? bookingId = data['_id'];
@@ -850,804 +960,861 @@ class _ChooseVendorState extends State<ChooseVendor> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(context,
-          User: widget.firstName +' '+ widget.lastName, showLeading: false),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+  Future<void> handleDeleteBooking() async {
+    try {
+      await userService.deleteBooking(context, widget.bookingId, widget.token);
+      await clearUserData();
+      isDeleting = false;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserType(
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            token: widget.token,
+            id: widget.id,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting booking: $e')),
+      );
+    } finally {
+      setState(() {
+        isDeleting = false;
+      });
+    }
+  }
+
+  void showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: Colors.white,
+              contentPadding: const EdgeInsets.all(20),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  SvgPicture.asset('assets/naqlee-logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.05),
-                  GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const CircleAvatar(
-                          child: Icon(FontAwesomeIcons.multiply)))
+                  Padding(
+                    padding: EdgeInsets.only(top: 30, bottom: 10),
+                    child: Text(
+                      'Are you sure you want to cancel?',
+                      style: TextStyle(fontSize: 19),
+                    ),
+                  ),
+                  if (isDeleting)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: LinearProgressIndicator(),
+                    ),
                 ],
               ),
-            ),
-            const Divider(),
-            ListTile(
-                leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
-                  child: Text(
-                    'Booking',
-                    style: TextStyle(fontSize: 25),
-                  ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Yes'),
+                  onPressed: () {
+                    if (!isDeleting) {
+                      setState(() {
+                        isDeleting = true;
+                      });
+                      stopFetching();
+                      handleDeleteBooking();
+                    }
+                  },
                 ),
-                onTap: () async {
-                  try {
-                    final bookingData = await booking;
+                TextButton(
+                  child: const Text('No'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
-                    if (bookingData != null) {
-                      bookingData['paymentStatus'] == 'Pending'
-                          ? Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChooseVendor(
-                                  id: widget.id,
-                                  bookingId: bookingData['_id'] ?? '',
-                                  size: bookingData['type']?.isNotEmpty ?? false
-                                      ? bookingData['type'][0]['scale'] ?? ''
-                                      : '',
-                                  unitType: bookingData['unitType'] ?? '',
-                                  unitTypeName: bookingData['type']
-                                              ?.isNotEmpty ??
-                                          false
-                                      ? bookingData['type'][0]['typeName'] ?? ''
-                                      : '',
-                                  load: bookingData['type']?.isNotEmpty ?? false
-                                      ? bookingData['type'][0]['typeOfLoad'] ??
-                                          ''
-                                      : '',
-                                  unit: bookingData['name'] ?? '',
-                                  pickup: bookingData['pickup'] ?? '',
-                                  dropPoints: bookingData['dropPoints'] ?? [],
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        stopFetching();
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => UserType(
+                firstName: widget.firstName,
+                lastName: widget.lastName,
+                token: widget.token,
+                id: widget.id,
+            )));
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(context,
+            User: widget.firstName +' '+ widget.lastName, showLeading: false),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SvgPicture.asset('assets/naqlee-logo.svg',
+                        height: MediaQuery.of(context).size.height * 0.05),
+                    GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const CircleAvatar(
+                            child: Icon(FontAwesomeIcons.multiply)))
+                  ],
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                  leading: Image.asset('assets/booking_logo.png',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  title: const Padding(
+                    padding: EdgeInsets.only(left: 15),
+                    child: Text(
+                      'Booking',
+                      style: TextStyle(fontSize: 25),
+                    ),
+                  ),
+                  onTap: () async {
+                    try {
+                      final bookingData = await booking;
+                      if (bookingData != null) {
+                        bookingData['paymentStatus'] == 'Pending'
+                            ? Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChooseVendor(
+                                    id: widget.id,
+                                    bookingId: bookingData['_id'] ?? '',
+                                    size: bookingData['type']?.isNotEmpty ?? false
+                                        ? bookingData['type'][0]['scale'] ?? ''
+                                        : '',
+                                    unitType: bookingData['unitType'] ?? '',
+                                    unitTypeName: bookingData['type']
+                                                ?.isNotEmpty ??
+                                            false
+                                        ? bookingData['type'][0]['typeName'] ?? ''
+                                        : '',
+                                    load: bookingData['type']?.isNotEmpty ?? false
+                                        ? bookingData['type'][0]['typeOfLoad'] ??
+                                            ''
+                                        : '',
+                                    unit: bookingData['name'] ?? '',
+                                    pickup: bookingData['pickup'] ?? '',
+                                    dropPoints: bookingData['dropPoints'] ?? [],
+                                    token: widget.token,
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    selectedType: widget.selectedType,
+                                    cityName: bookingData['cityName'] ?? '',
+                                    address: bookingData['address'] ?? '',
+                                    zipCode: bookingData['zipCode'] ?? '',
+                                  ),
+                                ),
+                              )
+                            : bookingData['paymentStatus'] == 'HalfPaid'
+                                ? Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => PendingPayment(
+                                              firstName: widget.firstName,
+                                              lastName: widget.lastName,
+                                              selectedType: widget.selectedType,
+                                              token: widget.token,
+                                              unit: bookingData['name'] ?? '',
+                                              load: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeOfLoad'] ??
+                                                      ''
+                                                  : '',
+                                              size: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['scale'] ??
+                                                      ''
+                                                  : '',
+                                              bookingId: bookingData['_id'] ?? '',
+                                              unitType:
+                                                  bookingData['unitType'] ?? '',
+                                              pickup: bookingData['pickup'] ?? '',
+                                              dropPoints:
+                                                  bookingData['dropPoints'] ?? [],
+                                              cityName:
+                                                  bookingData['cityName'] ?? '',
+                                              address:
+                                                  bookingData['address'] ?? '',
+                                              zipCode:
+                                                  bookingData['zipCode'] ?? '',
+                                              unitTypeName: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeName'] ??
+                                                      ''
+                                                  : '',
+                                              id: widget.id,
+                                          partnerName: '',
+                                          partnerId: bookingData['partner'] ?? '',
+                                          oldQuotePrice: '',
+                                          paymentStatus: bookingData['paymentStatus'] ?? '',
+                                          quotePrice: '',
+                                            advanceOrPay: bookingData['remainingBalance'] ?? 0,
+                                          bookingStatus: bookingData['bookingStatus'] ?? '',
+                                            )),
+                                  )
+                                : Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => PaymentCompleted(
+                                              firstName: widget.firstName,
+                                              lastName: widget.lastName,
+                                              selectedType: widget.selectedType,
+                                              token: widget.token,
+                                              unit: bookingData['name'] ?? '',
+                                              load: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeOfLoad'] ??
+                                                      ''
+                                                  : '',
+                                              size: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['scale'] ??
+                                                      ''
+                                                  : '',
+                                              bookingId: bookingData['_id'] ?? '',
+                                              unitType:
+                                                  bookingData['unitType'] ?? '',
+                                              pickup: bookingData['pickup'] ?? '',
+                                              dropPoints:
+                                                  bookingData['dropPoints'] ?? [],
+                                              cityName:
+                                                  bookingData['cityName'] ?? '',
+                                              address:
+                                                  bookingData['address'] ?? '',
+                                              zipCode:
+                                                  bookingData['zipCode'] ?? '',
+                                              unitTypeName: bookingData['type']
+                                                          ?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeName'] ??
+                                                      ''
+                                                  : '',
+                                              id: widget.id,
+                                              partnerId:
+                                                  bookingData['partner'] ?? '',
+                                            )),
+                                  );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => NewBooking(
                                   token: widget.token,
                                   firstName: widget.firstName,
                                   lastName: widget.lastName,
-                                  selectedType: widget.selectedType,
-                                  cityName: bookingData['cityName'] ?? '',
-                                  address: bookingData['address'] ?? '',
-                                  zipCode: bookingData['zipCode'] ?? '',
-                                ),
-                              ),
-                            )
-                          : bookingData['paymentStatus'] == 'HalfPaid'
-                              ? Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => PendingPayment(
-                                            firstName: widget.firstName,
-                                            lastName: widget.lastName,
-                                            selectedType: widget.selectedType,
-                                            token: widget.token,
-                                            unit: bookingData['name'] ?? '',
-                                            load: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['typeOfLoad'] ??
-                                                    ''
-                                                : '',
-                                            size: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['scale'] ??
-                                                    ''
-                                                : '',
-                                            bookingId: bookingData['_id'] ?? '',
-                                            unitType:
-                                                bookingData['unitType'] ?? '',
-                                            pickup: bookingData['pickup'] ?? '',
-                                            dropPoints:
-                                                bookingData['dropPoints'] ?? [],
-                                            cityName:
-                                                bookingData['cityName'] ?? '',
-                                            address:
-                                                bookingData['address'] ?? '',
-                                            zipCode:
-                                                bookingData['zipCode'] ?? '',
-                                            unitTypeName: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['typeName'] ??
-                                                    ''
-                                                : '',
-                                            id: widget.id,
-                                        partnerName: '',
-                                        partnerId: '',
-                                        oldQuotePrice: '',
-                                        paymentStatus: '',
-                                        quotePrice: '',
-                                          advanceOrPay: 0
-                                          )),
-                                )
-                              : Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => PaymentCompleted(
-                                            firstName: widget.firstName,
-                                            lastName: widget.lastName,
-                                            selectedType: widget.selectedType,
-                                            token: widget.token,
-                                            unit: bookingData['name'] ?? '',
-                                            load: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['typeOfLoad'] ??
-                                                    ''
-                                                : '',
-                                            size: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['scale'] ??
-                                                    ''
-                                                : '',
-                                            bookingId: bookingData['_id'] ?? '',
-                                            unitType:
-                                                bookingData['unitType'] ?? '',
-                                            pickup: bookingData['pickup'] ?? '',
-                                            dropPoints:
-                                                bookingData['dropPoints'] ?? [],
-                                            cityName:
-                                                bookingData['cityName'] ?? '',
-                                            address:
-                                                bookingData['address'] ?? '',
-                                            zipCode:
-                                                bookingData['zipCode'] ?? '',
-                                            unitTypeName: bookingData['type']
-                                                        ?.isNotEmpty ??
-                                                    false
-                                                ? bookingData['type'][0]
-                                                        ['typeName'] ??
-                                                    ''
-                                                : '',
-                                            id: widget.id,
-                                            partnerId:
-                                                bookingData['partner'] ?? '',
-                                          )),
-                                );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => NewBooking(
-                                token: widget.token,
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                id: widget.id)),
+                                  id: widget.id)),
+                        );
+                      }
+                    } catch (e) {
+                      // Handle errors here
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Error fetching booking details: $e')),
                       );
                     }
-                  } catch (e) {
-                    // Handle errors here
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('Error fetching booking details: $e')),
+                  }),
+              ListTile(
+                  leading: Image.asset('assets/booking_logo.png',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  title: const Padding(
+                    padding: EdgeInsets.only(left: 15),
+                    child: Text(
+                      'Booking History',
+                      style: TextStyle(fontSize: 25),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookingHistory(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                        ),
+                      ),
                     );
-                  }
-                }),
-            ListTile(
-                leading: Image.asset('assets/booking_logo.png',
+                  }),
+              ListTile(
+                  leading: Image.asset('assets/payment_logo.png',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  title: const Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Text(
+                      'Payment',
+                      style: TextStyle(fontSize: 25),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Payment(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                        ),
+                      ),
+                    );
+                  }),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, bottom: 10, top: 15),
+                child: Text('More info and support',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              ListTile(
+                leading: Image.asset('assets/report_logo.png',
                     height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
                   padding: EdgeInsets.only(left: 15),
                   child: Text(
-                    'Booking History',
+                    'Report',
                     style: TextStyle(fontSize: 25),
                   ),
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BookingHistory(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                      ),
-                    ),
-                  );
-                }),
-            ListTile(
-                leading: Image.asset('assets/payment_logo.png',
+                onTap: () {},
+              ),
+              ListTile(
+                leading: Image.asset('assets/help_logo.png',
                     height: MediaQuery.of(context).size.height * 0.05),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 5),
+                  padding: EdgeInsets.only(left: 15),
                   child: Text(
-                    'Payment',
+                    'Help',
                     style: TextStyle(fontSize: 25),
                   ),
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Payment(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                      ),
-                    ),
-                  );
-                }),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.only(left: 20, bottom: 10, top: 15),
-              child: Text('More info and support',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            ),
-            ListTile(
-              leading: Image.asset('assets/report_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text(
-                  'Report',
-                  style: TextStyle(fontSize: 25),
-                ),
+                onTap: () {},
               ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Image.asset('assets/help_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text(
-                  'Help',
-                  style: TextStyle(fontSize: 25),
-                ),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Icon(
-                  Icons.phone,
-                  size: 30,
-                  color: Color(0xff707070),
-                ),
-              ),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 17),
-                child: Text(
-                  'Contact us',
-                  style: TextStyle(fontSize: 25),
-                ),
-              ),
-              onTap: () {},
-            ),
-            ListTile(
-              leading: const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Icon(
-                  Icons.logout,
-                  color: Colors.red,
-                  size: 30,
-                ),
-              ),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15),
-                child: Text(
-                  'Logout',
-                  style: TextStyle(fontSize: 25, color: Colors.red),
-                ),
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      backgroundColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(20),
-                      content: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 30, bottom: 10),
-                            child: Text(
-                              'Are you sure you want to logout?',
-                              style: TextStyle(fontSize: 19),
-                            ),
-                          ),
-                        ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('Yes'),
-                          onPressed: () async {
-                            await clearUserData();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => UserLogin()),
-                            );
-                          },
-                        ),
-                        TextButton(
-                          child: const Text('No'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.45,
-                  child: GoogleMap(
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 1,
-                    ),
-                    markers: markers,
-                    polylines: polylines,
+              ListTile(
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Icon(
+                    Icons.phone,
+                    size: 30,
+                    color: Color(0xff707070),
                   ),
                 ),
-                Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Builder(
-                            builder: (context) => Center(
-                              child: CircleAvatar(
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                  onPressed: () {
-                                    Scaffold.of(context)
-                                        .openDrawer(); // Opens the drawer
-                                  },
-                                  icon: const Icon(Icons.more_vert_outlined),
-                                ),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 17),
+                  child: Text(
+                    'Contact us',
+                    style: TextStyle(fontSize: 25),
+                  ),
+                ),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(
+                    Icons.logout,
+                    color: Colors.red,
+                    size: 30,
+                  ),
+                ),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(fontSize: 25, color: Colors.red),
+                  ),
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        backgroundColor: Colors.white,
+                        contentPadding: const EdgeInsets.all(20),
+                        content: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 30, bottom: 10),
+                              child: Text(
+                                'Are you sure you want to logout?',
+                                style: TextStyle(fontSize: 19),
                               ),
                             ),
+                          ],
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Yes'),
+                            onPressed: () async {
+                              await clearUserData();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => UserLogin()),
+                              );
+                            },
                           ),
-                          Container(
-                            decoration: ShapeDecoration(
-                              color: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(80),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 15),
-                                      child: Image.asset(
-                                          'assets/moving_truck.png'),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                          alignment: Alignment.center,
-                                          // height: 50,
-                                          width:
-                                              MediaQuery.sizeOf(context).width *
-                                                  0.5,
-                                          child: Column(
-                                            children: [
-                                              Text('Booking Id'),
-                                              Text(widget.bookingId),
-                                            ],
-                                          )),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
                           ),
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        body: FutureBuilder(
+          future: booking,
+          builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>?> snapshot){
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              return Center(child: Text('An error occurred: ${snapshot.error}'));
+            }  else if (snapshot.hasData && snapshot.data != null){
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          height: MediaQuery.sizeOf(context).height * 0.45,
+                          child: GoogleMap(
+                            onMapCreated: (GoogleMapController controller) {
+                              mapController = controller;
+                            },
+                            initialCameraPosition: const CameraPosition(
+                              target: LatLng(0, 0), // Default position
+                              zoom: 1,
+                            ),
+                            markers: markers,
+                            polylines: polylines,
+                          ),
+                        ),
+                        Positioned(
+                            top: 15,
+                            child: Container(
+                              width: MediaQuery.sizeOf(context).width,
+                              padding: const EdgeInsets.only(left: 10, right: 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Builder(
+                                    builder: (context) => Center(
+                                      child: CircleAvatar(
                                         backgroundColor: Colors.white,
-                                        contentPadding:
-                                            const EdgeInsets.all(20),
-                                        content: const Column(
-                                          mainAxisSize: MainAxisSize.min,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            Scaffold.of(context)
+                                                .openDrawer(); // Opens the drawer
+                                          },
+                                          icon: const Icon(Icons.more_vert_outlined),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    decoration: ShapeDecoration(
+                                      color: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(80),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
                                           children: [
                                             Padding(
-                                              padding: EdgeInsets.only(
-                                                  top: 30, bottom: 10),
-                                              child: Text(
-                                                'Are you sure you want to cancel ?',
-                                                style: TextStyle(fontSize: 19),
-                                              ),
+                                              padding: const EdgeInsets.only(left: 15),
+                                              child: Image.asset(
+                                                  'assets/moving_truck.png'),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Container(
+                                                  alignment: Alignment.center,
+                                                  // height: 50,
+                                                  width:
+                                                  MediaQuery.sizeOf(context).width *
+                                                      0.5,
+                                                  child: Column(
+                                                    children: [
+                                                      Text('Booking Id'),
+                                                      Text(widget.bookingId),
+                                                    ],
+                                                  )),
                                             ),
                                           ],
                                         ),
-                                        actions: <Widget>[
-                                          TextButton(
-                                            child: const Text('Yes'),
-                                            onPressed: () async {
-                                              await userService.deleteBooking(context,widget.bookingId, widget.token);
-                                              stopFetching();
-                                              await clearUserData();
-                                               Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              UserType(
-                                                                firstName: widget
-                                                                    .firstName,
-                                                                lastName: widget
-                                                                    .lastName,
-                                                                token: widget
-                                                                    .token,
-                                                                id: widget.id,
-                                                              )));
-                                            },
+                                      ],
+                                    ),
+                                  ),
+                                  CircleAvatar(
+                                    backgroundColor: Colors.white,
+                                    child: IconButton(
+                                        onPressed: showConfirmationDialog,
+                                        icon: const Icon(FontAwesomeIcons.multiply)),
+                                  ),
+                                ],
+                              ),
+                            )),
+                        Positioned(
+                            bottom: 15,
+                            child: Container(
+                              width: MediaQuery.sizeOf(context).width,
+                              // height: MediaQuery.sizeOf(context).height * 0.1,
+                              padding: const EdgeInsets.only(left: 10, right: 10),
+                              child: Container(
+                                decoration: ShapeDecoration(
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                    BorderRadius.circular(10.0), // Rounded corners
+                                    side: const BorderSide(
+                                      color: Color(0xffE0E0E0), // Border color
+                                      width: 1, // Border width
+                                    ),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                              flex: 5,
+                                              child: Text(
+                                                'Unit',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold),
+                                              )),
+                                          Expanded(
+                                              flex: 3,
+                                              child: widget.unit == 'null'
+                                                  ? Text('No data')
+                                                  : Text(
+                                                widget.unit ?? '',
+                                                style: TextStyle(fontSize: 14),
+                                              )),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Container(
+                                              height: 35,
+                                              child: const VerticalDivider(
+                                                color: Colors.grey,
+                                                thickness: 1,
+                                              ),
+                                            ),
                                           ),
-                                          TextButton(
-                                            child: const Text('No'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
+                                          const Expanded(
+                                              flex: 5,
+                                              child: Text(
+                                                'Load',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold),
+                                              )),
+                                          Expanded(
+                                              flex: 4,
+                                              child: widget.load == 'null'
+                                                  ? Text('No data')
+                                                  : Text(
+                                                widget.load,
+                                                style: TextStyle(fontSize: 14),
+                                              )),
                                         ],
-                                      );
-                                    },
-                                  );
-                                },
-                                icon: const Icon(FontAwesomeIcons.multiply)),
-                          ),
-                        ],
-                      ),
-                    )),
-                Positioned(
-                    bottom: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      // height: MediaQuery.sizeOf(context).height * 0.1,
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Container(
-                        decoration: ShapeDecoration(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(10.0), // Rounded corners
-                            side: const BorderSide(
-                              color: Color(0xffE0E0E0), // Border color
-                              width: 1, // Border width
-                            ),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Expanded(
-                                      flex: 5,
-                                      child: Text(
-                                        'Unit',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                  Expanded(
-                                      flex: 3,
-                                      child: widget.unit == 'null'
-                                          ? Text('No data')
-                                          : Text(
-                                              widget.unit ?? '',
-                                              style: TextStyle(fontSize: 14),
-                                            )),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Container(
-                                      height: 35,
-                                      child: const VerticalDivider(
-                                        color: Colors.grey,
-                                        thickness: 1,
                                       ),
-                                    ),
-                                  ),
-                                  const Expanded(
-                                      flex: 5,
-                                      child: Text(
-                                        'Load',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                  Expanded(
-                                      flex: 4,
-                                      child: widget.load == 'null'
-                                          ? Text('No data')
-                                          : Text(
-                                              widget.load,
-                                              style: TextStyle(fontSize: 14),
-                                            )),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Expanded(
-                                      flex: 5,
-                                      child: Text(
-                                        'Unit type',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                  Expanded(
-                                      flex: 3,
-                                      child: widget.unitType == 'null'
-                                          ? Text('No data')
-                                          : Text(
-                                              widget.unitType,
-                                              style: TextStyle(fontSize: 14),
-                                            )),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Container(
-                                      height: 40,
-                                      child: const VerticalDivider(
-                                        color: Colors.grey,
-                                        thickness: 1,
+                                      Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                              flex: 5,
+                                              child: Text(
+                                                'Unit type',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold),
+                                              )),
+                                          Expanded(
+                                              flex: 3,
+                                              child: widget.unitType == 'null'
+                                                  ? Text('No data')
+                                                  : Text(
+                                                widget.unitType,
+                                                style: TextStyle(fontSize: 14),
+                                              )),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Container(
+                                              height: 40,
+                                              child: const VerticalDivider(
+                                                color: Colors.grey,
+                                                thickness: 1,
+                                              ),
+                                            ),
+                                          ),
+                                          const Expanded(
+                                              flex: 5,
+                                              child: Text(
+                                                'Size',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold),
+                                              )),
+                                          Expanded(
+                                              flex: 4,
+                                              child: widget.size == 'null'
+                                                  ? Text('No data')
+                                                  : Text(
+                                                widget.size,
+                                                style: TextStyle(fontSize: 14),
+                                              )),
+                                        ],
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                  const Expanded(
-                                      flex: 5,
-                                      child: Text(
-                                        'Size',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      )),
-                                  Expanded(
-                                      flex: 4,
-                                      child: widget.size == 'null'
-                                          ? Text('No data')
-                                          : Text(
-                                              widget.size,
-                                              style: TextStyle(fontSize: 14),
-                                            )),
-                                ],
+                                ),
                               ),
-                            ],
-                          ),
+                            ))
+                      ],
+                    ),
+                    Container(
+                      alignment: Alignment.topLeft,
+                      child: const Padding(
+                        padding: EdgeInsets.only(left: 30, top: 20, bottom: 15),
+                        child: Text(
+                          'Choose your Vendor',
+                          style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
                         ),
                       ),
-                    ))
-              ],
-            ),
-            Container(
-              alignment: Alignment.topLeft,
-              child: const Padding(
-                padding: EdgeInsets.only(left: 30, top: 20, bottom: 20),
-                child: Text(
-                  'Choose your Vendor',
-                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                    ),
+                    Column(
+                      children: [
+                        if (isFetching) LinearProgressIndicator(),
+                        vendors.isEmpty
+                            ? isTimeout
+                            ? Center(child: Text('No vendor available'))
+                            : Center(child: Text('Fetching vendors...'))
+                            : Container(
+                          height: 200,
+                          child: ListView.builder(
+                            itemCount: vendors.length,
+                            itemBuilder: (context, index) {
+                              final vendor = vendors[index];
+                              final partnerId = vendor['partnerId']?.toString() ?? 'No partnerId';
+                              final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? 'No oldQuotePrice';
+                              final partnerName = vendor['partnerName']?.toString() ?? 'No Name';
+                              final quotePriceStr = vendor['quotePrice']?.toString() ?? '0';
+                              final quotePrice = double.tryParse(quotePriceStr) ?? 0;
+                              paymentStatus = vendor?['paymentStatus'];
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: RadioListTile<String>(
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        flex:2,
+                                        child: Text(
+                                          '$partnerName',
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex:4,
+                                        child: Text(
+                                          '$quotePrice SAR',
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  value: index.toString(),
+                                  groupValue: selectedVendorId,
+                                  onChanged: (String? value) {
+                                    if (!mounted) return; // Check if the widget is still mounted
+                                    setState(() {
+                                      selectedPartnerName = partnerName;
+                                      selectedPartnerId = partnerId;
+                                      selectedQuotePrice = quotePrice.toStringAsFixed(2);
+                                      selectedOldQuotePrice = oldQuotePrice;
+                                      selectedVendorId = value;
+                                      fullAmount = quotePrice.round();
+                                      advanceAmount = (quotePrice / 2).round();
+                                      try {
+                                        fullPayAmount = fullAmount.toDouble();
+                                        advancePayAmount = advanceAmount.toDouble();
+                                      } catch (e) {
+                                        print('Error parsing amount: $e');
+                                        fullPayAmount = 0.0;
+                                        advancePayAmount = 0.0;
+                                      }
+                                      stopFetching(); // Stop fetching when radio button is selected
+                                    });
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
                 ),
+              );
+            }
+            else {
+              return Center(child: Text('Please try again....'));
+            }
+          }
+        ),
+          bottomNavigationBar: BottomAppBar(
+            color: Colors.white,
+            height: MediaQuery.of(context).size.height * 0.18,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(bottom: 15, top: 15),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.53,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6269FE),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        // Pay Advance button with "Completed" status string
+                        onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
+                            ? null
+                            : () {
+                          initiateStripePayment(
+                            context,
+                            advancePayAmount,
+                            true,
+                            selectedPartnerName!,
+                            selectedPartnerId!,
+                            selectedOldQuotePrice!,
+                            selectedQuotePrice!,
+                              "HalfPaid",
+                            advanceAmount
+                          );
+                        },
+                        child: Text(
+                          'Pay Advance : $advanceAmount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(right: 10, bottom: 15),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.53,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff2229BF),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        // Full payment button with "Paid" status string
+                        onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
+                            ? null
+                            : () async {
+                          initiateStripePayment(
+                            context,
+                            fullPayAmount,
+                            false,
+                            selectedPartnerName!,
+                            selectedPartnerId!,
+                            selectedOldQuotePrice!,
+                            selectedQuotePrice!,
+                              "Paid",
+                            fullAmount
+                          );
+                        },
+                        child: Text(
+                          'Pay : $fullAmount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Column(
-              children: [
-                if (isFetching) LinearProgressIndicator(),
-                vendors.isEmpty
-                    ? isTimeout
-                    ? Center(child: Text('No vendor available'))
-                    : Center(child: Text('Fetching vendors...'))
-                    : Container(
-                  height: 200,
-                  child: ListView.builder(
-                    itemCount: vendors.length,
-                    itemBuilder: (context, index) {
-                      final vendor = vendors[index];
-                      final partnerId = vendor['partnerId']?.toString() ?? 'No partnerId';
-                      final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? 'No oldQuotePrice';
-                      final partnerName = vendor['partnerName']?.toString() ?? 'No Name';
-                      final quotePriceStr = vendor['quotePrice']?.toString() ?? '0';
-                      final quotePrice = double.tryParse(quotePriceStr) ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 10),
-                        child: RadioListTile<String>(
-                          title: Row(
-                            children: [
-                              Expanded(
-                                flex:2,
-                                child: Text(
-                                  '$partnerName',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex:4,
-                                child: Text(
-                                  '$quotePrice SAR',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          value: index.toString(),
-                          groupValue: selectedVendorId,
-                          onChanged: (String? value) {
-                            if (!mounted) return; // Check if the widget is still mounted
-                            setState(() {
-                              selectedPartnerName = partnerName;
-                              selectedPartnerId = partnerId;
-                              selectedQuotePrice = quotePrice.toStringAsFixed(2);
-                              selectedOldQuotePrice = oldQuotePrice;
-                              selectedVendorId = value;
-                              fullAmount = quotePrice.round();
-                              advanceAmount = (quotePrice / 2).round();
-                              try {
-                                fullPayAmount = fullAmount.toDouble();
-                                advancePayAmount = advanceAmount.toDouble();
-                              } catch (e) {
-                                print('Error parsing amount: $e');
-                                fullPayAmount = 0.0;
-                                advancePayAmount = 0.0;
-                              }
-                              stopFetching(); // Stop fetching when radio button is selected
-                            });
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
+          )
       ),
-        bottomNavigationBar: BottomAppBar(
-          color: Colors.white,
-          height: MediaQuery.of(context).size.height * 0.19,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(bottom: 15, top: 15),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.055,
-                    width: MediaQuery.of(context).size.width * 0.53,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff6269FE),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      // Pay Advance button with "Completed" status string
-                      onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
-                          ? null
-                          : () {
-                        initiateStripePayment(
-                          context,
-                          advancePayAmount,
-                          true,
-                          selectedPartnerName!,
-                          selectedPartnerId!,
-                          selectedOldQuotePrice!,
-                          selectedQuotePrice!,
-                            "HalfPaid",
-                          advanceAmount
-                        );
-                      },
-                      child: Text(
-                        'Pay Advance : $advanceAmount',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.only(right: 10, bottom: 15),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.055,
-                    width: MediaQuery.of(context).size.width * 0.53,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff2229BF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      // Full payment button with "Paid" status string
-                      onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
-                          ? null
-                          : () async {
-                        initiateStripePayment(
-                          context,
-                          fullPayAmount,
-                          false, // Full Payment
-                          selectedPartnerName!,
-                          selectedPartnerId!,
-                          selectedOldQuotePrice!,
-                          selectedQuotePrice!,
-                            "Paid",
-                          fullAmount
-                        );
-                      },
-                      child: Text(
-                        'Pay : $fullAmount',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )
     );
   }
 }
