@@ -6,7 +6,15 @@ import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class DriverNotification extends StatefulWidget {
-  const DriverNotification({super.key});
+  final String firstName;
+  final String lastName;
+  final String token;
+  final String id;
+  final double distanceToPickup;
+  final List<double> distanceToDropPoints;
+  final String timeToPickup;
+  final String timeToDrop;
+  const DriverNotification({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.distanceToPickup, required this.distanceToDropPoints, required this.timeToPickup, required this.timeToDrop});
 
   @override
   State<DriverNotification> createState() => _DriverNotificationState();
@@ -23,15 +31,15 @@ class _DriverNotificationState extends State<DriverNotification> {
       child: Stack(
         children: [
           BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0), // Blur effect
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
-              color: Colors.black.withOpacity(0.3), // Slight dark overlay
+              color: Colors.black.withOpacity(0.3),
             ),
           ),
           Scaffold(
-            backgroundColor: Colors.transparent, // Make scaffold transparent
+            backgroundColor: Colors.transparent,
             appBar: AppBar(
-              backgroundColor: Color(0xffE6E5E3).withOpacity(0.1), // Semi-transparent AppBar
+              backgroundColor: Color(0xffE6E5E3).withOpacity(0.1),
               toolbarHeight: MediaQuery.of(context).size.height * 0.15,
               leading: GestureDetector(
                 onTap: () {
@@ -125,9 +133,9 @@ class _DriverNotificationState extends State<DriverNotification> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
-                                    children: const [
+                                    children: [
                                       Text(
-                                        '8 mins(2.5mi)away',
+                                        '${widget.timeToPickup } (${widget.distanceToPickup.toStringAsFixed(2)} km)',
                                         style: TextStyle(fontSize: 20),
                                       ),
                                       Padding(
@@ -137,12 +145,11 @@ class _DriverNotificationState extends State<DriverNotification> {
                                           style: TextStyle(fontSize: 20),
                                         ),
                                       ),
+                                      for (int i = 0; i < widget.distanceToDropPoints.length; i++)
                                       Padding(
                                         padding: EdgeInsets.only(top: 20),
-                                        child: Text(
-                                          '9 mins(2.50mi)left',
-                                          style: TextStyle(fontSize: 20),
-                                        ),
+                                        child: Text('${widget.timeToDrop }(${widget.distanceToDropPoints[i].toStringAsFixed(2)} km)',
+                                          style: TextStyle(fontSize: 20),),
                                       ),
                                       Text(
                                         'Xxxxxxxxx',
@@ -171,8 +178,11 @@ class _DriverNotificationState extends State<DriverNotification> {
                   padding: EdgeInsets.only(top: 35),
                   child: IconButton(
                       onPressed: (){
-                        Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => DriverHomePage()));
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,)));
                       },
                       icon: Icon(Icons.cancel)
                   )

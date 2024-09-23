@@ -288,10 +288,12 @@ class CommonWidgets{
   Widget buildTextField(
       String label,
       TextEditingController controller, {
+        FocusNode? focusNode,
         String? hintText,
         String? labelText,
         bool obscureText = false,
         Widget? suffixIcon,
+        TextEditingController? passwordController,
       }) {
     return Column(
       children: [
@@ -310,6 +312,7 @@ class CommonWidgets{
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
           child: TextFormField(
             controller: controller,
+            focusNode: focusNode,
             obscureText: obscureText,
             decoration: InputDecoration(
               hintText: hintText ?? '',
@@ -325,20 +328,17 @@ class CommonWidgets{
               if (value == null || value.isEmpty) {
                 return 'Please enter $label';
               }
-              if (label == 'Email id' || label == 'Email ID') {
-                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                  return 'Please enter a valid email address';
-                }
+              if (label == 'Email ID' && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                return 'Please enter a valid email address';
               }
-              if (label == 'Password' || label == 'Confirm Password') {
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters long';
-                }
+              if ((label == 'Password' || label == 'Confirm Password') && value.length < 6) {
+                return 'Password must be at least 6 characters long';
               }
-              if (label == 'Id Number') {
-                if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                  return 'ID number must be exactly 10 digits long';
-                }
+              if (label == 'Confirm Password' && passwordController != null && passwordController.text != value) {
+                return 'Passwords do not match';
+              }
+              if (label == 'ID Number' && !RegExp(r'^\d{10}$').hasMatch(value)) {
+                return 'ID number must be exactly 10 digits long';
               }
               return null;
             },

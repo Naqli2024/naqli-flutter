@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
@@ -63,10 +64,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder<Map<String, String?>>(
-        future: getSavedPartnerData(),  // Load partner data
+        future: getSavedPartnerData(),
         builder: (context, partnerSnapshot) {
           if (partnerSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -88,30 +90,58 @@ class _LoginScreenState extends State<LoginScreen> {
             }
           }
 
-          // If partner data is not found, try to load user data
           return FutureBuilder<Map<String, String?>>(
-            future: getSavedUserData(),  // Load user data
-            builder: (context, userSnapshot) {
-              if (userSnapshot.connectionState == ConnectionState.waiting) {
+            future: getSavedDriverData(),
+            builder: (context, driverSnapshot) {
+              if (driverSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
-              } else if (userSnapshot.hasData) {
-                final userData = userSnapshot.data;
-                if (userData != null) {
-                  final firstName = userData['firstName'] ?? '';
-                  final lastName = userData['lastName'] ?? '';
-                  final token = userData['token'] ?? '';
-                  final id = userData['id'] ?? '';
-
-                  print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
-
+              } else if (driverSnapshot.hasData) {
+                final driverData = driverSnapshot.data;
+                if (driverData != null) {
+                  final firstName = driverData['firstName'] ?? '';
+                  final lastName = driverData['lastName'] ?? '';
+                  final id = driverData['id'] ?? '';
+                  final token = driverData['token'] ?? '';
+                  print('Driver data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
                   if (id.isNotEmpty && token.isNotEmpty) {
-                    // return ChooseVendor(unit: '', load: '',size: '',bookingId: '',unitType: '',);
-                    return UserType(firstName: firstName, lastName: lastName,token: token,id: id,);
+                    return DriverHomePage(
+                      firstName: firstName,
+                      lastName: lastName,
+                      token: token,
+                      id: id,
+                    );
                   }
                 }
               }
 
-              return const UserHomePage();
+
+              return FutureBuilder<Map<String, String?>>(
+                future: getSavedUserData(),
+                builder: (context, userSnapshot) {
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (userSnapshot.hasData) {
+                    final userData = userSnapshot.data;
+                    if (userData != null) {
+                      final firstName = userData['firstName'] ?? '';
+                      final lastName = userData['lastName'] ?? '';
+                      final token = userData['token'] ?? '';
+                      final id = userData['id'] ?? '';
+                      print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+                      if (id.isNotEmpty && token.isNotEmpty) {
+                        return UserType(
+                          firstName: firstName,
+                          lastName: lastName,
+                          token: token,
+                          id: id,
+                        );
+                      }
+                    }
+                  }
+
+                  return const UserHomePage();
+                },
+              );
             },
           );
         },

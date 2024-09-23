@@ -353,7 +353,7 @@ class UserService{
 
       if (response.statusCode == 200) {
         print('Login successful');
-        final message = responseBody['message'] ?? 'Login successful';
+        final message = responseBody['message'] ?? 'Login Failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );

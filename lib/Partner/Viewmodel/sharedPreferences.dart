@@ -60,6 +60,42 @@ Future<Map<String, String?>> getSavedUserData() async {
   }
 }
 
+Future<void> saveDriverData(String firstName, String lastName, String token, String id) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('firstName', firstName);
+    await prefs.setString('lastName', lastName);
+    await prefs.setString('token', token);
+    await prefs.setString('id', id);
+    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+  } catch (e) {
+    print('Error saving data: $e');
+  }
+}
+
+Future<Map<String, String?>> getSavedDriverData() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final firstName = prefs.getString('firstName');
+    final lastName = prefs.getString('lastName');
+    final token = prefs.getString('token');
+    final id = prefs.getString('id');
+
+    // Debugging
+    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'token': token,
+      'id': id,
+    };
+  } catch (e) {
+    print('Error retrieving data: $e');
+    return {};
+  }
+}
+
 
 Future<void> saveBookingId(String id, String token) async {
   try {
@@ -93,6 +129,13 @@ Future<Map<String, String?>> getSavedBookingId() async {
     return {};
   }
 }
+
+Future<void> clearDriverData() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  print('SharedPreferences cleared.');
+}
+
 
 
 Future<void> clearUserData() async {

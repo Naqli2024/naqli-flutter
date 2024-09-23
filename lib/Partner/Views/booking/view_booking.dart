@@ -299,7 +299,19 @@ class _ViewBookingState extends State<ViewBooking> {
                   ),
                 ),
                 DottedDivider(),
-                Padding(
+                widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
+                ? Padding(
+                  padding: EdgeInsets.fromLTRB(50, 0, 50, 10),
+                  child: Container(
+                  height: MediaQuery.sizeOf(context).width * 0.12,
+                  width: MediaQuery.sizeOf(context).width * 0.65,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xffBCBCBC)),
+                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                  ),
+                    child: Center(child: Text(widget.quotePrice)),
+                  ))
+                 : Padding(
                   padding: const EdgeInsets.fromLTRB(50, 0, 50, 10),
                   child: TextField(
                     controller: quotePriceController,
@@ -334,12 +346,10 @@ class _ViewBookingState extends State<ViewBooking> {
                               setState(() {
                                 widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
                                     ? null
+                                    : quotePriceController.text.isEmpty
+                                    ? CommonWidgets().showToast('Please enter Quote price to send')
                                     : _authService.sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
                               });
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //         builder: (context) => const StepTwo()));
                             },
                             child: const Text(
                               'Send Quote',
@@ -357,7 +367,9 @@ class _ViewBookingState extends State<ViewBooking> {
                         width: MediaQuery.of(context).size.width * 0.4,
                         child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff6F181C),
+                              backgroundColor: widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
+                              ? const Color(0xff703438)
+                              : const Color(0xff6F181C),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -365,9 +377,45 @@ class _ViewBookingState extends State<ViewBooking> {
                             onPressed: () {
                               setState(() {
                                 widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
-                                    ?null
-                                    :_authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
-
+                                    ? null
+                                    : showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      backgroundColor: Colors.white,
+                                      contentPadding: const EdgeInsets.all(20),
+                                      content: const Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(top: 30,bottom: 10),
+                                            child: Text(
+                                              'Are you sure you want to cancel?',
+                                              style: TextStyle(fontSize: 19),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: const Text('Yes'),
+                                          onPressed: () async {
+                                            await _authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: const Text('No'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               });
                             },
                             child: const Text(

@@ -24,6 +24,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: GestureDetector(

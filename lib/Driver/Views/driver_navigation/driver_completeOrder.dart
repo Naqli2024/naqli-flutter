@@ -175,10 +175,11 @@ class _CompleteOrderState extends State<CompleteOrder> {
                                   fontWeight: FontWeight.w500,
                                 ),
                                 onSubmit: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => DriverHomePage()),
-                                  );
+                                  Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
+                                    firstName: '',
+                                    lastName: '',
+                                    token: '',
+                                    id: '',)));
                                 },
                               ),
                             ),

@@ -1,60 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_naqli/Driver/driver_home_page.dart';
+import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
-import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class UserLogin extends StatefulWidget {
-  const UserLogin({super.key});
+class DriverLogin extends StatefulWidget {
+  const DriverLogin({super.key});
 
   @override
-  State<UserLogin> createState() => _UserLoginState();
+  State<DriverLogin> createState() => _DriverLoginState();
 }
 
-class _UserLoginState extends State<UserLogin> {
+class _DriverLoginState extends State<DriverLogin> {
   final _formKey = GlobalKey<FormState>();
   final userOtpKey = GlobalKey<FormState>();
   final userPasswordOtpKey = GlobalKey<FormState>();
   final CommonWidgets commonWidgets = CommonWidgets();
-  final UserService userService = UserService();
-  final TextEditingController emailAddressController = TextEditingController();
+  final DriverService driverService = DriverService();
+  final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController forgotPasswordEmailController = TextEditingController();
   final TextEditingController forgotPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isLoading = false;
-  bool isNewPasswordObscured = true;
-  bool isConfirmPasswordObscured = true;
 
   @override
   void dispose() {
-    emailAddressController.dispose();
+    emailController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
   void driverLogin() async{
-    Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverHomePage()));
-    // if (_formKey.currentState!.validate()) {
-    //   setState(() {
-    //     isLoading = true;
-    //   });
-    //   userService.userLogin(
-    //     context,
-    //     emailAddress: emailAddressController.text,
-    //     password: passwordController.text,
-    //   );
-    //   setState(() {
-    //     isLoading = false;
-    //   });
-    // }
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+      await driverService.driverLogin(
+        context,
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -152,7 +144,7 @@ class _UserLoginState extends State<UserLogin> {
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
                                     child: TextFormField(
-                                      controller: emailAddressController,
+                                      controller: emailController,
                                       decoration: InputDecoration(
                                         border: OutlineInputBorder(
                                           borderSide: const BorderSide(
@@ -241,47 +233,6 @@ class _UserLoginState extends State<UserLogin> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.normal,
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //       builder: (context) => const UserRegister()),
-                                // );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.only(top: 15),
-                                decoration: const BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Color(0xff6A66D1),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Create Account',
-                                  style: TextStyle(
-                                    color: Color(0xff6A66D1),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.only(top: 7,bottom: 10),
-                                child: const Text(
-                                  'Use without Login',
-                                  style: TextStyle(
-                                    color: Color(0xff6A66D1),
-                                    fontSize: 12,
                                   ),
                                 ),
                               ),

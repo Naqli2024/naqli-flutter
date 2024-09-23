@@ -36,36 +36,80 @@ class _UserRegisterState extends State<UserRegister> {
   final List<String> accountItems = ['Single User', 'Super User', 'Enterprise User'];
   final List<String> govtIdItems = ['iqama No', 'national ID'];
   final UserService userService = UserService();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode firstNameFocusNode = FocusNode();
+  final FocusNode lastNameFocusNode = FocusNode();
+  final FocusNode emailFocusNode = FocusNode();
+  final FocusNode passwordFocusNode = FocusNode();
+  final FocusNode confirmPasswordFocusNode = FocusNode();
+  final FocusNode contactNoFocusNode = FocusNode();
+  final FocusNode idNoFocusNode = FocusNode();
+  final FocusNode address1FocusNode = FocusNode();
+  final FocusNode address2FocusNode = FocusNode();
+  final FocusNode cityFocusNode = FocusNode();
 
-  void registerUser()async{
-    if (!_isChecked) {
-      commonWidgets.showToast('Please agree to the terms and conditions to proceed');
-      return;
-    }
+  // RegisterUser function
+  void registerUser() async {
     if (registerKey.currentState!.validate()) {
+      if (!_isChecked) {
+        commonWidgets.showToast('Please agree to the terms and conditions to proceed');
+        return;
+      }
       setState(() {
         isLoading = true;
       });
       await userService.userRegister(
-          context,
-          firstName: firstNameController.text,
-          lastName: lastNameController.text,
-          emailAddress: emailController.text,
-          password: passwordController.text,
-          confirmPassword: confirmPasswordController.text,
-          contactNumber: contactNoController.text,
-          alternateNumber: alternateNoController.text,
-          address1: address1Controller.text,
-          address2: address2Controller.text,
-          city: cityController.text,
-          accountType: selectedAccount.toString(),
-          govtId: selectedId.toString(),
-          idNumber: idNoController.text
+        context,
+        firstName: firstNameController.text,
+        lastName: lastNameController.text,
+        emailAddress: emailController.text,
+        password: passwordController.text,
+        confirmPassword: confirmPasswordController.text,
+        contactNumber: contactNoController.text,
+        alternateNumber: alternateNoController.text,
+        address1: address1Controller.text,
+        address2: address2Controller.text,
+        city: cityController.text,
+        accountType: selectedAccount.toString(),
+        govtId: selectedId.toString(),
+        idNumber: idNoController.text,
       );
       setState(() {
         isLoading = false;
       });
+    } else {
+      // Scroll up and focus on the first error field
+      FocusScope.of(context).unfocus(); // Remove focus from any field
+
+      if (firstNameController.text.isEmpty) {
+        _focusAndScroll(firstNameFocusNode);
+      } else if (lastNameController.text.isEmpty) {
+        _focusAndScroll(lastNameFocusNode);
+      } else if (emailController.text.isEmpty) {
+        _focusAndScroll(emailFocusNode);
+      } else if (passwordController.text.isEmpty || passwordController.text.length < 6) {
+        _focusAndScroll(passwordFocusNode);
+      } else if (confirmPasswordController.text.isEmpty || confirmPasswordController.text != passwordController.text) {
+        _focusAndScroll(confirmPasswordFocusNode);
+      } else if (contactNoController.text.isEmpty) {
+        _focusAndScroll(contactNoFocusNode);
+      } else if (idNoController.text.isEmpty || !RegExp(r'^\d{10}$').hasMatch(idNoController.text)) {
+        _focusAndScroll(idNoFocusNode);
+      } else if (address1Controller.text.isEmpty) {
+        _focusAndScroll(address1FocusNode);
+      } else if (cityController.text.isEmpty) {
+        _focusAndScroll(cityFocusNode);
+      }
     }
+  }
+
+  void _focusAndScroll(FocusNode focusNode) {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+    focusNode.requestFocus();
   }
 
   void _onCheckboxChanged(bool? value) {
@@ -92,9 +136,12 @@ class _UserRegisterState extends State<UserRegister> {
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
             title: const Center(
-              child: Text(
-                'Create your account',
-                style: TextStyle(color: Colors.white),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 40),
+                child: Text(
+                  'Create your account',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
             leading: IconButton(
@@ -113,6 +160,7 @@ class _UserRegisterState extends State<UserRegister> {
           ? const Center(
         child: CircularProgressIndicator())
           : SingleChildScrollView(
+        controller: _scrollController,
         child: Form(
           key: registerKey,
           child: Column(
@@ -120,13 +168,13 @@ class _UserRegisterState extends State<UserRegister> {
             children: [
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: commonWidgets.buildTextField('First Name', firstNameController),
+              child: commonWidgets.buildTextField('First Name', firstNameController,focusNode: firstNameFocusNode),
             ),
-            commonWidgets.buildTextField('Last Name', lastNameController),
-            commonWidgets.buildTextField('Email Address', emailController),
+            commonWidgets.buildTextField('Last Name', lastNameController,focusNode: lastNameFocusNode),
+            commonWidgets.buildTextField('Email Address', emailController,focusNode: emailFocusNode),
               commonWidgets.buildTextField(
                 'Password',
-                passwordController,
+                passwordController,focusNode: passwordFocusNode,
                 obscureText: isPasswordObscured,
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -140,8 +188,9 @@ class _UserRegisterState extends State<UserRegister> {
                 ),),
             commonWidgets.buildTextField(
               'Confirm Password',
-              confirmPasswordController,
+              confirmPasswordController,focusNode: confirmPasswordFocusNode,
               obscureText: isConfirmPasswordObscured,
+              passwordController: passwordController,
               suffixIcon: IconButton(
               icon: Icon(
                 isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
@@ -152,7 +201,7 @@ class _UserRegisterState extends State<UserRegister> {
                 });
               },
             ),),
-            commonWidgets.buildTextField('Contact Number', contactNoController),
+            commonWidgets.buildTextField('Contact Number', contactNoController,focusNode: contactNoFocusNode),
               Container(
                 margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                 alignment: Alignment.topLeft,
@@ -177,7 +226,7 @@ class _UserRegisterState extends State<UserRegister> {
                   ),
                 ),
               ),
-            commonWidgets.buildTextField('Address 1', address1Controller),
+            commonWidgets.buildTextField('Address 1', address1Controller,focusNode: address1FocusNode),
               Container(
                 margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                 alignment: Alignment.topLeft,
@@ -202,10 +251,10 @@ class _UserRegisterState extends State<UserRegister> {
                   ),
                 ),
               ),
-            commonWidgets.buildTextField('City', cityController),
+            commonWidgets.buildTextField('City', cityController,focusNode: cityFocusNode),
             accountDropdownWidget(),
             govtIdDropdownWidget(),
-              commonWidgets.buildTextField('Id Number', idNoController),
+              commonWidgets.buildTextField('Id Number', idNoController,focusNode: idNoFocusNode),
               Container(
                 alignment: Alignment.center,
                 margin: EdgeInsets.only(
