@@ -60,14 +60,16 @@ Future<Map<String, String?>> getSavedUserData() async {
   }
 }
 
-Future<void> saveDriverData(String firstName, String lastName, String token, String id) async {
+Future<void> saveDriverData(String firstName, String lastName, String token, String id,String partnerId,String mode) async {
   try {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', firstName);
     await prefs.setString('lastName', lastName);
     await prefs.setString('token', token);
     await prefs.setString('id', id);
-    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+    await prefs.setString('partnerId', partnerId);
+    await prefs.setString('mode', mode);
+    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, partnerId=$partnerId,mode= $mode');
   } catch (e) {
     print('Error saving data: $e');
   }
@@ -80,15 +82,19 @@ Future<Map<String, String?>> getSavedDriverData() async {
     final lastName = prefs.getString('lastName');
     final token = prefs.getString('token');
     final id = prefs.getString('id');
+    final partnerId = prefs.getString('partnerId');
+    final mode = prefs.getString('mode');
 
     // Debugging
-    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, partnerId=$partnerId,mode= $mode');
 
     return {
       'firstName': firstName,
       'lastName': lastName,
       'token': token,
       'id': id,
+      'partnerId': partnerId,
+      'mode': mode,
     };
   } catch (e) {
     print('Error retrieving data: $e');

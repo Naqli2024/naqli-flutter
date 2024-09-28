@@ -280,20 +280,22 @@ class _ViewBookingState extends State<ViewBooking> {
                   child: Row(
                     children: [
                       Image.asset('assets/pickup_drop.png'),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom:35,left: 20),
-                            child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',
-                            style: const TextStyle(fontSize: 20),),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20),
-                            child: Text('${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom:35,left: 20),
+                              child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',
                               style: const TextStyle(fontSize: 20),),
-                          ),
-                        ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20),
+                              child: Text('${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
+                                style: const TextStyle(fontSize: 20),),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

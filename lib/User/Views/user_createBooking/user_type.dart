@@ -43,8 +43,6 @@ class _UserTypeState extends State<UserType> {
   void initState() {
     super.initState();
     booking = _fetchBookingDetails();
-
-    // fetchPartnerData();
   }
   // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
   //   try {

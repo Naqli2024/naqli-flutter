@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -43,16 +44,18 @@ class DriverService{
         if (driverData != null) {
           final firstName = driverData['firstName'] ?? '';
           final lastName = driverData['lastName'] ?? '';
+          final mode = driverData['mode'] ?? '';
           final token = tokenData['token'] ?? '';
-          final id = driverData['_id'] ?? '';
+          final operatorId = driverData['_id'] ?? '';
+          final partnerId = tokenData['associatedPartnerId'] ?? '';
           print(driverData);
-
+          await driverMode(context, partnerId: partnerId, operatorId: operatorId, mode: mode);
           Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
             firstName: firstName,
             lastName: lastName,
             token: token,
-            id: id,)));
-          await saveDriverData(firstName, lastName, token, id);
+            id: operatorId,partnerId: partnerId,mode: mode,)));
+          await saveDriverData(firstName, lastName, token, operatorId,partnerId,mode);
         } else {
           print('Driver data is null');
         }
@@ -76,4 +79,259 @@ class DriverService{
       print('Error: $e');
     }
   }
+
+  Future<void> driverMode(
+      BuildContext context, {
+        required String partnerId,
+        required String operatorId,
+        required String mode,
+      }) async {
+    try {
+      final url = Uri.parse('${baseUrl}updateOperatorMode');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'partnerId': partnerId,
+          'operatorId': operatorId,
+          'mode': mode,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        final message = responseBody['message'] ?? 'Failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+      else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to update: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+      print('Network error: No Internet connection');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please try again...')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> driverRequest(
+      BuildContext context, {
+        required String operatorId,
+      }) async {
+    try {
+      final url = Uri.parse('${baseUrl}getBookingRequest');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'operatorId': operatorId,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        // final message = responseBody['message'] ?? 'Request successful';
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(message)),
+        // );
+        return responseBody; // Return the response body on success
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to update: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return null; // Return null for errors
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+      print('Network error: No Internet connection');
+      return null; // Return null on network error
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please try again...')),
+      );
+      print('Error: $e');
+      return null; // Return null for other errors
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
+    try {
+      final url = Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$id');
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      print('Fetching from URL: ${url.toString()}');
+
+      final response = await http.get(url, headers: headers);
+
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      // Check if the response body is empty
+      if (response.body.isEmpty) {
+        throw Exception('Empty response body');
+      }
+
+      // Handle successful status code
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        if (responseBody.containsKey('data')) {
+          final Map<String, dynamic> bookingData = responseBody['data'];
+          print('Booking Data: $bookingData');
+          return bookingData;
+        } else {
+          throw Exception('Unexpected response format: $responseBody');
+        }
+      }
+      // Handle specific errors such as booking not found
+      else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
+        print('Booking not found');
+        return null;
+      }
+      // Handle service unavailable error
+      else if (response.statusCode == 503) {
+        print('Service unavailable. Please try again later.');
+        throw Exception('Service is temporarily unavailable. Please try again later.');
+      } else {
+        throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet connection and try again.');
+    } on FormatException {
+      print('An error occurred: Invalid JSON format or empty response body.');
+      throw Exception('Invalid response format or empty response body.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<String?> getUserName(String userId, String token) async {
+    try{
+      final response = await http.get(
+        Uri.parse('https://naqli.onrender.com/api/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Check if 'data' exists and contains 'firstName' and 'lastName'
+        if (responseBody != null) {
+          final firstName = responseBody['firstName'] ?? '';
+          final lastName = responseBody['lastName'] ?? '';
+
+          if (firstName.isNotEmpty && lastName.isNotEmpty) {
+            print('token: $token');
+            print('User name: $firstName $lastName');
+            return '$firstName $lastName';
+          } else {
+            print("First name or last name is not available.");
+            return null;
+          }
+        } else {
+          print("Response body does not contain user data.");
+          return null;
+        }
+      } else if (response.statusCode == 401) {
+        print("Authorization failed for user ID $userId: ${response.body}");
+        throw Exception('Authorization failed');
+      } else {
+        print('Failed to load user data: ${response.statusCode} ${response.body}');
+        throw Exception('Failed to load user data for user ID $userId');
+      }
+    }on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+
+  Future<void> driverCompleteOrder(
+      BuildContext context, {
+        required String bookingId,
+        required bool status,
+        required String token,
+      }) async {
+    try {
+      final url = Uri.parse('https://naqli.onrender.com/api/bookings/update-booking-status');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "bookingId": bookingId,
+          "status": status,
+        }),
+      );
+        print(status);
+      final responseBody = jsonDecode(response.body);
+
+      print('Full Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        final message = responseBody['message'] ?? 'Failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+      else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to update: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+      print('Network error: No Internet connection');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please try again...')),
+      );
+      print('Error: $e');
+    }
+  }
+
 }

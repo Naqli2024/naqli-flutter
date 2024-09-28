@@ -692,16 +692,15 @@ class AuthService {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
-
+         print('rrrrrrrrrr$partnerData');
         if (partnerData['bookingRequest'] != null) {
           final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
           final bookingIds = <Map<String, dynamic>>[];
 
           for (var booking in bookingRequests) {
             final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
-            final quotePrice = booking['quotePrice']?.toString() ?? '0';
+            final quotePrice = booking['bookingRequest']['quotePrice']?.toString() ?? '0';
             final paymentStatus = booking['paymentStatus']?.toString() ?? 'Pending';
-
             print('Booking ID: $bookingId');
             print('Payment Status: $paymentStatus');
             print('Quote Price: $quotePrice');

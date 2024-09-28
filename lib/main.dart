@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
               final partnerName = partnerData['partnerName'] ?? '';
               final partnerId = partnerData['partnerId'] ?? '';
               final token = partnerData['token'] ?? '';
-              if (partnerId.isNotEmpty && token.isNotEmpty) {
+              if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
                 return BookingDetails(
                   partnerName: partnerName,
                   partnerId: partnerId,
@@ -100,8 +100,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (driverData != null) {
                   final firstName = driverData['firstName'] ?? '';
                   final lastName = driverData['lastName'] ?? '';
+                  final mode = driverData['mode'] ?? '';
                   final id = driverData['id'] ?? '';
                   final token = driverData['token'] ?? '';
+                  final driverPartnerId = driverData['partnerId'] ?? '';
                   print('Driver data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
                   if (id.isNotEmpty && token.isNotEmpty) {
                     return DriverHomePage(
@@ -109,6 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       lastName: lastName,
                       token: token,
                       id: id,
+                      partnerId: driverPartnerId,
+                      mode: mode,
                     );
                   }
                 }

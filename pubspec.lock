@@ -266,10 +266,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_stripe
-      sha256: "28527923373720fcd39eade306f4acc007df8a3f2c0aeea545f1521dec9399c2"
+      sha256: c54d972c022c987688bf7315853968894776c7f792fea39136cfdaf526d2ca15
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0"
+    version: "11.1.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -420,10 +420,10 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_android
-      sha256: "075f550650a907a85d00d1e48f135e9cc326f1519652eb5f8caafebacabf7727"
+      sha256: "10cf27bee8c560f8e69992b3a0f27ddf1d7acbea622ddb13ef3f587848a73f26"
       url: "https://pub.dev"
     source: hosted
-    version: "2.14.5"
+    version: "2.14.7"
   google_maps_flutter_ios:
     dependency: transitive
     description:
@@ -536,6 +536,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  location:
+    dependency: "direct main"
+    description:
+      name: location
+      sha256: "37ffdadcd4b1498b769824f45ebb4de8ed46663a4a67ac27b33a590ee486579f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.2"
+  location_platform_interface:
+    dependency: transitive
+    description:
+      name: location_platform_interface
+      sha256: "2ecde6bb0f88032b0bbbde37e18975b4468711dd92619c2235cc0c0ee93b4b8e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
+  location_web:
+    dependency: transitive
+    description:
+      name: location_web
+      sha256: "15ad7b4c8a9f55abee513373755e093a40c04d7e24fc1b4f89676fe99523d034"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.1"
   logging:
     dependency: transitive
     description:
@@ -905,10 +929,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite_common
-      sha256: "7b41b6c3507854a159e24ae90a8e3e9cc01eb26a477c118d6dca065b5f55453e"
+      sha256: "4058172e418eb7e7f2058dcb7657d451a8fc264afa0dea4dbd0f304a57131611"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.4+2"
+    version: "2.5.4+3"
   stack_trace:
     dependency: transitive
     description:
@@ -945,34 +969,34 @@ packages:
     dependency: transitive
     description:
       name: stripe_android
-      sha256: "189b8d5c79dfb363540a77e813ba350c9058559673f3df80a2cb87e0983a316e"
+      sha256: "4d752a704988bf710b0f7ac82daa3b4d4bd5e47ee28aebcb349f8310c2a1b0ab"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0"
+    version: "11.1.0"
   stripe_ios:
     dependency: transitive
     description:
       name: stripe_ios
-      sha256: "680d442b2bb920dd91bec4aba9286de050a76a789e9bc128044f2b3732369be6"
+      sha256: d46660f6de8ff76b70fc69fc7e658cc3500912cdec0cd54cd6a69d03a92884c1
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0"
+    version: "11.1.0"
   stripe_platform_interface:
     dependency: transitive
     description:
       name: stripe_platform_interface
-      sha256: "3a4e22f0ad461dc47147601d1215f2a72715c6c67f56fb4b8a3cab4b857b9a41"
+      sha256: "2369f8e934b0ef93a0685b1d6ad8a2bb08ac10637976d226ea807b571c09419e"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0"
+    version: "11.1.1"
   synchronized:
     dependency: transitive
     description:
       name: synchronized
-      sha256: a824e842b8a054f91a728b783c177c1e4731f6b124f9192468457a8913371255
+      sha256: "51b08572b9f091f8c3eb4d9d4be253f196ff0075d5ec9b10a884026d5b55d7bc"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.0"
+    version: "3.3.0+2"
   term_glyph:
     dependency: transitive
     description:

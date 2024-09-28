@@ -179,7 +179,7 @@ class _CompleteOrderState extends State<CompleteOrder> {
                                     firstName: '',
                                     lastName: '',
                                     token: '',
-                                    id: '',)));
+                                    id: '',partnerId: '',mode: '',)));
                                 },
                               ),
                             ),

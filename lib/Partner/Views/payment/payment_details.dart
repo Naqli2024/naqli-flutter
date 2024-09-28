@@ -21,7 +21,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
   bool isLoading = false;
   final AuthService _authService = AuthService();
   final CommonWidgets commonWidgets = CommonWidgets();
-
+  String paymentType ='';
   @override
   void initState() {
     super.initState();
@@ -52,7 +52,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
       for (var booking in bookingIds) {
         final bookingId = booking['bookingId'] as String;
         final paymentStatus = booking['paymentStatus'] as String;
-
+        paymentType = paymentStatus;
         try {
           print('Fetching details for booking ID: $bookingId');
           final details = await _authService.getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
@@ -292,7 +292,11 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => _updateFilter('Pending'),
+                      onTap: () {
+                        paymentType =='Pending'
+                        ? _updateFilter('Pending')
+                        : _updateFilter('HalfPaid');
+                      },
                       child: Padding(
                         padding: const EdgeInsets.only(right: 30),
                         child: Text(

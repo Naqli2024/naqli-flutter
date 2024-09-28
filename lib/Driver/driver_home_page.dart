@@ -1,26 +1,35 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_accept.dart';
 import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_notification.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'dart:math' show asin, cos, pi, sin, sqrt;
+import 'dart:math' show asin, atan2, cos, pi, sin, sqrt;
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DriverHomePage extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String token;
   final String id;
-  const DriverHomePage({super.key, required this.firstName, required this.lastName, required this.token, required this.id});
+  final String partnerId;
+  final String mode;
+  const DriverHomePage({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.partnerId, required this.mode});
 
   @override
   State<DriverHomePage> createState() => _DriverHomePageState();
@@ -29,7 +38,7 @@ class DriverHomePage extends StatefulWidget {
 class _DriverHomePageState extends State<DriverHomePage>
     with SingleTickerProviderStateMixin {
   final CommonWidgets commonWidgets = CommonWidgets();
-  final UserService userService = UserService();
+  final DriverService driverService = DriverService();
   bool isOnline = false;
   GoogleMapController? mapController;
   final Set<Marker> markers = {};
@@ -46,6 +55,13 @@ class _DriverHomePageState extends State<DriverHomePage>
   List<double>? dropPointsDistance;
   String? timeToPickup;
   String? timeToDrop;
+  LatLng currentLatLng = LatLng(37.7749, -122.4194);
+  StreamSubscription<Position>? positionStream;
+  double currentHeading = 0.0;
+  BitmapDescriptor? customIcon;
+  Map<String, dynamic>? bookingRequestData;
+  Future<Map<String, dynamic>?>? booking;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -61,8 +77,78 @@ class _DriverHomePageState extends State<DriverHomePage>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    fetchCoordinates();
     _checkPermissionsAndFetchLocation();
+    fetchCoordinates();
+    _loadDriverStatus();
+    _fetchBookingRequest();
+    print(widget.partnerId);
+    print(widget.id);
+    print(widget.mode);
+  }
+
+
+  @override
+  void dispose() {
+    positionStream?.cancel();
+    _animationController.dispose();
+    markers.clear();
+    polylines.clear();
+    super.dispose();
+  }
+
+  double _haversineDistance(LatLng start, LatLng end) {
+    const double earthRadius = 6371.0; // Earth's radius in kilometers
+    final double dLat = _degreesToRadians(end.latitude - start.latitude);
+    final double dLon = _degreesToRadians(end.longitude - start.longitude);
+
+    final double a =
+        (sin(dLat / 2) * sin(dLat / 2)) +
+            cos(_degreesToRadians(start.latitude)) *
+                cos(_degreesToRadians(end.latitude)) *
+                sin(dLon / 2) *
+                sin(dLon / 2);
+
+    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * (pi / 180);
+  }
+
+  List<LatLng> _decodePolyline(String polyline) {
+    List<LatLng> points = [];
+    int index = 0;
+    int len = polyline.length;
+    int lat = 0;
+    int lng = 0;
+
+    while (index < len) {
+      int shift = 0;
+      int result = 0;
+      int b;
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1F) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
   }
 
   Future<void> _checkPermissionsAndFetchLocation() async {
@@ -106,177 +192,77 @@ class _DriverHomePageState extends State<DriverHomePage>
 
   Future<void> fetchCoordinates() async {
     try {
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-
-      String pickupPlace = 'San Francisco'; // Pickup location
-      List dropPlaces = ['Santa Rosa']; // Drop locations
-
       // Step 1: Get the current location (device's location)
       Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
 
+      // Clear existing markers and polylines
       setState(() {
         markers.clear();
         polylines.clear();
         dropLatLngs.clear();
       });
 
-      // Step 2: Fetch pickup coordinates
-      String pickupUrl =
-          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
-      final pickupResponse = await http.get(Uri.parse(pickupUrl));
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
 
-      // Step 3: Fetch drop coordinates
-      List<Future<http.Response>> dropResponses = dropPlaces.map((dropPlace) {
-        String dropUrl =
-            'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(dropPlace)}&key=$apiKey';
-        return http.get(Uri.parse(dropUrl));
-      }).toList();
+      // Step 2: Reverse geocode to get the place name
+      String reverseGeocodeUrl =
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
+      final response = await http.get(Uri.parse(reverseGeocodeUrl));
 
-      final List<http.Response> dropResponsesList = await Future.wait(dropResponses);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
 
-      if (pickupResponse.statusCode == 200) {
-        final pickupData = json.decode(pickupResponse.body);
-
-        if (pickupData != null && pickupData['status'] == 'OK') {
-          final pickupLocation = pickupData['results']?[0]['geometry']?['location'];
-          final pickupAddress = pickupData['results']?[0]['formatted_address'];
-
-          if (pickupLocation != null) {
-            LatLng pickupLatLng = LatLng(pickupLocation['lat'], pickupLocation['lng']);
-            double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
-            List<double> distancesToDropPoints = [];
-            pickUpDistance = distanceToPickup;
-
-            setState(() {
-              markers.add(
-                Marker(
-                  markerId: const MarkerId('currentLocation'),
-                  position: currentLatLng,
-                  infoWindow: InfoWindow(
-                    title: 'Current Location',
-                    snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km',
-                  ),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        if (data['status'] == 'OK') {
+          final placeName = data['results'][0]['formatted_address'];
+          // Step 3: Add current location marker with place name
+          BitmapDescriptor customIcon = await BitmapDescriptor.fromAssetImage(
+            const ImageConfiguration(size: Size(100, 100)), // Customize size here if necessary
+            'assets/carDirection.png', // Path to your custom icon
+          );
+          setState(() {
+            markers.add(
+              Marker(
+                markerId: const MarkerId('currentLocation'),
+                position: currentLatLng,
+                infoWindow: InfoWindow(
+                  title: 'Current Location',
+                  snippet: placeName, // Show the place name here
                 ),
-              );
-
-              markers.add(
-                Marker(
-                  markerId: const MarkerId('pickup'),
-                  position: pickupLatLng,
-                  infoWindow: InfoWindow(
-                    title: 'Pickup Point',
-                    snippet: '$pickupAddress Distance: ${distanceToPickup.toStringAsFixed(2)} km',
-                  ),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                ),
-              );
-            });
-
-            // Step 5: Handle drop point markers
-            List<LatLng> waypoints = [];
-            for (int i = 0; i < dropResponsesList.length; i++) {
-              final dropResponse = dropResponsesList[i];
-              if (dropResponse.statusCode == 200) {
-                final dropData = json.decode(dropResponse.body);
-
-                if (dropData != null && dropData['status'] == 'OK') {
-                  final dropLocation = dropData['results']?[0]['geometry']?['location'];
-                  final dropAddress = dropData['results']?[0]['formatted_address'];
-
-                  if (dropLocation != null) {
-                    LatLng dropLatLng = LatLng(dropLocation['lat'], dropLocation['lng']);
-                    double distance = _haversineDistance(pickupLatLng, dropLatLng);
-                    distancesToDropPoints.add(distance);
-                    dropPointsDistance = [distance];
-
-                    setState(() {
-                      markers.add(
-                        Marker(
-                          markerId: MarkerId('dropPoint$i'),
-                          position: dropLatLng,
-                          infoWindow: InfoWindow(
-                            title: 'Drop Point ${i + 1}',
-                            snippet: '$dropAddress - Distance: ${distance.toStringAsFixed(2)} km',
+                icon: customIcon,
+                onTap: () {
+                  // Show info window when the marker is clicked
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) => Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Current Location',
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
-                          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-                        ),
-                      );
+                          Text(
+                            'Place: $placeName',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            );
 
-                      dropLatLngs.add(dropLatLng);
-                      waypoints.add(dropLatLng);
-                    });
-                  } else {
-                    print('Drop location is null for point $i');
-                  }
-                } else {
-                  print('Error with drop API response for point $i: ${dropData?['status']}');
-                }
-              } else {
-                print('Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
-              }
-            }
-
-            // Step 6: Fetch route from current location to pickup point
-            String directionsUrlFromCurrentToPickup =
-                'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng.latitude},${pickupLatLng.longitude}&key=$apiKey';
-            final directionsResponseFromCurrentToPickup = await http.get(Uri.parse(directionsUrlFromCurrentToPickup));
-
-            // Draw the polyline for current location to pickup point
-            if (directionsResponseFromCurrentToPickup.statusCode == 200) {
-              final directionsData = json.decode(directionsResponseFromCurrentToPickup.body);
-              if (directionsData['status'] == 'OK') {
-                final polylinePoints = directionsData['routes'][0]['overview_polyline']['points'];
-                List<LatLng> routePoints = _decodePolyline(polylinePoints);
-
-                setState(() {
-                  polylines.add(Polyline(
-                    polylineId: const PolylineId('currentToPickup'),
-                    color: Colors.blue,
-                    width: 5,
-                    points: routePoints,
-                  ));
-                });
-
-                // Extract travel time
-                final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-                timeToPickup = durationToPickup;
-                print('Travel time to Pickup: $durationToPickup');
-              }
-            }
-
-            // Step 7: Fetch route from pickup point to drop points
-            if (dropLatLngs.isNotEmpty) {
-              String waypointsString = waypoints.map((latLng) => '${latLng.latitude},${latLng.longitude}').join('|');
-              String directionsUrl =
-                  'https://maps.googleapis.com/maps/api/directions/json?origin=${pickupLatLng.latitude},${pickupLatLng.longitude}&destination=${dropLatLngs.last.latitude},${dropLatLngs.last.longitude}&waypoints=$waypointsString&key=$apiKey';
-              final directionsResponse = await http.get(Uri.parse(directionsUrl));
-
-              if (directionsResponse.statusCode == 200) {
-                final directionsData = json.decode(directionsResponse.body);
-                if (directionsData['status'] == 'OK') {
-                  final polylinePoints = directionsData['routes'][0]['overview_polyline']['points'];
-                  List<LatLng> routePoints = _decodePolyline(polylinePoints);
-
-                  setState(() {
-                    polylines.add(Polyline(
-                      polylineId: const PolylineId('pickupToDrop'),
-                      color: Colors.green,
-                      width: 5,
-                      points: routePoints,
-                    ));
-                  });
-
-                  // Extract travel time from pickup to drop points
-                  final durationFromPickupToDrop = directionsData['routes'][0]['legs'][0]['duration']['text'];
-                  timeToDrop = durationFromPickupToDrop;
-                  print('Travel time from Pickup to Drop Points: $durationFromPickupToDrop');
-                }
-              }
-            }
-          }
+            // Move the camera to the current location
+            // mapController?.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 15));
+          });
+        } else {
+          print('Failed to reverse geocode location. Status: ${data['status']}');
         }
+      } else {
+        print('Failed to fetch reverse geocoding. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching coordinates: $e');
@@ -285,35 +271,6 @@ class _DriverHomePageState extends State<DriverHomePage>
 
 
 
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> points = [];
-    int index = 0, len = encoded.length;
-    int lat = 0, lng = 0;
-
-    while (index < len) {
-      int b, shift = 0, result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      points.add(LatLng(lat / 1E5, lng / 1E5));
-    }
-    return points;
-  }
 
   void _showDistanceSnackbar(LatLng point, List<LatLng> otherPoints) {
     double totalDistance = 0;
@@ -325,20 +282,6 @@ class _DriverHomePageState extends State<DriverHomePage>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Total Distance: ${totalDistance.toStringAsFixed(2)} km'),
     ));
-  }
-
-  double _haversineDistance(LatLng a, LatLng b) {
-    const double R = 6371; // Radius of Earth in kilometers
-    double lat1 = a.latitude * (3.141592653589793 / 180);
-    double lat2 = b.latitude * (3.141592653589793 / 180);
-    double dLat = (b.latitude - a.latitude) * (3.141592653589793 / 180);
-    double dLon = (b.longitude - a.longitude) * (3.141592653589793 / 180);
-
-    double aValue = sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * asin(sqrt(aValue));
-
-    return R * c; // Distance in kilometers
   }
 
   void _moveCameraToFitAllMarkers() {
@@ -357,18 +300,25 @@ class _DriverHomePageState extends State<DriverHomePage>
   }
 
   LatLngBounds _calculateBounds() {
+    if (pickupLatLng == null) {
+      throw Exception('pickupLatLng is null');
+    }
+
     double southWestLat = [
       pickupLatLng!.latitude,
       ...dropLatLngs.map((latLng) => latLng.latitude)
     ].reduce((a, b) => a < b ? a : b);
+
     double southWestLng = [
       pickupLatLng!.longitude,
       ...dropLatLngs.map((latLng) => latLng.longitude)
     ].reduce((a, b) => a < b ? a : b);
+
     double northEastLat = [
       pickupLatLng!.latitude,
       ...dropLatLngs.map((latLng) => latLng.latitude)
     ].reduce((a, b) => a > b ? a : b);
+
     double northEastLng = [
       pickupLatLng!.longitude,
       ...dropLatLngs.map((latLng) => latLng.longitude)
@@ -379,6 +329,7 @@ class _DriverHomePageState extends State<DriverHomePage>
       northeast: LatLng(northEastLat, northEastLng),
     );
   }
+
 
   double calculateDistance(LatLng a, LatLng b) {
     const double R = 6371; // Radius of Earth in kilometers
@@ -395,12 +346,6 @@ class _DriverHomePageState extends State<DriverHomePage>
   }
 
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
   void _toggleNotification() {
     setState(() {
       _showNotification = !_showNotification;
@@ -412,6 +357,77 @@ class _DriverHomePageState extends State<DriverHomePage>
       _animationController.reverse();
     }
   }
+
+  Future<void> _loadDriverStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isOnline = prefs.getBool('isOnline') ?? false;
+    });
+  }
+
+  Future<void> _saveDriverStatus(bool status) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isOnline', status);
+  }
+
+  void driverOnlineModeChange() async{
+    await driverService.driverMode(context, partnerId: widget.partnerId, operatorId: widget.id, mode: "online");
+  }
+
+  void driverOfflineModeChange() async{
+    await driverService.driverMode(context, partnerId: widget.partnerId, operatorId: widget.id, mode: "offline");
+  }
+
+  Future<void> _fetchBookingRequest() async {
+    try {
+      // Fetch the booking request data using driverService
+      final data = await driverService.driverRequest(context, operatorId: widget.id);
+
+      if (data != null && data['bookingRequest'] != null) {
+        // Check if assignedOperator exists in the bookingRequest
+        if (data['bookingRequest']['assignedOperator'] != null) {
+          // Fetch bookingId from assignedOperator if present
+          final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
+          print('Booking ID from assignedOperator: $assignedOperatorBookingId');
+        } else {
+          // Otherwise, fetch bookingId directly from bookingRequest
+          final bookingRequestBookingId = data['bookingRequest']['bookingId'];
+          print('Booking ID from bookingRequest: $bookingRequestBookingId');
+        }
+
+        // Set the fetched data to state
+        setState(() {
+          bookingRequestData = data;
+        });
+      } else {
+        print("No booking request data available.");
+      }
+    } catch (e) {
+      print("Error during API call: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+    }
+  }
+
+  Future<void> _handleDriverRequest() async {
+    try {
+      // Fetch the driver request using driverService
+      final response = await driverService.driverRequest(context, operatorId: widget.id);
+
+      if (response != null) {
+        // Toggle notification if response exists
+        _toggleNotification();
+      } else {
+        // Handle if no data is present in the response
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No data available from the API.')),
+        );
+      }
+    } catch (e) {
+      print("Error during API call: $e");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +513,9 @@ class _DriverHomePageState extends State<DriverHomePage>
           ],
         ),
       ),
-      body: SingleChildScrollView(
+      body:  isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Stack(
           children: [
             Column(
@@ -507,17 +525,25 @@ class _DriverHomePageState extends State<DriverHomePage>
                     Container(
                       height: MediaQuery.sizeOf(context).height * 0.78,
                       child: GoogleMap(
+                        mapType: MapType.normal,
                         onMapCreated: (GoogleMapController controller) {
                           mapController = controller;
                         },
                         initialCameraPosition: const CameraPosition(
                           target: LatLng(0, 0), // Default position
-                          zoom: 1,
+                          zoom: 40,
                         ),
-                        markers: markers,
-                        polylines: polylines,
-                        myLocationEnabled: true,
+                        markers: Set<Marker>.of(markers),
+                        polylines: Set<Polyline>.of(polylines),
+                        myLocationEnabled: false,
                         myLocationButtonEnabled: true,
+                        gestureRecognizers: Set()
+                          ..add(Factory<PanGestureRecognizer>(
+                                () => PanGestureRecognizer(),
+                          ))
+                          ..add(Factory<TapGestureRecognizer>(
+                                () => TapGestureRecognizer(),
+                          )),
                       ),
                     ),
                     Positioned(
@@ -572,8 +598,8 @@ class _DriverHomePageState extends State<DriverHomePage>
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: () {
-                                      Navigator.push(context,
-                                          MaterialPageRoute(builder: (context) => OrderAccept()));
+                                      // Navigator.push(context,
+                                      //     MaterialPageRoute(builder: (context) => OrderAccept()));
                                     },
                                     icon: Icon(Icons.search)),
                               ),
@@ -582,31 +608,34 @@ class _DriverHomePageState extends State<DriverHomePage>
                         ),
                       ),
                     ),
-                    Positioned(
+                   /* Positioned(
                       bottom: 20,
                       child: GestureDetector(
-                        onTap: _toggleNotification, // Toggle the notification screen
-                        child: Container(
+                        onTap: ()async{
+
+                          },
+                          // _toggleNotification,
+                          child: Container(
                           width: MediaQuery.sizeOf(context).width,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(
-                                    0, 5), // changes position of shadow
-                              ),
-                            ],
-                            border: Border.all(
-                              color: Color(0xff6069FF),
-                              width: 6,
-                            ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                          BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(
+                          0, 5), // changes position of shadow
+                          ),
+                          ],
+                          border: Border.all(
+                          color: Color(0xff6069FF),
+                          width: 6,
+                          ),
                           ),
                           child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                          decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.white,
                                 width: 2,
@@ -624,7 +653,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                           ),
                         ),
                       ),
-                    ),
+                    ),*/
                   ],
                 ),
                 if (!isOnline) // Show Offline button when the user is offline
@@ -643,7 +672,10 @@ class _DriverHomePageState extends State<DriverHomePage>
                         ),
                         onPressed: () async {
                           setState(() {
-                            isOnline = !isOnline;
+                            driverOnlineModeChange();
+                            isOnline = true;
+                            _saveDriverStatus(isOnline);
+                            _handleDriverRequest();
                           });
                         },
                         child: Row(
@@ -676,7 +708,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                         ),
                         onPressed: () async {
                           setState(() {
-                            isOnline = !isOnline;
+                            driverOfflineModeChange();
+                            isOnline = false;
+                            _saveDriverStatus(isOnline);
                           });
                         },
                         child: Row(
@@ -708,6 +742,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                   distanceToDropPoints: dropPointsDistance ?? [],
                   timeToDrop: timeToDrop??'',
                   timeToPickup: timeToPickup??'',
+                  partnerId: widget.partnerId,
+                  mode: widget.mode,
+                  bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
                 )
               ),
           ],
