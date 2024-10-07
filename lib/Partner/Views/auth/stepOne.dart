@@ -200,7 +200,7 @@ class _StepOneState extends State<StepOne> {
                 _buildUnitClassificationDropdown(),
                 _buildSubClassificationDropdown(),
                 _buildTextField('Plate Information',plateInfoController),
-                _buildTextField('Istimara no',istimaraNoController),
+                commonWidgets.buildTextField('Istimara no',istimaraNoController),
                 _buildIstimaraFileUploadButton('Istimara Card'),
                 _buildVehicleFileUploadButton('Picture of Vehicle'),
                 Container(

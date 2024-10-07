@@ -19,15 +19,17 @@ class StepThree extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String email;
+  final String password;
+  final String confirmPassword;
   final String mobileNo;
-  final String dateOfBirth;
+  final DateTime dateOfBirth;
   final String iqamaNo;
   final String panelInformation;
   final String token;
   final PlatformFile? drivingLicense;
   final PlatformFile? nationalID;
   final PlatformFile? aramcoLicense;
-  const StepThree({super.key, required this.partnerName, required this.firstName, required this.lastName, required this.email, required this.mobileNo, required this.iqamaNo, this.drivingLicense, this.nationalID, this.aramcoLicense, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.dateOfBirth, required this.panelInformation, required this.partnerId, required this.token});
+  const StepThree({super.key, required this.partnerName, required this.firstName, required this.lastName, required this.email, required this.mobileNo, required this.iqamaNo, this.drivingLicense, this.nationalID, this.aramcoLicense, required this.unitType, required this.unitClassification, required this.subClassification, required this.plateInformation, required this.istimaraNo, this.istimaraCard, this.pictureOfVehicle, required this.dateOfBirth, required this.panelInformation, required this.partnerId, required this.token, required this.password, required this.confirmPassword});
 
   @override
   State<StepThree> createState() => _StepThreeState();
@@ -61,52 +63,67 @@ class _StepThreeState extends State<StepThree> {
   }
 
   Future<void> _submitForm() async {
-    print('sssssssssssssssSending data:');
-    print('partnerName: $widget.partnerName');
-    print('unitType: $widget.unitType');
-    print('unitClassification: $widget.unitClassification');
-    print('subClassification: $widget.subClassification');
-    print('plateInformation: $widget.plateInformation');
-    print('istimaraNo: $widget.istimaraNo');
-    print('firstName: $widget.firstName');
-    print('lastName: $widget.lastName');
-    print('email: $widget.email');
-    print('mobileNo: $widget.mobileNo');
-    print('dateOfBirth: $widget.dateOfBirth');
-    print('iqamaNo: $widget.iqamaNo');
-    print('panelInformation: $widget.panelInformation');
-    print('id: $widget.partnerId');
-    setState(() {
-      isLoading = true;
-    });
-    await _authService.addOperator(
-      context,
-      partnerName: partnerNameController.text,
-      partnerId: widget.partnerId,
-      token: widget.token,
-      unitType: widget.unitType,
-      unitClassification: widget.unitClassification,
-      subClassification: widget.subClassification,
-      plateInformation: widget.plateInformation,
-      istimaraNo: widget.istimaraNo,
-      istimaraCard: widget.istimaraCard,
-      pictureOfVehicle: widget.pictureOfVehicle,
-      firstName: widget.firstName,
-      lastName: widget.lastName,
-      email: widget.email,
-      mobileNo: widget.mobileNo,
-      dateOfBirth: widget.dateOfBirth,
-      iqamaNo: widget.iqamaNo,
-      panelInformation: widget.panelInformation,
-      drivingLicense: widget.drivingLicense,
-      nationalID: widget.nationalID,
-      aramcoLicense: widget.aramcoLicense,
-      stepThreeInstance: widget,
-      controller: partnerNameController,
-    );
-    setState(() {
-      isLoading = false;
-    });
+    try{
+      print('sssssssssssssssSending data:');
+      print('partnerName: ${widget.partnerName}');
+      print('unitType: ${widget.unitType}');
+      print('unitClassification: ${widget.unitClassification}');
+      print('subClassification: ${widget.subClassification}');
+      print('plateInformation: ${widget.plateInformation}');
+      print('istimaraNo: ${widget.istimaraNo}');
+      print('firstName: ${widget.firstName}');
+      print('lastName: ${widget.lastName}');
+      print('email: ${widget.email}');
+      print('mobileNo: ${widget.mobileNo}');
+      print('dateOfBirth: ${widget.dateOfBirth}');
+      print('iqamaNo: ${widget.iqamaNo}');
+      print('panelInformation: ${widget.panelInformation}');
+      print('id: ${widget.partnerId}');
+      print('id: ${widget.istimaraCard}');
+      print('id: ${widget.pictureOfVehicle}');
+      print('id: ${widget.partnerId}');
+      print('id: ${widget.drivingLicense}');
+      print('id: ${widget.nationalID}');
+      print('id: ${widget.aramcoLicense}');
+      setState(() {
+        isLoading = true;
+      });
+      await _authService.addOperator(
+        context,
+        partnerName: partnerNameController.text,
+        partnerId: widget.partnerId,
+        token: widget.token,
+        unitType: widget.unitType,
+        unitClassification: widget.unitClassification,
+        subClassification: widget.subClassification,
+        plateInformation: widget.plateInformation,
+        istimaraNo: widget.istimaraNo,
+        istimaraCard: widget.istimaraCard,
+        pictureOfVehicle: widget.pictureOfVehicle,
+        firstName: widget.firstName,
+        lastName: widget.lastName,
+        email: widget.email,
+        password: widget.password,
+        confirmPassword: widget.confirmPassword,
+        mobileNo: widget.mobileNo,
+        dateOfBirth: widget.dateOfBirth,
+        iqamaNo: widget.iqamaNo,
+        panelInformation: widget.panelInformation,
+        drivingLicense: widget.drivingLicense,
+        nationalID: widget.nationalID,
+        aramcoLicense: widget.aramcoLicense,
+        stepThreeInstance: widget,
+        controller: partnerNameController,
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }catch (e) {
+      // Handle unexpected errors
+      print('Error: $e');
+      // Optionally show a user-friendly error message
+    }
+
   }
 
   @override

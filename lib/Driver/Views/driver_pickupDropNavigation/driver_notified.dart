@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_droppingProduct.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
@@ -176,6 +175,25 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
         await fetchNearbyPlaces(currentLatLng);
 
         String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+
+        String reverseGeocodeUrl =
+            'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
+        final reverseGeocodeResponse = await http.get(Uri.parse(reverseGeocodeUrl));
+
+        String currentLocationName = 'Unknown Location'; // Default value
+
+        if (reverseGeocodeResponse.statusCode == 200) {
+          final reverseGeocodeData = json.decode(reverseGeocodeResponse.body);
+
+          if (reverseGeocodeData['status'] == 'OK') {
+            final currentAddress = reverseGeocodeData['results']?[0]['formatted_address'];
+            currentPlace = currentAddress;
+            if (currentAddress != null) {
+              currentLocationName = currentAddress;
+              print('Current Location Name: $currentLocationName');
+            }
+          }
+        }
         String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${dropLatLng.latitude},${dropLatLng.longitude}&key=$apiKey';
         final directionsResponse = await http.get(Uri.parse(directionsUrl));
 
@@ -184,7 +202,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
           if (directionsData['status'] == 'OK') {
             final durationToDrop = directionsData['routes'][0]['legs'][0]['duration']['text'];
             final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
-            currentPlace = placeName;
             // Check if the widget is still mounted before calling setState()
             if (mounted) {
               setState(() {
@@ -523,38 +540,29 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
     print('Current LatLng: $currentLatLng');
     print('Drop LatLng: $dropPointLatLng');
 
-    // Calculate the distance to drop in kilometers
     double distanceToDropInKm = _haversineDistance(currentLatLng, dropPointLatLng!);
+    // 1 kilometer = 0.621371 miles
+    // 1 mile = 5280 feet
+    // Therefore, 1 kilometer = 3280.84 feet
+    // Convert kilometers to feet (1 km = 3280.84 feet)
+    double distanceInFeet = distanceToDropInKm * 3280.84;
 
-    // Format distance as feet using formatDistance function
-    String formattedDistanceToDrop = formatDistance(distanceToDropInKm);
-
-    // Extract the feet value from the formatted string
-    double distanceInFeet = double.tryParse(formattedDistanceToDrop.split(' ')[0]) ?? 0.0;
-
-    // Debugging log
     print('Distance to Drop in Feet: $distanceInFeet');
 
-    // Check if the distance is less than or equal to 3000 feet
+
     if (distanceInFeet <= 30 && !hasNavigated) {
-      hasNavigated = true; // Prevent multiple navigations
+      hasNavigated = true;
 
       if (mounted) {
         setState(() {
           isAtDropLocation = true;
         });
         print('Navigating to CustomerNotified');
-        // Perform your navigation logic here
       }
     } else {
       print('Current location is more than 3000 feet from pickup location or already navigated.');
     }
   }
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -743,44 +751,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                     ),
                   )
                 ),
-                /*Positioned(
-                    top: MediaQuery.sizeOf(context).height * 0.1,
-                    child: Container(
-                      margin: EdgeInsets.only(left: 20),
-                      width: MediaQuery.sizeOf(context).width * 0.92,
-                      height: MediaQuery.sizeOf(context).height * 0.13,
-                      child: Card(
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 50,right: 50,top: 15),
-                                    child: Column(
-                                      children: [
-                                        SvgPicture.asset('assets/notified.svg'),
-                                        Text('0 ft'),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    children: [
-                                      Text('XXXXXXXXX',style: TextStyle(fontSize: 16,color: Color(0xff676565))),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                ),*/
-        // Only show the Move button if isAtPickupLocation is false
         if (!isAtDropLocation)
           Positioned(
       bottom: MediaQuery.sizeOf(context).height * 0.27,
@@ -875,7 +845,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
-                      'Dropping off Product',
+                      'Dropping of Product',
                       style: TextStyle(fontSize: 20, color: Color(0xff676565)),
                     ),
                   ),

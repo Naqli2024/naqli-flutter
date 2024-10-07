@@ -352,34 +352,41 @@ class UserService{
       print('Full Response Body: $responseBody');
 
       if (response.statusCode == 200) {
-        print('Login successful');
-        final message = responseBody['message'] ?? 'Login Failed';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-
         final userData = responseBody['data']['user'];
         final tokenData = responseBody['data'];
-
         if (userData != null) {
           final firstName = userData['firstName'] ?? '';
           final lastName = userData['lastName'] ?? '';
           final token = tokenData['token'] ?? '';
           final id = userData['_id'] ?? '';
+          final accountType = userData['accountType'] ?? '';
           print(userData);
 
-          // Show CircularProgressIndicator while navigating
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => UserType(
-                firstName: firstName,
-                lastName: lastName,
-                token: token,
-                id: id,
-              ),
-            ),
-          );
-          await saveUserData(firstName, lastName, token, id);
+          if(accountType == 'Single User')
+            {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => UserType(
+                    firstName: firstName,
+                    lastName: lastName,
+                    token: token,
+                    id: id,
+                  ),
+                ),
+              );
+              print('Login successful');
+              final message = responseBody['message'] ?? 'Login Failed';
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(message)),
+              );
+              await saveUserData(firstName, lastName, token, id);
+            }
+          else{
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Only "Single User" can allowed...')),
+            );
+          }
+
         } else {
           print('User data is null');
         }
@@ -1019,7 +1026,7 @@ class UserService{
     }
   }*/
 
-  Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token) async {
+  Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token,String bookingId) async {
     try {
       final response = await http.get(
         Uri.parse('${baseUrl}partner/$partnerId'),
@@ -1063,14 +1070,12 @@ class UserService{
               final bookingRequests = partnerData['bookingRequest'] ?? [];
               if (bookingRequests.isNotEmpty) {
                 for (var booking in bookingRequests) {
+                  if (booking['bookingId'] == bookingId) {
                   final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
                   final paymentStatus = booking['paymentStatus']?.toString() ?? 'Unknown Payment Status';
                   final assignedOperator = booking['assignedOperator'] ?? {};
-
-                  // If assignedOperator matches the current booking's bookingId
-                  if (assignedOperator['bookingId'] == bookingId) {
-                    final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
-                    final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
+                  final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
+                  final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
 
                     print('Operator for Booking ID $bookingId: $assignOperatorName, Mobile: $assignOperatorMobileNo');
 

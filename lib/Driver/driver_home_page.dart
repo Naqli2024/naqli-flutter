@@ -6,9 +6,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
+import 'package:flutter_naqli/Driver/Views/driver_addresNavigation/driver_addressNotification.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
-import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_accept.dart';
-import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_notification.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notification.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
@@ -55,13 +55,16 @@ class _DriverHomePageState extends State<DriverHomePage>
   List<double>? dropPointsDistance;
   String? timeToPickup;
   String? timeToDrop;
+  String? bookingId;
+  String cityName = '';
+  String bookingStatus = '';
   LatLng currentLatLng = LatLng(37.7749, -122.4194);
   StreamSubscription<Position>? positionStream;
   double currentHeading = 0.0;
   BitmapDescriptor? customIcon;
   Map<String, dynamic>? bookingRequestData;
-  Future<Map<String, dynamic>?>? booking;
   bool isLoading = false;
+  Map<String, dynamic>? booking;
 
   @override
   void initState() {
@@ -81,11 +84,11 @@ class _DriverHomePageState extends State<DriverHomePage>
     fetchCoordinates();
     _loadDriverStatus();
     _fetchBookingRequest();
+    _fetchBookingDetails();
     print(widget.partnerId);
     print(widget.id);
     print(widget.mode);
   }
-
 
   @override
   void dispose() {
@@ -96,59 +99,22 @@ class _DriverHomePageState extends State<DriverHomePage>
     super.dispose();
   }
 
-  double _haversineDistance(LatLng start, LatLng end) {
-    const double earthRadius = 6371.0; // Earth's radius in kilometers
-    final double dLat = _degreesToRadians(end.latitude - start.latitude);
-    final double dLon = _degreesToRadians(end.longitude - start.longitude);
+  Future<void> _fetchBookingDetails() async {
+    final bookingData = await driverService.fetchBookingDetails(bookingId??'', widget.token);
 
-    final double a =
-        (sin(dLat / 2) * sin(dLat / 2)) +
-            cos(_degreesToRadians(start.latitude)) *
-                cos(_degreesToRadians(end.latitude)) *
-                sin(dLon / 2) *
-                sin(dLon / 2);
+    // Debugging: Print the response
+    print("Fetched Booking Data: $bookingData");
 
-    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return earthRadius * c;
+    setState(() {
+      booking = bookingData;
+      cityName =booking?['cityName'];
+      bookingStatus =booking?['bookingStatus'];
+      print('cityName-----$cityName');
+    });
   }
 
   double _degreesToRadians(double degrees) {
     return degrees * (pi / 180);
-  }
-
-  List<LatLng> _decodePolyline(String polyline) {
-    List<LatLng> points = [];
-    int index = 0;
-    int len = polyline.length;
-    int lat = 0;
-    int lng = 0;
-
-    while (index < len) {
-      int shift = 0;
-      int result = 0;
-      int b;
-      do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lng += dlng;
-
-      points.add(LatLng(lat / 1E5, lng / 1E5));
-    }
-
-    return points;
   }
 
   Future<void> _checkPermissionsAndFetchLocation() async {
@@ -269,68 +235,6 @@ class _DriverHomePageState extends State<DriverHomePage>
     }
   }
 
-
-
-
-  void _showDistanceSnackbar(LatLng point, List<LatLng> otherPoints) {
-    double totalDistance = 0;
-
-    for (LatLng otherPoint in otherPoints) {
-      totalDistance += _haversineDistance(point, otherPoint);
-    }
-    distance = '${totalDistance.toStringAsFixed(2)}';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Total Distance: ${totalDistance.toStringAsFixed(2)} km'),
-    ));
-  }
-
-  void _moveCameraToFitAllMarkers() {
-    if (mapController != null) {
-      LatLngBounds bounds;
-      if (dropLatLngs.isNotEmpty) {
-        bounds = _calculateBounds();
-      } else {
-        bounds = LatLngBounds(
-          southwest: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
-          northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
-        );
-      }
-      mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
-    }
-  }
-
-  LatLngBounds _calculateBounds() {
-    if (pickupLatLng == null) {
-      throw Exception('pickupLatLng is null');
-    }
-
-    double southWestLat = [
-      pickupLatLng!.latitude,
-      ...dropLatLngs.map((latLng) => latLng.latitude)
-    ].reduce((a, b) => a < b ? a : b);
-
-    double southWestLng = [
-      pickupLatLng!.longitude,
-      ...dropLatLngs.map((latLng) => latLng.longitude)
-    ].reduce((a, b) => a < b ? a : b);
-
-    double northEastLat = [
-      pickupLatLng!.latitude,
-      ...dropLatLngs.map((latLng) => latLng.latitude)
-    ].reduce((a, b) => a > b ? a : b);
-
-    double northEastLng = [
-      pickupLatLng!.longitude,
-      ...dropLatLngs.map((latLng) => latLng.longitude)
-    ].reduce((a, b) => a > b ? a : b);
-
-    return LatLngBounds(
-      southwest: LatLng(southWestLat, southWestLng),
-      northeast: LatLng(northEastLat, northEastLng),
-    );
-  }
-
-
   double calculateDistance(LatLng a, LatLng b) {
     const double R = 6371; // Radius of Earth in kilometers
     double lat1 = a.latitude * pi / 180;
@@ -344,7 +248,6 @@ class _DriverHomePageState extends State<DriverHomePage>
 
     return R * c; // Distance in kilometers
   }
-
 
   void _toggleNotification() {
     setState(() {
@@ -398,6 +301,8 @@ class _DriverHomePageState extends State<DriverHomePage>
         // Set the fetched data to state
         setState(() {
           bookingRequestData = data;
+          bookingId = (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString();
+          print(booking);
         });
       } else {
         print("No booking request data available.");
@@ -515,241 +420,227 @@ class _DriverHomePageState extends State<DriverHomePage>
       ),
       body:  isLoading
           ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      height: MediaQuery.sizeOf(context).height * 0.78,
-                      child: GoogleMap(
-                        mapType: MapType.normal,
-                        onMapCreated: (GoogleMapController controller) {
-                          mapController = controller;
-                        },
-                        initialCameraPosition: const CameraPosition(
-                          target: LatLng(0, 0), // Default position
-                          zoom: 40,
+          : RefreshIndicator(
+              onRefresh: ()async{
+                _fetchBookingRequest();
+              },
+            child: SingleChildScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+           child: Stack(
+            children: [
+              Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        height: MediaQuery.sizeOf(context).height * 0.78,
+                        child: GoogleMap(
+                          mapType: MapType.normal,
+                          onMapCreated: (GoogleMapController controller) {
+                            mapController = controller;
+                          },
+                          initialCameraPosition: const CameraPosition(
+                            target: LatLng(0, 0), // Default position
+                            zoom: 40,
+                          ),
+                          markers: Set<Marker>.of(markers),
+                          polylines: Set<Polyline>.of(polylines),
+                          myLocationEnabled: false,
+                          myLocationButtonEnabled: true,
+                          gestureRecognizers: Set()
+                            ..add(Factory<PanGestureRecognizer>(
+                                  () => PanGestureRecognizer(),
+                            ))
+                            ..add(Factory<TapGestureRecognizer>(
+                                  () => TapGestureRecognizer(),
+                            )),
                         ),
-                        markers: Set<Marker>.of(markers),
-                        polylines: Set<Polyline>.of(polylines),
-                        myLocationEnabled: false,
-                        myLocationButtonEnabled: true,
-                        gestureRecognizers: Set()
-                          ..add(Factory<PanGestureRecognizer>(
-                                () => PanGestureRecognizer(),
-                          ))
-                          ..add(Factory<TapGestureRecognizer>(
-                                () => TapGestureRecognizer(),
-                          )),
                       ),
-                    ),
-                    Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10, right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(
-                                        0, 5), // changes position of shadow
-                                  ),
-                                ],
-                              ),
-                              child: Builder(
-                                builder: (context) => Center(
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.white,
-                                    child: IconButton(
-                                      onPressed: () {
-                                        Scaffold.of(context).openDrawer();
-                                      },
-                                      icon: const Icon(Icons.menu),
+                      Positioned(
+                        top: 15,
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width,
+                          padding: const EdgeInsets.only(left: 10, right: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(
+                                          0, 5), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
+                                child: Builder(
+                                  builder: (context) => Center(
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.white,
+                                      child: IconButton(
+                                        onPressed: () {
+                                          Scaffold.of(context).openDrawer();
+                                        },
+                                        icon: const Icon(Icons.menu),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(
-                                        0, 5), // changes position of shadow
-                                  ),
-                                ],
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(
+                                          0, 5), // changes position of shadow
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.white,
+                                  child: IconButton(
+                                      onPressed: () {
+                                        // Navigator.push(context,
+                                        //     MaterialPageRoute(builder: (context) => OrderAccept()));
+                                      },
+                                      icon: Icon(Icons.search)),
+                                ),
                               ),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: () {
-                                      // Navigator.push(context,
-                                      //     MaterialPageRoute(builder: (context) => OrderAccept()));
-                                    },
-                                    icon: Icon(Icons.search)),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                   /* Positioned(
-                      bottom: 20,
-                      child: GestureDetector(
-                        onTap: ()async{
-
+                    ],
+                  ),
+                  if (!isOnline)
+                    Container(
+                      margin: const EdgeInsets.only(top: 30, bottom: 20),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.07,
+                        width: MediaQuery.of(context).size.width * 0.45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Color(0xff6069FF)),
+                            ),
+                          ),
+                          onPressed: () async {
+                            await _fetchBookingDetails();
+                            setState(() {
+                              driverOnlineModeChange();
+                              isOnline = true;
+                              _saveDriverStatus(isOnline);
+                              _handleDriverRequest();
+                            });
                           },
-                          // _toggleNotification,
-                          child: Container(
-                          width: MediaQuery.sizeOf(context).width,
-                          decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                          BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(
-                          0, 5), // changes position of shadow
-                          ),
-                          ],
-                          border: Border.all(
-                          color: Color(0xff6069FF),
-                          width: 6,
-                          ),
-                          ),
-                          child: Container(
-                          decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              SvgPicture.asset('assets/carOffline.svg', height: 35),
+                              Text(
+                                'Offline',
+                                style:
+                                TextStyle(fontSize: 23, color: Colors.black),
                               ),
-                            ),
-                            child: CircleAvatar(
-                                minRadius: 45,
-                                maxRadius: double.maxFinite,
-                                backgroundColor: Color(0xff6069FF),
-                                child: Text(
-                                  'Move',
-                                  style:
-                                  TextStyle(color: Colors.white, fontSize: 20),
-                                )),
+                            ],
                           ),
-                        ),
-                      ),
-                    ),*/
-                  ],
-                ),
-                if (!isOnline) // Show Offline button when the user is offline
-                  Container(
-                    margin: const EdgeInsets.only(top: 30, bottom: 20),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.07,
-                      width: MediaQuery.of(context).size.width * 0.45,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Color(0xff6069FF)),
-                          ),
-                        ),
-                        onPressed: () async {
-                          setState(() {
-                            driverOnlineModeChange();
-                            isOnline = true;
-                            _saveDriverStatus(isOnline);
-                            _handleDriverRequest();
-                          });
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            SvgPicture.asset('assets/carOffline.svg', height: 35),
-                            Text(
-                              'Offline',
-                              style:
-                              TextStyle(fontSize: 23, color: Colors.black),
-                            ),
-                          ],
                         ),
                       ),
                     ),
-                  ),
-                if (isOnline)
-                  Container(
-                    margin: const EdgeInsets.only(top: 30, bottom: 20),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.07,
-                      width: MediaQuery.of(context).size.width * 0.45,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xff6069FF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(color: Color(0xff6069FF)),
-                          ),
-                        ),
-                        onPressed: () async {
-                          setState(() {
-                            driverOfflineModeChange();
-                            isOnline = false;
-                            _saveDriverStatus(isOnline);
-                          });
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Text(
-                              'Online',
-                              style:
-                              TextStyle(fontSize: 23, color: Colors.black),
+                  if (isOnline)
+                    Container(
+                      margin: const EdgeInsets.only(top: 30, bottom: 20),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.07,
+                        width: MediaQuery.of(context).size.width * 0.45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xff6069FF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Color(0xff6069FF)),
                             ),
-                            SvgPicture.asset('assets/carOnline.svg', height: 35),
-                          ],
+                          ),
+                          onPressed: () async {
+                            setState(() {
+                              driverOfflineModeChange();
+                              isOnline = false;
+                              _saveDriverStatus(isOnline);
+                            });
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text(
+                                'Online',
+                                style:
+                                TextStyle(fontSize: 23, color: Colors.black),
+                              ),
+                              SvgPicture.asset('assets/carOnline.svg', height: 35),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            // SlideTransition widget for notification screen
-            if (_showNotification)
-              SlideTransition(
-                position: _slideAnimation,
-                child: DriverNotification(
-                    firstName: widget.firstName,
-                    lastName: widget.lastName,
-                    token: widget.token,
-                    id: widget.id,
-                  distanceToPickup: pickUpDistance ?? 0.0,
-                  distanceToDropPoints: dropPointsDistance ?? [],
-                  timeToDrop: timeToDrop??'',
-                  timeToPickup: timeToPickup??'',
-                  partnerId: widget.partnerId,
-                  mode: widget.mode,
-                  bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
-                )
+                ],
               ),
-          ],
-        ),
-      ),
+              _buildNotification()
+            ],
+                    ),
+                  ),
+          ),
     );
+  }
+
+  Widget _buildNotification() {
+    if (_showNotification)
+
+    // Determine the notification type based on bookingStatus and cityName
+    if (bookingStatus != 'Completed') {
+      return cityName.isEmpty
+          ? SlideTransition(
+        position: _slideAnimation,
+        child: DriverNotification(
+          firstName: widget.firstName,
+          lastName: widget.lastName,
+          token: widget.token,
+          id: widget.id,
+          distanceToPickup: pickUpDistance ?? 0.0,
+          distanceToDropPoints: dropPointsDistance ?? [],
+          timeToDrop: timeToDrop ?? '',
+          timeToPickup: timeToPickup ?? '',
+          partnerId: widget.partnerId,
+          mode: widget.mode,
+          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+        ),
+      )
+          : SlideTransition(
+        position: _slideAnimation,
+        child: DriverAddressNotification(
+          firstName: widget.firstName,
+          lastName: widget.lastName,
+          token: widget.token,
+          id: widget.id,
+          distanceToPickup: pickUpDistance ?? 0.0,
+          timeToPickup: timeToPickup ?? '',
+          partnerId: widget.partnerId,
+          mode: widget.mode,
+          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+        ),
+      );
+    } else {
+       commonWidgets.showToast('Booking Completed...');
+    }
+    return Container();
   }
 }

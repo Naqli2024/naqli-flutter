@@ -14,11 +14,11 @@ class _RoleState extends State<Role> {
   String _getRoleString(int value) {
     switch (value) {
       case 1:
-        return 'enterprise';
+        return 'singleUnit + operator';
       case 2:
         return 'multipleUnits';
       case 3:
-        return 'singleUnit + operator';
+        return 'enterprise';
       case 4:
         return 'operator';
       default:

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_notification.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';

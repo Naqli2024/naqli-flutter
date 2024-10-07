@@ -31,6 +31,7 @@ class _UserLoginState extends State<UserLogin> {
   bool isLoading = false;
   bool isNewPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
+  bool isPasswordObscured = true;
 
   @override
   void dispose() {
@@ -189,8 +190,18 @@ class _UserLoginState extends State<UserLogin> {
                                               padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
                                               child: TextFormField(
                                                 controller: passwordController,
-                                                obscureText: true,
+                                                obscureText: isPasswordObscured,
                                                 decoration: InputDecoration(
+                                                  suffixIcon: IconButton(
+                                                    icon: Icon(
+                                                      isPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                                                    ),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        isPasswordObscured = !isPasswordObscured;
+                                                      });
+                                                    },
+                                                  ),
                                                   border: OutlineInputBorder(
                                                     borderSide: const BorderSide(
                                                         color: Color(0xffBCBCBC), width: 2),

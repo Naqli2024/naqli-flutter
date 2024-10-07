@@ -22,6 +22,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
   final AuthService _authService = AuthService();
   final CommonWidgets commonWidgets = CommonWidgets();
   String paymentType ='';
+  String bookingType ='';
   @override
   void initState() {
     super.initState();
@@ -52,12 +53,19 @@ class _PaymentDetailsState extends State<PaymentDetails> {
       for (var booking in bookingIds) {
         final bookingId = booking['bookingId'] as String;
         final paymentStatus = booking['paymentStatus'] as String;
+
         paymentType = paymentStatus;
         try {
           print('Fetching details for booking ID: $bookingId');
           final details = await _authService.getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
           print('Details retrieved: $details');
+
+          bookingType = details['bookingStatus'];
+
+          // Only add the details if there is a valid response
           if (details.isNotEmpty) {
+            details['paymentType'] = paymentType;
+            details['bookingType'] = bookingType;
             bookingDetails.add(details);
           } else {
             print("No details found for booking ID $bookingId.");
@@ -74,11 +82,19 @@ class _PaymentDetailsState extends State<PaymentDetails> {
     }
   }
 
+
   List<Map<String, dynamic>> _filterBookings(List<Map<String, dynamic>> bookings) {
     if (_currentFilter == 'All') {
       return bookings;
-    }
-    return bookings.where((booking) => booking['paymentStatus'] == _currentFilter).toList();
+    } else if (_currentFilter == 'Completed') {
+      // Return both Paid and Completed bookings
+      return bookings.where((booking) => booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid' || booking['bookingStatus'] == 'Completed').toList();
+    }else if(_currentFilter == 'Pending')
+      {
+        return bookings.where((booking) => booking['paymentStatus'] == 'NotPaid' || booking['paymentStatus'] == 'Pending' || booking['bookingStatus'] == 'HalfPaid').toList();
+      }
+    return bookings;
+    // return bookings.where((booking) => booking['paymentStatus'] == _currentFilter).toList();
   }
 
   void _updateFilter(String filter) {
@@ -258,60 +274,62 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                   ),
                 ),
               ),
-              Container(
-                color: const Color(0xff6A66D1),
-                height: 60,
-                width: MediaQuery.sizeOf(context).width,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _updateFilter('All'),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 30),
-                        child: Text(
-                          'All',
-                          style: TextStyle(
-                            color: _currentFilter == 'All' ? Colors.white : Color(0xffC2BFF2),
-                            fontSize: 15,
-                          ),
-                        ),
+          Container(
+            color: const Color(0xff6A66D1),
+            height: 60,
+            width: MediaQuery.sizeOf(context).width,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _updateFilter('All');
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 30),
+                    child: Text(
+                      'All',
+                      style: TextStyle(
+                        color: _currentFilter == 'All' ? Colors.white : Color(0xffC2BFF2),
+                        fontSize: 15,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => _updateFilter('Completed'),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Completed',
-                          style: TextStyle(
-                            color: _currentFilter == 'Completed' ? Colors.white : Color(0xffC2BFF2),
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        paymentType =='Pending'
-                        ? _updateFilter('Pending')
-                        : _updateFilter('HalfPaid');
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 30),
-                        child: Text(
-                          'Pending Payment',
-                          style: TextStyle(
-                            color: _currentFilter == 'Pending Payment' ? Colors.white : Color(0xffC2BFF2),
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                GestureDetector(
+                  onTap: () {
+                    _updateFilter('Completed');  // Only passing 'Completed'
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Completed',
+                      style: TextStyle(
+                        color: _currentFilter == 'Completed' ? Colors.white : Color(0xffC2BFF2),
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    _updateFilter('Pending');  // Only passing 'Pending Payment'
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 30),
+                    child: Text(
+                      'Pending Payment',
+                      style: TextStyle(
+                        color: _currentFilter == 'Pending' ? Colors.white : Color(0xffC2BFF2),
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ],
           ),
         ),
       ),

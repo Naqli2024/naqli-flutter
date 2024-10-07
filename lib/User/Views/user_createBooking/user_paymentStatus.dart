@@ -116,6 +116,7 @@ class PaymentCompleted extends StatefulWidget {
   final String selectedType;
   final String id;
   final String partnerId;
+  final String bookingStatus;
   const PaymentCompleted(
       {super.key,
       required this.bookingId,
@@ -134,7 +135,7 @@ class PaymentCompleted extends StatefulWidget {
       required this.lastName,
       required this.selectedType,
       required this.id,
-      required this.partnerId});
+      required this.partnerId, required this.bookingStatus});
 
   @override
   State<PaymentCompleted> createState() => _PaymentCompletedState();
@@ -162,7 +163,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
 
   Future<void> fetchPartnerData() async {
     try {
-      final data = await userService.getPartnerData(widget.partnerId, widget.token);
+      final data = await userService.getPartnerData(widget.partnerId, widget.token,widget.bookingId);
 
       print('Fetched Partner Data: $data');
 
@@ -522,150 +523,160 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
         User: widget.firstName +' '+ widget.lastName,
         showLeading: false
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.4,
-                  child: GoogleMap(
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 1,
-                    ),
-                    markers: markers,
-                    polylines: polylines,
-                  ),
-                ),
-                Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      // padding: const EdgeInsets.only(left: 35, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(80),
-                            ),
-                            color: Colors.white,
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 15),
-                                      child: Image.asset(
-                                          'assets/moving_truck.png'),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                          alignment: Alignment.center,
-                                          // height: 50,
-                                          width:
-                                              MediaQuery.sizeOf(context).width *
-                                                  0.55,
-                                          child: Column(
-                                            children: [
-                                              Text('Booking Id'),
-                                              Text(widget.bookingId),
-                                            ],
-                                          )),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              UserType(
-                                                firstName: widget.firstName,
-                                                lastName: widget.lastName,
-                                                token: widget.token,
-                                                id: widget.id,
-                                              )));
-                                },
-                                icon: const Icon(FontAwesomeIcons.multiply)),
-                          ),
-                        ],
+      body: RefreshIndicator(
+        onRefresh: () async{
+          await fetchPartnerData();
+        },
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    height: MediaQuery.sizeOf(context).height * 0.4,
+                    child: GoogleMap(
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                      },
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(0, 0), // Default position
+                        zoom: 1,
                       ),
-                    )),
-              ],
-            ),
-            Container(
-              margin: EdgeInsets.only(
-                  top: MediaQuery.of(context).size.height * 0.03,
-                  left: 15,
-                  right: 15,
-                  bottom: 10),
-              child: Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  side: const BorderSide(
-                    color: Color(0xffE0E0E0), // Border color
-                    width: 1, // Border width
+                      markers: markers,
+                      polylines: polylines,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: partnerData == null
-                      ? Center(
-                          child: CircularProgressIndicator())
-                      : Column(
+                  Positioned(
+                      top: 15,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        // padding: const EdgeInsets.only(left: 35, right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildDetailRow('Vendor name',
-                                partnerData![0]['partnerName'] ?? 'Unknown'),
-                            Divider(),
-                            _buildDetailRow('Operator id',
-                                partnerData![0]['partnerId'] ?? 'Unknown'),
-                            Divider(),
-                            _buildDetailRow('Operator name',
-                              partnerData != null && partnerData!.isNotEmpty
-                                  ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                  ? (partnerData?[0]['operatorName'] ?? '')
-                                  : (partnerData?[0]['assignOperatorName'] ?? ''))
-                                  : 'No Data'),
-                            Divider(),
-                            _buildDetailRow(
-                                'Mode', partnerData![0]['mode'] ?? 'Unknown'),
-                            Divider(),
-                            _buildDetailRow('Booking status',
-                                partnerData![0]['paymentStatus'] ?? 'Pending'),
+                            Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(80),
+                              ),
+                              color: Colors.white,
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 15),
+                                        child: Image.asset(
+                                            'assets/moving_truck.png'),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Container(
+                                            alignment: Alignment.center,
+                                            // height: 50,
+                                            width:
+                                                MediaQuery.sizeOf(context).width *
+                                                    0.55,
+                                            child: Column(
+                                              children: [
+                                                Text('Booking Id'),
+                                                Text(widget.bookingId),
+                                              ],
+                                            )),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              child: IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                UserType(
+                                                  firstName: widget.firstName,
+                                                  lastName: widget.lastName,
+                                                  token: widget.token,
+                                                  id: widget.id,
+                                                )));
+                                  },
+                                  icon: const Icon(FontAwesomeIcons.multiply)),
+                            ),
                           ],
                         ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 15,bottom: 15),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
-                  ),
+                      )),
                 ],
               ),
-            )
-          ],
+              Container(
+                margin: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height * 0.03,
+                    left: 15,
+                    right: 15,
+                    bottom: 10),
+                child: Card(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(
+                      color: Color(0xffE0E0E0), // Border color
+                      width: 1, // Border width
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: partnerData == null
+                        ? Center(
+                            child: CircularProgressIndicator())
+                        : Column(
+                            children: [
+                              _buildDetailRow('Vendor name',
+                                  partnerData![0]['partnerName'] ?? 'Unknown'),
+                              Divider(),
+                              _buildDetailRow('Operator name',
+                                partnerData != null && partnerData!.isNotEmpty
+                                    ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                    ? (partnerData?[0]['operatorName'] ?? 'N/A')
+                                    : (partnerData?[0]['assignOperatorName'] ?? 'N/A'))
+                                    : 'No Data'),
+                              Divider(),
+                              _buildDetailRow('Operator mobile no',
+                                partnerData != null && partnerData!.isNotEmpty
+                                    ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                    ? (partnerData?[0]['mobileNo'] ?? 'N/A')
+                                    : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'))
+                                    : 'No Data',),
+                              Divider(),
+                              _buildDetailRow(
+                                  'Mode', partnerData![0]['mode'] ?? 'Unknown'),
+                              Divider(),
+                              _buildDetailRow('Booking status',
+                                  widget.bookingStatus),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 15,bottom: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

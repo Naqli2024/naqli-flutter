@@ -33,7 +33,7 @@ class _UserRegisterState extends State<UserRegister> {
   bool isConfirmPasswordObscured = true;
   String? selectedAccount;
   String? selectedId;
-  final List<String> accountItems = ['Single User', 'Super User', 'Enterprise User'];
+  final List<String> accountItems = ['Single User', 'Super User'];
   final List<String> govtIdItems = ['iqama No', 'national ID'];
   final UserService userService = UserService();
   final ScrollController _scrollController = ScrollController();

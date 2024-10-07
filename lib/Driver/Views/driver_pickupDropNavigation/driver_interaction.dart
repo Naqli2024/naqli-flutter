@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
-import 'package:flutter_naqli/Driver/Views/driver_navigation/driver_notified.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notified.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -776,20 +776,16 @@ class _DriverInteractionState extends State<DriverInteraction> {
       return;
     }
 
-    // Calculate the distance to pickup in kilometers
     double distanceToPickupInKm = _haversineDistance(currentLatLng, pickupLatLng!);
 
-    // Format the distance as feet using the formatDistance function
-    String formattedDistanceToPickup = formatDistance(distanceToPickupInKm);
-
-    // Extract the feet value from the formatted string
-    double distanceInFeet = double.tryParse(formattedDistanceToPickup.split(' ')[0]) ?? 0.0;
+    // Convert kilometers to feet (1 km = 3280.84 feet)
+    double distanceToPickupInFeet = distanceToPickupInKm * 3280.84;
 
     // Debugging log
-    print('Distance to Pickup in Feet: $distanceInFeet');
+    print('Distance to Pickup in Feet: $distanceToPickupInFeet');
 
     // Check if the distance is less than or equal to 1150 feet and hasn't navigated yet
-    if (distanceInFeet <= 50 && !hasNavigated) {
+    if (distanceToPickupInFeet <= 50 && !hasNavigated) {
       hasNavigated = true; // Prevent multiple navigations
 
       if (mounted) {

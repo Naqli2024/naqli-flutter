@@ -6,6 +6,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
 
 class UserOTP extends StatefulWidget {
   final String emailAddress;
@@ -103,7 +104,10 @@ class _UserOTPState extends State<UserOTP> {
                 )),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserHomePage()),
+                );
               },
               child: Container(
                 margin: const EdgeInsets.only(top: 0),

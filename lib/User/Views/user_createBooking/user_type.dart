@@ -183,6 +183,7 @@ class _UserTypeState extends State<UserType> {
                             unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
                             id: widget.id,
                             partnerId: bookingData['partner'] ?? '',
+                            bookingStatus: bookingData['bookingStatus'] ?? '',
                           )
                         ),
                       );

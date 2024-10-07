@@ -71,7 +71,7 @@ class _PaymentState extends State<Payment> {
               country: 'YOUR COUNTRY',
               line1: 'YOUR ADDRESS LINE 1',
               line2: 'YOUR ADDRESS LINE 2',
-              postalCode: 'YOUR POSTAL CODE',
+              postalCode: '',
               state: 'YOUR STATE',
             ),
           ),

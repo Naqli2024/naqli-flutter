@@ -22,10 +22,10 @@ class PartnerHomePage extends StatefulWidget {
 class _PartnerHomePageState extends State<PartnerHomePage> {
   @override
   Widget build(BuildContext context) {
-    Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: GestureDetector(
           onTap: (){
@@ -93,25 +93,31 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
               padding: const EdgeInsets.all(25.0),
               child: GestureDetector(
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const Role()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const Role()),
+                  );
                 },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Sign up now',
-                      style: TextStyle(
+                child: Container(
+                  color: Colors.transparent,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text(
+                        'Sign up now',
+                        style: TextStyle(
                           color: Color(0xff140303),
                           fontSize: 30,
-                          fontWeight: FontWeight.w500),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_outlined,
-                      color: Color(0xff140303),
-                      size: 40,
-                    )
-                  ],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_outlined,
+                        color: Color(0xff140303),
+                        size: 40,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -130,22 +136,25 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                       MaterialPageRoute(
                           builder: (context) => LoginPage(partnerName: widget.partnerName,mobileNo: widget.mobileNo,password: widget.password,token: widget.token, partnerId: widget.partnerId,)));
                 },
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Log in',
-                      style: TextStyle(
-                          color: Color(0xff140303),
-                          fontSize: 30,
-                          fontWeight: FontWeight.w500),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_outlined,
-                      color: Color(0xff140303),
-                      size: 40,
-                    )
-                  ],
+                child: Container(
+                  color: Colors.transparent,
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Log in',
+                        style: TextStyle(
+                            color: Color(0xff140303),
+                            fontSize: 30,
+                            fontWeight: FontWeight.w500),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_outlined,
+                        color: Color(0xff140303),
+                        size: 40,
+                      )
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -188,7 +197,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                           children: [
                             Container(
                                 alignment: Alignment.topLeft,
-                                child: Image.asset('assets/Truck.jpg')),
+                                child: SvgPicture.asset('assets/regular-trips.svg',height: 30,)),
                             Container(
                                 alignment: Alignment.centerLeft,
                                 padding: const EdgeInsets.only(top: 20),
@@ -216,7 +225,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                           children: [
                             Container(
                                 alignment: Alignment.centerLeft,
-                                child: Image.asset('assets/Earnings.jpg')),
+                                child: SvgPicture.asset('assets/better-earning.svg',height: 30,)),
                             Container(
                                 alignment: Alignment.centerLeft,
                                 padding: const EdgeInsets.only(top: 20),
@@ -245,7 +254,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                           children: [
                             Container(
                                 alignment: Alignment.centerLeft,
-                                child: Image.asset('assets/Payments.jpg')),
+                                child: SvgPicture.asset('assets/onTime-payment.svg',height: 30,)),
                             Container(
                                 alignment: Alignment.centerLeft,
                                 padding: const EdgeInsets.only(top: 20),

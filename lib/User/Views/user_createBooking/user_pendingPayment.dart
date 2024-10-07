@@ -77,9 +77,9 @@ class _PendingPaymentState extends State<PendingPayment> {
     print(widget.bookingId);
     print(widget.quotePrice);
     print(widget.oldQuotePrice);
-    widget.paymentStatus == 'HalfPaid'
-    ? null
-    :fetchPaymentData();
+    // widget.paymentStatus == 'HalfPaid'
+    // ? null
+    // :fetchPaymentData();
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
@@ -125,7 +125,7 @@ class _PendingPaymentState extends State<PendingPayment> {
               country: 'YOUR COUNTRY',
               line1: 'YOUR ADDRESS LINE 1',
               line2: 'YOUR ADDRESS LINE 2',
-              postalCode: 'YOUR POSTAL CODE',
+              postalCode: '',
               state: 'YOUR STATE',
             ),
           ),
@@ -184,6 +184,7 @@ class _PendingPaymentState extends State<PendingPayment> {
               unitTypeName: widget.unitTypeName,
               partnerId: widget.partnerId,
               size: widget.size,
+              bookingStatus: widget.bookingStatus,
             ),
           ),
         );
@@ -287,7 +288,7 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   Future<void> fetchPartnerData() async {
     try {
-      final data = await userService.getPartnerData(widget.partnerId, widget.token);
+      final data = await userService.getPartnerData(widget.partnerId, widget.token,widget.bookingId);
 
       // Log the fetched data to check what's being returned
       print('Fetched Partner Data: $data');
@@ -653,340 +654,346 @@ class _PendingPaymentState extends State<PendingPayment> {
       child: Scaffold(
         appBar: commonWidgets.commonAppBar(
           context,
-          User: widget.firstName +' '+ widget.lastName,
+          User: widget.firstName +' '+ widget.lastName,showLeading: false
         ),
-        body: SingleChildScrollView(
-          child: Stack(
-            children: [
-              Container(
-                height: MediaQuery.sizeOf(context).height * 0.4,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0), // Default position
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                )
-              ),
-              Positioned(
-                  top: 15,
-                  child: Container(
-                    width: MediaQuery.sizeOf(context).width,
-                    padding: const EdgeInsets.only(left: 10,right: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Container(
-                          decoration: ShapeDecoration(
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(80),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 10,right: 15),
-                                    child: Image.asset('assets/moving_truck.png'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                        alignment: Alignment.center,
-                                        // height: 50,
-                                        width: MediaQuery.sizeOf(context).width * 0.55,
-                                        child: Column(
-                                          children: [
-                                            Text('Booking Id'),
-                                            Text(widget.bookingId),
-                                          ],
-                                        )
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        CircleAvatar(
-                          backgroundColor: Colors.white,
-                          child: IconButton(
-                              onPressed: (){
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder:  (context) => UserType(
-                                        firstName: widget.firstName,
-                                        lastName: widget.lastName,
-                                        token: widget.token,
-                                        id: widget.id,
-                                      quotePrice: widget.quotePrice,
-                                    )));
-                              },
-                              icon: Icon(FontAwesomeIcons.multiply)),
-                        ),
-                      ],
+        body: RefreshIndicator(
+          onRefresh: () async{
+            await fetchPartnerData();
+          },
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Stack(
+              children: [
+                Container(
+                  height: MediaQuery.sizeOf(context).height * 0.4,
+                  child: GoogleMap(
+                    onMapCreated: (GoogleMapController controller) {
+                      mapController = controller;
+                    },
+                    initialCameraPosition: const CameraPosition(
+                      target: LatLng(0, 0), // Default position
+                      zoom: 1,
                     ),
-                  )),
-              /*widget.selectedType ==
-                  'vehicle' ||
-                  widget.selectedType ==
-                      'bus' ||
-                  widget.selectedType ==
-                      'equipment' ||
-                  widget.selectedType ==
-                      'special' ||
-                  widget.selectedType ==
-                      'others'
-              ?*/Center(
-                child: Column(
-                  children: [
-                    Container(
-                      // height: MediaQuery.sizeOf(context).height * 0.37,
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.sizeOf(context).height * 0.25,
-                          left: 15,
-                          right: 15,
-                          bottom: 10
-                      ),
-                      child: Container(
-                        decoration: ShapeDecoration(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            side: const BorderSide(
-                              color: Color(0xffE0E0E0), // Border color
-                              width: 1, // Border width
-                            ),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Vendor name',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData?[0]['partnerName'] ?? 'N/A',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Operator name',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData != null && partnerData!.isNotEmpty
-                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                            ? (partnerData?[0]['operatorName'] ?? '')
-                                            : (partnerData?[0]['assignOperatorName'] ?? ''))
-                                            : 'No Data',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Operator mobile No',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        partnerData != null && partnerData!.isNotEmpty
-                                            ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                            ? (partnerData?[0]['mobileNo'] ?? '')
-                                            : (partnerData?[0]['assignOperatorMobileNo'] ?? ''))
-                                            : 'No Data',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Unit',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        widget.unit,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Booking status',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        widget.bookingStatus,
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    widget.paymentStatus == 'HalfPaid'
-                    ?Column(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(left: 50,right: 50,top: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                'Pending Amount',
-                                style: TextStyle(fontSize: 21),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                '${widget.advanceOrPay} SAR',
-                                style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 20,left: 10),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.054,
-                            width: MediaQuery.of(context).size.width * 0.5,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6269FE),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                ),
-                                onPressed: (){
-                                  initiateStripePayment(
-                                      context,
-                                      'Completed',
-                                      widget.bookingId,
-                                      widget.advanceOrPay,
-                                      widget.partnerId
-                                  );
-                                },
-                                child: Text(
-                                  'Pay : ${widget.advanceOrPay} SAR',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                      ],
-                    )
-                     : Padding(
-                      padding: const EdgeInsets.only(top: 30),
+                    markers: markers,
+                    polylines: polylines,
+                  )
+                ),
+                Positioned(
+                    top: 15,
+                    child: Container(
+                      width: MediaQuery.sizeOf(context).width,
+                      padding: const EdgeInsets.only(left: 10,right: 10),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                          Container(
+                            decoration: ShapeDecoration(
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(80),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 10,right: 15),
+                                      child: Image.asset('assets/moving_truck.png'),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                          alignment: Alignment.center,
+                                          // height: 50,
+                                          width: MediaQuery.sizeOf(context).width * 0.55,
+                                          child: Column(
+                                            children: [
+                                              Text('Booking Id'),
+                                              Text(widget.bookingId),
+                                            ],
+                                          )
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: IconButton(
+                                onPressed: (){
+                                  Navigator.push(context,
+                                      MaterialPageRoute(builder:  (context) => UserType(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          token: widget.token,
+                                          id: widget.id,
+                                        quotePrice: widget.quotePrice,
+                                      )));
+                                },
+                                icon: Icon(FontAwesomeIcons.multiply)),
                           ),
                         ],
                       ),
-                    )
-                  ],
-                ),
-              )
+                    )),
+                /*widget.selectedType ==
+                    'vehicle' ||
+                    widget.selectedType ==
+                        'bus' ||
+                    widget.selectedType ==
+                        'equipment' ||
+                    widget.selectedType ==
+                        'special' ||
+                    widget.selectedType ==
+                        'others'
+                ?*/Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        // height: MediaQuery.sizeOf(context).height * 0.37,
+                        margin: EdgeInsets.only(
+                            top: MediaQuery.sizeOf(context).height * 0.25,
+                            left: 15,
+                            right: 15,
+                            bottom: 10
+                        ),
+                        child: Container(
+                          decoration: ShapeDecoration(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(
+                                color: Color(0xffE0E0E0), // Border color
+                                width: 1, // Border width
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Vendor name',
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          partnerData?[0]['partnerName'] ?? 'N/A',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Operator name',
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          partnerData != null && partnerData!.isNotEmpty
+                                              ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                              ? (partnerData?[0]['operatorName'] ?? 'N/A')
+                                              : (partnerData?[0]['assignOperatorName'] ?? 'N/A'))
+                                              : 'No Data',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Operator mobile No',
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          partnerData != null && partnerData!.isNotEmpty
+                                              ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                              ? (partnerData?[0]['mobileNo'] ?? 'N/A')
+                                              : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'))
+                                              : 'No Data',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Unit',
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          widget.unit,
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(),
+                                Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Booking status',
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          widget.bookingStatus,
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      widget.paymentStatus == 'HalfPaid'
+                      ?Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left: 50,right: 50,top: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  'Pending Amount',
+                                  style: TextStyle(fontSize: 21),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text(
+                                  '${widget.advanceOrPay} SAR',
+                                  style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 20,left: 10),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.054,
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff6269FE),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  onPressed: (){
+                                    initiateStripePayment(
+                                        context,
+                                        'Completed',
+                                        widget.bookingId,
+                                        widget.advanceOrPay,
+                                        widget.partnerId
+                                    );
+                                  },
+                                  child: Text(
+                                    'Pay : ${widget.advanceOrPay} SAR',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.normal),
+                                  )),
+                            ),
+                          ),
+                        ],
+                      )
+                       : Padding(
+                        padding: const EdgeInsets.only(top: 30),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                )
 
-            ],
+              ],
+            ),
           ),
         ),
       ),

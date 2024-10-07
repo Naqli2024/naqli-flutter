@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   final token = driverData['token'] ?? '';
                   final driverPartnerId = driverData['partnerId'] ?? '';
                   print('Driver data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
-                  if (id.isNotEmpty && token.isNotEmpty) {
+                  if (id.isNotEmpty && token.isNotEmpty && driverPartnerId.isNotEmpty) {
                     return DriverHomePage(
                       firstName: firstName,
                       lastName: lastName,

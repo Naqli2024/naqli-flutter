@@ -411,18 +411,19 @@ class AuthService {
         required String firstName,
         required String lastName,
         required String email,
+        required String password,
+        required String confirmPassword,
         required String mobileNo,
-        required String dateOfBirth,
+        required DateTime dateOfBirth, // Updated to DateTime
         required String iqamaNo,
         required String panelInformation,
         required String partnerId,
         required String token,
         required TextEditingController controller,
-
       }) async {
-    try{
+    try {
       var partnerName = stepThreeInstance.partnerName;
-      var partnerId= stepThreeInstance.partnerId;
+      var partnerId = stepThreeInstance.partnerId;
       var unitType = stepThreeInstance.unitType;
       var unitClassification = stepThreeInstance.unitClassification;
       var subClassification = stepThreeInstance.subClassification;
@@ -431,33 +432,37 @@ class AuthService {
       var firstName = stepThreeInstance.firstName;
       var lastName = stepThreeInstance.lastName;
       var email = stepThreeInstance.email;
+      var password = stepThreeInstance.password;
+      var confirmPassword = stepThreeInstance.confirmPassword;
       var mobileNo = stepThreeInstance.mobileNo;
       var dateOfBirth = stepThreeInstance.dateOfBirth;
       var iqamaNo = stepThreeInstance.iqamaNo;
       var panelInformation = stepThreeInstance.panelInformation;
 
       logRequestData(
-          partnerName: partnerName,
-          unitType: unitType,
-          unitClassification: unitClassification,
-          subClassification: subClassification,
-          plateInformation: plateInformation,
-          istimaraNo: istimaraNo,
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          mobileNo: mobileNo,
-          dateOfBirth: dateOfBirth,
-          iqamaNo: iqamaNo,
-          panelInformation: panelInformation,
-          istimaraCard: istimaraCard,
-          aramcoLicense: aramcoLicense,
-          drivingLicense: drivingLicense,
-          nationalID: nationalID,
-          pictureOfVehicle: pictureOfVehicle,
-          partnerId:partnerId,
-          token: token
+        partnerName: controller.text,
+        unitType: unitType,
+        unitClassification: unitClassification,
+        subClassification: subClassification,
+        plateInformation: plateInformation,
+        istimaraNo: istimaraNo,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        mobileNo: mobileNo,
+        dateOfBirth: dateOfBirth.toIso8601String(), // Convert DateTime to ISO format
+        iqamaNo: iqamaNo,
+        panelInformation: panelInformation,
+        istimaraCard: istimaraCard,
+        aramcoLicense: aramcoLicense,
+        drivingLicense: drivingLicense,
+        nationalID: nationalID,
+        pictureOfVehicle: pictureOfVehicle,
+        partnerId: partnerId,
+        password: password,
+        confirmPassword: confirmPassword
       );
+
       final url = Uri.parse('${baseUrl}add-operator');
 
       var request = http.MultipartRequest('POST', url);
@@ -472,25 +477,27 @@ class AuthService {
       request.fields['firstName'] = firstName;
       request.fields['lastName'] = lastName;
       request.fields['email'] = email;
+      request.fields['password'] = password;
+      request.fields['confirmPassword'] = confirmPassword;
       request.fields['mobileNo'] = mobileNo;
-      request.fields['dateOfBirth'] = dateOfBirth;
+      request.fields['dateOfBirth'] = dateOfBirth.toIso8601String(); // Use ISO format for dateOfBirth
       request.fields['iqamaNo'] = iqamaNo;
       request.fields['panelInformation'] = panelInformation;
 
       // Adding files
-      if (istimaraCard != null) {
+      if (istimaraCard != null && istimaraCard.path != null) {
         request.files.add(await http.MultipartFile.fromPath('istimaraCard', istimaraCard.path.toString()));
       }
-      if (pictureOfVehicle != null) {
+      if (pictureOfVehicle != null && pictureOfVehicle.path != null) {
         request.files.add(await http.MultipartFile.fromPath('pictureOfVehicle', pictureOfVehicle.path.toString()));
       }
-      if (drivingLicense != null) {
+      if (drivingLicense != null && drivingLicense.path != null) {
         request.files.add(await http.MultipartFile.fromPath('drivingLicense', drivingLicense.path.toString()));
       }
-      if (nationalID != null) {
+      if (nationalID != null && nationalID.path != null) {
         request.files.add(await http.MultipartFile.fromPath('nationalID', nationalID.path.toString()));
       }
-      if (aramcoLicense != null) {
+      if (aramcoLicense != null && aramcoLicense.path != null) {
         request.files.add(await http.MultipartFile.fromPath('aramcoLicense', aramcoLicense.path.toString()));
       }
 
@@ -500,7 +507,6 @@ class AuthService {
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: $responseBody');
       print('partnerId');
-      // print(partnerIdd);
       if (response.statusCode == 201) {
         globalPartnerId = partnerId;
         print('Upload successful');
@@ -516,11 +522,10 @@ class AuthService {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: '',token: token,partnerId: partnerId,),
+            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: '', token: token, partnerId: partnerId),
           ),
         );
       } else {
-        var parsedResponse = jsonDecode(responseBody);
         var message = parsedResponse['message'] ?? 'Operation failed. Please try again.';
         print('Failed to login user: ${response.statusCode}');
         Fluttertoast.showToast(
@@ -533,7 +538,7 @@ class AuthService {
           fontSize: 16.0,
         );
       }
-    }on SocketException {
+    } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
@@ -548,6 +553,7 @@ class AuthService {
 
 
 
+
   void logRequestData({
     required String partnerName,
     required String unitType,
@@ -558,6 +564,8 @@ class AuthService {
     required String firstName,
     required String lastName,
     required String email,
+    required String password,
+    required String confirmPassword,
     required String mobileNo,
     required String dateOfBirth,
     required String iqamaNo,
@@ -568,7 +576,6 @@ class AuthService {
     required PlatformFile? nationalID,
     required PlatformFile? aramcoLicense,
     required String partnerId,
-    required String token,
   }) {
     print('Sending data:');
     print('partnerName: $partnerName');
@@ -580,17 +587,20 @@ class AuthService {
     print('firstName: $firstName');
     print('lastName: $lastName');
     print('email: $email');
+    print('password:: $password');
+    print('confirmPassword: $confirmPassword');
     print('mobileNo: $mobileNo');
     print('dateOfBirth: $dateOfBirth');
     print('iqamaNo: $iqamaNo');
-    print('istimaraCard: $istimaraCard');
-    print('pictureOfVehicle: $pictureOfVehicle');
-    print('drivingLicense: $drivingLicense');
-    print('nationalID: $nationalID');
-    print('aramcoLicense: $aramcoLicense');
+    print('panelInformation: $panelInformation');
+    print('istimaraCard: ${istimaraCard?.path ?? 'No file'}');
+    print('pictureOfVehicle: ${pictureOfVehicle?.path ?? 'No file'}');
+    print('drivingLicense: ${drivingLicense?.path ?? 'No file'}');
+    print('nationalID: ${nationalID?.path ?? 'No file'}');
+    print('aramcoLicense: ${aramcoLicense?.path ?? 'No file'}');
     print('partnerId: $partnerId');
-    print('token: $token');
   }
+
 
   Future<List<int>> streamToBytes(Stream<List<int>> stream) async {
     final completer = Completer<List<int>>();
@@ -680,7 +690,7 @@ class AuthService {
 
 
   Future<List<Map<String, dynamic>>> getBookingData(String partnerId, String token) async {
-    try{
+    try {
       final response = await http.get(
         Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
         headers: {
@@ -692,24 +702,35 @@ class AuthService {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
-         print('rrrrrrrrrr$partnerData');
+       print('dataaa$partnerData');
+        // Ensure the bookingRequest field is not null
         if (partnerData['bookingRequest'] != null) {
           final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
           final bookingIds = <Map<String, dynamic>>[];
 
           for (var booking in bookingRequests) {
             final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
-            final quotePrice = booking['bookingRequest']['quotePrice']?.toString() ?? '0';
+
+            // Ensure quotePrice is parsed correctly
+            final quotePrice = booking['quotePrice'] is int
+                ? booking['quotePrice'].toString() // Convert to String if it's an int
+                : booking['quotePrice'].toString(); // Ensure it's a String if it's already a String
+
             final paymentStatus = booking['paymentStatus']?.toString() ?? 'Pending';
+
+            // Logging the values for verification
             print('Booking ID: $bookingId');
             print('Payment Status: $paymentStatus');
             print('Quote Price: $quotePrice');
 
-            await getBookingId(bookingId, token, paymentStatus, quotePrice);
+            // Call the function with the correct types
+            await getBookingId(bookingId, token, paymentStatus, quotePrice); // quotePrice is now a String
+
+            // Add to the list of booking IDs
             bookingIds.add({
               'bookingId': bookingId,
               'paymentStatus': paymentStatus,
-              'quotePrice': quotePrice,
+              'quotePrice': quotePrice, // This should be a String now
             });
           }
           return bookingIds;
@@ -724,18 +745,18 @@ class AuthService {
         print('Failed to load booking data: ${response.statusCode} ${response.body}');
         throw Exception('Failed to load booking data');
       }
-    }on SocketException {
+    } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('An error occurred: $e');
       throw Exception('An unexpected error occurred: $e');
     }
   }
 
-
   Future<Map<String, dynamic>> getBookingId(String bookingId, String token, String paymentStatus, String quotePrice) async {
     try{
+      print('object$paymentStatus');
       final response = await http.get(
         Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
         headers: {
@@ -778,7 +799,7 @@ class AuthService {
           typeOfLoad = typeItem['typeOfLoad'] ?? 'No load available';
           typeName = typeItem['typeName'] ?? 'No name available';
         }
-
+        final bookingStatus = data['bookingStatus'] ?? 'Unknown';
         final userId = data['user'] ?? '';
         await getUserName(userId, token);
 
@@ -786,6 +807,7 @@ class AuthService {
         print('paymentStatus: $paymentStatus');
         print('quotePrice: $quotePrice');
         print('token: $token');
+        print('bookingStatus: $bookingStatus');
 
         return {
           '_id': data['_id'],
@@ -799,11 +821,14 @@ class AuthService {
           'dropPoints': firstDropPoint,
           'typeOfLoad': typeOfLoad,
           'quotePrice': quotePrice,
-          'paymentStatus': paymentStatus,
+          'paymentStatus': data['paymentStatus'],
           'userId': userId,
-          'bookingStatus': data['bookingStatus'],
+          'bookingStatus': bookingStatus,
           'remainingBalance': data['remainingBalance'],
           'paymentAmount': data['paymentAmount'],
+           'cityName' : data['cityName'],
+           'address' : data['address'],
+           'zipCode' : data['zipCode'],
         };
 
       } else if (response.statusCode == 401) {
@@ -891,10 +916,10 @@ class AuthService {
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        await requestPayment(context, additionalCharges: 0, reason: '', bookingId: bookingId, token: token);
-        print('Send Quote Price successful');
+        // await requestPayment(context, additionalCharges: 0, reason: '', bookingId: bookingId, token: token);
+        final message = responseBody['message'] ?? 'Send failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Send successful')),
+          SnackBar(content: Text(message)),
         );
 
         print('token: $token');

@@ -337,8 +337,14 @@ class CommonWidgets{
               if (label == 'Confirm Password' && passwordController != null && passwordController.text != value) {
                 return 'Passwords do not match';
               }
-              if (label == 'ID Number' && !RegExp(r'^\d{10}$').hasMatch(value)) {
+              if (label == 'Id Number' && !RegExp(r'^\d{10}$').hasMatch(value)) {
                 return 'ID number must be exactly 10 digits long';
+              }
+              if (label == 'Istimara no' && !RegExp(r'^\d{10}$').hasMatch(value)) {
+                return 'Istimara number must be exactly 10 digits long';
+              }
+              if (label == 'Iqama no' && !RegExp(r'^\d{10}$').hasMatch(value)) {
+                return 'Iqama number must be exactly 10 digits long';
               }
               return null;
             },
