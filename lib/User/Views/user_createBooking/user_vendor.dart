@@ -107,9 +107,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
   @override
   void initState() {
     startVendorFetching();
-    widget.selectedType == 'vehicle' || widget.selectedType == 'bus'
-        ? fetchCoordinates()
-        : fetchAddressCoordinates();
+    _moveCameraToFitAllMarkers();
+    widget.cityName != null
+        ? fetchAddressCoordinates()
+        : fetchCoordinates();
     fetchAddressCoordinates();
     fetchCoordinates();
     booking = _fetchBookingDetails();
@@ -1357,6 +1358,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                   await fetchRefreshVendor();
               }
               : () async {
+            if (widget.cityName != null) {
+              fetchAddressCoordinates();
+            } else {
+              fetchCoordinates();
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Swipe to refresh will be enabled after 3 minutes')),
             );
@@ -1719,7 +1725,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           );
                         },
                         child: Text(
-                          'Pay Advance : $advanceAmount',
+                          'Pay Advance : \n $advanceAmount SAR',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -1758,7 +1764,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           );
                         },
                         child: Text(
-                          'Pay : $fullAmount',
+                          'Pay : $fullAmount SAR',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,

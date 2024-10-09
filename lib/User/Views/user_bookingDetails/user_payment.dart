@@ -257,7 +257,7 @@ class _PaymentState extends State<Payment> {
                                 Expanded(
                                   flex: 2,
                                   child: Text(
-                                    '${booking?['date'] ?? 'No Date'}',
+                                    '${booking?['date'] ?? ''}',
                                     style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
                                   ),
                                 ),
@@ -320,7 +320,7 @@ class _PaymentState extends State<Payment> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '${booking?['paymentAmount'] ?? 'No Amount'} SAR',
+                  '${booking?['remainingBalance'] ?? 'No Amount'} SAR',
                   style: const TextStyle(fontSize: 19),
                 ),
               ),
@@ -360,7 +360,7 @@ class _PaymentState extends State<Payment> {
                         );
                       },
                       child: Text(
-                        'Pay : ${booking['remainingBalance']??''}',
+                        'Pay : ${booking['remainingBalance']??''} SAR',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 17,
@@ -503,6 +503,9 @@ class _PaymentState extends State<Payment> {
               itemBuilder: (context, index) {
                 final booking = paymentHistory[index];
                 bookingId = '${booking['_id'].toString()}';
+                final fromTime = booking?['fromTime'] ?? 'N/A';
+                final toTime = booking?['toTime'] ?? 'N/A';
+                final time = booking?['time'] ?? 'N/A';
                 return Container(
                   margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Material(
@@ -522,9 +525,14 @@ class _PaymentState extends State<Payment> {
                         subtitle: Row(
                           children: [
                             Text('${booking['date']}'),
-                            Padding(
+                            time == 'N/A'
+                                ? Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text('${booking['time']}'),
+                              child: Text('$fromTime - $toTime'),
+                            )
+                                :Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('$time'),
                             ),
                           ],
                         ),

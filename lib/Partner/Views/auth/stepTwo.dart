@@ -469,7 +469,7 @@ class _StepTwoState extends State<StepTwo> {
                               _focusAndScroll(lastNameFocusNode);
                             } else if (emailIdController.text.isEmpty) {
                               _focusAndScroll(emailFocusNode);
-                            } else if (mobileNoController.text.isEmpty) {
+                            } else if (mobileNoController.text.isEmpty || !RegExp(r'^\d{10}$').hasMatch(mobileNoController.text)) {
                                 _focusAndScroll(mobileNoFocusNode);
                             } else if (passwordController.text.isEmpty || passwordController.text.length < 6) {
                               _focusAndScroll(passwordFocusNode);

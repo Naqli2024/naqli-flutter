@@ -18,6 +18,7 @@ final TextEditingController emailController = TextEditingController();
 final TextEditingController passwordController = TextEditingController();
 final AuthService _authService = AuthService();
 bool isLoading = false;
+bool isPasswordObscured = true;
 
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
@@ -123,17 +124,41 @@ class _RegisterState extends State<Register> {
                   return null;
                 },
               ),
-              _buildTextField(
-                context: context,
-                controller: passwordController,
-                label: 'Password',
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
+              Container(
+                margin: const EdgeInsets.fromLTRB(30, 15, 30, 10),
+                alignment: Alignment.topLeft,
+                child: const Text(
+                  'Password',
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+                child: TextFormField(
+                  controller: passwordController,
+                  obscureText: isPasswordObscured,
+                  decoration: InputDecoration(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordObscured = !isPasswordObscured;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                ),
               ),
               Container(
                 padding: const EdgeInsets.all(8.0),

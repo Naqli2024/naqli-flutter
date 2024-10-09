@@ -221,8 +221,8 @@ class _BookingDetailsState extends State<BookingDetails> {
                   final dynamic quotePriceValue = booking?['quotePrice'];
                   final quotePrice = quotePriceValue != null ? quotePriceValue.toString() : 'N/A';
                   final paymentStatus = booking?['paymentStatus'] ?? 'N/A';
-                  final pickup = booking?['pickup'] ?? 'N/A';
-                  final dropPoints = booking?['dropPoints'] ?? 'N/A';
+                  final pickup = booking?['pickup'] ?? '';
+                  final dropPoints = booking?['dropPoints'] ?? '';
                   final remainingBalance = booking?['remainingBalance'] ?? 'N/A';
                   final name = booking?['name'] ?? 'N/A';
                   final typeName = booking?['typeName'] ?? 'N/A';
@@ -230,7 +230,9 @@ class _BookingDetailsState extends State<BookingDetails> {
                   final bookingStatus = booking?['bookingStatus'] ?? 'N/A';
                   final cityName = booking?['cityName'] ?? 'N/A';
                   final address = booking?['address'] ?? 'N/A';
-                  final zipCode = booking?['zipCode'] ?? 'N/A';
+                  final zipCode = booking?['fromTime'] ?? 'N/A';
+                  final fromTime = booking?['fromTime'] ?? 'N/A';
+                  final toTime = booking?['toTime'] ?? 'N/A';
                    print('qqqqqqqqqqq$quotePrice');
                   return Column(
                     children: [
@@ -245,10 +247,15 @@ class _BookingDetailsState extends State<BookingDetails> {
                             subtitle: Row(
                               children: [
                                 Text('$date'),
-                                Padding(
+                                time == 'N/A'
+                                ? Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('$fromTime - $toTime'),
+                                )
+                                :Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text('$time'),
-                                ),
+                                )
                               ],
                             ),
                             trailing: Container(
@@ -270,7 +277,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                     await fetchUserName(userId);
                                     await fetchBookingDetails();
 
-                                    if(payment == 'Pending'){
+                                    if(payment == 'Pending' || payment == 'NotPaid'){
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(

@@ -290,16 +290,11 @@ class AuthService {
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
-        Fluttertoast.showToast(
-          msg: 'OTP Send Successfully',
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0,
+        final message = responseBody['message'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
         );
+        print('Success');
       } else {
         final message = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
@@ -829,6 +824,8 @@ class AuthService {
            'cityName' : data['cityName'],
            'address' : data['address'],
            'zipCode' : data['zipCode'],
+           'fromTime' : data['fromTime'],
+           'toTime' : data['toTime'],
         };
 
       } else if (response.statusCode == 401) {
@@ -1005,6 +1002,52 @@ class AuthService {
         print("Booking request deleted successfully.");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Deleted successfully')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  BookingDetails(partnerName: '',
+                    partnerId: partnerId,
+                    token: token,
+                    quotePrice: '',
+                    paymentStatus: '',)
+          ),
+        );
+      } else if (response.statusCode == 401) {
+        print("Authorization failed: ${response.body}");
+        throw Exception('Authorization failed');
+      } else {
+        print("Failed to delete booking request: ${response.body}");
+        throw Exception('Failed to delete booking request');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> terminateBooking(BuildContext context,String partnerId, String bookingId, String token) async {
+    try {
+      final url = Uri.parse(
+          '${baseUrl}$partnerId/booking-request/$bookingId');
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print("Booking request deleted successfully.");
+        final message = responseBody['message'] ?? 'Send failed. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
         );
         Navigator.push(
           context,

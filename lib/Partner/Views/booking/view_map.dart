@@ -68,17 +68,25 @@ class _ViewMapState extends State<ViewMap> {
   String ?balance;
   String errorMessage = '';
   Map<String, dynamic>? bookingDetails;
+  bool isTerminating = false;
 
   @override
   void initState() {
     super.initState();
     paymentStatus = widget.paymentStatus;
-    widget.pickupPoint == ''
-    ? fetchAddressCoordinates()
-    : _fetchCoordinates();
+    _moveCameraToFitAllMarkers();
+    _initialize();
     _requestPermissions();
     fetchBookingDetails();
     remainingBalance = widget.remainingBalance;
+  }
+
+  Future<void> _initialize() async {
+    if (widget.cityName != null) {
+      await fetchAddressCoordinates(); // Await the async function
+    } else {
+      await _fetchCoordinates(); // Await the async function
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -286,19 +294,28 @@ class _ViewMapState extends State<ViewMap> {
 
 
   void _moveCameraToFitAllMarkers() {
-    if (mapController != null && pickupLatLng != null && dropLatLng != null) {
-      LatLngBounds bounds = _calculateBounds();
-      // mapController!.animateCamera(
-      //   CameraUpdate.newLatLngBounds(bounds, 130), // Padding in pixels
-      // );
+    if (mapController != null) {
+      LatLngBounds bounds;
+      if (dropLatLng!=null) {
+        bounds = _calculateBounds();
+      } else if (pickupLatLng != null) {
+        bounds = LatLngBounds(
+          southwest: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+          northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+        );
+      } else {
+        print('No coordinates to fit.');
+        return;
+      }
+
       mapController!.animateCamera(
         CameraUpdate.newCameraPosition(CameraPosition(
           target: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
-          zoom: 4,
+          zoom: 5,
         )), // Padding in pixels
       );
     } else {
-      print('mapController or coordinates are not initialized');
+      print('mapController is not initialized');
     }
   }
 
@@ -320,6 +337,7 @@ class _ViewMapState extends State<ViewMap> {
 
   Future<void> requestPayment() async {
     int additionalCharges = int.tryParse(chargesController.text) ?? 0;
+    chargesController.text = '';
     String? updatedRemainingBalance = await _authService.requestPayment(
       context,
       additionalCharges: additionalCharges,
@@ -327,7 +345,7 @@ class _ViewMapState extends State<ViewMap> {
       bookingId: widget.bookingId,
       token: widget.token,
     );
-
+    commonWidgets.showToast('Additional charges were added');
     if (updatedRemainingBalance != null) {
       print(
           'Updated Remaining Balance: $updatedRemainingBalance'); // Print for debugging
@@ -410,7 +428,7 @@ class _ViewMapState extends State<ViewMap> {
         onRefresh: () async{
           await fetchBookingDetails();
           setState(() {
-            if (widget.pickupPoint.isEmpty) {
+            if (widget.cityName != null) {
               fetchAddressCoordinates();
             } else {
               _fetchCoordinates();
@@ -426,7 +444,6 @@ class _ViewMapState extends State<ViewMap> {
                 child: GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController = controller;
-                    _requestPermissions();
                   },
                   initialCameraPosition: const CameraPosition(
                     target: LatLng(0, 0), // Default position
@@ -606,7 +623,7 @@ class _ViewMapState extends State<ViewMap> {
                           ),
                           Text(
                             remainingBalance != null
-                                ? '$remainingBalance'
+                                ? '$remainingBalance SAR'
                                 : 'N/A',
                             style:
                             TextStyle(color: Color(0xffAD1C86), fontSize: 17),
@@ -626,6 +643,22 @@ class _ViewMapState extends State<ViewMap> {
                       ),
                     ),
                     _buildTextField('Reason', reasonController),
+                    Visibility(
+                      visible: paymentStatus == 'Completed',
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 15,bottom: 15),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Text('Payment Successful!!' ,style: TextStyle(color: Colors.green,fontSize: 20,fontWeight: FontWeight.w500),),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -667,10 +700,36 @@ class _ViewMapState extends State<ViewMap> {
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
-                                onPressed: () {
-                                  setState(() {});
-                                },
-                                child: const Text(
+                                onPressed: () async{
+                                  setState(() {
+                                    isTerminating = true;
+                                  });
+                                  await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            BookingDetails(partnerName: widget.partnerName,
+                                              partnerId: widget.partnerId,
+                                              token: widget.token,
+                                              quotePrice: '',
+                                              paymentStatus: '',)
+                                    ),
+                                  );
+                                  setState(() {
+                                    isTerminating = false;
+                                  });
+                                  },
+                                child: isTerminating
+                                    ? Container(
+                                          height: 15,
+                                          width: 15,
+                                          child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                          ),
+                                      )
+                                    : Text(
                                   'Terminate',
                                   style: TextStyle(
                                       color: Colors.white,

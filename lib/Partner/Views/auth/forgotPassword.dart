@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ForgotPassword extends StatefulWidget {
@@ -92,7 +93,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               });
                               await _authService.forgotPassword(
                                 context,
-                                    (context) => ResetPassword(),
+                                    (context) => ResetPassword(email: forgotPasswordEmailController.text,),
                                 email: forgotPasswordEmailController.text,
                               );
                               setState(() {
@@ -125,7 +126,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
 
 class ResetPassword extends StatefulWidget {
-  const ResetPassword({super.key});
+  final String email;
+  const ResetPassword({super.key, required this.email});
 
   @override
   State<ResetPassword> createState() => _ResetPasswordState();
@@ -285,13 +287,13 @@ class _ResetPasswordState extends State<ResetPassword> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              onPressed: () {
+                              onPressed: () async{
                                 if (passwordKey.currentState!.validate()) {
                                   String otp = otpControllers.map((controller) => controller.text).join();
                                   setState(() {
                                     isLoading = true;
                                   });
-                                  _authService.forgotPasswordReset(
+                                  await _authService.forgotPasswordReset(
                                       context,
                                       otp: otp,
                                       newPassword: forgotPasswordController.text,
@@ -327,10 +329,12 @@ class _ResetPasswordState extends State<ResetPassword> {
                                   ..onTap = () {
                                     for (var controller in otpControllers) {
                                       controller.clear();
+                                      forgotPasswordController.text='';
+                                      confirmPasswordController.text='';
                                     }
                                     _authService.forgotPasswordResendOTP(
                                         context,
-                                        email: forgotPasswordEmailController.text);
+                                        email: widget.email);
                                   },
                               ),
                             ],

@@ -1046,7 +1046,6 @@ class UserService{
 
           final partnerId = partnerData['_id'] ?? 'N/A';
           final partnerName = partnerData['partnerName'] ?? 'N/A';
-          final mobileNo = partnerData['mobileNo'] ?? 'N/A';
           final type = partnerData['type'] ?? 'N/A';
           final operators = partnerData['operators'] ?? [];
 
@@ -1065,7 +1064,7 @@ class UserService{
               final lastName = operatorDetails['lastName'] ?? 'N/A';
               final mode = operator['unitType'] ?? 'N/A';
               final fullName = '$firstName $lastName';
-
+              final mobileNo = operatorDetails['mobileNo'] ?? 'N/A';
               // Iterate through booking requests
               final bookingRequests = partnerData['bookingRequest'] ?? [];
               if (bookingRequests.isNotEmpty) {

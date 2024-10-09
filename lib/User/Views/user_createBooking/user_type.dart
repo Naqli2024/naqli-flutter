@@ -114,10 +114,10 @@ class _UserTypeState extends State<UserType> {
                           builder: (context) => ChooseVendor(
                             id: widget.id,
                             bookingId: bookingData['_id'] ?? '',
-                            size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
+                            size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : 'N/A',
                             unitType: bookingData['unitType'] ?? '',
-                            unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                            load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
+                            unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? 'N/A' : 'N/A',
+                            load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : 'N/A',
                             unit: bookingData['name'] ?? '',
                             pickup: bookingData['pickup'] ?? '',
                             dropPoints: bookingData['dropPoints'] ?? [],

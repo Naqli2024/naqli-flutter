@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
@@ -55,6 +56,7 @@ class _PendingPaymentState extends State<PendingPayment> {
   String operatorName = 'Operator Name';
   String mode = 'Mode';
   int remainingBalance = 0;
+  int advanceOrPay = 0;
   String bookingStatus = 'Booking status';
   String paymentStatus = 'payment Status';
   String pendingAmount = 'XXXXX SAR';
@@ -67,6 +69,7 @@ class _PendingPaymentState extends State<PendingPayment> {
   LatLng? dropLatLng;
   final List<LatLng> _dropLatLngs = [];
   String zeroQuotePrice = '0';
+  Future<Map<String, dynamic>?>? booking;
 
   @override
   void initState() {
@@ -83,6 +86,7 @@ class _PendingPaymentState extends State<PendingPayment> {
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
+    fetchAndSetBookingDetails();
     // userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
     _savePaymentDetailsToSharedPreferences(widget.paymentStatus, widget.advanceOrPay);
     super.initState();
@@ -637,6 +641,31 @@ class _PendingPaymentState extends State<PendingPayment> {
     );
   }
 
+  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+    final data = await getSavedBookingId();
+    final String? bookingId = data['_id'];
+    final String? token = data['token'];
+
+    if (bookingId != null && token != null) {
+      print('Fetching details with bookingId=$bookingId and token=$token');
+      return await userService.fetchBookingDetails(bookingId, token);
+    } else {
+      print('No bookingId or token found in shared preferences.');
+      return null;
+    }
+  }
+
+  Future<void> fetchAndSetBookingDetails() async {
+    final bookingDetails = await _fetchBookingDetails();
+    if (bookingDetails != null) {
+      setState(() {
+        // Set advanceOrPay as an int
+        advanceOrPay = bookingDetails['remainingBalance'] ?? 0;
+        print(advanceOrPay);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -659,6 +688,7 @@ class _PendingPaymentState extends State<PendingPayment> {
         body: RefreshIndicator(
           onRefresh: () async{
             await fetchPartnerData();
+            fetchAndSetBookingDetails();
           },
           child: SingleChildScrollView(
             physics: AlwaysScrollableScrollPhysics(),
@@ -937,7 +967,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 Text(
-                                  '${widget.advanceOrPay} SAR',
+                                  '${advanceOrPay} SAR',
                                   style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
                                 ),
                               ],
@@ -965,7 +995,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                     );
                                   },
                                   child: Text(
-                                    'Pay : ${widget.advanceOrPay} SAR',
+                                    'Pay : ${advanceOrPay} SAR',
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 17,

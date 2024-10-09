@@ -91,7 +91,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
       return bookings.where((booking) => booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid' || booking['bookingStatus'] == 'Completed').toList();
     }else if(_currentFilter == 'Pending')
       {
-        return bookings.where((booking) => booking['paymentStatus'] == 'NotPaid' || booking['paymentStatus'] == 'Pending' || booking['bookingStatus'] == 'HalfPaid').toList();
+        return bookings.where((booking) => booking['paymentStatus'] == 'NotPaid' || booking['paymentStatus'] == 'Pending' || booking['paymentStatus'] == 'HalfPaid').toList();
       }
     return bookings;
     // return bookings.where((booking) => booking['paymentStatus'] == _currentFilter).toList();
@@ -232,7 +232,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
-                  '${booking?['paymentAmount'] ?? 'No Amount'}',
+                  '${booking?['paymentAmount'] ?? ''} SAR',
                   style: const TextStyle(fontSize: 19),
                 ),
               ),
@@ -364,12 +364,13 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                 final booking = bookingDetails[index];
                 final id = booking?['_id'] ?? 'Unknown ID';
                 final date = booking?['date'] ?? 'No date available';
-                final time = booking?['time'] ?? 'No date available';
+                final time = booking?['time'] ?? 'N/A';
                 final quotePrice = booking?['quotePrice'] ?? 'No quotePrice available';
                 final paymentStatus = booking?['paymentStatus'] ?? 'No paymentStatus available';
                 final userId = booking?['userId'] ?? 'No userId available';
                 final bookingStatus = booking?['bookingStatus'] ?? 'No bookingStatus available';
-
+                final fromTime = booking?['fromTime'] ?? 'N/A';
+                final toTime = booking?['toTime'] ?? 'N/A';
                 return Container(
                   margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: Card(
@@ -381,10 +382,15 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                       subtitle: Row(
                         children: [
                           Text('$date'),
-                          Padding(
+                          time == 'N/A'
+                          ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('$fromTime - $toTime'),
+                          )
+                          :Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text('$time'),
-                          ),
+                          )
                         ],
                       ),
                       trailing: Container(

@@ -346,6 +346,9 @@ class CommonWidgets{
               if (label == 'Iqama no' && !RegExp(r'^\d{10}$').hasMatch(value)) {
                 return 'Iqama number must be exactly 10 digits long';
               }
+              if (label == 'Mobile no' && !RegExp(r'^\d{10}$').hasMatch(value)) {
+                return 'Mobile number must be exactly 10 digits long';
+              }
               return null;
             },
           ),

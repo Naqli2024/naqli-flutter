@@ -203,8 +203,8 @@ class _ViewBookingState extends State<ViewBooking> {
                       userId: widget.userId,
                       mode: '${bookingDetails?['name'] ?? 'No name available'} ${bookingDetails?['typeName'] ?? ''}',
                       bookingStatus: widget.bookingStatus,
-                      pickupPoint: '${bookingDetails?['pickup'] ?? 'No pickup available'}',
-                      dropPoint: '${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
+                      pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
+                      dropPoint: '${bookingDetails?['dropPoints'] ?? ''}',
                       remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
                       bookingId: widget.bookingId,
                       token: widget.token,
@@ -252,32 +252,7 @@ class _ViewBookingState extends State<ViewBooking> {
                         Expanded(flex:7,child: Text(firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',style: TextStyle(color: Color(0xffAD1C86)))),
                         GestureDetector(
                           onTap: (){
-                            /*widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
-                            ?Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ViewMap(
-                                    partnerName: widget.partnerName,
-                                    userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
-                                    userId: widget.userId,
-                                    mode: '${bookingDetails?['name'] ?? 'No name available'}'+
-                                          ' ${bookingDetails?['typeName'] ?? ''}',
-                                    bookingStatus: widget.bookingStatus,
-                                    pickupPoint: '${bookingDetails?['pickup'] ?? 'No pickup available'}',
-                                    dropPoint: '${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',
-                                    remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
-                                    bookingId: widget.bookingId,token: widget.token,
-                                    partnerId: widget.partnerId,
-                                    quotePrice: widget.quotePrice,
-                                    paymentStatus: widget.paymentStatus,
-                                    cityName: widget.cityName,
-                                    address: widget.address,
-                                    zipCode: widget.zipCode,
-                                  )
-                              ),
-                            )
-                                :null;*/
-                          },
+                            },
                             child: Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86)))),
                       ],
                     ),
@@ -324,7 +299,9 @@ class _ViewBookingState extends State<ViewBooking> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Expanded(flex:6,child: Text('Time')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
+                              bookingDetails?['time'] == null
+                              ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
+                              : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),))
                             ],
                           ),
                           const Divider(),
@@ -353,14 +330,35 @@ class _ViewBookingState extends State<ViewBooking> {
                     child: Row(
                       children: [
                         Image.asset('assets/pickup_drop.png'),
-                        Expanded(
+                        bookingDetails?['cityName'] != null
+                        ? Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom:0,left: 10),
+                                child: Column(
+                                  children: [
+                                    Text('${bookingDetails?['cityName'] ?? 'No cityName available'}',textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 16),),
+                                    Text('${bookingDetails?['address'] ?? 'No address available'}',textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 16),),
+                                    Text('${bookingDetails?['zipCode'] ?? ''}',textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 16),),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : Expanded(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(bottom:35,left: 0),
                                 child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',textAlign: TextAlign.left,
-                                style: const TextStyle(fontSize: 20),),
+                                  style: const TextStyle(fontSize: 20),),
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(left: 0),
