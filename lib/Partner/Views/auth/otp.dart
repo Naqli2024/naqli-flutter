@@ -98,6 +98,7 @@ class _OtpScreenState extends State<OtpScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,

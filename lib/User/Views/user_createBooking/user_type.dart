@@ -12,6 +12,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dar
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,10 +23,11 @@ class UserType extends StatefulWidget {
   final String lastName;
   final String token;
   final String id;
+  final String email;
   final String? paymentStatus;
   final String? quotePrice;
   final String? oldQuotePrice;
-  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id, this.paymentStatus, this.quotePrice, this.oldQuotePrice});
+  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id, this.paymentStatus, this.quotePrice, this.oldQuotePrice, required this.email});
 
   @override
   State<UserType> createState() => _UserTypeState();
@@ -54,7 +56,7 @@ class _UserTypeState extends State<UserType> {
   //   }
   // }
 
-  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+/*  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
     final String? bookingId = data['_id'];
     final String? token = data['token'];
@@ -66,7 +68,55 @@ class _UserTypeState extends State<UserType> {
       print('No bookingId or token found in shared preferences.');
       return null;
     }
+  }*/
+
+  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+    final data = await getSavedBookingId();
+    String? bookingId = data['_id'];
+    final String? token = data['token'];
+
+    // If bookingId is null, call getPaymentPendingBooking API
+    if (bookingId == null || token == null) {
+      print('No bookingId found, fetching pending booking details.');
+
+      if (widget.id != null && token != null) {
+        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+
+        if (bookingId != null) {
+          // Optionally, save the bookingId to shared preferences
+          // await saveBookingIdToPreferences(bookingId, token);
+        } else {
+          print('No pending booking found, navigating to NewBooking.');
+          return null;
+        }
+      } else {
+        print('No userId or token available.');
+        return null;
+      }
+    }
+
+    // Proceed to fetch booking details if bookingId is available
+    if (bookingId != null && token != null) {
+      return await userService.fetchBookingDetails(bookingId, token);
+    } else {
+      print('Failed to fetch booking details due to missing bookingId or token.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NewBooking(
+            token: token,
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            id: widget.id,
+            email: widget.email,
+          ),
+        ),
+      );
+      return null;
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +157,7 @@ class _UserTypeState extends State<UserType> {
                     final bookingData = await booking;
                     partnerId = bookingData?['partner']??'';
                     if (bookingData != null) {
-                      bookingData['paymentStatus']== 'Pending'
+                      bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus']== 'NotPaid'
                       ? Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -128,6 +178,7 @@ class _UserTypeState extends State<UserType> {
                             cityName: bookingData['cityName'] ?? '',
                             address: bookingData['address'] ?? '',
                             zipCode: bookingData['zipCode'] ?? '',
+                            email: widget.email,
                           ),
                         ),
                       )
@@ -159,6 +210,7 @@ class _UserTypeState extends State<UserType> {
                             quotePrice: widget.quotePrice??'',
                             advanceOrPay: bookingData['remainingBalance'] ?? 0,
                             bookingStatus: bookingData['bookingStatus'] ?? '',
+                            email: widget.email,
                           )
                         ),
                       )
@@ -184,6 +236,7 @@ class _UserTypeState extends State<UserType> {
                             id: widget.id,
                             partnerId: bookingData['partner'] ?? '',
                             bookingStatus: bookingData['bookingStatus'] ?? '',
+                            email: widget.email,
                           )
                         ),
                       );
@@ -192,7 +245,7 @@ class _UserTypeState extends State<UserType> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id)
+                            builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id,email: widget.email,)
                         ),
                       );
                     }
@@ -215,7 +268,7 @@ class _UserTypeState extends State<UserType> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                        builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 }
@@ -231,7 +284,7 @@ class _UserTypeState extends State<UserType> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,quotePrice: widget.quotePrice??'',),
+                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,quotePrice: widget.quotePrice??'',email: widget.email,),
                     ),
                   );
                 }
@@ -249,7 +302,12 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Report',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -260,6 +318,7 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
+
               },
             ),
             ListTile(
@@ -403,6 +462,7 @@ class _UserTypeState extends State<UserType> {
                               selectedType: _selectedType,
                               token: widget.token,
                               id: widget.id,
+                              email: widget.email,
                             ),
                           ),
                         );
@@ -416,7 +476,7 @@ class _UserTypeState extends State<UserType> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Image.asset('assets/truck.png'),
+                            SvgPicture.asset('assets/vehicle.svg'),
                             const Divider(
                               indent: 7,
                               endIndent: 7,
@@ -452,6 +512,7 @@ class _UserTypeState extends State<UserType> {
                               selectedType: _selectedType,
                               token: widget.token,
                               id: widget.id,
+                              email: widget.email,
                             ),
                           ),
                         );
@@ -508,6 +569,7 @@ class _UserTypeState extends State<UserType> {
                       selectedType: _selectedType,
                       token: widget.token,
                       id: widget.id,
+                      email: widget.email,
                     ),
                   ),
                 );
@@ -527,7 +589,7 @@ class _UserTypeState extends State<UserType> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Image.asset('assets/equipment.png'),
+                            SvgPicture.asset('assets/equipment.svg',height: MediaQuery.sizeOf(context).height * 0.12),
                             const Divider(
                               indent: 7,
                               endIndent: 7,
@@ -562,6 +624,7 @@ class _UserTypeState extends State<UserType> {
                                 selectedType: _selectedType,
                                 token: widget.token,
                                 id: widget.id,
+                                email: widget.email,
                               ),
                             ),
                           );
@@ -575,7 +638,7 @@ class _UserTypeState extends State<UserType> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Image.asset('assets/special.png'),
+                              SvgPicture.asset('assets/special.svg',height: MediaQuery.sizeOf(context).height * 0.12),
                               const Divider(
                                 indent: 7,
                                 endIndent: 7,
@@ -600,7 +663,7 @@ class _UserTypeState extends State<UserType> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(left: 35, top: 15),
+              margin: EdgeInsets.only(left: 35, top: 15,bottom: MediaQuery.sizeOf(context).height * 0.12),
               alignment: Alignment.bottomLeft,
               child: GestureDetector(
                 onTap: () {
@@ -616,6 +679,7 @@ class _UserTypeState extends State<UserType> {
                         selectedType: _selectedType,
                         token: widget.token,
                         id: widget.id,
+                        email: widget.email,
                       ),
                     ),
                   );
@@ -633,7 +697,7 @@ class _UserTypeState extends State<UserType> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Image.asset('assets/others.png'),
+                          SvgPicture.asset('assets/others.svg'),
                           const Divider(
                             indent: 7,
                             endIndent: 7,
@@ -641,7 +705,7 @@ class _UserTypeState extends State<UserType> {
                             thickness: 2,
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 22),
+                            padding: const EdgeInsets.only(bottom: 20),
                             child: const Text(
                               'Others',
                               textAlign: TextAlign.center,
@@ -658,36 +722,37 @@ class _UserTypeState extends State<UserType> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(shadowColor: Colors.black,
-        color: Colors.white,
-        elevation: 3,
-        height: MediaQuery.of(context).size.height * 0.1,
-        child:  GestureDetector(
-          onTap: (){
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(left: 30,right: 0),
+        width: MediaQuery.sizeOf(context).width,
+        height: MediaQuery.sizeOf(context).height * 0.07,
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xff6069FF),
+          elevation: 5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          onPressed: (){
             _showModalBottomSheet(context);
-          },
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(25, 0, 25, 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xff6069FF),
-                borderRadius: BorderRadius.circular(10),
+          },child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20),
+                child: Text('Get an estimate',
+                  style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 17),),
               ),
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Get an estimate',
-                      style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 15),),
-                    Icon(Icons.arrow_forward,color: Colors.white,)
-                  ],
-                ),
-              ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Icon(Icons.arrow_forward,color: Colors.white,),
+              )
+            ],
           ),
         ),
-      )
+        ),
+      ),
     );
   }
 }
@@ -718,11 +783,36 @@ void _showModalBottomSheet(BuildContext context) {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const Text('Please select a service so that we can assist you'),
-                      bottomCard('assets/truck.png', 'Vehicle'),
-                      bottomCard('assets/bus.png', 'Bus'),
-                      bottomCard('assets/equipment.png', 'Equipment'),
-                      bottomCard('assets/special.png', 'Special'),
-                      bottomCard('assets/others.png', 'Others'),
+                      bottomCard('assets/vehicle.svg', 'Vehicle'),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Card(
+                          elevation: 5,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0), // Rounded corners
+                            side: const BorderSide(
+                              color: Color(0xffE0E0E0), // Border color
+                              width: 1, // Border width
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Image.asset('assets/bus.png', width: 90, height: 70),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 50),
+                                child: Text('Bus', style: TextStyle(fontSize: 20)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      bottomCard('assets/equipment.svg', 'Equipment'),
+                      bottomCard('assets/special.svg', 'Special'),
+                      bottomCard('assets/others.svg', 'Others'),
                     ],
                   ),
                   Positioned(
@@ -762,7 +852,7 @@ Widget bottomCard(String imagePath, String title) {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Image.asset(imagePath, width: 90, height: 70),
+            child: SvgPicture.asset(imagePath, width: 90, height: 70),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 50),

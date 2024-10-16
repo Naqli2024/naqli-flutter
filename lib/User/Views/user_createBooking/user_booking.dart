@@ -14,6 +14,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.d
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -27,11 +28,12 @@ class CreateBooking extends StatefulWidget {
   final String selectedType;
   final String token;
   final String id;
+  final String email;
   const CreateBooking(
       {super.key,
       required this.firstName,
       required this.lastName,
-      required this.selectedType, required this.token, required this.id});
+      required this.selectedType, required this.token, required this.id, required this.email});
 
   @override
   State<CreateBooking> createState() => _CreateBookingState();
@@ -83,6 +85,8 @@ class _CreateBookingState extends State<CreateBooking> {
   late List<String> _addressSuggestions = [];
   late List<String> _zipCodeSuggestions = [];
   Future<Map<String, dynamic>?>? booking;
+  FocusNode _pickUpFocusNode = FocusNode();
+  List<FocusNode> _dropPointFocusNodes = [];
 
   @override
   void initState() {
@@ -117,6 +121,14 @@ class _CreateBookingState extends State<CreateBooking> {
     });
   }
 
+  void _dismissSuggestions() {
+    setState(() {
+      _pickUpSuggestions = []; // Clear pick-up suggestions
+      for (var i = 0; i < _dropPointSuggestions.length; i++) {
+        _dropPointSuggestions[i] = []; // Clear all drop point suggestions
+      }
+    });
+  }
 
   Future<void> _requestPermissions() async {
     var status = await Permission.location.status;
@@ -733,6 +745,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     address: addressController.text,
                     zipCode: zipCodeController.text,
                     id: widget.id,
+                    email: widget.email,
                   ),
                 ),
               );
@@ -794,6 +807,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   address: '',
                   zipCode: '',
                   id: widget.id,
+                  email: widget.email,
                 ),
               ),
             );
@@ -855,6 +869,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   address: addressController.text,
                   zipCode: zipCodeController.text,
                   id: widget.id,
+                  email: widget.email,
                 ),
               ),
             );
@@ -915,6 +930,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   address: addressController.text,
                   zipCode: zipCodeController.text,
                   id: widget.id,
+                  email: widget.email,
                 ),
               ),
             );
@@ -930,17 +946,50 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
-    final String? bookingId = data['_id'];
+    String? bookingId = data['_id'];
     final String? token = data['token'];
 
+    // If bookingId is null, call getPaymentPendingBooking API
+    if (bookingId == null || token == null) {
+      print('No bookingId found, fetching pending booking details.');
+
+      if (widget.id != null && token != null) {
+        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+
+        if (bookingId != null) {
+          // Optionally, save the bookingId to shared preferences
+          // await saveBookingIdToPreferences(bookingId, token);
+        } else {
+          print('No pending booking found, navigating to NewBooking.');
+          return null;
+        }
+      } else {
+        print('No userId or token available.');
+        return null;
+      }
+    }
+
+    // Proceed to fetch booking details if bookingId is available
     if (bookingId != null && token != null) {
-      print('Fetching details with bookingId=$bookingId and token=$token');
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
-      print('No bookingId or token found in shared preferences.');
+      print('Failed to fetch booking details due to missing bookingId or token.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NewBooking(
+            token: token,
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            id: widget.id,
+            email: widget.email,
+          ),
+        ),
+      );
       return null;
     }
   }
+
 
 
   @override
@@ -953,6 +1002,7 @@ class _CreateBookingState extends State<CreateBooking> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -976,7 +1026,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context)=> UserType(
                         firstName: widget.firstName,
-                        lastName: widget.lastName, token: widget.token,id: '',)));
+                        lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
               },
               icon: const Icon(
                 Icons.arrow_back_sharp,
@@ -1017,7 +1067,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     final bookingData = await booking;
 
                     if (bookingData != null) {
-                      bookingData['paymentStatus']== 'Pending'
+                      bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus'] == 'NotPaid'
                           ? Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -1038,6 +1088,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             cityName: bookingData['cityName'] ?? '',
                             address: bookingData['address'] ?? '',
                             zipCode: bookingData['zipCode'] ?? '',
+                            email: widget.email,
                           ),
                         ),
                       )
@@ -1069,6 +1120,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               quotePrice: '',
                               advanceOrPay: bookingData['remainingBalance'] ?? 0,
                               bookingStatus: bookingData['bookingStatus'] ?? '',
+                              email: widget.email,
                             )
                         ),
                       )
@@ -1094,6 +1146,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               id: widget.id,
                               partnerId: bookingData['partner'] ?? '',
                               bookingStatus: bookingData['bookingStatus'] ?? '',
+                              email: widget.email,
                             )
                         ),
                       );
@@ -1101,7 +1154,7 @@ class _CreateBookingState extends State<CreateBooking> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id)
+                            builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id,email: widget.email,)
                         ),
                       );
                     }
@@ -1124,7 +1177,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                      builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 }
@@ -1140,7 +1193,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,),
+                      builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 }
@@ -1158,7 +1211,12 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Text('Report',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -1263,179 +1321,183 @@ class _CreateBookingState extends State<CreateBooking> {
             Expanded(
               child: _buildStepContent(_currentStep),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (_currentStep == 1) Container(),
-                  if (_currentStep > 1)
-                    Container(
-                      padding: const EdgeInsets.only(left: 40, bottom: 10),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (_currentStep > 1) {
-                              if (_currentStep == 2) {
-                                selectedLoad = null;
-                              }
-                              _currentStep--;
-                            }
-                          });
-                        },
-                        child: const Text(
-                          'Back',
-                          style: TextStyle(
-                              color: Color(0xff6269FE),
-                              fontSize: 21,
-                              fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ),
-                  if (_currentStep < 3)
-                    Container(
-                      padding: const EdgeInsets.only(right: 10, bottom: 12,top:5),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.055,
-                        width: MediaQuery.of(context).size.width * 0.3,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6269FE),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () async{
-                            setState(() {
-                              if (widget.selectedType == 'vehicle') {
-                                if (_currentStep == 1) {
-                                  if (selectedTypeName == null) {
-                                    commonWidgets.showToast('Please select an option');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                }else if (_currentStep == 2) {
-                                  if (_selectedFromTime == null ||
-                                      _selectedDate == null ||
-                                      productController.text.isEmpty) {
-                                    commonWidgets.showToast('Please fill all fields');
-                                  } else {
-                                    // Await the fetchLoadsForSelectedType function
-                                    fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                      print('Fetched loadTypes: $loadTypes');
-                                      if (loadTypes.isEmpty || selectedLoad !=null) {
-
-                                        setState(() {
-                                          _currentStep++;
-                                        });
-                                      } else {
-                                        if (loadTypes.isNotEmpty) {
-                                          commonWidgets.showToast(
-                                              'Please select Load type');
-                                        }
-                                      }
-                                    }).catchError((error) {
-                                      // Handle errors
-                                      print('Error fetching load types: $error');
-                                      commonWidgets.showToast('Error fetching load types');
-                                    });
-                                  }
-                                }
-                              }
-                              if (widget.selectedType == 'bus') {
-                                if (_currentStep == 1) {
-                                  if (selectedBus == null) {
-                                    commonWidgets.showToast('Please select Bus');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                } else if (_currentStep == 2) {
-                                  if (_selectedFromTime == null ||
-                                      _selectedDate == null ||
-                                      productController.text.isEmpty) {
-                                    commonWidgets.showToast('Please fill all fields');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                }
-                              }
-                              if (widget.selectedType == 'equipment') {
-                                if (_currentStep == 1) {
-                                  if (selectedTypeName ==null) {
-                                    commonWidgets.showToast('Please select an option');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                } else if (_currentStep == 2) {
-                                  if (_selectedFromTime == null ||
-                                      _selectedDate == null) {
-                                    commonWidgets.showToast('Please fill all fields');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                }
-                              }
-                              if (widget.selectedType == 'special' || widget.selectedType == 'others') {
-                                if (_currentStep == 1) {
-                                  if (selectedSpecial ==null) {
-                                    commonWidgets.showToast('Please select Special/Other Units');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                } else if (_currentStep == 2) {
-                                  if (_selectedFromTime == null ||
-                                      _selectedDate == null) {
-                                    commonWidgets.showToast('Please fill all fields');
-                                  } else {
-                                    _currentStep++;
-                                  }
-                                }
-                              }
-                            });
-                          },
-                          child: const Text(
-                            'Next',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_currentStep == 3)
-                    Container(
-                      padding: const EdgeInsets.only(right: 10, bottom: 5),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.055,
-                        width: MediaQuery.of(context).size.width * 0.52,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6269FE),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          onPressed: () async {
-                            setState(() {
-                              createBooking();
-                            });
-                          },
-                          child: const Text(
-                            'Create Booking',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        height: MediaQuery.sizeOf(context).height * 0.11,
+        color: Colors.white,
+        child:  Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_currentStep == 1) Container(),
+              if (_currentStep > 1)
+                Container(
+                  padding: const EdgeInsets.only(left: 12, bottom: 10),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (_currentStep > 1) {
+                          if (_currentStep == 2) {
+                            selectedLoad = null;
+                          }
+                          _currentStep--;
+                        }
+                      });
+                    },
+                    child: const Text(
+                      'Back',
+                      style: TextStyle(
+                          color: Color(0xff6269FE),
+                          fontSize: 21,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              if (_currentStep < 3)
+                Container(
+                  padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.055,
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () async{
+                        setState(() {
+                          if (widget.selectedType == 'vehicle') {
+                            if (_currentStep == 1) {
+                              if (selectedTypeName == null) {
+                                commonWidgets.showToast('Please select an option');
+                              } else {
+                                _currentStep++;
+                              }
+                            }else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null ||
+                                  productController.text.isEmpty) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                // Await the fetchLoadsForSelectedType function
+                                fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
+                                  print('Fetched loadTypes: $loadTypes');
+                                  if (loadTypes.isEmpty || selectedLoad !=null) {
+
+                                    setState(() {
+                                      _currentStep++;
+                                    });
+                                  } else {
+                                    if (loadTypes.isNotEmpty) {
+                                      commonWidgets.showToast(
+                                          'Please select Load type');
+                                    }
+                                  }
+                                }).catchError((error) {
+                                  // Handle errors
+                                  print('Error fetching load types: $error');
+                                  commonWidgets.showToast('Error fetching load types');
+                                });
+                              }
+                            }
+                          }
+                          if (widget.selectedType == 'bus') {
+                            if (_currentStep == 1) {
+                              if (selectedBus == null) {
+                                commonWidgets.showToast('Please select Bus');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null ||
+                                  productController.text.isEmpty) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
+                          }
+                          if (widget.selectedType == 'equipment') {
+                            if (_currentStep == 1) {
+                              if (selectedTypeName ==null) {
+                                commonWidgets.showToast('Please select an option');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
+                          }
+                          if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                            if (_currentStep == 1) {
+                              if (selectedSpecial ==null) {
+                                commonWidgets.showToast('Please select Special/Other Units');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
+                          }
+                        });
+                      },
+                      child: const Text(
+                        'Next',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+              if (_currentStep == 3)
+                Container(
+                  padding: const EdgeInsets.only(right: 10, bottom: 0),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.055,
+                    width: MediaQuery.of(context).size.width * 0.52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          createBooking();
+                        });
+                      },
+                      child: const Text(
+                        'Create Booking',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -2230,36 +2292,41 @@ class _CreateBookingState extends State<CreateBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
-                ),
-                Container(
-                  height: 50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2273,36 +2340,41 @@ class _CreateBookingState extends State<CreateBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
-                ),
-                Container(
-                  height: 50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectDate(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate'),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2321,7 +2393,7 @@ class _CreateBookingState extends State<CreateBooking> {
             child: TextFormField(
               controller: productController,
               decoration: InputDecoration(
-                hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
                 border: OutlineInputBorder(
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
                   borderSide: const BorderSide(
@@ -2447,36 +2519,41 @@ class _CreateBookingState extends State<CreateBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
-                ),
-                Container(
-                  height: 50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2490,36 +2567,41 @@ class _CreateBookingState extends State<CreateBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
-                ),
-                Container(
-                  height: 50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectDate(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate'),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2667,7 +2749,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -2710,7 +2792,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}'),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -2753,7 +2835,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate'),
+                    child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -2869,7 +2951,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}'),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -2912,7 +2994,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}'),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -2955,7 +3037,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate'),
+                    child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -3039,333 +3121,548 @@ class _CreateBookingState extends State<CreateBooking> {
       String selectedLoad,
       String additionalLabour,
       ) {
-    return  SingleChildScrollView(
-      child: Center(
-        child: Stack(
-          children: [
-            Container(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(0, 0),
-                  zoom: 1,
+    return  GestureDetector(
+       onTap: () {
+          setState(() {
+          _dismissSuggestions();
+          });
+        },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Stack(
+            children: [
+              Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0),
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
                 ),
-                markers: markers,
-                polylines: polylines,
               ),
-            ),
-            Positioned(
-              top: 15,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                child: Column(
-                  children: [
-                  Card(
-                  color: Colors.white,
+              Positioned(
+                top: 15,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: const EdgeInsets.only(left: 30, right: 30),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(10,17,10,10),
-                            child: CircleAvatar(
-                              backgroundColor: Color(0xff009E10),
-                              minRadius: 6,
+                    Card(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(10,17,10,10),
+                              child: CircleAvatar(
+                                backgroundColor: Color(0xff009E10),
+                                minRadius: 6,
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              height: 40,
-                              child: TextFormField(
-                                onChanged: (value) => _fetchSuggestions(value, -1, true),
-                                controller: pickUpController,
-                                decoration: InputDecoration(
-                                  hintText: 'Pick up',
-                                  hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                  border: InputBorder.none,
+                            Expanded(
+                              child: Container(
+                                height: 40,
+                                child: TextFormField(
+                                  onChanged: (value) => _fetchSuggestions(value, -1, true),
+                                  controller: pickUpController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Pick up',
+                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                    border: InputBorder.none,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          height: 200,
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          child: ListView.builder(
-                            itemCount: _pickUpSuggestions.length,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                title: Text(_pickUpSuggestions[index]),
-                                onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
-                              );
-                            },
-                          ),
+                          ],
                         ),
-                      const Divider(
-                        indent: 5,
-                        endIndent: 5,
-                      ),
-                      ..._dropPointControllers.asMap().entries.map((entry) {
-                        int i = entry.key;
-                        TextEditingController controller = entry.value;
-                        return Column(
-                          children: [
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,10,5,10),
-                                  child: CircleAvatar(
-                                    backgroundColor: Color(0xffE20808),
-                                    minRadius: 6,
+                        if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            height: 200,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              itemCount: _pickUpSuggestions.length,
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(_pickUpSuggestions[index]),
+                                  onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
+                                );
+                              },
+                            ),
+                          ),
+                        const Divider(
+                          indent: 5,
+                          endIndent: 5,
+                        ),
+                        ..._dropPointControllers.asMap().entries.map((entry) {
+                          int i = entry.key;
+                          TextEditingController controller = entry.value;
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(10,10,5,10),
+                                    child: CircleAvatar(
+                                      backgroundColor: Color(0xffE20808),
+                                      minRadius: 6,
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: TextFormField(
-                                      onChanged: (value) => _fetchSuggestions(value, i, false),
-                                      controller: controller,
-                                      decoration: InputDecoration(
-                                        hintText: 'Drop Point ${i + 1}',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                        suffixIcon: i == _dropPointControllers.length - 1
-                                            ? Padding(
-                                              padding: const EdgeInsets.only(right: 15),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                              if (_dropPointControllers.length > 1)
-                                                GestureDetector(
-                                                  onTap: () => _removeTextField(i),
-                                                  child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                  Expanded(
+                                    child: Container(
+                                      height: 43,
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: TextFormField(
+                                        onChanged: (value) => _fetchSuggestions(value, i, false),
+                                        controller: controller,
+                                        decoration: InputDecoration(
+                                          isDense: true,
+                                          hintText: 'Drop Point ${i + 1}',
+                                          hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                          border: InputBorder.none,
+                                          suffixIcon: i == _dropPointControllers.length - 1
+                                              ? Padding(
+                                                padding: const EdgeInsets.only(right: 15),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                if (_dropPointControllers.length > 1)
+                                                  GestureDetector(
+                                                    onTap: () => _removeTextField(i),
+                                                    child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                  ),
+                                                if (_dropPointControllers.length == 1)
+                                                  GestureDetector(
+                                                    onTap: _addTextField,
+                                                    child: Icon(Icons.add_circle_outline_sharp),
+                                                  ),
+                                                  ],
                                                 ),
-                                              if (_dropPointControllers.length == 1)
-                                                GestureDetector(
-                                                  onTap: _addTextField,
-                                                  child: Icon(Icons.add_circle_outline_sharp),
-                                                ),
-                                                ],
-                                              ),
-                                            )
-                                            : null,
+                                              )
+                                              : null,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                height: 200,
-                                child: ListView.builder(
-                                  itemCount: _dropPointSuggestions[i]!.length,
-                                  itemBuilder: (context, index) {
-                                    return ListTile(
-                                      title: Text(_dropPointSuggestions[i]![index]),
-                                      onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
-                                    );
-                                  },
-                                ),
+                                ],
                               ),
-                          ],
-                        );
-                      }).toList(),
-
-                    ],
+                              if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  height: 200,
+                                  child: ListView.builder(
+                                    itemCount: _dropPointSuggestions[i]!.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                        title: Text(_dropPointSuggestions[i]![index]),
+                                        onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              if (i < _dropPointControllers.length - 1)
+                                Divider(
+                                  indent: 5,
+                                  endIndent: 5,
+                                ),
+                            ],
+                          );
+                        }).toList(),
+                      ],
+                    ),
                   ),
-                ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff6A66D1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                          ),
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            _fetchCoordinates();
-                          },
-                          child: const Text(
-                            'Get Location',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _fetchCoordinates();
+                            },
+                            child: const Text(
+                              'Get Location',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.normal,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget UserBusStepThree() {
-    return SingleChildScrollView(
-      child: Center(
-        child: Stack(
-          children: [
-            Container(
-              height: MediaQuery.of(context).size.height * 0.6,
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(0, 0),
-                  zoom: 1,
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _dismissSuggestions();
+        });
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Stack(
+            children: [
+              Container(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0),
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
                 ),
-                markers: markers,
-                polylines: polylines,
               ),
-            ),
-            Positioned(
-              top: 15,
-              child: Container(
+              Positioned(
+                top: 15,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: const EdgeInsets.only(left: 30, right: 30),
+                  child: Column(
+                    children: [
+                      Card(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xff009E10),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 40,
+                                    child: TextFormField(
+                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
+                                      controller: pickUpController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Pick up',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                height: 200,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ListView.builder(
+                                  itemCount: _pickUpSuggestions.length,
+                                  itemBuilder: (context, index) {
+                                    return ListTile(
+                                      title: Text(_pickUpSuggestions[index]),
+                                      onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
+                                    );
+                                  },
+                                ),
+                              ),
+                            const Divider(
+                              indent: 5,
+                              endIndent: 5,
+                            ),
+                            ..._dropPointControllers.asMap().entries.map((entry) {
+                              int i = entry.key;
+                              TextEditingController controller = entry.value;
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color(0xffE20808),
+                                          minRadius: 6,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: 43,
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextFormField(
+                                            onChanged: (value) => _fetchSuggestions(value, i, false),
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              hintText: 'Drop Point ${i + 1}',
+                                              hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                              border: InputBorder.none,
+                                              suffixIcon: i == _dropPointControllers.length - 1
+                                                  ? Padding(
+                                                padding: const EdgeInsets.only(right: 15),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    if (_dropPointControllers.length > 1)
+                                                      GestureDetector(
+                                                        onTap: () => _removeTextField(i),
+                                                        child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                      ),
+                                                    if (_dropPointControllers.length == 1)
+                                                      GestureDetector(
+                                                        onTap: _addTextField,
+                                                        child: Icon(Icons.add_circle_outline_sharp),
+                                                      ),
+                                                  ],
+                                                ),
+                                              )
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      height: 200,
+                                      child: ListView.builder(
+                                        itemCount: _dropPointSuggestions[i]!.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_dropPointSuggestions[i]![index]),
+                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (i < _dropPointControllers.length - 1)
+                                    Divider(
+                                      indent: 5,
+                                      endIndent: 5,
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff6A66D1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _fetchCoordinates();
+                            },
+                            child: const Text(
+                              'Get Location',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _dismissAddressSuggestions() {
+    setState(() {
+      _cityNameSuggestions.clear();
+      _addressSuggestions.clear();
+      _zipCodeSuggestions.clear();
+    });
+  }
+
+  Widget UserEquipmentStepThree() {
+    return GestureDetector(
+      onTap: (){
+        _dismissAddressSuggestions();
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              Container(
                 width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 30, right: 30),
+                padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
                 child: Column(
                   children: [
                     Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0),
+                          width: 1,
+                        ),
+                      ),
                       color: Colors.white,
                       child: Column(
                         children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Padding(
+                                    padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                    child: SvgPicture.asset('assets/search.svg')),
+                                Expanded(
+                                  child: Container(
+                                    height: 33,
+                                    child: TextFormField(
+                                      controller: cityNameController,
+                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter city name',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _cityNameSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_cityNameSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
+                                  );
+                                },
+                              ),
+                            ),
+                          const Divider(indent: 5, endIndent: 5),
                           Row(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(10,17,10,10),
-                                child: CircleAvatar(
-                                  backgroundColor: Color(0xff009E10),
-                                  minRadius: 6,
-                                ),
-                              ),
+                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                  child: SvgPicture.asset('assets/address.svg')),
                               Expanded(
                                 child: Container(
-                                  height: 40,
+                                  // color: Colors.green,
+                                  height: 33,
                                   child: TextFormField(
-                                    onChanged: (value) => _fetchSuggestions(value, -1, true),
-                                    controller: pickUpController,
+                                    controller: addressController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
-                                      hintText: 'Pick up',
+                                      hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
+                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(8),
                               height: 200,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: ListView.builder(
-                                itemCount: _pickUpSuggestions.length,
+                                itemCount: _addressSuggestions.length,
                                 itemBuilder: (context, index) {
                                   return ListTile(
-                                    title: Text(_pickUpSuggestions[index]),
-                                    onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
+                                    title: Text(_addressSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
                                   );
                                 },
                               ),
                             ),
-                          const Divider(
-                            indent: 5,
-                            endIndent: 5,
-                          ),
-                          ..._dropPointControllers.asMap().entries.map((entry) {
-                            int i = entry.key;
-                            TextEditingController controller = entry.value;
-                            return Column(
+                          const Divider(indent: 5, endIndent: 5),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(10,10,5,10),
-                                      child: CircleAvatar(
-                                        backgroundColor: Color(0xffE20808),
-                                        minRadius: 6,
+                                Padding(
+                                    padding: const EdgeInsets.fromLTRB(10,8,7,0),
+                                    child: SvgPicture.asset('assets/zipCode.svg')),
+                                Expanded(
+                                  child: Container(
+                                    height: 33,
+                                    child: TextFormField(
+                                      controller: zipCodeController,
+                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
+                                      decoration: InputDecoration(
+                                        hintText: 'Zip code for construction site',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        height: 40,
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: TextFormField(
-                                          onChanged: (value) => _fetchSuggestions(value, i, false),
-                                          controller: controller,
-                                          decoration: InputDecoration(
-                                            hintText: 'Drop Point ${i + 1}',
-                                            hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                            border: InputBorder.none,
-                                            suffixIcon: i == _dropPointControllers.length - 1
-                                                ? Padding(
-                                              padding: const EdgeInsets.only(right: 15),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  if (_dropPointControllers.length > 1)
-                                                    GestureDetector(
-                                                      onTap: () => _removeTextField(i),
-                                                      child: Icon(Icons.cancel_outlined, color: Colors.red),
-                                                    ),
-                                                  if (_dropPointControllers.length == 1)
-                                                    GestureDetector(
-                                                      onTap: _addTextField,
-                                                      child: Icon(Icons.add_circle_outline_sharp),
-                                                    ),
-                                                ],
-                                              ),
-                                            )
-                                                : null,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    height: 200,
-                                    child: ListView.builder(
-                                      itemCount: _dropPointSuggestions[i]!.length,
-                                      itemBuilder: (context, index) {
-                                        return ListTile(
-                                          title: Text(_dropPointSuggestions[i]![index]),
-                                          onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
-                                        );
-                                      },
                                     ),
                                   ),
+                                ),
                               ],
-                            );
-                          }).toList(),
-
+                            ),
+                          ),
+                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 100,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _zipCodeSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_zipCodeSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
+                                  );
+                                },
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -3383,7 +3680,7 @@ class _CreateBookingState extends State<CreateBooking> {
                           ),
                           onPressed: () {
                             FocusScope.of(context).unfocus();
-                            _fetchCoordinates();
+                            _fetchAddressCoordinates();
                           },
                           child: const Text(
                             'Get Location',
@@ -3395,398 +3692,225 @@ class _CreateBookingState extends State<CreateBooking> {
                           ),
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget UserEquipmentStepThree() {
-    return SingleChildScrollView(
-      child: Center(
-        child: Column(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
-              child: Column(
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      side: const BorderSide(
-                        color: Color(0xffE0E0E0),
-                        width: 1,
-                      ),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
-                                  child: SvgPicture.asset('assets/search.svg')),
-                              Expanded(
-                                child: Container(
-                                  height: 33,
-                                  child: TextFormField(
-                                    controller: cityNameController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter city name',
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _cityNameSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_cityNameSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                );
-                              },
-                            ),
-                          ),
-                        const Divider(indent: 5, endIndent: 5),
-                        Row(
-                          children: [
-                            Padding(
-                                padding: const EdgeInsets.fromLTRB(10,8,15,0),
-                                child: SvgPicture.asset('assets/address.svg')),
-                            Expanded(
-                              child: Container(
-                                // color: Colors.green,
-                                height: 33,
-                                child: TextFormField(
-                                  controller: addressController,
-                                  onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your address',
-                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                    border: InputBorder.none,
-                                    // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _addressSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_addressSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                );
-                              },
-                            ),
-                          ),
-                        const Divider(indent: 5, endIndent: 5),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,7,0),
-                                  child: SvgPicture.asset('assets/zipCode.svg')),
-                              Expanded(
-                                child: Container(
-                                  height: 33,
-                                  child: TextFormField(
-                                    controller: zipCodeController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                    decoration: InputDecoration(
-                                      hintText: 'Zip code for construction site',
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 100,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _zipCodeSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_zipCodeSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
+              Container(
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    _requestPermissions();
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0), // Default position
+                    zoom: 1,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.05,
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6A66D1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          FocusScope.of(context).unfocus();
-                          _fetchAddressCoordinates();
-                        },
-                        child: const Text(
-                          'Get Location',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Container(
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  _requestPermissions();
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(0, 0), // Default position
-                  zoom: 1,
+                  markers: markers,
+                  polylines: polylines,
                 ),
-                markers: markers,
-                polylines: polylines,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget UserSpecialStepThree() {
-    return SingleChildScrollView(
-      child: Center(
-        child: Column(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width,
-              padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
-              child: Column(
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      side: const BorderSide(
-                        color: Color(0xffE0E0E0), // Border color
-                        width: 1, // Border width
+    return GestureDetector(
+      onTap: (){
+        _dismissAddressSuggestions();
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
+                child: Column(
+                  children: [
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0), // Border color
+                          width: 1, // Border width
+                        ),
                       ),
-                    ),
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Padding(
+                                    padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                    child: SvgPicture.asset('assets/search.svg')),
+                                Expanded(
+                                  child: Container(
+                                    height: 33,
+                                    child: TextFormField(
+                                      controller: cityNameController,
+                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                      decoration: InputDecoration(
+                                        hintText: 'Enter city name',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _cityNameSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_cityNameSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
+                                  );
+                                },
+                              ),
+                            ),
+                          const Divider(indent: 5, endIndent: 5),
+                          Row(
                             children: [
                               Padding(
                                   padding: const EdgeInsets.fromLTRB(10,8,15,0),
-                                  child: SvgPicture.asset('assets/search.svg')),
+                                  child: SvgPicture.asset('assets/address.svg')),
                               Expanded(
                                 child: Container(
+                                  // color: Colors.green,
                                   height: 33,
                                   child: TextFormField(
-                                    controller: cityNameController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                    controller: addressController,
+                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
-                                      hintText: 'Enter city name',
+                                      hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
+                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _cityNameSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_cityNameSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                );
-                              },
-                            ),
-                          ),
-                        const Divider(indent: 5, endIndent: 5),
-                        Row(
-                          children: [
-                            Padding(
-                                padding: const EdgeInsets.fromLTRB(10,8,15,0),
-                                child: SvgPicture.asset('assets/address.svg')),
-                            Expanded(
-                              child: Container(
-                                // color: Colors.green,
-                                height: 33,
-                                child: TextFormField(
-                                  controller: addressController,
-                                  onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter your address',
-                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                    border: InputBorder.none,
-                                    // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                                  ),
-                                ),
+                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _addressSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_addressSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
+                                  );
+                                },
                               ),
                             ),
-                          ],
-                        ),
-                        if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _addressSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_addressSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                );
-                              },
-                            ),
-                          ),
-                        const Divider(indent: 5, endIndent: 5),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,7,0),
-                                  child: SvgPicture.asset('assets/zipCode.svg')),
-                              Expanded(
-                                child: Container(
-                                  height: 33,
-                                  child: TextFormField(
-                                    controller: zipCodeController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                    decoration: InputDecoration(
-                                      hintText: 'Zip code for construction site',
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                      border: InputBorder.none,
+                          const Divider(indent: 5, endIndent: 5),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Padding(
+                                    padding: const EdgeInsets.fromLTRB(10,8,7,0),
+                                    child: SvgPicture.asset('assets/zipCode.svg')),
+                                Expanded(
+                                  child: Container(
+                                    height: 33,
+                                    child: TextFormField(
+                                      controller: zipCodeController,
+                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
+                                      decoration: InputDecoration(
+                                        hintText: 'Zip code for construction site',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 100,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _zipCodeSuggestions.length,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_zipCodeSuggestions[index]),
-                                  onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
-                                );
-                              },
+                              ],
                             ),
                           ),
-                      ],
+                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 100,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _zipCodeSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_zipCodeSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.05,
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6A66D1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6A66D1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        onPressed: () {
-                          FocusScope.of(context).unfocus();
-                          _fetchAddressCoordinates();
-                        },
-                        child: const Text(
-                          'Get Location',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.normal,
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            _fetchAddressCoordinates();
+                          },
+                          child: const Text(
+                            'Get Location',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.normal,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Container(
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  _requestPermissions();
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(0, 0), // Default position
-                  zoom: 1,
+                    )
+                  ],
                 ),
-                markers: markers,
-                polylines: polylines,
               ),
-            ),
-          ],
+              Container(
+                height: MediaQuery.of(context).size.height * 0.4,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    _requestPermissions();
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0), // Default position
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -3881,7 +4005,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                         : 'Load type',
                     style: TextStyle(fontSize: 16),
                   ),
-                  const Icon(Icons.arrow_drop_down),
+                  const Icon(Icons.arrow_drop_down,size: 26),
                 ],
               ),
               itemBuilder: (BuildContext context) {

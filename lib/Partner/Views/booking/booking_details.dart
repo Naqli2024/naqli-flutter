@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 
 class BookingDetails extends StatefulWidget {
@@ -12,8 +13,9 @@ class BookingDetails extends StatefulWidget {
   final String token;
   final String quotePrice;
   final String paymentStatus;
+  final String email;
 
-   const BookingDetails({super.key, required this.partnerName, required this.partnerId, required this.token, required this.quotePrice, required this.paymentStatus});
+   const BookingDetails({super.key, required this.partnerName, required this.partnerId, required this.token, required this.quotePrice, required this.paymentStatus, required this.email});
 
   @override
   State<BookingDetails> createState() => _BookingDetailsState();
@@ -164,6 +166,7 @@ class _BookingDetailsState extends State<BookingDetails> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -185,14 +188,24 @@ class _BookingDetailsState extends State<BookingDetails> {
           ),
         ),
       ),
-      drawer: commonWidgets.createDrawer(context,onPaymentPressed: () {
+      drawer: commonWidgets.createDrawer(context,
+        onPaymentPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+            builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
           ),
         );
-      },),
+      },
+        onReportPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+            ),
+          );
+        }
+      ),
       body: RefreshIndicator(
         backgroundColor: Colors.white,
         onRefresh: ()async {
@@ -294,6 +307,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                             cityName: cityName,
                                             address: address,
                                             zipCode: zipCode,
+                                            email: widget.email,
                                           ),
                                         ),
                                       );
@@ -318,6 +332,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                               cityName: cityName,
                                               address: address,
                                               zipCode: zipCode,
+                                              email: widget.email,
                                             )
                                         ),
                                       );

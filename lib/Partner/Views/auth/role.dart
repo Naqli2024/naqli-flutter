@@ -31,6 +31,7 @@ class _RoleState extends State<Role> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         toolbarHeight: MediaQuery.of(context).size.height * 0.4,

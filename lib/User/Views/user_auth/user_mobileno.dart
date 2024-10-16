@@ -25,6 +25,7 @@ class _OTPMobileNoState extends State<OTPMobileNo> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        centerTitle: false,
         backgroundColor: Colors.white,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,
         title: Stack(

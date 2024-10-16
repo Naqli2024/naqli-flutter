@@ -3,12 +3,14 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 
 class ViewBooking extends StatefulWidget {
   final String partnerName;
   final String partnerId;
   final String token;
+  final String email;
   final String bookingId;
   final String quotePrice;
   final String paymentStatus;
@@ -29,7 +31,7 @@ class ViewBooking extends StatefulWidget {
     required this.quotePrice,
     required this.paymentStatus,
     required this.userId,
-    required this.bookingStatus, required this.cityName, required this.address, required this.zipCode,
+    required this.bookingStatus, required this.cityName, required this.address, required this.zipCode, required this.email,
   });
 
   @override
@@ -141,6 +143,7 @@ class _ViewBookingState extends State<ViewBooking> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -167,7 +170,7 @@ class _ViewBookingState extends State<ViewBooking> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+              builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
           ),
         );
       },
@@ -175,10 +178,18 @@ class _ViewBookingState extends State<ViewBooking> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,)
+                builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
             ),
           );
-        }
+        },
+          onReportPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+              ),
+            );
+          }
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -204,7 +215,7 @@ class _ViewBookingState extends State<ViewBooking> {
                       mode: '${bookingDetails?['name'] ?? 'No name available'} ${bookingDetails?['typeName'] ?? ''}',
                       bookingStatus: widget.bookingStatus,
                       pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
-                      dropPoint: '${bookingDetails?['dropPoints'] ?? ''}',
+                      dropPoint: bookingDetails?['dropPoints'] ?? [],
                       remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
                       bookingId: widget.bookingId,
                       token: widget.token,
@@ -214,6 +225,7 @@ class _ViewBookingState extends State<ViewBooking> {
                       cityName: widget.cityName,
                       address: widget.address,
                       zipCode: widget.zipCode,
+                      email: widget.email,
                     ),
                   ),
                 );

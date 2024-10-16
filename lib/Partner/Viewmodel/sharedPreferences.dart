@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-Future<void> savePartnerData(String partnerId, String token, String partnerName) async {
+Future<void> savePartnerData(String partnerId, String token, String partnerName, String email) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('partnerId', partnerId);
   await prefs.setString('token', token);
   await prefs.setString('partnerName', partnerName);
+  await prefs.setString('email', email);
 }
 
 Future<Map<String, String?>> getSavedPartnerData() async {
@@ -16,6 +17,7 @@ Future<Map<String, String?>> getSavedPartnerData() async {
     'partnerId': prefs.getString('partnerId'),
     'token': prefs.getString('token'),
     'partnerName': prefs.getString('partnerName'),
+    'email': prefs.getString('email'),
   };
 }
 
@@ -24,14 +26,15 @@ Future<void> clearPartnerData() async {
   await prefs.clear();
 }
 
-Future<void> saveUserData(String firstName, String lastName, String token, String id) async {
+Future<void> saveUserData(String firstName, String lastName, String token, String id,String email) async {
   try {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', firstName);
     await prefs.setString('lastName', lastName);
     await prefs.setString('token', token);
     await prefs.setString('id', id);
-    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+    await prefs.setString('email', email);
+    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email');
   } catch (e) {
     print('Error saving data: $e');
   }
@@ -44,15 +47,17 @@ Future<Map<String, String?>> getSavedUserData() async {
     final lastName = prefs.getString('lastName');
     final token = prefs.getString('token');
     final id = prefs.getString('id');
+    final email = prefs.getString('email');
 
     // Debugging
-    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
+    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email');
 
     return {
       'firstName': firstName,
       'lastName': lastName,
       'token': token,
       'id': id,
+      'email': email,
     };
   } catch (e) {
     print('Error retrieving data: $e');

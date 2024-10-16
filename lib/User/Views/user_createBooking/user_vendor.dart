@@ -15,6 +15,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dar
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
+import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:stripe_platform_interface/src/models/payment_methods.dart'
     as stripe;
@@ -41,6 +42,7 @@ class ChooseVendor extends StatefulWidget {
   final String lastName;
   final String selectedType;
   final String id;
+  final String email;
   const ChooseVendor(
       {super.key,
       required this.bookingId,
@@ -58,7 +60,7 @@ class ChooseVendor extends StatefulWidget {
       required this.address,
       required this.zipCode,
       required this.unitTypeName,
-      required this.id});
+      required this.id, required this.email});
 
   @override
   State<ChooseVendor> createState() => _ChooseVendorState();
@@ -108,9 +110,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
   void initState() {
     startVendorFetching();
     _moveCameraToFitAllMarkers();
-    widget.cityName != null
-        ? fetchAddressCoordinates()
-        : fetchCoordinates();
+    // widget.cityName != null
+    //     ? fetchAddressCoordinates()
+    //     : fetchCoordinates();
     fetchAddressCoordinates();
     fetchCoordinates();
     booking = _fetchBookingDetails();
@@ -410,6 +412,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
               quotePrice: quotePrice,
               advanceOrPay: advanceOrPay,
               bookingStatus: bookingStatus??'',
+              email: widget.email,
             ),
           ),
         );
@@ -442,6 +445,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
               quotePrice: quotePrice,
               advanceOrPay: advanceOrPay,
               bookingStatus: bookingStatus??'',
+              email: widget.email,
             ),
           ),
         );
@@ -843,6 +847,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
   // }
 
 
+/*
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
     final String? bookingId = data['_id'];
@@ -853,6 +858,54 @@ class _ChooseVendorState extends State<ChooseVendor> {
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
       print('No bookingId or token found in shared preferences.');
+      return null;
+    }
+  }
+*/
+
+
+  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
+    final data = await getSavedBookingId();
+    String? bookingId = data['_id'];
+    final String? token = data['token'];
+
+    // If bookingId is null, call getPaymentPendingBooking API
+    if (bookingId == null || token == null) {
+      print('No bookingId found, fetching pending booking details.');
+
+      if (widget.id != null && token != null) {
+        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+
+        if (bookingId != null) {
+          // Optionally, save the bookingId to shared preferences
+          // await saveBookingIdToPreferences(bookingId, token);
+        } else {
+          print('No pending booking found, navigating to NewBooking.');
+          return null;
+        }
+      } else {
+        print('No userId or token available.');
+        return null;
+      }
+    }
+
+    // Proceed to fetch booking details if bookingId is available
+    if (bookingId != null && token != null) {
+      return await userService.fetchBookingDetails(bookingId, token);
+    } else {
+      print('Failed to fetch booking details due to missing bookingId or token.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NewBooking(
+            token: token,
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            id: widget.id,
+            email: widget.email,
+          ),
+        ),
+      );
       return null;
     }
   }
@@ -871,6 +924,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
             lastName: widget.lastName,
             token: widget.token,
             id: widget.id,
+            email: widget.email,
           ),
         ),
       );
@@ -999,6 +1053,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                 lastName: widget.lastName,
                 token: widget.token,
                 id: widget.id,
+              email: widget.email,
             )));
         return false;
       },
@@ -1040,7 +1095,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     try {
                       final bookingData = await booking;
                       if (bookingData != null) {
-                        bookingData['paymentStatus'] == 'Pending'
+                        bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus']== 'NotPaid'
                             ? Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -1070,6 +1125,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                     cityName: bookingData['cityName'] ?? '',
                                     address: bookingData['address'] ?? '',
                                     zipCode: bookingData['zipCode'] ?? '',
+                                    email: widget.email,
                                   ),
                                 ),
                               )
@@ -1124,6 +1180,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                           quotePrice: '',
                                             advanceOrPay: bookingData['remainingBalance'] ?? 0,
                                           bookingStatus: bookingData['bookingStatus'] ?? '',
+                                          email: widget.email,
                                             )),
                                   )
                                 : Navigator.push(
@@ -1172,6 +1229,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                               partnerId:
                                                   bookingData['partner'] ?? '',
                                               bookingStatus: bookingData['bookingStatus'] ?? '',
+                                              email: widget.email,
                                             )),
                                   );
                       } else {
@@ -1182,7 +1240,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                   token: widget.token,
                                   firstName: widget.firstName,
                                   lastName: widget.lastName,
-                                  id: widget.id)),
+                                  id: widget.id,email: widget.email,)),
                         );
                       }
                     } catch (e) {
@@ -1212,6 +1270,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           lastName: widget.lastName,
                           token: widget.token,
                           id: widget.id,
+                          email: widget.email,
                         ),
                       ),
                     );
@@ -1235,6 +1294,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           lastName: widget.lastName,
                           token: widget.token,
                           id: widget.id,
+                          email: widget.email,
                         ),
                       ),
                     );
@@ -1255,7 +1315,14 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     style: TextStyle(fontSize: 25),
                   ),
                 ),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: Image.asset('assets/help_logo.png',
@@ -1624,7 +1691,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 //   return SizedBox.shrink();
                                 // }
                                 return Padding(
-                                  padding: const EdgeInsets.only(left: 10),
+                                  padding: const EdgeInsets.only(left: 5),
                                   child: RadioListTile<String>(
                                     title: Row(
                                       children: [
@@ -1690,85 +1757,90 @@ class _ChooseVendorState extends State<ChooseVendor> {
             ),
           ),
         ),
-          bottomNavigationBar: BottomAppBar(
-            color: Colors.white,
-            height: MediaQuery.of(context).size.height * 0.18,
+          floatingActionButton: Container(
+            height: MediaQuery.of(context).size.height * 0.15,
             child: SingleChildScrollView(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     padding: const EdgeInsets.only(bottom: 15, top: 15),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.53,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                    child: Center(
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.53,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
-                        ),
-                        // Pay Advance button with "Completed" status string
-                        onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
-                            ? null
-                            : () {
-                          initiateStripePayment(
-                            context,
-                            advancePayAmount,
-                            true,
-                            selectedPartnerName!,
-                            selectedPartnerId!,
-                            selectedOldQuotePrice!,
-                            selectedQuotePrice!,
-                              "HalfPaid",
-                            advanceAmount
-                          );
-                        },
-                        child: Text(
-                          'Pay Advance : \n $advanceAmount SAR',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          // Pay Advance button with "Completed" status string
+                          onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
+                              ? null
+                              : () {
+                            initiateStripePayment(
+                              context,
+                              advancePayAmount,
+                              true,
+                              selectedPartnerName!,
+                              selectedPartnerId!,
+                              selectedOldQuotePrice!,
+                              selectedQuotePrice!,
+                                "HalfPaid",
+                              advanceAmount
+                            );
+                          },
+                          child: Text(
+                            'Pay Advance : \n $advanceAmount SAR',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 15),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.53,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff2229BF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                    padding: const EdgeInsets.only(right: 0, bottom: 15),
+                    child: Center(
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.53,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff2229BF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
-                        ),
-                        // Full payment button with "Paid" status string
-                        onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
-                            ? null
-                            : () async {
-                          initiateStripePayment(
-                            context,
-                            fullPayAmount,
-                            false,
-                            selectedPartnerName!,
-                            selectedPartnerId!,
-                            selectedOldQuotePrice!,
-                            selectedQuotePrice!,
-                            "Paid",
-                            fullAmount
-                          );
-                        },
-                        child: Text(
-                          'Pay : $fullAmount SAR',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                          // Full payment button with "Paid" status string
+                          onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
+                              ? null
+                              : () async {
+                            initiateStripePayment(
+                              context,
+                              fullPayAmount,
+                              false,
+                              selectedPartnerName!,
+                              selectedPartnerId!,
+                              selectedOldQuotePrice!,
+                              selectedQuotePrice!,
+                              "Paid",
+                              fullAmount
+                            );
+                          },
+                          child: Text(
+                            'Pay : $fullAmount SAR',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),

@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,7 @@ class ViewMap extends StatefulWidget {
   final String partnerName;
   final String userName;
   final String userId;
+  final String email;
   final String mode;
   final String bookingStatus;
   final String pickupPoint;
@@ -45,7 +47,7 @@ class ViewMap extends StatefulWidget {
     required this.paymentStatus,
     required this.cityName,
     required this.address,
-    required this.zipCode,
+    required this.zipCode, required this.email,
   });
 
   @override
@@ -75,18 +77,11 @@ class _ViewMapState extends State<ViewMap> {
     super.initState();
     paymentStatus = widget.paymentStatus;
     _moveCameraToFitAllMarkers();
-    _initialize();
+    fetchAddressCoordinates();
+    _fetchCoordinates();
     _requestPermissions();
     fetchBookingDetails();
     remainingBalance = widget.remainingBalance;
-  }
-
-  Future<void> _initialize() async {
-    if (widget.cityName != null) {
-      await fetchAddressCoordinates(); // Await the async function
-    } else {
-      await _fetchCoordinates(); // Await the async function
-    }
   }
 
   Future<void> _requestPermissions() async {
@@ -399,7 +394,8 @@ class _ViewMapState extends State<ViewMap> {
         context,
         User: widget.partnerName,
       ),
-      drawer: commonWidgets.createDrawer(context, onPaymentPressed: () {
+      drawer: commonWidgets.createDrawer(context,
+          onPaymentPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -409,6 +405,7 @@ class _ViewMapState extends State<ViewMap> {
                     partnerName: widget.partnerName,
                     quotePrice: widget.quotePrice,
                     paymentStatus: widget.paymentStatus,
+                    email: widget.email,
                   )),
         );
       }, onBookingPressed: () {
@@ -421,9 +418,19 @@ class _ViewMapState extends State<ViewMap> {
                     partnerName: widget.partnerName,
                     quotePrice: widget.quotePrice,
                     paymentStatus: widget.paymentStatus,
+                    email: widget.email,
                   )),
         );
-      }),
+      },
+          onReportPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+              ),
+            );
+          }
+      ),
       body: RefreshIndicator(
         onRefresh: () async{
           await fetchBookingDetails();
@@ -704,7 +711,7 @@ class _ViewMapState extends State<ViewMap> {
                                   setState(() {
                                     isTerminating = true;
                                   });
-                                  await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token);
+                                  await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token,widget.email);
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -713,7 +720,7 @@ class _ViewMapState extends State<ViewMap> {
                                               partnerId: widget.partnerId,
                                               token: widget.token,
                                               quotePrice: '',
-                                              paymentStatus: '',)
+                                              paymentStatus: '',email: widget.email,)
                                     ),
                                   );
                                   setState(() {

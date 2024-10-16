@@ -228,6 +228,7 @@ class _DriverNotificationState extends State<DriverNotification> {
           Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
+              centerTitle: false,
               backgroundColor: Color(0xffE6E5E3).withOpacity(0.1),
               toolbarHeight: MediaQuery.of(context).size.height * 0.15,
               leading: GestureDetector(

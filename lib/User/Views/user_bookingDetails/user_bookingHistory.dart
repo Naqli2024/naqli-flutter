@@ -10,7 +10,8 @@ class BookingHistory extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String id;
-  const BookingHistory({super.key, required this.token, required this.firstName, required this.lastName, required this.id});
+  final String email;
+  const BookingHistory({super.key, required this.token, required this.firstName, required this.lastName, required this.id, required this.email});
 
   @override
   State<BookingHistory> createState() => _BookingHistoryState();
@@ -69,6 +70,7 @@ class _BookingHistoryState extends State<BookingHistory> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -91,7 +93,7 @@ class _BookingHistoryState extends State<BookingHistory> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context)=> UserType(
                         firstName: widget.firstName,
-                        lastName: widget.lastName, token: widget.token, id: widget.id,)));
+                        lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)));
               },
               icon: const Icon(
                 Icons.arrow_back_sharp,
@@ -163,7 +165,33 @@ class _BookingHistoryState extends State<BookingHistory> {
                                     Expanded(
                                       flex: 3,
                                       child: Text(
-                                        'Mode',
+                                        'Unit',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        booking['unitType'] ?? 'N/A',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(
+                                indent: 20,
+                                endIndent: 20,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Unit Type',
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     ),
@@ -197,32 +225,6 @@ class _BookingHistoryState extends State<BookingHistory> {
                                       flex: 2,
                                       child: Text(
                                         booking['date'] ?? 'N/A',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Divider(
-                                indent: 20,
-                                endIndent: 20,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(30, 8, 17, 2),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Unit Type',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        booking['unitType'] ?? 'N/A',
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     ),

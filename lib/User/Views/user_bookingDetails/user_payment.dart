@@ -18,6 +18,7 @@ class Payment extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String id;
+  final String email;
   final String? quotePrice;
 
   const Payment({
@@ -25,7 +26,7 @@ class Payment extends StatefulWidget {
     required this.token,
     required this.firstName,
     required this.lastName,
-    required this.id, this.quotePrice,
+    required this.id, this.quotePrice, required this.email,
   });
 
   @override
@@ -117,6 +118,7 @@ class _PaymentState extends State<Payment> {
               lastName: widget.lastName,
               token: widget.token,
               id: widget.id,
+              email: widget.email,
             ),
           ),
         );
@@ -284,7 +286,7 @@ class _PaymentState extends State<Payment> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                       padding: const EdgeInsets.all(8),
-                      child: Text('${booking?['paymentStatus'] ?? 'No paymentStatus'}',style: const TextStyle(fontSize: 19)),
+                      child: Text('${booking?['paymentStatus'] ?? 'N/A'}' == 'Completed' ? 'Paid': booking?['paymentStatus'] ?? 'N/A',style: const TextStyle(fontSize: 19)),
                     ),
                   ),
                   Positioned(
@@ -306,7 +308,7 @@ class _PaymentState extends State<Payment> {
                   ?Padding(
                 padding: const EdgeInsets.only(top: 30,bottom: 10),
                 child: Text(
-                  'Total ${booking?['paymentStatus'] ?? ''}',
+                  '${booking?['paymentStatus'] ?? ''}'== 'Completed' ? ' Total Paid': 'Total ${booking?['paymentStatus'] ?? 'N/A'}',
                   style: const TextStyle(fontSize: 19),
                 ),
               )
@@ -425,6 +427,7 @@ class _PaymentState extends State<Payment> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -447,7 +450,7 @@ class _PaymentState extends State<Payment> {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context)=> UserType(
                       firstName: widget.firstName,
-                      lastName: widget.lastName, token: widget.token, id: widget.id,quotePrice: widget.quotePrice,)));
+                      lastName: widget.lastName, token: widget.token, id: widget.id,quotePrice: widget.quotePrice,email: widget.email,)));
               },
               icon: const Icon(
                 Icons.arrow_back_sharp,

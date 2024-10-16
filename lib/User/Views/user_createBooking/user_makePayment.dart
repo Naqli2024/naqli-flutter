@@ -25,6 +25,7 @@ class _MakePaymentState extends State<MakePayment> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: const Text('Stripe Payment'),
       ),
       body: Center(

@@ -5,13 +5,16 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Views/auth/forgotPassword.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/otp.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepThree.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 
 class AuthService {
   static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
@@ -249,7 +252,7 @@ class AuthService {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context)=> LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: ''),
+            builder: (context)=> ForgotPasswordSuccess(),
           ),
         );
       } else {
@@ -346,12 +349,13 @@ class AuthService {
         final partnerName = responseBody['data']['partner']['partnerName'];
         final partnerId = responseBody['data']['partner']['_id'];
         final type = responseBody['data']['partner']['type'];
+        final email = responseBody['data']['partner']['email'];
 
         if(type == 'singleUnit + operator')
           {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                  builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',)
+                  builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',email: email,)
               ),
             );
             print('Login successful');
@@ -361,7 +365,7 @@ class AuthService {
             await getBookingData(partnerId,token);
             print(userData);
             print(token);
-            await savePartnerData(partnerId, token, partnerName);
+            await savePartnerData(partnerId, token, partnerName,email);
           }
         else{
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1011,7 +1015,7 @@ class AuthService {
                     partnerId: partnerId,
                     token: token,
                     quotePrice: '',
-                    paymentStatus: '',)
+                    paymentStatus: '',email:'',)
           ),
         );
       } else if (response.statusCode == 401) {
@@ -1030,7 +1034,7 @@ class AuthService {
     }
   }
 
-  Future<void> terminateBooking(BuildContext context,String partnerId, String bookingId, String token) async {
+  Future<void> terminateBooking(BuildContext context,String partnerId, String bookingId, String token,String email) async {
     try {
       final url = Uri.parse(
           '${baseUrl}$partnerId/booking-request/$bookingId');
@@ -1057,7 +1061,7 @@ class AuthService {
                     partnerId: partnerId,
                     token: token,
                     quotePrice: '',
-                    paymentStatus: '',)
+                    paymentStatus: '',email: email,)
           ),
         );
       } else if (response.statusCode == 401) {
@@ -1073,6 +1077,67 @@ class AuthService {
     } catch (e) {
       print('An error occurred: $e');
       throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> submitTicket(BuildContext context, {
+    required String reportMessage,
+    required String email,
+    required File? pictureOfTheReport,
+  }) async {
+    try {
+      final url = Uri.parse('https://naqli.onrender.com/api/report/add-report');
+
+      var request = http.MultipartRequest('POST', url);
+      request.fields['email'] = email;
+      request.fields['reportMessage'] = reportMessage;
+
+      if (pictureOfTheReport != null) {
+        var fileName = basename(pictureOfTheReport.path);
+        var fileBytes = await pictureOfTheReport.readAsBytes();
+
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'pictureOfTheReport',
+            fileBytes,
+            filename: fileName,
+          ),
+        );
+      }
+
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString(); // Local declaration
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: $responseBody'); // Use the locally defined responseBody
+
+      if (response.statusCode == 201) {
+        try {
+          final message = jsonDecode(responseBody)['message'];
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+          print('Success: $message');
+        } catch (e) {
+          print('Error parsing JSON: $e');
+          print('Received body: $responseBody'); // Use the locally defined responseBody
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
+        );
+        print('Failed to submit ticket: ${response.statusCode}');
+        print('Response body: $responseBody'); // Use the locally defined responseBody
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
     }
   }
 

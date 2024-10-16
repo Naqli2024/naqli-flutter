@@ -10,6 +10,7 @@ import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
 
 class UserService{
   static const String baseUrl = 'https://naqli.onrender.com/api/';
@@ -260,7 +262,7 @@ class UserService{
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context)=> UserLogin(),
+            builder: (context)=> UserForgotPasswordSuccess(),
           ),
         );
       } else {
@@ -359,6 +361,7 @@ class UserService{
           final lastName = userData['lastName'] ?? '';
           final token = tokenData['token'] ?? '';
           final id = userData['_id'] ?? '';
+          final email = userData['emailAddress'] ?? '';
           final accountType = userData['accountType'] ?? '';
           print(userData);
 
@@ -371,6 +374,7 @@ class UserService{
                     lastName: lastName,
                     token: token,
                     id: id,
+                    email: email
                   ),
                 ),
               );
@@ -379,7 +383,7 @@ class UserService{
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(message)),
               );
-              await saveUserData(firstName, lastName, token, id);
+              await saveUserData(firstName, lastName, token, id,email);
             }
           else{
             ScaffoldMessenger.of(context).showSnackBar(
@@ -1161,5 +1165,106 @@ class UserService{
       throw Exception('An unexpected error occurred: $e');
     }
   }
+
+  Future<void> userSubmitTicket(BuildContext context, {
+    required String reportMessage,
+    required String email,
+    required File? pictureOfTheReport,
+  }) async {
+    try {
+      final url = Uri.parse('${baseUrl}report/add-report');
+
+      var request = http.MultipartRequest('POST', url);
+      request.fields['email'] = email;
+      request.fields['reportMessage'] = reportMessage;
+
+      if (pictureOfTheReport != null) {
+        var fileName = basename(pictureOfTheReport.path);
+        var fileBytes = await pictureOfTheReport.readAsBytes();
+
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'pictureOfTheReport',
+            fileBytes,
+            filename: fileName,
+          ),
+        );
+      }
+
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString(); // Local declaration
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: $responseBody'); // Use the locally defined responseBody
+
+      if (response.statusCode == 201) {
+        try {
+          final message = jsonDecode(responseBody)['message'];
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+          print('Success: $message');
+        } catch (e) {
+          print('Error parsing JSON: $e');
+          print('Received body: $responseBody'); // Use the locally defined responseBody
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
+        );
+        print('Failed to submit ticket: ${response.statusCode}');
+        print('Response body: $responseBody'); // Use the locally defined responseBody
+      }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<String?> getPaymentPendingBooking(String userId, String token) async {
+    try {
+      final url = Uri.parse('${baseUrl}bookings/getBookingsWithPendingPayment/$userId');
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+
+        final message = responseBody['message']; // Fixed type issue
+        commonWidgets.showToast(message);
+
+        if (responseBody.containsKey('booking')) {
+          final booking = responseBody['booking'];
+          final String bookingId = booking['_id']; // Extracting the booking ID
+          print('Fetched pending bookingId: $bookingId');
+          return bookingId; // Return the extracted bookingId
+        } else {
+          print('No booking found in the response');
+          return null;
+        }
+      } else {
+        print('Failed to load pending booking: ${response.body}');
+        return null;
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet connection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
 
 }

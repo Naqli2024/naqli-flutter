@@ -88,6 +88,7 @@ class _UserOTPState extends State<UserOTP> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,

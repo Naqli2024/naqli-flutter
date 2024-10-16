@@ -9,11 +9,12 @@ class SuccessScreen extends StatefulWidget {
   final String? firstName;
   final String? lastName;
   final String? id;
+  final String? email;
   final String title;
   final String subTitle;
   final Image;
 
-  const SuccessScreen({super.key, required this.title, required this.subTitle, this.Image, this.token,this.firstName, this.lastName, this.id,});
+  const SuccessScreen({super.key, required this.title, required this.subTitle, this.Image, this.token,this.firstName, this.lastName, this.id, this.email,});
 
   @override
   State<SuccessScreen> createState() => _SuccessScreenState();
@@ -31,6 +32,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [
@@ -45,6 +47,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
                             lastName: widget.lastName??'',
                             token: widget.token??'',
                             id: widget.id??'',
+                            email: widget.email??'',
                           )));
             },
             child: Container(
@@ -121,6 +124,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         actions: [

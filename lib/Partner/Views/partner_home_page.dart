@@ -25,6 +25,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: GestureDetector(

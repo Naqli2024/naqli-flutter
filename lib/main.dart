@@ -78,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
               final partnerName = partnerData['partnerName'] ?? '';
               final partnerId = partnerData['partnerId'] ?? '';
               final token = partnerData['token'] ?? '';
+              final email = partnerData['email'] ?? '';
               if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
                 return BookingDetails(
                   partnerName: partnerName,
@@ -85,6 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   token: token,
                   quotePrice: '',
                   paymentStatus: '',
+                  email: email,
                 );
               }
             }
@@ -131,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       final lastName = userData['lastName'] ?? '';
                       final token = userData['token'] ?? '';
                       final id = userData['id'] ?? '';
+                      final email = userData['email'] ?? '';
                       print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
                       if (id.isNotEmpty && token.isNotEmpty) {
                         return UserType(
@@ -138,6 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           lastName: lastName,
                           token: token,
                           id: id,
+                          email: email,
                         );
                       }
                     }

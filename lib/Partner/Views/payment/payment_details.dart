@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
 
 class PaymentDetails extends StatefulWidget {
   final String partnerName;
   final String partnerId;
   final String token;
+  final String email;
   final String quotePrice;
   final String paymentStatus;
-  const PaymentDetails({super.key, required this.partnerName, required this.partnerId, required this.token, required this.quotePrice, required this.paymentStatus});
+  const PaymentDetails({super.key, required this.partnerName, required this.partnerId, required this.token, required this.quotePrice, required this.paymentStatus, required this.email});
 
   @override
   State<PaymentDetails> createState() => _PaymentDetailsState();
@@ -333,7 +335,8 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           ),
         ),
       ),
-      drawer: commonWidgets.createDrawer(context, onBookingPressed: () {
+      drawer: commonWidgets.createDrawer(context,
+          onBookingPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -343,10 +346,20 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               token: widget.token,
               quotePrice: widget.quotePrice,
               paymentStatus: widget.paymentStatus,
+              email: widget.email,
             ),
           ),
         );
-      }),
+      },
+          onReportPressed: (){
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+              ),
+            );
+          }
+      ),
       body: isLoading
       ? Center(child: CircularProgressIndicator(),)
       : FutureBuilder<List<Map<String, dynamic>?>>(

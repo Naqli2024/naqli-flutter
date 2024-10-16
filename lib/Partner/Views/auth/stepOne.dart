@@ -158,6 +158,7 @@ class _StepOneState extends State<StepOne> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(70.0),
           child: AppBar(
+            centerTitle: false,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
             title: const Text(

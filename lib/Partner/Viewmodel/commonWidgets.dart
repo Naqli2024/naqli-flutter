@@ -10,7 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CommonWidgets{
   AppBar commonAppBar(BuildContext context,{String? User,PreferredSizeWidget? bottom,bool showLeading = true}) {
     return AppBar(
+      backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
+        centerTitle: false,
         // toolbarHeight: MediaQuery.of(context).size.height * 0.065,
         leading: showLeading
             ? Builder(
@@ -85,7 +87,7 @@ class CommonWidgets{
   Drawer createDrawer(
       BuildContext context,
       {VoidCallback ? onBookingPressed,String ? partnerName, String ? partnerId,
-        VoidCallback ? onPaymentPressed}) {
+        VoidCallback ? onPaymentPressed,VoidCallback ? onReportPressed}) {
     return Drawer(
       backgroundColor: Colors.white,
       child: ListView(
@@ -136,9 +138,7 @@ class CommonWidgets{
               padding: EdgeInsets.only(left: 15),
               child: Text('Report',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
             ),
-            onTap: () {
-
-            },
+            onTap: onReportPressed
           ),
           ListTile(
             leading: Image.asset('assets/help_logo.png',
@@ -242,10 +242,13 @@ class CommonWidgets{
           title: Stack(
             children: [
               Center(
-                child: SvgPicture.asset(
-                  'assets/generated_logo.svg',
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height * 0.1,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: SvgPicture.asset(
+                    'assets/generated_logo.svg',
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height * 0.1,
+                  ),
                 ),
               ),
               Positioned(

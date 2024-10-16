@@ -60,6 +60,8 @@ dependencies:
   geolocator: ^12.0.0
   location: ^6.0.2
   mime: ^1.0.0
+  dotted_border: ^2.0.0
+  path: ^1.8.0
 
 
 dev_dependencies:
@@ -106,11 +108,11 @@ flutter:
     - assets/payment_logo.png
     - assets/report_logo.png
     - assets/help_logo.png
+    - assets/vehicle.svg
     - assets/bus.png
-    - assets/truck.png
-    - assets/special.png
-    - assets/equipment.png
-    - assets/others.png
+    - assets/special.svg
+    - assets/equipment.svg
+    - assets/others.svg
     - assets/otp_mobileno.png
     - assets/otp_verified.svg
     - assets/delivery-truck.png
@@ -135,6 +137,12 @@ flutter:
     - assets/carDirection.png
     - assets/arrow.png
     - assets/history_truck.svg
+    - assets/forgotLogo.svg
+    - assets/newPassword.svg
+    - assets/resetSuccess.svg
+    - assets/verifyOtp.svg
+    - assets/submitTicket.svg
+    - assets/ticketSuccess.svg
     - assets/images/short-sides.svg
     - assets/images/curtain.svg
     - assets/images/refrigerator.svg
@@ -179,6 +187,9 @@ flutter:
     - assets/images/backhoe.svg
     - assets/images/front hoe.svg
     - assets/images/skid steer.svg
+    - assets/images/tow-truck-for-trucks.svg
+    - assets/images/tow-truck-two-cars.svg
+    - assets/images/tow-truck-VIP.svg
     - .env
   # To add assets to your application, add an assets section, like this:
   # assets:

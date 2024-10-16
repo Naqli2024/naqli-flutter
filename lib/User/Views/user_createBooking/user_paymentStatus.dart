@@ -17,12 +17,13 @@ class NewBooking extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String id;
+  final String email;
   const NewBooking(
       {super.key,
       required this.token,
       required this.firstName,
       required this.lastName,
-      required this.id});
+      required this.id, required this.email});
 
   @override
   State<NewBooking> createState() => _NewBookingState();
@@ -77,7 +78,7 @@ class _NewBookingState extends State<NewBooking> {
                               token: widget.token,
                               firstName: widget.firstName,
                               lastName: widget.lastName,
-                              id: widget.id)),
+                              id: widget.id,email: widget.email,)),
                     );
                   },
                   child: const Text(
@@ -115,6 +116,7 @@ class PaymentCompleted extends StatefulWidget {
   final String lastName;
   final String selectedType;
   final String id;
+  final String email;
   final String partnerId;
   final String bookingStatus;
   const PaymentCompleted(
@@ -135,7 +137,7 @@ class PaymentCompleted extends StatefulWidget {
       required this.lastName,
       required this.selectedType,
       required this.id,
-      required this.partnerId, required this.bookingStatus});
+      required this.partnerId, required this.bookingStatus, required this.email});
 
   @override
   State<PaymentCompleted> createState() => _PaymentCompletedState();
@@ -551,7 +553,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                       top: 15,
                       child: Container(
                         width: MediaQuery.sizeOf(context).width,
-                        // padding: const EdgeInsets.only(left: 35, right: 10),
+                        padding: const EdgeInsets.only(left: 25, right: 8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -604,6 +606,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                                                   lastName: widget.lastName,
                                                   token: widget.token,
                                                   id: widget.id,
+                                                  email: widget.email,
                                                 )));
                                   },
                                   icon: const Icon(FontAwesomeIcons.multiply)),
@@ -669,7 +672,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                   children: [
                     Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                     Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.only(left: 0),
                       child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
                     ),
                   ],

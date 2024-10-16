@@ -34,6 +34,7 @@ class PendingPayment extends StatefulWidget {
   final String lastName;
   final String selectedType;
   final String id;
+  final String email;
   final String partnerName;
   final String partnerId;
   final String oldQuotePrice;
@@ -42,7 +43,7 @@ class PendingPayment extends StatefulWidget {
   final int advanceOrPay;
   final String bookingStatus;
 
-  const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay, required this.bookingStatus});
+  const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay, required this.bookingStatus, required this.email});
 
   @override
   State<PendingPayment> createState() => _PendingPaymentState();
@@ -189,6 +190,7 @@ class _PendingPaymentState extends State<PendingPayment> {
               partnerId: widget.partnerId,
               size: widget.size,
               bookingStatus: widget.bookingStatus,
+              email: widget.email,
             ),
           ),
         );
@@ -643,17 +645,50 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
-    final String? bookingId = data['_id'];
+    String? bookingId = data['_id'];
     final String? token = data['token'];
 
+    // If bookingId is null, call getPaymentPendingBooking API
+    if (bookingId == null || token == null) {
+      print('No bookingId found, fetching pending booking details.');
+
+      if (widget.id != null && token != null) {
+        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+
+        if (bookingId != null) {
+          // Optionally, save the bookingId to shared preferences
+          // await saveBookingIdToPreferences(bookingId, token);
+        } else {
+          print('No pending booking found, navigating to NewBooking.');
+          return null;
+        }
+      } else {
+        print('No userId or token available.');
+        return null;
+      }
+    }
+
+    // Proceed to fetch booking details if bookingId is available
     if (bookingId != null && token != null) {
-      print('Fetching details with bookingId=$bookingId and token=$token');
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
-      print('No bookingId or token found in shared preferences.');
+      print('Failed to fetch booking details due to missing bookingId or token.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NewBooking(
+            token: token,
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            id: widget.id,
+            email: widget.email,
+          ),
+        ),
+      );
       return null;
     }
   }
+
 
   Future<void> fetchAndSetBookingDetails() async {
     final bookingDetails = await _fetchBookingDetails();
@@ -677,10 +712,12 @@ class _PendingPaymentState extends State<PendingPayment> {
           id: widget.id,
           quotePrice: widget.quotePrice,
           oldQuotePrice: widget.oldQuotePrice,
+          email: widget.email,
         )));
         return false;
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
           context,
           User: widget.firstName +' '+ widget.lastName,showLeading: false
@@ -761,6 +798,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                           token: widget.token,
                                           id: widget.id,
                                         quotePrice: widget.quotePrice,
+                                        email: widget.email,
                                       )));
                                 },
                                 icon: Icon(FontAwesomeIcons.multiply)),
@@ -946,7 +984,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                           ),
                         ),
                       ),
-                      widget.paymentStatus == 'HalfPaid'
+                      widget.paymentStatus == 'Pending'
                       ?Column(
                         children: [
                           Padding(
@@ -956,7 +994,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                               children: [
                                 Text(
                                   'Pending Amount',
-                                  style: TextStyle(fontSize: 21),
+                                  style: TextStyle(fontSize: 21,fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -976,7 +1014,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                           Container(
                             margin: const EdgeInsets.only(top: 20,left: 10),
                             child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.054,
+                              height: MediaQuery.of(context).size.height * 0.06,
                               width: MediaQuery.of(context).size.width * 0.5,
                               child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
