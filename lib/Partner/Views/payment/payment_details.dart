@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
-import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 
 class PaymentDetails extends StatefulWidget {
   final String partnerName;
@@ -206,7 +206,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                           borderRadius: BorderRadius.circular(30),
                       ),
                       padding: const EdgeInsets.all(8),
-                      child: Text('${booking?['paymentStatus'] ?? 'No paymentStatus'}',style: const TextStyle(fontSize: 19)),
+                      child: Text('${booking?['paymentStatus'] ?? 'N/A'}'== 'Completed' ? 'Paid': booking?['paymentStatus'] ?? 'N/A',style: const TextStyle(fontSize: 19)),
                     ),
                   ),
                   Positioned(
@@ -227,7 +227,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               Padding(
                 padding: const EdgeInsets.only(top: 30,bottom: 10),
                 child: Text(
-                  'Total ${booking?['paymentStatus'] ?? ''}',
+                  '${booking?['paymentStatus'] ?? ''}'== 'Completed' ? ' Total Paid': 'Total ${booking?['paymentStatus'] ?? 'N/A'}',
                   style: const TextStyle(fontSize: 19),
                 ),
               ),
@@ -252,6 +252,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
+          userId: widget.partnerId,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(160.0),
           child: Column(
@@ -261,9 +262,12 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                 automaticallyImplyLeading: false,
                 backgroundColor: const Color(0xffA09CEC),
                 title: const Center(
-                  child: Text(
-                    'Payment',
-                    style: TextStyle(color: Colors.white),
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 25),
+                    child: Text(
+                      'Payment',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 leading: IconButton(
@@ -438,7 +442,11 @@ class _PaymentDetailsState extends State<PaymentDetails> {
               },
             );
           } else {
-            return Center(child: Text('${_currentFilter=='All'?'No Payment Found':'No $_currentFilter found'}'));
+            return Center(child: Text(_currentFilter=='All'
+                ? 'No Payment Found'
+                : _currentFilter=='Completed'
+                  ? 'No $_currentFilter found'
+                  : 'No Pending Payment found'));
           }
         },
       ),

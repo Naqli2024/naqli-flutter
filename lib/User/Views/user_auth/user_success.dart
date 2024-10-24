@@ -172,13 +172,13 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               ],
             ),
             Padding(
-              padding: EdgeInsets.only(bottom: 20),
+              padding: EdgeInsets.only(top: 15),
               child: Text(widget.title,
                   style: TextStyle(
-                      fontSize: 25,fontWeight: FontWeight.w400)),
+                      fontSize: 25,fontWeight: FontWeight.w500)),
             ),
             Padding(
-              padding: EdgeInsets.only(top: 30),
+              padding: EdgeInsets.only(top: 20),
               child: Text(widget.subTitle,
                   style: TextStyle(
                       fontSize: 17,fontWeight: FontWeight.w500)),

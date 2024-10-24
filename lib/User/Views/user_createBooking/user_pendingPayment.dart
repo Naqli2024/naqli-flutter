@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -720,7 +722,8 @@ class _PendingPaymentState extends State<PendingPayment> {
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
           context,
-          User: widget.firstName +' '+ widget.lastName,showLeading: false
+          User: widget.firstName +' '+ widget.lastName,showLeading: false,
+            userId: widget.id
         ),
         body: RefreshIndicator(
           onRefresh: () async{
@@ -743,15 +746,21 @@ class _PendingPaymentState extends State<PendingPayment> {
                     ),
                     markers: markers,
                     polylines: polylines,
+                    gestureRecognizers: Set()
+                      ..add(Factory<PanGestureRecognizer>(
+                            () => PanGestureRecognizer(),
+                      ))
+                      ..add(Factory<TapGestureRecognizer>(
+                            () => TapGestureRecognizer(),
+                      )),
                   )
                 ),
                 Positioned(
                     top: 15,
                     child: Container(
                       width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10,right: 10),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Container(
                             decoration: ShapeDecoration(
@@ -764,9 +773,21 @@ class _PendingPaymentState extends State<PendingPayment> {
                               children: [
                                 Row(
                                   children: [
+                                    Container(
+                                      child: GestureDetector(
+                                          onTap: (){
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
+                                              ),
+                                            );
+                                          },
+                                          child: const CircleAvatar(backgroundColor: Colors.white,child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
+                                    ),
                                     Padding(
                                       padding: const EdgeInsets.only(left: 10,right: 15),
-                                      child: Image.asset('assets/moving_truck.png'),
+                                      child: SvgPicture.asset('assets/moving_truck.svg'),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -984,7 +1005,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                           ),
                         ),
                       ),
-                      widget.paymentStatus == 'Pending'
+                      widget.paymentStatus == 'Pending' || widget.paymentStatus == 'HalfPaid'
                       ?Column(
                         children: [
                           Padding(

@@ -7,6 +7,7 @@ import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class UserOTP extends StatefulWidget {
   final String emailAddress;
@@ -97,8 +98,8 @@ class _UserOTPState extends State<UserOTP> {
             Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/otp_logo.png',
+                child: SvgPicture.asset(
+                  'assets/otp_logo.svg',
                   fit: BoxFit.contain,
                   width: MediaQuery.of(context).size.width,
                   height: 200,

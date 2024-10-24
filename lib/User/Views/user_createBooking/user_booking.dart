@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,14 +16,18 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.d
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
-import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
+import 'package:location/location.dart';
 import 'package:google_places_flutter_api/google_places_flutter_api.dart';
+import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart' as geo;
+import 'package:permission_handler/permission_handler.dart'as permissionHandler;
 class CreateBooking extends StatefulWidget {
   final String firstName;
   final String lastName;
@@ -29,11 +35,13 @@ class CreateBooking extends StatefulWidget {
   final String token;
   final String id;
   final String email;
+  final String? accountType;
+  final String? isFromUserType;
   const CreateBooking(
       {super.key,
       required this.firstName,
       required this.lastName,
-      required this.selectedType, required this.token, required this.id, required this.email});
+      required this.selectedType, required this.token, required this.id, required this.email, this.isFromUserType, this.accountType});
 
   @override
   State<CreateBooking> createState() => _CreateBookingState();
@@ -87,7 +95,9 @@ class _CreateBookingState extends State<CreateBooking> {
   Future<Map<String, dynamic>?>? booking;
   FocusNode _pickUpFocusNode = FocusNode();
   List<FocusNode> _dropPointFocusNodes = [];
-
+  String currentPlace = '';
+  int typeCount = 0;
+  bool isLocating = false;
   @override
   void initState() {
     super.initState();
@@ -97,6 +107,7 @@ class _CreateBookingState extends State<CreateBooking> {
     _futureSpecial = userService.fetchUserSpecialUnits();
     fetchLoadsForSelectedType(selectedTypeName ?? '');
     booking = _fetchBookingDetails();
+    _requestPermissions();
   }
 
   @override
@@ -131,9 +142,146 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Future<void> _requestPermissions() async {
-    var status = await Permission.location.status;
+    var status = await permissionHandler.Permission.location.status;
     if (!status.isGranted) {
-      await Permission.location.request();
+      await permissionHandler.Permission.location.request();
+    }
+  }
+
+  Future<void> locateCurrentPosition() async {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.high,
+      );
+
+      // Get the current location as LatLng
+      LatLng currentLocation = LatLng(position.latitude, position.longitude);
+
+      // Update the map to center on current location
+      if (mapController != null) {
+        mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(currentLocation, 10.0),
+        );
+      }
+
+      // Add a marker at the current location
+      setState(() {
+        markers.clear();
+        markers.add(
+          Marker(
+            markerId: const MarkerId('currentLocation'),
+            position: currentLocation,
+            infoWindow: const InfoWindow(
+              title: 'Your Location',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueBlue,
+            ),
+          ),
+        );
+      });
+    } catch (e) {
+      print('Error fetching current location: $e');
+    }
+  }
+
+  Future<void> currentPositionSuggestion() async {
+    setState(() {
+      isLocating = true;
+    });
+    Position currentPosition = await Geolocator.getCurrentPosition(
+      desiredAccuracy: geo.LocationAccuracy.high,
+    );
+
+    // Convert the coordinates into a human-readable address (Reverse Geocoding)
+    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+    String reverseGeocodeUrl =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(reverseGeocodeUrl));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data != null && data['status'] == 'OK') {
+        final formattedAddress = data['results'][0]['formatted_address'];
+
+        // Update the pickup controller with the current location address
+        setState(() {
+          pickUpController.text = formattedAddress;
+          isLocating = false;
+          _pickUpSuggestions = [];
+        });
+
+        // Optionally, place a marker for the current location on the map
+        setState(() {
+          markers.add(
+            Marker(
+              markerId: const MarkerId('current_location'),
+              position: LatLng(currentPosition.latitude, currentPosition.longitude),
+              infoWindow: InfoWindow(
+                title: 'Current Location',
+                snippet: formattedAddress,
+              ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            ),
+          );
+        });
+      } else {
+        print('Error with reverse geocoding API response: ${data['status']}');
+      }
+    } else {
+      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
+    }
+  }
+
+  Future<void> currentPositionSuggestionForCity() async {
+    setState(() {
+      isLocating = true;
+    });
+    Position currentPosition = await Geolocator.getCurrentPosition(
+      desiredAccuracy: geo.LocationAccuracy.high,
+    );
+
+    // Convert the coordinates into a human-readable address (Reverse Geocoding)
+    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+    String reverseGeocodeUrl =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(reverseGeocodeUrl));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data != null && data['status'] == 'OK') {
+        final formattedAddress = data['results'][0]['formatted_address'];
+
+        // Update the pickup controller with the current location address
+        setState(() {
+          cityNameController.text = formattedAddress;
+          isLocating = false;
+          _cityNameSuggestions = [];
+        });
+
+        // Optionally, place a marker for the current location on the map
+        setState(() {
+          markers.add(
+            Marker(
+              markerId: const MarkerId('current_location'),
+              position: LatLng(currentPosition.latitude, currentPosition.longitude),
+              infoWindow: InfoWindow(
+                title: 'Current Location',
+                snippet: formattedAddress,
+              ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            ),
+          );
+        });
+      } else {
+        print('Error with reverse geocoding API response: ${data['status']}');
+      }
+    } else {
+      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
     }
   }
 
@@ -143,7 +291,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
       String pickupPlace = pickUpController.text;
       List<String> dropPlaces =
-          _dropPointControllers.map((controller) => controller.text).toList();
+      _dropPointControllers.map((controller) => controller.text).toList();
 
       setState(() {
         markers.clear();
@@ -163,14 +311,14 @@ class _CreateBookingState extends State<CreateBooking> {
       }).toList();
 
       final List<http.Response> dropResponsesList =
-          await Future.wait(dropResponses);
+      await Future.wait(dropResponses);
 
       if (pickupResponse.statusCode == 200) {
         final pickupData = json.decode(pickupResponse.body);
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-              pickupData['results']?[0]['geometry']?['location'];
+          pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -211,12 +359,12 @@ class _CreateBookingState extends State<CreateBooking> {
 
             if (dropData != null && dropData['status'] == 'OK') {
               final dropLocation =
-                  dropData['results']?[0]['geometry']?['location'];
+              dropData['results']?[0]['geometry']?['location'];
               final dropAddress = dropData['results']?[0]['formatted_address'];
 
               if (dropLocation != null) {
                 LatLng dropLatLng =
-                    LatLng(dropLocation['lat'], dropLocation['lng']);
+                LatLng(dropLocation['lat'], dropLocation['lng']);
 
                 setState(() {
                   markers.add(
@@ -344,7 +492,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-              pickupData['results']?[0]['geometry']?['location'];
+          pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -395,6 +543,7 @@ class _CreateBookingState extends State<CreateBooking> {
       print('Error fetching coordinates: $e');
     }
   }
+
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylinePoints = [];
@@ -584,7 +733,6 @@ class _CreateBookingState extends State<CreateBooking> {
     });
   }
 
-
   Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
     try {
       List<Vehicle> vehicles =
@@ -632,7 +780,7 @@ class _CreateBookingState extends State<CreateBooking> {
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: true,
+            alwaysUse24HourFormat: false,
           ),
           child: child!,
         );
@@ -653,7 +801,7 @@ class _CreateBookingState extends State<CreateBooking> {
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: true,
+            alwaysUse24HourFormat: false,
           ),
           child: child!,
         );
@@ -670,7 +818,7 @@ class _CreateBookingState extends State<CreateBooking> {
   String _formatTimeOfDay(TimeOfDay time) {
     return MaterialLocalizations.of(context).formatTimeOfDay(
       time,
-      alwaysUse24HourFormat: true,
+      alwaysUse24HourFormat: false,
     );
   }
 
@@ -746,6 +894,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     zipCode: zipCodeController.text,
                     id: widget.id,
                     email: widget.email,
+                    accountType: widget.accountType,
                   ),
                 ),
               );
@@ -808,6 +957,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   zipCode: '',
                   id: widget.id,
                   email: widget.email,
+                  accountType: widget.accountType,
                 ),
               ),
             );
@@ -870,6 +1020,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   zipCode: zipCodeController.text,
                   id: widget.id,
                   email: widget.email,
+                  accountType: widget.accountType,
                 ),
               ),
             );
@@ -931,6 +1082,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   zipCode: zipCodeController.text,
                   id: widget.id,
                   email: widget.email,
+                  accountType: widget.accountType,
                 ),
               ),
             );
@@ -991,52 +1143,65 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            centerTitle: false,
-            toolbarHeight: 80,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: Container(
-              alignment: Alignment.topLeft,
-              child: Column(
-                children: [
-                  const Text(
-                    'Create Booking',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                  Text(
-                    'Step $_currentStep of 3 - booking',
-                    style: const TextStyle(color: Colors.white, fontSize: 17),
-                  ),
-                ],
+      appBar: widget.accountType =='Single User'
+          ? commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          userId: widget.id,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              centerTitle: false,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff6A66D1),
+              title: Container(
+                alignment: Alignment.topLeft,
+                child: Column(
+                  children: [
+                    Text(
+                      widget.isFromUserType != null
+                          ?'Create Booking'
+                          :'Get an estimate',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                    Text(
+                      widget.isFromUserType != null
+                          ?'Step $_currentStep of 3 - booking'
+                          :'Step $_currentStep of 3',
+                      style: const TextStyle(color: Colors.white, fontSize: 17),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context)=> UserType(
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=> UserType(
                         firstName: widget.firstName,
                         lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
-              },
-              icon: const Icon(
-                Icons.arrow_back_sharp,
-                color: Colors.white,
+                },
+                icon: const Icon(
+                  Icons.arrow_back_sharp,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-        ),
+        )
+        : commonWidgets.commonAppBar(
+        context,
+        User: widget.firstName +' '+ widget.lastName,
+        userId: widget.id,
+        showLeading: true,
+        showLanguage: false,
       ),
-      drawer: Drawer(
+      drawer: widget.accountType =='Single User'
+          ? Drawer(
         backgroundColor: Colors.white,
         child: ListView(
           children: <Widget>[
@@ -1056,10 +1221,24 @@ class _CreateBookingState extends State<CreateBooking> {
             ),
             const Divider(),
             ListTile(
-                leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: Icon(Icons.home,size: 30,color: Color(0xff707070)),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('Home',style: TextStyle(fontSize: 25),),
+                ),
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserType(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                    ),
+                  );
+                }
+            ),
+            ListTile(
+                leading: SvgPicture.asset('assets/booking_logo.svg'),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 10),
                   child: Text('Booking',style: TextStyle(fontSize: 25),),
                 ),
                 onTap: ()async {
@@ -1089,6 +1268,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             address: bookingData['address'] ?? '',
                             zipCode: bookingData['zipCode'] ?? '',
                             email: widget.email,
+                            accountType: widget.accountType,
                           ),
                         ),
                       )
@@ -1167,10 +1347,10 @@ class _CreateBookingState extends State<CreateBooking> {
                 }
             ),
             ListTile(
-                leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/booking_history.svg',
+                    height: MediaQuery.of(context).size.height * 0.035),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text('Booking History',style: TextStyle(fontSize: 25),),
                 ),
                 onTap: (){
@@ -1183,10 +1363,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 }
             ),
             ListTile(
-                leading: Image.asset('assets/payment_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/payment_logo.svg'),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 5),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text('Payment',style: TextStyle(fontSize: 25),),
                 ),
                 onTap: (){
@@ -1204,10 +1383,9 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Text('More info and support',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold)),
             ),
             ListTile(
-              leading: Image.asset('assets/report_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
+              leading: SvgPicture.asset('assets/report_logo.svg'),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Report',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
@@ -1220,10 +1398,9 @@ class _CreateBookingState extends State<CreateBooking> {
               },
             ),
             ListTile(
-              leading: Image.asset('assets/help_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
+              leading: SvgPicture.asset('assets/help_logo.svg'),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 7),
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
@@ -1231,12 +1408,9 @@ class _CreateBookingState extends State<CreateBooking> {
               },
             ),
             ListTile(
-              leading: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
-              ),
+              leading: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
               title: const Padding(
-                padding: EdgeInsets.only(left: 17),
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Contact us',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
@@ -1244,12 +1418,82 @@ class _CreateBookingState extends State<CreateBooking> {
               },
             ),
             ListTile(
-              leading: const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Icon(Icons.logout,color: Colors.red,size: 30,),
-              ),
+              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(20),
+                      content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 30,bottom: 10),
+                            child: Text(
+                              'Are you sure you want to logout?',
+                              style: TextStyle(fontSize: 19),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Yes'),
+                          onPressed: () async {
+                            await clearUserData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserLogin()),
+                            );
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('No'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      )
+          : Drawer(
+        backgroundColor: Colors.white,
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset('assets/naqlee-logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  GestureDetector(
+                      onTap: (){
+                        Navigator.pop(context);
+                      },
+                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
               ),
               onTap: () {
@@ -1648,7 +1892,7 @@ class _CreateBookingState extends State<CreateBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Image.asset('assets/delivery-truck.png'),
+                              child: SvgPicture.asset('assets/delivery-truck.svg'),
                             ),
                             Expanded(
                               flex: 6,
@@ -1683,7 +1927,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  offset: const Offset(0, 55),
+                                  offset:  Offset(0, 55),
                                   padding: EdgeInsets.zero,
                                   color: Colors.white,
                                   onSelected: (newValue) {
@@ -1700,7 +1944,11 @@ class _CreateBookingState extends State<CreateBooking> {
                                     });
                                   },
                                   itemBuilder: (context) {
-                                    return vehicle.types?.map((type) {
+                                    return vehicle.types?.asMap().entries.map((entry) {
+                                      int index = entry.key;
+                                      var type = entry.value;
+                                      typeCount = index + 1;
+                                      print('Dropdown item ${index + 1}: ${typeCount}');
                                           return PopupMenuItem<String>(
                                             value: type.typeName,
                                             child: Container(
@@ -1886,27 +2134,15 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                                 child: Column(
                                   children: [
-                                    FutureBuilder(
-                                      future: _loadSvg(bus.image),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const CircularProgressIndicator();
-                                        } else if (snapshot.hasError) {
-                                          return const Icon(Icons.error);
-                                        } else {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                                top: 45, bottom: 10),
-                                            child: SvgPicture.asset(
-                                              bus.image,
-                                              width: 30,
-                                              height: 40,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
+                                Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 45, bottom: 10),
+                                child: SvgPicture.asset(
+                                  bus.image,
+                                  width: 30,
+                                  height: 40,
+                                ),
+                              ),
                                     Divider(
                                       indent: 7,
                                       endIndent: 7,
@@ -1978,7 +2214,7 @@ class _CreateBookingState extends State<CreateBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Image.asset('assets/delivery-truck.png'),
+                              child: SvgPicture.asset('assets/delivery-truck.svg'),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -2198,27 +2434,15 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                                 child: Column(
                                   children: [
-                                    FutureBuilder(
-                                      future: _loadSvg(specials.image),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const CircularProgressIndicator();
-                                        } else if (snapshot.hasError) {
-                                          return const Icon(Icons.error);
-                                        } else {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                                top: 45, bottom: 10),
-                                            child: SvgPicture.asset(
-                                              specials.image,
-                                              width: 30,
-                                              height: 40,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
+                                Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 45, bottom: 10),
+                                child: SvgPicture.asset(
+                                  specials.image,
+                                  width: 30,
+                                  height: 40,
+                                ),
+                              ),
                                     Divider(
                                       indent: 7,
                                       endIndent: 7,
@@ -2804,7 +3028,7 @@ class _CreateBookingState extends State<CreateBooking> {
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Date',
+                'Starting Date',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3006,7 +3230,7 @@ class _CreateBookingState extends State<CreateBooking> {
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Date',
+                'Starting Date',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3143,6 +3367,13 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   markers: markers,
                   polylines: polylines,
+                  gestureRecognizers: Set()
+                    ..add(Factory<PanGestureRecognizer>(
+                          () => PanGestureRecognizer(),
+                    ))
+                    ..add(Factory<TapGestureRecognizer>(
+                          () => TapGestureRecognizer(),
+                    )),
                 ),
               ),
               Positioned(
@@ -3172,6 +3403,18 @@ class _CreateBookingState extends State<CreateBooking> {
                                   onChanged: (value) => _fetchSuggestions(value, -1, true),
                                   controller: pickUpController,
                                   decoration: InputDecoration(
+                                    suffixIcon: Padding(
+                                      padding: const EdgeInsets.only(right: 8,top: 5),
+                                      child: Tooltip(
+                                        message: 'Locate Current Location',
+                                        child: IconButton(
+                                            onPressed: ()async{
+                                              FocusScope.of(context).unfocus();
+                                              await locateCurrentPosition();
+                                            },
+                                            icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                      ),
+                                    ),
                                     hintText: 'Pick up',
                                     hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                     border: InputBorder.none,
@@ -3187,12 +3430,38 @@ class _CreateBookingState extends State<CreateBooking> {
                             height: 200,
                             width: MediaQuery.of(context).size.width * 0.9,
                             child: ListView.builder(
-                              itemCount: _pickUpSuggestions.length,
+                              itemCount: _pickUpSuggestions.length + 1,  // +1 to include the "Current Location"
                               itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text(_pickUpSuggestions[index]),
-                                  onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
-                                );
+                                if (index == 0) {
+                                  // Show "Current Location" as the first suggestion
+                                  return ListTile(
+                                    title: Row(
+                                      children: [
+                                        Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                          child: Text('Current Location'),
+                                        ),
+                                        isLocating ? Container(
+                                          height: 15,
+                                          width: 15,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ):Container()
+                                      ],
+                                    ),
+                                      onTap: () async {
+                                        await currentPositionSuggestion();
+                                    },
+                                  );
+                                } else {
+                                  // Show other suggestions from the list
+                                  return ListTile(
+                                    title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
+                                    onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
+                                  );
+                                }
                               },
                             ),
                           ),
@@ -3339,6 +3608,13 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   markers: markers,
                   polylines: polylines,
+                  gestureRecognizers: Set()
+                    ..add(Factory<PanGestureRecognizer>(
+                          () => PanGestureRecognizer(),
+                    ))
+                    ..add(Factory<TapGestureRecognizer>(
+                          () => TapGestureRecognizer(),
+                    )),
                 ),
               ),
               Positioned(
@@ -3368,6 +3644,18 @@ class _CreateBookingState extends State<CreateBooking> {
                                       onChanged: (value) => _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(right: 8,top: 5),
+                                          child: Tooltip(
+                                            message: 'Locate Current Location',
+                                            child: IconButton(
+                                                onPressed: ()async{
+                                                  FocusScope.of(context).unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                          ),
+                                        ),
                                         hintText: 'Pick up',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
@@ -3383,12 +3671,38 @@ class _CreateBookingState extends State<CreateBooking> {
                                 height: 200,
                                 width: MediaQuery.of(context).size.width * 0.9,
                                 child: ListView.builder(
-                                  itemCount: _pickUpSuggestions.length,
+                                  itemCount: _pickUpSuggestions.length + 1,  // +1 to include the "Current Location"
                                   itemBuilder: (context, index) {
-                                    return ListTile(
-                                      title: Text(_pickUpSuggestions[index]),
-                                      onTap: () => _onSuggestionTap(_pickUpSuggestions[index], pickUpController, true),
-                                    );
+                                    if (index == 0) {
+                                      // Show "Current Location" as the first suggestion
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                              child: Text('Current Location'),
+                                            ),
+                                            isLocating ? Container(
+                                              height: 15,
+                                              width: 15,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ):Container()
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          await currentPositionSuggestion();
+                                        },
+                                      );
+                                    } else {
+                                      // Show other suggestions from the list
+                                      return ListTile(
+                                        title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
+                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
+                                      );
+                                    }
                                   },
                                 ),
                               ),
@@ -3550,15 +3864,28 @@ class _CreateBookingState extends State<CreateBooking> {
                             child: Row(
                               children: [
                                 Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
                                     child: SvgPicture.asset('assets/search.svg')),
                                 Expanded(
                                   child: Container(
-                                    height: 33,
+                                    height: 30,
                                     child: TextFormField(
                                       controller: cityNameController,
                                       onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
                                       decoration: InputDecoration(
+                                        isDense: true,
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Tooltip(
+                                            message: 'Locate Current Location',
+                                            child: IconButton(
+                                                onPressed: ()async{
+                                                  FocusScope.of(context).unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                          ),
+                                        ),
                                         hintText: 'Enter city name',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
@@ -3575,12 +3902,36 @@ class _CreateBookingState extends State<CreateBooking> {
                               height: 200,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length,
+                                itemCount: _cityNameSuggestions.length + 1,
                                 itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_cityNameSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                  );
+                                  if (index == 0) {
+                                    return ListTile(
+                                      title: Row(
+                                        children: [
+                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                          Padding(
+                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                            child: Text('Current Location'),
+                                          ),
+                                          isLocating ? Container(
+                                            height: 15,
+                                            width: 15,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ):Container()
+                                        ],
+                                      ),
+                                      onTap: () async {
+                                        await currentPositionSuggestionForCity();
+                                      },
+                                    );
+                                  } else {
+                                    return ListTile(
+                                      title: Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
+                                    );
+                                  }
                                 },
                               ),
                             ),
@@ -3588,16 +3939,17 @@ class _CreateBookingState extends State<CreateBooking> {
                           Row(
                             children: [
                               Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
                                   child: SvgPicture.asset('assets/address.svg')),
                               Expanded(
                                 child: Container(
-                                  // color: Colors.green,
+                                  padding: const EdgeInsets.only(bottom: 5),
                                   height: 33,
                                   child: TextFormField(
                                     controller: addressController,
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
+                                      isDense: true,
                                       hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
@@ -3619,46 +3971,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                   return ListTile(
                                     title: Text(_addressSuggestions[index]),
                                     onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,7,0),
-                                    child: SvgPicture.asset('assets/zipCode.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 33,
-                                    child: TextFormField(
-                                      controller: zipCodeController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Zip code for construction site',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 100,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _zipCodeSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_zipCodeSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
                                   );
                                 },
                               ),
@@ -3709,6 +4021,13 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   markers: markers,
                   polylines: polylines,
+                  gestureRecognizers: Set()
+                    ..add(Factory<PanGestureRecognizer>(
+                          () => PanGestureRecognizer(),
+                    ))
+                    ..add(Factory<TapGestureRecognizer>(
+                          () => TapGestureRecognizer(),
+                    )),
                 ),
               ),
             ],
@@ -3748,15 +4067,28 @@ class _CreateBookingState extends State<CreateBooking> {
                             child: Row(
                               children: [
                                 Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                    padding: const EdgeInsets.fromLTRB(10,8,15,8),
                                     child: SvgPicture.asset('assets/search.svg')),
                                 Expanded(
                                   child: Container(
-                                    height: 33,
+                                    height: 30,
                                     child: TextFormField(
                                       controller: cityNameController,
                                       onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
                                       decoration: InputDecoration(
+                                        isDense: true,
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Tooltip(
+                                            message: 'Locate Current Location',
+                                            child: IconButton(
+                                                onPressed: ()async{
+                                                  FocusScope.of(context).unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                          ),
+                                        ),
                                         hintText: 'Enter city name',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
@@ -3773,12 +4105,36 @@ class _CreateBookingState extends State<CreateBooking> {
                               height: 200,
                               width: MediaQuery.of(context).size.width * 0.9,
                               child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length,
+                                itemCount: _cityNameSuggestions.length + 1,
                                 itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_cityNameSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index], cityNameController, 'city'),
-                                  );
+                                  if (index == 0) {
+                                    return ListTile(
+                                      title: Row(
+                                        children: [
+                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                          Padding(
+                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                            child: Text('Current Location'),
+                                          ),
+                                          isLocating ? Container(
+                                            height: 15,
+                                            width: 15,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ):Container()
+                                        ],
+                                      ),
+                                      onTap: () async {
+                                        await currentPositionSuggestionForCity();
+                                      },
+                                    );
+                                  } else {
+                                    return ListTile(
+                                      title: Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
+                                    );
+                                  }
                                 },
                               ),
                             ),
@@ -3786,16 +4142,17 @@ class _CreateBookingState extends State<CreateBooking> {
                           Row(
                             children: [
                               Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,0),
+                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
                                   child: SvgPicture.asset('assets/address.svg')),
                               Expanded(
                                 child: Container(
-                                  // color: Colors.green,
+                                  padding: const EdgeInsets.only(bottom: 5),
                                   height: 33,
                                   child: TextFormField(
                                     controller: addressController,
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
+                                      isDense: true,
                                       hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
@@ -3817,46 +4174,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                   return ListTile(
                                     title: Text(_addressSuggestions[index]),
                                     onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,7,0),
-                                    child: SvgPicture.asset('assets/zipCode.svg')),
-                                Expanded(
-                                  child: Container(
-                                    height: 33,
-                                    child: TextFormField(
-                                      controller: zipCodeController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'zipCode'),
-                                      decoration: InputDecoration(
-                                        hintText: 'Zip code for construction site',
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_zipCodeSuggestions.isNotEmpty && zipCodeController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 100,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _zipCodeSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_zipCodeSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_zipCodeSuggestions[index], zipCodeController, 'zipCode'),
                                   );
                                 },
                               ),
@@ -3907,6 +4224,13 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   markers: markers,
                   polylines: polylines,
+                  gestureRecognizers: Set()
+                    ..add(Factory<PanGestureRecognizer>(
+                          () => PanGestureRecognizer(),
+                    ))
+                    ..add(Factory<TapGestureRecognizer>(
+                          () => TapGestureRecognizer(),
+                    )),
                 ),
               ),
             ],

@@ -4,7 +4,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
-import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 
 class BookingDetails extends StatefulWidget {
@@ -38,6 +38,7 @@ class _BookingDetailsState extends State<BookingDetails> {
   @override
   void initState() {
     super.initState();
+    payment = widget.paymentStatus;
     _bookingDetailsFuture = fetchBookingDetails();
     fetchBookingDetails();
   }
@@ -111,10 +112,10 @@ class _BookingDetailsState extends State<BookingDetails> {
 
           // Add quotePrice and paymentStatus to the details
           details['quotePrice'] = quotePrice;
-          details['paymentStatus'] = paymentType;
+          payment = details?['paymentStatus'];
 
           balance = details['remainingBalance'];
-          payment = paymentType;
+          // payment = paymentType;
           print('Details retrieved: $details');
 
           if (details['bookingStatus'] != 'Completed') {
@@ -163,6 +164,7 @@ class _BookingDetailsState extends State<BookingDetails> {
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
+          userId: widget.partnerId,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
@@ -171,9 +173,12 @@ class _BookingDetailsState extends State<BookingDetails> {
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
             title: const Center(
-              child: Text(
-                'Booking',
-                style: TextStyle(color: Colors.white),
+              child: Padding(
+                padding: EdgeInsets.only(right: 25),
+                child: Text(
+                  'Booking',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
             leading: IconButton(
@@ -268,7 +273,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                 :Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text('$time'),
-                                )
+                                ),
                               ],
                             ),
                             trailing: Container(
@@ -289,7 +294,6 @@ class _BookingDetailsState extends State<BookingDetails> {
                                     });
                                     await fetchUserName(userId);
                                     await fetchBookingDetails();
-
                                     if(payment == 'Pending' || payment == 'NotPaid'){
                                       Navigator.push(
                                         context,

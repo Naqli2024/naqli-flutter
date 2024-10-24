@@ -10,6 +10,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/forgotPassword.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LoginPage extends StatefulWidget {
@@ -99,8 +100,8 @@ class _LoginPageState extends State<LoginPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            'assets/logo.png',
+                          SvgPicture.asset(
+                            'assets/logo.svg',
                             fit: BoxFit.fitWidth,
                             width: 200,
                             height: 200,
@@ -147,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                               Container(
                                 margin: const EdgeInsets.only(top: 25, bottom: 7),
                                 child: const Text(
-                                  'Login',
+                                  'Partner Login',
                                   style: TextStyle(fontSize: 30),
                                 ),
                               ),
@@ -173,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                                         controller: emailOrMobileController,
                                         decoration: InputDecoration(
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
                                         validator: (value) {
@@ -209,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                                             },
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
                                         validator: (value) {

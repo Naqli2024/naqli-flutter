@@ -387,6 +387,7 @@ class _StepOneState extends State<StepOne> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
             child: DropdownButtonFormField<String>(
+              dropdownColor: Colors.white,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -434,6 +435,7 @@ class _StepOneState extends State<StepOne> {
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
             child: DropdownButtonFormField<String>(
+              dropdownColor: Colors.white,
               value: _selectedSubClassification,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(

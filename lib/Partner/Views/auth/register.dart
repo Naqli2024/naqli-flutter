@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_svg/svg.dart';
 
 class Register extends StatefulWidget {
   final String selectedRole;
@@ -48,36 +49,50 @@ class _RegisterState extends State<Register> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         centerTitle: false,
         automaticallyImplyLeading: false,
         toolbarHeight: MediaQuery.of(context).size.height * 0.31,
         title: Stack(
           children: [
             Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 20),
+                margin: const EdgeInsets.only(top: 20, bottom: 20),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/Register.jpg',
+                child: SvgPicture.asset(
+                  'assets/Register.svg',
                   fit: BoxFit.contain,
                   width: MediaQuery.of(context).size.width,
-                  height: 200,
+                  height: MediaQuery.of(context).size.height * 0.25,
                 )),
             GestureDetector(
               onTap: () {
                 Navigator.pop(context);
               },
-              child: Container(
-                margin: const EdgeInsets.only(top: 0),
-                child: const Align(
-                    alignment: Alignment.topRight,
+              child: Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                    ),
                     child: CircleAvatar(
                       backgroundColor: Color(0xffFFFFFF),
                       child: Icon(
                         Icons.clear,
                         color: Colors.black,
                       ),
-                    )),
-              ),
+                    ),
+                  )),
             ),
           ],
         ),
@@ -126,15 +141,15 @@ class _RegisterState extends State<Register> {
                 },
               ),
               Container(
-                margin: const EdgeInsets.fromLTRB(30, 15, 30, 10),
+                margin: const EdgeInsets.fromLTRB(40, 15, 40, 10),
                 alignment: Alignment.topLeft,
                 child: const Text(
                   'Password',
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: 20,color: Color(0xff828080)),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+                padding: const EdgeInsets.fromLTRB(40, 0, 40, 30),
                 child: TextFormField(
                   controller: passwordController,
                   obscureText: isPasswordObscured,
@@ -151,6 +166,9 @@ class _RegisterState extends State<Register> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
+                      borderSide: BorderSide(
+                        color: Color(0xff828080),
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -162,9 +180,8 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(8.0),
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.08,
+                  height: MediaQuery.of(context).size.height * 0.07,
                   width: MediaQuery.of(context).size.width * 0.8,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -203,13 +220,13 @@ class _RegisterState extends State<Register> {
     String? Function(String?)? validator,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 10, 30, 10),
+      padding: const EdgeInsets.fromLTRB(40, 10, 40, 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 20),
+            style: const TextStyle(fontSize: 20,color: Color(0xff828080)),
           ),
           const SizedBox(height: 10),
           TextFormField(
@@ -217,6 +234,9 @@ class _RegisterState extends State<Register> {
             obscureText: obscureText,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Color(0xff828080),
+                ),
                 borderRadius: BorderRadius.all(Radius.circular(15)),
               ),
             ),

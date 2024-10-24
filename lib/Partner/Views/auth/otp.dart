@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class OtpScreen extends StatefulWidget {
   final String mobileNo;
@@ -107,8 +108,8 @@ class _OtpScreenState extends State<OtpScreen> {
             Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 20),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/otp_logo.png',
+                child: SvgPicture.asset(
+                  'assets/otp_logo.svg',
                   fit: BoxFit.contain,
                   width: MediaQuery.of(context).size.width,
                   height: 200,

@@ -1,16 +1,21 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart' as geo;
 
 class NewBooking extends StatefulWidget {
   final String token;
@@ -33,6 +38,7 @@ final CommonWidgets commonWidgets = CommonWidgets();
 final UserService userService = UserService();
 
 class _NewBookingState extends State<NewBooking> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,58 +47,62 @@ class _NewBookingState extends State<NewBooking> {
         context,
         User: widget.firstName +' '+ widget.lastName,
         showLeading: false,
+          userId: widget.id,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.only(
-                  top: MediaQuery.sizeOf(context).height * 0.17),
-              child: SvgPicture.asset('assets/createBooking.svg'),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 60, bottom: 30),
-              child: Text(
-                "Looks like you don't have any booking\nyet. Start by creating your first booking",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      body: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                    top: MediaQuery.sizeOf(context).height * 0.17),
+                child: SvgPicture.asset('assets/createBooking.svg'),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.07,
-                width: MediaQuery.of(context).size.width * 0.6,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xff6A66D1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              Padding(
+                padding: const EdgeInsets.only(top: 60, bottom: 30),
+                child: Text(
+                  "Looks like you don't have any booking\nyet. Start by creating your first booking",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xff6A66D1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => UserType(
-                              token: widget.token,
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              id: widget.id,email: widget.email,)),
-                    );
-                  },
-                  child: const Text(
-                    'Create Booking',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UserType(
+                                token: widget.token,
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                id: widget.id,email: widget.email,)),
+                      );
+                    },
+                    child: const Text(
+                      'Create Booking',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -154,6 +164,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
   String? selectedVendorId;
   bool isLoading = true;
   List<Map<String, dynamic>>? partnerData;
+  String currentPlace = '';
 
   @override
   void initState() {
@@ -182,9 +193,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
     }
   }
 
-
-
-
   Future<void> fetchCoordinates() async {
     try {
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
@@ -197,34 +205,46 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
         polylines.clear();
         _dropLatLngs.clear();
       });
+
+      // Fetch the user's current location
+      Position currentPosition = await geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.high,
+      );
+      LatLng currentLatLng =
+      LatLng(currentPosition.latitude, currentPosition.longitude);
+
+      // Add marker for the current location
+      setState(() {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('currentLocation'),
+            position: currentLatLng,
+            infoWindow: InfoWindow(
+              snippet: currentPlace,
+              title: 'Current Location',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          ),
+        );
+      });
+
       // Fetch pickup coordinates
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
-
-      // Fetch drop coordinates
-      List<Future<http.Response>> dropResponses = dropPlaces.map((dropPlace) {
-        String dropUrl =
-            'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(dropPlace)}&key=$apiKey';
-        return http.get(Uri.parse(dropUrl));
-      }).toList();
-
-      final List<http.Response> dropResponsesList =
-          await Future.wait(dropResponses);
 
       if (pickupResponse.statusCode == 200) {
         final pickupData = json.decode(pickupResponse.body);
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-              pickupData['results']?[0]['geometry']?['location'];
+          pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
-            setState(() {
-              pickupLatLng =
-                  LatLng(pickupLocation['lat'], pickupLocation['lng']);
+            pickupLatLng = LatLng(pickupLocation['lat'], pickupLocation['lng']);
 
+            setState(() {
               markers.add(
                 Marker(
                   markerId: const MarkerId('pickup'),
@@ -237,41 +257,54 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                       BitmapDescriptor.hueGreen),
                 ),
               );
-
-              // Clear existing polylines and drop points list
-              polylines.clear();
-              _dropLatLngs.clear();
             });
-          } else {
-            print('Pickup location is null');
           }
-        } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
         }
 
-        // Handle each drop point response
-        List<LatLng> waypoints = [];
-        for (int i = 0; i < dropResponsesList.length; i++) {
-          final dropResponse = dropResponsesList[i];
+        String reverseGeocodeUrl =
+            'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
+        final reverseGeocodeResponse = await http.get(Uri.parse(reverseGeocodeUrl));
+
+        String currentLocationName = 'Unknown Location'; // Default value
+
+        if (reverseGeocodeResponse.statusCode == 200) {
+          final reverseGeocodeData = json.decode(reverseGeocodeResponse.body);
+
+          if (reverseGeocodeData['status'] == 'OK') {
+            final currentAddress = reverseGeocodeData['results']?[0]['formatted_address'];
+            currentPlace = currentAddress;
+            if (currentAddress != null) {
+              currentLocationName = currentAddress;
+              print('Current Location Name: $currentLocationName');
+            }
+          }
+        }
+
+        // Fetch drop coordinates
+        if (dropPlaces.isNotEmpty) {
+          String dropUrl =
+              'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(dropPlaces[0])}&key=$apiKey';
+          final dropResponse = await http.get(Uri.parse(dropUrl));
+
           if (dropResponse.statusCode == 200) {
             final dropData = json.decode(dropResponse.body);
 
             if (dropData != null && dropData['status'] == 'OK') {
               final dropLocation =
-                  dropData['results']?[0]['geometry']?['location'];
+              dropData['results']?[0]['geometry']?['location'];
               final dropAddress = dropData['results']?[0]['formatted_address'];
 
               if (dropLocation != null) {
                 LatLng dropLatLng =
-                    LatLng(dropLocation['lat'], dropLocation['lng']);
+                LatLng(dropLocation['lat'], dropLocation['lng']);
 
                 setState(() {
                   markers.add(
                     Marker(
-                      markerId: MarkerId('dropPoint$i'),
+                      markerId: const MarkerId('dropPoint'),
                       position: dropLatLng,
                       infoWindow: InfoWindow(
-                        title: 'Drop Point ${i + 1}',
+                        title: 'Drop Point',
                         snippet: dropAddress,
                       ),
                       icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -279,70 +312,49 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                     ),
                   );
 
-                  // Add the drop point to the list
                   _dropLatLngs.add(dropLatLng);
-                  waypoints.add(dropLatLng);
                 });
-              } else {
-                print('Drop location is null for point $i');
+
+                // Fetch route with Directions API from current location -> pickup -> drop
+                String directionsUrl =
+                    'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${dropLatLng.latitude},${dropLatLng.longitude}&waypoints=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
+
+                final directionsResponse = await http.get(Uri.parse(directionsUrl));
+
+                if (directionsResponse.statusCode == 200) {
+                  final directionsData = json.decode(directionsResponse.body);
+
+                  if (directionsData != null && directionsData['status'] == 'OK') {
+                    final routes = directionsData['routes']?[0];
+                    final polyline = routes?['overview_polyline']?['points'];
+
+                    if (polyline != null) {
+                      final decodedPoints = _decodePolyline(polyline);
+
+                      setState(() {
+                        polylines.add(
+                          Polyline(
+                            polylineId: const PolylineId('route'),
+                            color: Colors.blue,
+                            width: 5,
+                            points: decodedPoints,
+                          ),
+                        );
+                      });
+                    }
+                  }
+                }
               }
-            } else {
-              print(
-                  'Error with drop API response for point $i: ${dropData?['status']}');
             }
-          } else {
-            print(
-                'Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
           }
         }
-
-        // Fetch route with Directions API
-        if (_dropLatLngs.isNotEmpty) {
-          String waypointsString = waypoints
-              .map((latLng) => '${latLng.latitude},${latLng.longitude}')
-              .join('|');
-          String directionsUrl =
-              'https://maps.googleapis.com/maps/api/directions/json?origin=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&destination=${_dropLatLngs.last.latitude},${_dropLatLngs.last.longitude}&waypoints=optimize:true|$waypointsString&key=$apiKey';
-          final directionsResponse = await http.get(Uri.parse(directionsUrl));
-
-          if (directionsResponse.statusCode == 200) {
-            final directionsData = json.decode(directionsResponse.body);
-            if (directionsData != null && directionsData['status'] == 'OK') {
-              final routes = directionsData['routes']?[0];
-              final legs = routes?['legs'] as List<dynamic>;
-              final polyline = routes?['overview_polyline']?['points'];
-              if (polyline != null) {
-                final decodedPoints = _decodePolyline(polyline);
-                setState(() {
-                  polylines.add(
-                    Polyline(
-                      polylineId: const PolylineId('route'),
-                      color: Colors.blue,
-                      width: 5,
-                      points: decodedPoints,
-                    ),
-                  );
-                });
-              }
-            } else {
-              print(
-                  'Error with directions API response: ${directionsData?['status']}');
-            }
-          } else {
-            print(
-                'Failed to load directions, status code: ${directionsResponse.statusCode}');
-          }
-        }
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mapController != null && pickupLatLng != null) {
-            _moveCameraToFitAllMarkers();
-          }
-        });
-      } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
       }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mapController != null) {
+          _moveCameraToFitAllMarkers();
+        }
+      });
     } catch (e) {
       print('Error fetching coordinates: $e');
     }
@@ -547,16 +559,34 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                       ),
                       markers: markers,
                       polylines: polylines,
+                      gestureRecognizers: Set()
+                        ..add(Factory<PanGestureRecognizer>(
+                              () => PanGestureRecognizer(),
+                        ))
+                        ..add(Factory<TapGestureRecognizer>(
+                              () => TapGestureRecognizer(),
+                        )),
                     ),
                   ),
                   Positioned(
                       top: 15,
                       child: Container(
                         width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 25, right: 8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
+                            Container(
+                              child: GestureDetector(
+                                  onTap: (){
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
+                                      ),
+                                    );
+                                  },
+                                  child: const CircleAvatar(backgroundColor: Colors.white,child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
+                            ),
                             Card(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(80),
@@ -565,13 +595,11 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                               child: Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.only(left: 15),
-                                        child: Image.asset(
-                                            'assets/moving_truck.png'),
+                                        child: SvgPicture.asset('assets/moving_truck.svg'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),

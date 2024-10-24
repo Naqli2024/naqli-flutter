@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class DriverLogin extends StatefulWidget {
   const DriverLogin({super.key});
@@ -74,8 +75,8 @@ class _DriverLoginState extends State<DriverLogin> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            'assets/logo.png',
+                          SvgPicture.asset(
+                            'assets/logo.svg',
                             fit: BoxFit.fitWidth,
                             width: 200,
                             height: 200,
@@ -155,7 +156,7 @@ class _DriverLoginState extends State<DriverLogin> {
                                           border: OutlineInputBorder(
                                             borderSide: const BorderSide(
                                                 color: Color(0xffBCBCBC), width: 2),
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
                                         validator: (value) {
@@ -196,7 +197,7 @@ class _DriverLoginState extends State<DriverLogin> {
                                           border: OutlineInputBorder(
                                             borderSide: const BorderSide(
                                                 color: Color(0xffBCBCBC), width: 2),
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
                                         validator: (value) {

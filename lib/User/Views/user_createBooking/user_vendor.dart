@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -15,8 +17,13 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dar
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
-import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:location/location.dart';
+import 'package:google_places_flutter_api/google_places_flutter_api.dart';
+import 'package:location/location.dart';
+import 'package:permission_handler/permission_handler.dart'as permissionHandler;
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:stripe_platform_interface/src/models/payment_methods.dart'
     as stripe;
 import 'package:flutter_svg/svg.dart';
@@ -43,6 +50,7 @@ class ChooseVendor extends StatefulWidget {
   final String selectedType;
   final String id;
   final String email;
+  final String? accountType;
   const ChooseVendor(
       {super.key,
       required this.bookingId,
@@ -60,7 +68,7 @@ class ChooseVendor extends StatefulWidget {
       required this.address,
       required this.zipCode,
       required this.unitTypeName,
-      required this.id, required this.email});
+      required this.id, required this.email, this.accountType});
 
   @override
   State<ChooseVendor> createState() => _ChooseVendorState();
@@ -105,6 +113,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
   int fetchedVendorsCount = 0;
   String zeroQuotePrice = '0';
   bool isSwipeEnabled = false;
+  String currentPlace = '';
+
 
   @override
   void initState() {
@@ -654,11 +664,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
           }
         }
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mapController != null && pickupLatLng != null) {
-            _moveCameraToFitAllMarkers();
-          }
-        });
+        mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(CameraPosition(
+            target: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
+            zoom: 5,
+          )),
+        );
+
       } else {
         print(
             'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
@@ -1059,9 +1071,21 @@ class _ChooseVendorState extends State<ChooseVendor> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: commonWidgets.commonAppBar(context,
-            User: widget.firstName +' '+ widget.lastName, showLeading: false),
-        drawer: Drawer(
+          appBar: widget.accountType =='Single User'
+          ? commonWidgets.commonAppBar(
+              context,
+              User: widget.firstName +' '+ widget.lastName,
+              showLeading: false,
+              userId: widget.id)
+          : commonWidgets.commonAppBar(
+              context,
+              User: widget.firstName +' '+ widget.lastName,
+              userId: widget.id,
+              showLeading: true,
+              showLanguage: false,
+          ),
+        drawer: widget.accountType == 'Single User'
+        ? Drawer(
           backgroundColor: Colors.white,
           child: ListView(
             children: <Widget>[
@@ -1082,10 +1106,24 @@ class _ChooseVendorState extends State<ChooseVendor> {
               ),
               const Divider(),
               ListTile(
-                  leading: Image.asset('assets/booking_logo.png',
-                      height: MediaQuery.of(context).size.height * 0.05),
+                  leading: Icon(Icons.home,size: 30,color: Color(0xff707070)),
                   title: const Padding(
-                    padding: EdgeInsets.only(left: 15),
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text('Home',style: TextStyle(fontSize: 25),),
+                  ),
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserType(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      ),
+                    );
+                  }
+              ),
+              ListTile(
+                  leading: SvgPicture.asset('assets/booking_logo.svg'),
+                  title: const Padding(
+                    padding: EdgeInsets.only(left: 10),
                     child: Text(
                       'Booking',
                       style: TextStyle(fontSize: 25),
@@ -1252,10 +1290,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     }
                   }),
               ListTile(
-                  leading: Image.asset('assets/booking_logo.png',
-                      height: MediaQuery.of(context).size.height * 0.05),
+                  leading: SvgPicture.asset('assets/booking_history.svg',
+                      height: MediaQuery.of(context).size.height * 0.035),
                   title: const Padding(
-                    padding: EdgeInsets.only(left: 15),
+                    padding: EdgeInsets.only(left: 10),
                     child: Text(
                       'Booking History',
                       style: TextStyle(fontSize: 25),
@@ -1276,10 +1314,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     );
                   }),
               ListTile(
-                  leading: Image.asset('assets/payment_logo.png',
-                      height: MediaQuery.of(context).size.height * 0.05),
+                  leading: SvgPicture.asset('assets/payment_logo.svg'),
                   title: const Padding(
-                    padding: EdgeInsets.only(left: 5),
+                    padding: EdgeInsets.only(left: 10),
                     child: Text(
                       'Payment',
                       style: TextStyle(fontSize: 25),
@@ -1306,10 +1343,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               ),
               ListTile(
-                leading: Image.asset('assets/report_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/report_logo.svg'),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text(
                     'Report',
                     style: TextStyle(fontSize: 25),
@@ -1325,10 +1361,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                 },
               ),
               ListTile(
-                leading: Image.asset('assets/help_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/help_logo.svg'),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 7),
                   child: Text(
                     'Help',
                     style: TextStyle(fontSize: 25),
@@ -1337,16 +1372,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
                 onTap: () {},
               ),
               ListTile(
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: Icon(
-                    Icons.phone,
-                    size: 30,
-                    color: Color(0xff707070),
-                  ),
+                leading: Icon(
+                  Icons.phone,
+                  size: 30,
+                  color: Color(0xff707070),
                 ),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 17),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text(
                     'Contact us',
                     style: TextStyle(fontSize: 25),
@@ -1355,16 +1387,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
                 onTap: () {},
               ),
               ListTile(
-                leading: const Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: Icon(
-                    Icons.logout,
-                    color: Colors.red,
-                    size: 30,
-                  ),
+                leading: Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                  size: 30,
                 ),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text(
                     'Logout',
                     style: TextStyle(fontSize: 25, color: Colors.red),
@@ -1401,6 +1430,79 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => UserLogin()),
+                              );
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('No'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        )
+        : Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SvgPicture.asset('assets/naqlee-logo.svg',
+                        height: MediaQuery.of(context).size.height * 0.05),
+                    GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                        },
+                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                  ],
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        backgroundColor: Colors.white,
+                        contentPadding: const EdgeInsets.all(20),
+                        content: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 30,bottom: 10),
+                              child: Text(
+                                'Are you sure you want to logout?',
+                                style: TextStyle(fontSize: 19),
+                              ),
+                            ),
+                          ],
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Yes'),
+                            onPressed: () async {
+                              await clearUserData();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => UserLogin()),
                               );
                             },
                           ),
@@ -1462,6 +1564,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               ),
                               markers: markers,
                               polylines: polylines,
+                              gestureRecognizers: Set()
+                                ..add(Factory<PanGestureRecognizer>(
+                                      () => PanGestureRecognizer(),
+                                ))
+                                ..add(Factory<TapGestureRecognizer>(
+                                      () => TapGestureRecognizer(),
+                                )),
                             ),
                           ),
                           Positioned(
@@ -1500,8 +1609,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                             children: [
                                               Padding(
                                                 padding: const EdgeInsets.only(left: 15),
-                                                child: Image.asset(
-                                                    'assets/moving_truck.png'),
+                                                child: SvgPicture.asset('assets/moving_truck.svg'),
                                               ),
                                               Padding(
                                                 padding: const EdgeInsets.all(8.0),

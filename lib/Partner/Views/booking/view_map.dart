@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
-import 'package:flutter_naqli/Partner/Views/partner_report/submitTicket.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -287,7 +289,6 @@ class _ViewMapState extends State<ViewMap> {
     }
   }
 
-
   void _moveCameraToFitAllMarkers() {
     if (mapController != null) {
       LatLngBounds bounds;
@@ -390,9 +391,11 @@ class _ViewMapState extends State<ViewMap> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
         User: widget.partnerName,
+          userId: widget.partnerId
       ),
       drawer: commonWidgets.createDrawer(context,
           onPaymentPressed: () {
@@ -458,6 +461,13 @@ class _ViewMapState extends State<ViewMap> {
                   ),
                   markers: markers,
                   polylines: polylines,
+                  gestureRecognizers: Set()
+                    ..add(Factory<PanGestureRecognizer>(
+                          () => PanGestureRecognizer(),
+                    ))
+                    ..add(Factory<TapGestureRecognizer>(
+                          () => TapGestureRecognizer(),
+                    )),
                 ),
               ),
               Center(
@@ -646,7 +656,7 @@ class _ViewMapState extends State<ViewMap> {
                       padding: const EdgeInsets.only(left: 70, right: 70),
                       child: TextFormField(
                         controller: chargesController,
-                        keyboardType: TextInputType.numberWithOptions(),
+                        keyboardType: TextInputType.number,
                       ),
                     ),
                     _buildTextField('Reason', reasonController),

@@ -7,6 +7,7 @@ import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserLogin extends StatefulWidget {
@@ -83,8 +84,8 @@ class _UserLoginState extends State<UserLogin> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Image.asset(
-                                    'assets/logo.png',
+                                  SvgPicture.asset(
+                                    'assets/logo.svg',
                                     fit: BoxFit.fitWidth,
                                     width: 200,
                                     height: 200,
@@ -164,7 +165,7 @@ class _UserLoginState extends State<UserLogin> {
                                                   border: OutlineInputBorder(
                                                     borderSide: const BorderSide(
                                                         color: Color(0xffBCBCBC), width: 2),
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius: BorderRadius.circular(8),
                                                   ),
                                                 ),
                                                 validator: (value) {
@@ -205,7 +206,7 @@ class _UserLoginState extends State<UserLogin> {
                                                   border: OutlineInputBorder(
                                                     borderSide: const BorderSide(
                                                         color: Color(0xffBCBCBC), width: 2),
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius: BorderRadius.circular(8),
                                                   ),
                                                 ),
                                                 validator: (value) {

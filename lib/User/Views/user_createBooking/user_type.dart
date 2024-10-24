@@ -1,7 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
@@ -12,11 +14,14 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dar
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
-import 'package:flutter_naqli/User/Views/user_report/user_submitTicket.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
+import 'package:flutter_naqli/main.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:ui' as ui;
 
 class UserType extends StatefulWidget {
   final String firstName;
@@ -24,10 +29,11 @@ class UserType extends StatefulWidget {
   final String token;
   final String id;
   final String email;
+  final String? accountType;
   final String? paymentStatus;
   final String? quotePrice;
   final String? oldQuotePrice;
-  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id, this.paymentStatus, this.quotePrice, this.oldQuotePrice, required this.email});
+  const UserType({super.key, required this.firstName, required this.lastName, required this.token, required this.id, this.paymentStatus, this.quotePrice, this.oldQuotePrice, required this.email, this.accountType});
 
   @override
   State<UserType> createState() => _UserTypeState();
@@ -37,15 +43,19 @@ class _UserTypeState extends State<UserType> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
   String _selectedType = '';
+  String isFromUserType = '';
   Future<Map<String, dynamic>?>? booking;
   List<Map<String, dynamic>>? partnerData;
   String? partnerId;
-
+  Locale _locale = Locale('en');
   @override
   void initState() {
     super.initState();
     booking = _fetchBookingDetails();
   }
+
+
+
   // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
   //   try {
   //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
@@ -79,12 +89,12 @@ class _UserTypeState extends State<UserType> {
     if (bookingId == null || token == null) {
       print('No bookingId found, fetching pending booking details.');
 
-      if (widget.id != null && token != null) {
-        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+      if (widget.id != null && widget.token != null) {
+        bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
 
         if (bookingId != null) {
           // Optionally, save the bookingId to shared preferences
-          // await saveBookingIdToPreferences(bookingId, token);
+          // await saveBookingId(bookingId,widget.token);
         } else {
           print('No pending booking found, navigating to NewBooking.');
           return null;
@@ -96,15 +106,15 @@ class _UserTypeState extends State<UserType> {
     }
 
     // Proceed to fetch booking details if bookingId is available
-    if (bookingId != null && token != null) {
-      return await userService.fetchBookingDetails(bookingId, token);
+    if (bookingId != null && widget.token != null) {
+      return await userService.fetchBookingDetails(bookingId, widget.token);
     } else {
       print('Failed to fetch booking details due to missing bookingId or token.');
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => NewBooking(
-            token: token,
+            token: widget.token,
             firstName: widget.firstName,
             lastName: widget.lastName,
             id: widget.id,
@@ -122,11 +132,21 @@ class _UserTypeState extends State<UserType> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
+      appBar: widget.accountType =='Single User'
+      ? commonWidgets.commonAppBar(
         context,
         User: widget.firstName +' '+ widget.lastName,
-      ),
-      drawer: Drawer(
+        userId: widget.id,
+      )
+      : commonWidgets.commonAppBar(
+        context,
+        User: widget.firstName +' '+ widget.lastName,
+        userId: widget.id,
+        showLeading: true,
+        showLanguage: false,
+    ),
+      drawer: widget.accountType =='Single User'
+      ? Drawer(
         backgroundColor: Colors.white,
         child: ListView(
           children: <Widget>[
@@ -146,11 +166,11 @@ class _UserTypeState extends State<UserType> {
             ),
             const Divider(),
             ListTile(
-                leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
-                  child: Text('Booking',style: TextStyle(fontSize: 25),),
+                leading: SvgPicture.asset('assets/booking_logo.svg'),
+                title: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Text('Booking',style: TextStyle(fontSize: 25),
+            ),
                 ),
                 onTap: ()async {
                   try {
@@ -258,10 +278,10 @@ class _UserTypeState extends State<UserType> {
                 }
             ),
             ListTile(
-                leading: Image.asset('assets/booking_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/booking_history.svg',
+                    height: MediaQuery.of(context).size.height * 0.035),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 15),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text('Booking History',style: TextStyle(fontSize: 25),),
                 ),
                 onTap: (){
@@ -274,10 +294,9 @@ class _UserTypeState extends State<UserType> {
                 }
             ),
             ListTile(
-                leading: Image.asset('assets/payment_logo.png',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                leading: SvgPicture.asset('assets/payment_logo.svg'),
                 title: const Padding(
-                  padding: EdgeInsets.only(left: 5),
+                  padding: EdgeInsets.only(left: 10),
                   child: Text('Payment',style: TextStyle(fontSize: 25),),
                 ),
                 onTap: (){
@@ -295,10 +314,9 @@ class _UserTypeState extends State<UserType> {
               child: Text('More info and support',style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold)),
             ),
             ListTile(
-              leading: Image.asset('assets/report_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
+              leading: SvgPicture.asset('assets/report_logo.svg'),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Report',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
@@ -311,35 +329,122 @@ class _UserTypeState extends State<UserType> {
               },
             ),
             ListTile(
-              leading: Image.asset('assets/help_logo.png',
-                  height: MediaQuery.of(context).size.height * 0.05),
+              leading: SvgPicture.asset('assets/help_logo.svg'),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 7),
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> UserHelp()));
               },
             ),
             ListTile(
-              leading: Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
-              ),
+              leading: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
               title: const Padding(
-                padding: EdgeInsets.only(left: 17),
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Contact us',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPage(integrity: 'sha384-6iuIhcalFaA24xiVvyRy4GJ1G9IpfC/N9oQZ0ZEMZwc73yn1XhyRF07/myU56Sv+', checkoutId: '56ABDE7778C303A6611EBE9AA19178C4.uat01-vm-tx04',),
+                  ),
+                );
               },
             ),
             ListTile(
-              leading: const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Icon(Icons.logout,color: Colors.red,size: 30,),
-              ),
+              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
               title: const Padding(
-                padding: EdgeInsets.only(left: 15),
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(20),
+                      content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 30,bottom: 10),
+                            child: Text(
+                              'Are you sure you want to logout?',
+                              style: TextStyle(fontSize: 19),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Yes'),
+                          onPressed: () async {
+                            await clearUserData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserLogin()),
+                            );
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('No'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      )
+      : Drawer(
+        backgroundColor: Colors.white,
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset('assets/naqlee-logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  GestureDetector(
+                      onTap: (){
+                        Navigator.pop(context);
+                      },
+                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(Icons.home,size: 30,),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Home',style: TextStyle(fontSize: 25),),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SingleUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
                 child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
               ),
               onTap: () {
@@ -451,6 +556,7 @@ class _UserTypeState extends State<UserType> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'vehicle';
+                          isFromUserType = 'isFromUserType';
                         });
 
                         Navigator.push(
@@ -463,6 +569,8 @@ class _UserTypeState extends State<UserType> {
                               token: widget.token,
                               id: widget.id,
                               email: widget.email,
+                              isFromUserType: isFromUserType,
+                              accountType: widget.accountType,
                             ),
                           ),
                         );
@@ -485,8 +593,9 @@ class _UserTypeState extends State<UserType> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 22),
-                              child: const Text(
-                                'Vehicle',
+                              child: Text(
+                                'Vehicle'.tr(),
+                                textDirection: ui.TextDirection.ltr,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 16),
                               ),
@@ -502,6 +611,7 @@ class _UserTypeState extends State<UserType> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'bus';
+                          isFromUserType = 'isFromUserType';
                         });
                         Navigator.push(
                           context,
@@ -513,6 +623,8 @@ class _UserTypeState extends State<UserType> {
                               token: widget.token,
                               id: widget.id,
                               email: widget.email,
+                              isFromUserType : isFromUserType,
+                              accountType: widget.accountType,
                             ),
                           ),
                         );
@@ -541,8 +653,9 @@ class _UserTypeState extends State<UserType> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 22),
-                              child: const Text(
-                                'Bus',
+                              child: Text(
+                                'Bus'.tr(),
+                                textDirection: ui.TextDirection.ltr,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 16),
                               ),
@@ -559,6 +672,7 @@ class _UserTypeState extends State<UserType> {
               onTap: () {
                 setState(() {
                   _selectedType = 'equipment';
+                  isFromUserType = 'isFromUserType';
                 });
                 Navigator.push(
                   context,
@@ -570,6 +684,8 @@ class _UserTypeState extends State<UserType> {
                       token: widget.token,
                       id: widget.id,
                       email: widget.email,
+                      isFromUserType: isFromUserType,
+                      accountType: widget.accountType,
                     ),
                   ),
                 );
@@ -598,8 +714,9 @@ class _UserTypeState extends State<UserType> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(bottom: 22),
-                              child: const Text(
-                                'Equipment',
+                              child: Text(
+                                'Equipment'.tr(),
+                                textDirection: ui.TextDirection.ltr,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 16),
                               ),
@@ -614,6 +731,7 @@ class _UserTypeState extends State<UserType> {
                         onTap: () {
                           setState(() {
                             _selectedType = 'special';
+                            isFromUserType = 'isFromUserType';
                           });
                           Navigator.push(
                             context,
@@ -625,6 +743,8 @@ class _UserTypeState extends State<UserType> {
                                 token: widget.token,
                                 id: widget.id,
                                 email: widget.email,
+                                isFromUserType: isFromUserType,
+                                accountType: widget.accountType,
                               ),
                             ),
                           );
@@ -647,8 +767,9 @@ class _UserTypeState extends State<UserType> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 22),
-                                child: const Text(
-                                  'Special',
+                                child: Text(
+                                  'Special'.tr(),
+                                  textDirection: ui.TextDirection.ltr,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(fontSize: 16),
                                 ),
@@ -669,6 +790,7 @@ class _UserTypeState extends State<UserType> {
                 onTap: () {
                   setState(() {
                     _selectedType = 'others';
+                    isFromUserType = 'isFromUserType';
                   });
                   Navigator.push(
                     context,
@@ -680,6 +802,8 @@ class _UserTypeState extends State<UserType> {
                         token: widget.token,
                         id: widget.id,
                         email: widget.email,
+                        isFromUserType: isFromUserType,
+                        accountType: widget.accountType,
                       ),
                     ),
                   );
@@ -706,8 +830,9 @@ class _UserTypeState extends State<UserType> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 20),
-                            child: const Text(
-                              'Others',
+                            child: Text(
+                              'Others'.tr(),
+                              textDirection: ui.TextDirection.ltr,
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 16),
                             ),
@@ -741,7 +866,8 @@ class _UserTypeState extends State<UserType> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20),
-                child: Text('Get an estimate',
+                child: Text('Get an estimate'.tr(),
+                  textDirection: ui.TextDirection.ltr,
                   style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 17),),
               ),
               Padding(
@@ -755,113 +881,149 @@ class _UserTypeState extends State<UserType> {
       ),
     );
   }
-}
-
-void _showModalBottomSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    builder: (BuildContext context) {
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.70,
-        minChildSize: 0,
-        maxChildSize: 0.75,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return  Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16.0),
-            width: MediaQuery.sizeOf(context).width,
-            child: SingleChildScrollView(
-              child: Stack(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Text(
-                        'How may we assist you?',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const Text('Please select a service so that we can assist you'),
-                      bottomCard('assets/vehicle.svg', 'Vehicle'),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          elevation: 5,
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0), // Rounded corners
-                            side: const BorderSide(
-                              color: Color(0xffE0E0E0), // Border color
-                              width: 1, // Border width
+  void _showModalBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.70,
+          minChildSize: 0,
+          maxChildSize: 0.75,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return  Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16.0),
+              width: MediaQuery.sizeOf(context).width,
+              child: SingleChildScrollView(
+                child: Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text(
+                          'How may we assist you?',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const Text('Please select a service so that we can assist you'),
+                        bottomCard('assets/vehicle.svg', 'Vehicle','vehicle'),
+                        GestureDetector(
+                          onTap: (){
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CreateBooking(
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  selectedType: 'bus',
+                                  token: widget.token,
+                                  id: widget.id,
+                                  email: widget.email,
+                                  accountType: widget.accountType,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Card(
+                              elevation: 5,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0), // Rounded corners
+                                side: const BorderSide(
+                                  color: Color(0xffE0E0E0), // Border color
+                                  width: 1, // Border width
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Image.asset('assets/bus.png', width: 90, height: 70),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 50),
+                                    child: Text('Bus', style: TextStyle(fontSize: 20)),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Image.asset('assets/bus.png', width: 90, height: 70),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 50),
-                                child: Text('Bus', style: TextStyle(fontSize: 20)),
-                              ),
-                            ],
-                          ),
                         ),
-                      ),
-                      bottomCard('assets/equipment.svg', 'Equipment'),
-                      bottomCard('assets/special.svg', 'Special'),
-                      bottomCard('assets/others.svg', 'Others'),
-                    ],
-                  ),
-                  Positioned(
-                    top: -15,
-                    right: -10,
-                    child: IconButton(
-                        alignment: Alignment.topRight,
-                        onPressed: (){
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(FontAwesomeIcons.multiply)),
-                  ),
-                ],
+                        bottomCard('assets/equipment.svg', 'Equipment','equipment'),
+                        bottomCard('assets/special.svg', 'Special','special'),
+                        bottomCard('assets/others.svg', 'Others','others'),
+                      ],
+                    ),
+                    Positioned(
+                      top: -15,
+                      right: -10,
+                      child: IconButton(
+                          alignment: Alignment.topRight,
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(FontAwesomeIcons.multiply)),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+            );
+          },
+        );
+      },
+    );
+  }
 
-Widget bottomCard(String imagePath, String title) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Card(
-      elevation: 5,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0), // Rounded corners
-        side: const BorderSide(
-          color: Color(0xffE0E0E0), // Border color
-          width: 1, // Border width
+  Widget bottomCard(String imagePath, String title,String userType) {
+    return GestureDetector(
+      onTap: (){
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CreateBooking(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              selectedType: userType,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+              accountType: widget.accountType,
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Card(
+          elevation: 5,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // Rounded corners
+            side: const BorderSide(
+              color: Color(0xffE0E0E0), // Border color
+              width: 1, // Border width
+            ),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SvgPicture.asset(imagePath, width: 90, height: 70),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 50),
+                child: Text(title, style: TextStyle(fontSize: 20)),
+              ),
+            ],
+          ),
         ),
       ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SvgPicture.asset(imagePath, width: 90, height: 70),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 50),
-            child: Text(title, style: TextStyle(fontSize: 20)),
-          ),
-        ],
-      ),
-    ),
-  );
+    );
+  }
 }
+
 
 

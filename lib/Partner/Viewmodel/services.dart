@@ -785,7 +785,7 @@ class AuthService {
         final List<dynamic> dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
 
         // Safely extract typeOfLoad from the first item
-        String typeOfLoad = 'No load available';
+        String typeOfLoad = 'N/A';
         String typeName = '';
         // Safely access the first item in 'dropPoints'
         String firstDropPoint = 'No drop point available';
@@ -795,8 +795,8 @@ class AuthService {
         }
         if (typeList.isNotEmpty) {
           final typeItem = typeList[0] as Map<String, dynamic>;
-          typeOfLoad = typeItem['typeOfLoad'] ?? 'No load available';
-          typeName = typeItem['typeName'] ?? 'No name available';
+          typeOfLoad = typeItem['typeOfLoad'] ?? 'N/A';
+          typeName = typeItem['typeName'] ?? 'N/A';
         }
         final bookingStatus = data['bookingStatus'] ?? 'Unknown';
         final userId = data['user'] ?? '';

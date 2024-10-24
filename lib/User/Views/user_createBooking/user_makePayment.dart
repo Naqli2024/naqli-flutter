@@ -1,118 +1,102 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_stripe/flutter_stripe.dart';
+import 'dart:io';
 
-class MakePayment extends StatefulWidget {
-  const MakePayment({super.key});
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+class PaymentPage extends StatefulWidget {
+  final String checkoutId;
+  final String integrity;
+
+  PaymentPage({required this.checkoutId, required this.integrity});
 
   @override
-  State<MakePayment> createState() => _MakePaymentState();
+  State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _MakePaymentState extends State<MakePayment> {
-  Map<String, dynamic>? paymentIntent;
-
+class _PaymentPageState extends State<PaymentPage> {
   @override
   void initState() {
     super.initState();
-    Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
+    if (Platform.isAndroid) {
+      WebView.platform = SurfaceAndroidWebView(); // Enable hybrid composition
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // HTML structure for payment widget
+    final String html = '''
+      <!DOCTYPE html>
+      <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Viewport settings -->
+        <style>
+          body {
+            margin: 0;
+            padding: 15px 15px;
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .paymentWidgets {
+            width: 30%; /* Width to make it responsive */
+            max-width: 100px; /* Prevent excessive width on larger screens */
+            box-sizing: border-box; /* Include padding in width */
+          }
+        </style>
+          <script>
+              function loadPaymentScript(checkoutId, integrity) {
+                        const script = document.createElement('script');
+                        script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+                        script.crossOrigin = 'anonymous';
+                        script.integrity = integrity;
+              
+                        script.onload = () => {
+                console.log('Payment widget script loaded');
+                // Additional functionality can be placed here
+                const paymentForm = document.querySelector('.paymentWidgets'); // Adjust selector if necessary
+                if (paymentForm) {
+                          paymentForm.addEventListener('submit', (event) => {
+                            event.preventDefault(); // Prevent default form submission
+                            // Custom logic to handle the form submission or payment process
+                            console.log('Payment form submitted');
+                            // You could add AJAX call here to handle payment server-side if needed
+                          });
+                        }
+                      };
+              
+                        // Append script to body or a specific element where the form will be displayed
+                        document.body.appendChild(script);
+                      }
+              
+                      // Call the loadPaymentScript function with parameters
+                      document.addEventListener("DOMContentLoaded", function() {
+                        loadPaymentScript("${widget.checkoutId}", "${widget.integrity}");
+                      });
+          </script>
+        </head>
+        <body>
+          <form action="https://example.com/payment-result" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+        </body>
+      </html>
+    ''';
+
     return Scaffold(
       appBar: AppBar(
-        centerTitle: false,
-        title: const Text('Stripe Payment'),
+        title: Text('Payment'),
       ),
-      body: Center(
-        child: ElevatedButton(
-          child: const Text('Make Payment'),
-          onPressed: () async {
-            await stripeMakePayment();
-          },
-        ),
+      body: WebView(
+        initialUrl: Uri.dataFromString(html,
+                mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+            .toString(),
+        javascriptMode: JavascriptMode.unrestricted,
+        onWebViewCreated: (WebViewController webViewController) {
+          // Optional: Enable debugging
+          webViewController.clearCache(); // Optional: Clear cache
+        },
       ),
     );
-  }
-
-  Future<void> stripeMakePayment() async {
-    try {
-      paymentIntent = await createPaymentIntent('100', 'INR');
-      await Stripe.instance
-          .initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-              billingDetails: BillingDetails(
-                  name: 'YOUR NAME',
-                  email: 'YOUREMAIL@gmail.com',
-                  phone: 'YOUR NUMBER',
-                  address: Address(
-                      city: 'YOUR CITY',
-                      country: 'YOUR COUNTRY',
-                      line1: 'YOUR ADDRESS 1',
-                      line2: 'YOUR ADDRESS 2',
-                      postalCode: 'YOUR PINCODE',
-                      state: 'YOUR STATE')),
-              paymentIntentClientSecret: paymentIntent![
-              'client_secret'], //Gotten from payment intent
-              style: ThemeMode.dark,
-              merchantDisplayName: 'Ikay'))
-          .then((value) {});
-
-      //STEP 3: Display Payment sheet
-      displayPaymentSheet();
-    } catch (e) {
-      print(e.toString());
-      Fluttertoast.showToast(msg: e.toString());
-    }
-  }
-
-  displayPaymentSheet() async {
-    try {
-      // 3. display the payment sheet.
-      await Stripe.instance.presentPaymentSheet();
-
-      Fluttertoast.showToast(msg: 'Payment succesfully completed');
-    } on Exception catch (e) {
-      if (e is StripeException) {
-        Fluttertoast.showToast(
-            msg: 'Error from Stripe: ${e.error.localizedMessage}');
-      } else {
-        Fluttertoast.showToast(msg: 'Unforeseen error: ${e}');
-      }
-    }
-  }
-
-//create Payment
-  createPaymentIntent(String amount, String currency) async {
-    try {
-      //Request body
-      Map<String, dynamic> body = {
-        'amount': calculateAmount(amount),
-        'currency': currency,
-      };
-
-      //Make post request to Stripe
-      var response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET']}',
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: body,
-      );
-      return json.decode(response.body);
-    } catch (err) {
-      throw Exception(err.toString());
-    }
-  }
-
-//calculate Amount
-  calculateAmount(String amount) {
-    final calculatedAmount = (int.parse(amount)) * 100;
-    return calculatedAmount.toString();
   }
 }

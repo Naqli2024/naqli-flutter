@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
@@ -383,12 +384,26 @@ class UserService{
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(message)),
               );
-              await saveUserData(firstName, lastName, token, id,email);
+              await saveUserData(firstName, lastName, token, id, email, accountType);
             }
           else{
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Only "Single User" can allowed...')),
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => SingleUserHomePage(
+                    firstName: firstName,
+                    lastName: lastName,
+                    token: token,
+                    id: id,
+                    email: email
+                ),
+              ),
             );
+            print('Login successful');
+            final message = responseBody['message'] ?? 'Login Failed';
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
+            );
+            await saveUserData(firstName, lastName, token, id, email, accountType);
           }
 
         } else {
@@ -1263,6 +1278,40 @@ class UserService{
     } catch (e) {
       print('An error occurred: $e');
       throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<List<Map<String, String>>> getNotifications(String userId) async {
+    try {
+      final url = Uri.parse('${baseUrl}admin/getNotificationById/$userId');
+      print('Fetching notifications for userId: $userId');
+
+      final response = await http.get(url, headers: {'Content-Type': 'application/json'});
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+        print('API Response: $responseBody');
+
+        if (responseBody.containsKey('data') && responseBody['data'] != null) {
+          final notifications = responseBody['data'] as List<dynamic>;
+          print('Notifications Data: $notifications');
+          return notifications.map((notification) {
+            return {
+              'messageTitle': notification['messageTitle']?.toString() ?? 'No Title',
+              'messageBody': notification['messageBody']?.toString() ?? 'No Message',
+            };
+          }).toList();
+        } else {
+          print('No notifications found in response');
+          return [];
+        }
+      } else {
+        print('Failed to fetch notifications, Status Code: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching notifications: $e');
+      return [];
     }
   }
 

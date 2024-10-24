@@ -424,6 +424,7 @@ class _PaymentState extends State<Payment> {
         context,
         User: widget.firstName +' '+ widget.lastName,
         showLeading: false,
+          userId: widget.id,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(

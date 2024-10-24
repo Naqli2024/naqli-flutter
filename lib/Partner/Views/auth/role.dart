@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Role extends StatefulWidget {
   const Role({Key? key}) : super(key: key);
@@ -39,8 +40,8 @@ class _RoleState extends State<Role> {
           children: [
             Container(
               alignment: Alignment.center,
-              child: Image.asset(
-                'assets/Joinus.jpg',
+              child: SvgPicture.asset(
+                'assets/joinUs.svg',
                 fit: BoxFit.fill,
                 width: MediaQuery.of(context).size.width,
                 height: 300,
@@ -50,13 +51,29 @@ class _RoleState extends State<Role> {
               onTap: () {
                 Navigator.pop(context);
               },
-              child: const Align(
+              child: Align(
                 alignment: Alignment.topRight,
-                child: CircleAvatar(
-                  backgroundColor: Color(0xffFFFFFF),
-                  child: Icon(
-                    Icons.clear,
-                    color: Colors.black,
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 2,
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: Color(0xffFFFFFF),
+                    child: Icon(
+                      Icons.clear,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),
@@ -79,12 +96,12 @@ class _RoleState extends State<Role> {
           Expanded(
             child: Container(
               margin: EdgeInsets.only(
-                left: MediaQuery.of(context).size.width * 0.08,
+                left: MediaQuery.of(context).size.width * 0.13,
               ),
               child: RadioListTile(
                 title: const Text(
                   'Single Unit + Operator',
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: 20,color: Color(0xff707070)),
                 ),
                 value: 1,
                 groupValue: _selectedValue,

@@ -2,10 +2,12 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PartnerHomePage extends StatefulWidget {
   final String mobileNo;
@@ -28,6 +30,21 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(top: 7),
+          child: Builder(
+            builder: (BuildContext context) => IconButton(
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              icon: const Icon(
+                Icons.menu,
+                color: Color(0xff5D5151),
+                size: 45,
+              ),
+            ),
+          ),
+        ),
         title: GestureDetector(
           onTap: (){
             Navigator.push(
@@ -45,15 +62,68 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                 height: 40,
               )),
         ),
-        actions: [
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                Icons.menu,
-                color: Color(0xff5D5151),
-                size: 50,
-              )),
-        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset('assets/naqlee-logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  GestureDetector(
+                      onTap: (){
+                        Navigator.pop(context);
+                      },
+                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(FontAwesomeIcons.userGroup),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 15,top: 5),
+                child: Text('User',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+              ),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> UserHomePage()));
+              },
+            ),
+            ListTile(
+              leading: Icon(FontAwesomeIcons.car),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 15,top: 5),
+                child: Text('Driver',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+              ),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverLogin()));
+              },
+            ),
+            ListTile(
+              leading: Icon(FontAwesomeIcons.phone),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 15,top: 5),
+                child: Text('Contact us',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+              ),
+              onTap: () {
+
+              },
+            ),
+            ListTile(
+              leading: SvgPicture.asset('assets/help_logo.svg'),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 13,top: 5),
+                child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+              ),
+              onTap: () {
+
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -270,7 +340,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                                 padding:
                                     const EdgeInsets.only(top: 20, right: 20),
                                 child: const Text(
-                                  'Be assured to receive allpayment on time & get the best in class support',
+                                  'Be assured to receive all payment on time & get the best in class support',
                                   style: TextStyle(
                                     color: Color(0xff5D5151),
                                     fontSize: 20,

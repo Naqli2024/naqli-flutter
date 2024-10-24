@@ -26,7 +26,7 @@ Future<void> clearPartnerData() async {
   await prefs.clear();
 }
 
-Future<void> saveUserData(String firstName, String lastName, String token, String id,String email) async {
+Future<void> saveUserData(String firstName, String lastName, String token, String id,String email, String accountType) async {
   try {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', firstName);
@@ -34,7 +34,8 @@ Future<void> saveUserData(String firstName, String lastName, String token, Strin
     await prefs.setString('token', token);
     await prefs.setString('id', id);
     await prefs.setString('email', email);
-    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email');
+    await prefs.setString('accountType', accountType);
+    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email, accountType=$accountType');
   } catch (e) {
     print('Error saving data: $e');
   }
@@ -48,9 +49,10 @@ Future<Map<String, String?>> getSavedUserData() async {
     final token = prefs.getString('token');
     final id = prefs.getString('id');
     final email = prefs.getString('email');
+    final accountType = prefs.getString('accountType');
 
     // Debugging
-    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email');
+    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email, accountType=$accountType');
 
     return {
       'firstName': firstName,
@@ -58,6 +60,7 @@ Future<Map<String, String?>> getSavedUserData() async {
       'token': token,
       'id': id,
       'email': email,
+      'accountType': accountType,
     };
   } catch (e) {
     print('Error retrieving data: $e');

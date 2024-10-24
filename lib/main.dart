@@ -1,26 +1,38 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'User/Views/user_createBooking/user_vendor.dart';
+import 'dart:ui' as ui;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: ".env");
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]).then((_) {
-    runApp(MyApp());
+    runApp(    EasyLocalization(
+      supportedLocales: [
+        Locale('en', 'US'),
+        Locale('ar', 'SA'),
+        Locale('hi', 'IN'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: Locale('en', 'US'),// Ensure this path is correct
+      child: MyApp(),
+    ),
+    );
   });
 }
 
@@ -30,6 +42,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       title: 'Naqli',
       builder: (context, child) {
         return MediaQuery(
@@ -45,7 +60,9 @@ class MyApp extends StatelessWidget {
           fontSizeFactor: 0.95,
         ),
       ),
-      home: const LoginScreen(),
+      home: Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: const LoginScreen()),
     );
   }
 }
@@ -63,7 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,15 +150,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       final token = userData['token'] ?? '';
                       final id = userData['id'] ?? '';
                       final email = userData['email'] ?? '';
-                      print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
-                      if (id.isNotEmpty && token.isNotEmpty) {
-                        return UserType(
-                          firstName: firstName,
-                          lastName: lastName,
-                          token: token,
-                          id: id,
-                          email: email,
-                        );
+                      final accountType = userData['accountType'] ?? '';
+                      print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id, accountType=$accountType');
+                      if(accountType == 'Single User') {
+                        if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
+                          return UserType(
+                            firstName: firstName,
+                            lastName: lastName,
+                            token: token,
+                            id: id,
+                            email: email,
+                            accountType: accountType,
+                          );
+                        }
+                      }
+                      else{
+                        if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
+                          return SingleUserHomePage(
+                            firstName: firstName,
+                            lastName: lastName,
+                            token: token,
+                            id: id,
+                            email: email,
+                          );
+                        }
                       }
                     }
                   }

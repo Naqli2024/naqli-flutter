@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -37,7 +38,8 @@ class _RequestSupportState extends State<RequestSupport> {
       appBar: commonWidgets.commonAppBar(
           context,
           User: widget.firstName,
-          showLeading: false
+          showLeading: false,
+          userId: widget.partnerId
       ),
       body: isLoading
           ? const Center(
@@ -50,13 +52,27 @@ class _RequestSupportState extends State<RequestSupport> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text('Request Support',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 30,
-                  ),),
+              Row(
+                children: [
+                  GestureDetector(
+                      onTap: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SubmitTicket(firstName: widget.firstName, token: widget.token, partnerId: widget.partnerId, email: widget.email)
+                          ),
+                        );
+                      },
+                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5,left: 45),
+                    child: Text('Request Support',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 30,
+                      ),),
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 30, bottom: 40),
@@ -237,74 +253,80 @@ class _RequestSupportState extends State<RequestSupport> {
                       ),
                     ),
                     onPressed: () async {
-                      setState(() {
-                        isLoading = true;
-                      });
-                      await _authService.submitTicket(
-                          context,
-                          reportMessage: descriptionController.text,
-                          email: widget.email,
-                          pictureOfTheReport: documentFile);
-                      setState(() {
-                        isLoading = false;
-                      });
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            shadowColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            backgroundColor: Colors.white,
-                            contentPadding: EdgeInsets.zero,
-                            title: SizedBox(
-                              width: MediaQuery.of(context).size.width,
-                              height: MediaQuery.of(context).size.height * 0.33,
-                              child: Column(
-                                children: [
-                                  Stack(
+                      if(widget.email.isNotEmpty && descriptionController.text.isNotEmpty)
+                        {
+                          setState(() {
+                            isLoading = true;
+                          });
+                          await _authService.submitTicket(
+                              context,
+                              reportMessage: descriptionController.text,
+                              email: widget.email,
+                              pictureOfTheReport: documentFile);
+                          setState(() {
+                            isLoading = false;
+                          });
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shadowColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                backgroundColor: Colors.white,
+                                contentPadding: EdgeInsets.zero,
+                                title: SizedBox(
+                                  width: MediaQuery.of(context).size.width,
+                                  height: MediaQuery.of(context).size.height * 0.33,
+                                  child: Column(
                                     children: [
-                                      Center(
-                                        child: SvgPicture.asset(
-                                          'assets/ticketSuccess.svg',
-                                          width: MediaQuery.of(context).size.width,
-                                          height: MediaQuery.of(context).size.height * 0.15,
+                                      Stack(
+                                        children: [
+                                          Center(
+                                            child: SvgPicture.asset(
+                                              'assets/ticketSuccess.svg',
+                                              width: MediaQuery.of(context).size.width,
+                                              height: MediaQuery.of(context).size.height * 0.15,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: -15,
+                                            right: -15,
+                                            child: IconButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              icon: const Icon(FontAwesomeIcons.multiply),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 20, bottom: 20),
+                                        child: Text(
+                                          'Thank you',
+                                          style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold,color: Colors.green),
                                         ),
                                       ),
-                                      Positioned(
-                                        top: -15,
-                                        right: -15,
-                                        child: IconButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          icon: const Icon(FontAwesomeIcons.multiply),
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 10),
+                                        child: Text(
+                                          'Your ticket has been submitted Successfully',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 20, bottom: 20),
-                                    child: Text(
-                                      'Thank you',
-                                      style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold,color: Colors.green),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 10),
-                                    child: Text(
-                                      'Your ticket has been submitted Successfully',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              );
+                            },
                           );
-                        },
-                      );
+                        }
+                      else{
+                        commonWidgets.showToast('Please fill the description..');
+                      }
                     },
                     child: const Text(
                       'Submit',
