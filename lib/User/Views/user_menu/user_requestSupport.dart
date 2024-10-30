@@ -58,12 +58,7 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                 children: [
                   GestureDetector(
                           onTap: (){
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => UserSubmitTicket(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
-                              ),
-                            );
+                            Navigator.pop(context);
                           },
                           child: const CircleAvatar(child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
                   Padding(
@@ -82,7 +77,6 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                   text: TextSpan(
                     text: "Feel free to contact us through our email, if you have any more questions ",
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
                       fontSize: 17,
                       color: Colors.black, // Set the text color
                     ),
@@ -90,7 +84,6 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                       TextSpan(
                         text: "naqlee45@gmail.com",
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
                           fontSize: 17,
                           color: Colors.blue,
                         ),
@@ -201,7 +194,7 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                   FilePickerResult? result = await FilePicker.platform.pickFiles();
                   if (result != null && result.files.first.path != null) {
                     setState(() {
-                      documentFile = File(result.files.first.path!); // Convert PlatformFile to File
+                      documentFile = File(result.files.first.path!);
                       documentUpload = true;
                       documentError = false;
                     });
@@ -323,7 +316,7 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.normal,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),

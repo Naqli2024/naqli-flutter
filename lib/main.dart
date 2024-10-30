@@ -6,7 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
-import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
+import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                       else{
                         if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
-                          return SingleUserHomePage(
+                          return SuperUserHomePage(
                             firstName: firstName,
                             lastName: lastName,
                             token: token,

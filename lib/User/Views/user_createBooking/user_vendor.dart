@@ -17,6 +17,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dar
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:location/location.dart';
@@ -120,9 +121,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
   void initState() {
     startVendorFetching();
     _moveCameraToFitAllMarkers();
-    // widget.cityName != null
-    //     ? fetchAddressCoordinates()
-    //     : fetchCoordinates();
     fetchAddressCoordinates();
     fetchCoordinates();
     booking = _fetchBookingDetails();
@@ -168,7 +166,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
         return;
       }
 
-      // Replace the old vendors with new fetched vendors
+
       setState(() {
         vendors.clear();           // Clear the old vendors list
         vendors.addAll(fetchedVendors);  // Add the new vendors
@@ -1369,7 +1367,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     style: TextStyle(fontSize: 25),
                   ),
                 ),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=> UserHelp(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      )));
+                },
               ),
               ListTile(
                 leading: Icon(

@@ -3,10 +3,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
-import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
+import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
-import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
@@ -335,7 +337,14 @@ class _UserTypeState extends State<UserType> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> UserHelp()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context)=>
+                        UserHelp(firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                token: widget.token,
+                                id: widget.id,
+                                email: widget.email
+                        )));
               },
             ),
             ListTile(
@@ -408,93 +417,186 @@ class _UserTypeState extends State<UserType> {
         ),
       )
       : Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SvgPicture.asset('assets/naqlee-logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.05),
-                  GestureDetector(
-                      onTap: (){
-                        Navigator.pop(context);
-                      },
-                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                ],
-              ),
+      backgroundColor: Colors.white,
+      child: ListView(
+        children: <Widget>[
+          ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SvgPicture.asset('assets/naqlee-logo.svg',
+                    height: MediaQuery.of(context).size.height * 0.05),
+                GestureDetector(
+                    onTap: (){
+                      Navigator.pop(context);
+                    },
+                    child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+              ],
             ),
-            const Divider(),
-            ListTile(
-              leading: Icon(Icons.home,size: 30,),
+          ),
+          const Divider(),
+          ListTile(
+            leading: Icon(Icons.home,size: 30,),
+            title: const Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Home',style: TextStyle(fontSize: 25),),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SuperUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
+                ),
+              );
+            },
+          ),
+          ListTile(
+              leading: SvgPicture.asset('assets/booking_logo.svg',
+                  height: MediaQuery.of(context).size.height * 0.035),
               title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Home',style: TextStyle(fontSize: 25),),
+                padding: EdgeInsets.only(left: 5),
+                child: Text('Trigger Booking',style: TextStyle(fontSize: 25),),
               ),
-              onTap: () {
-                Navigator.push(
-                  context,
+              onTap: (){
+                Navigator.of(context).push(
                   MaterialPageRoute(
-                      builder: (context) => SingleUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
+                    builder: (context) => TriggerBooking(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email
+                    ),
                   ),
                 );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+              }
+          ),
+          ListTile(
+              leading: SvgPicture.asset('assets/booking_manager.svg'),
               title: const Padding(
                 padding: EdgeInsets.only(left: 10),
-                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+                child: Text('Booking Manager',style: TextStyle(fontSize: 25),),
               ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      backgroundColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(20),
-                      content: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 30,bottom: 10),
-                            child: Text(
-                              'Are you sure you want to logout?',
-                              style: TextStyle(fontSize: 19),
-                            ),
+              onTap: (){
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => BookingManager(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email
+                    ),
+                  ),
+                );
+              }
+          ),
+          ListTile(
+            leading: SvgPicture.asset('assets/payment.svg'),
+            title: const Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Payments',style: TextStyle(fontSize: 25),),
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SuperUserPayment(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: SvgPicture.asset('assets/report_logo.svg'),
+            title: const Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Report',style: TextStyle(fontSize: 25),),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: SvgPicture.asset('assets/help_logo.svg'),
+            title: const Padding(
+              padding: EdgeInsets.only(left: 7),
+              child: Text('Help',style: TextStyle(fontSize: 25),),
+            ),
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context)=> UserHelp(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email
+                  )));
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+            title: const Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+            ),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    backgroundColor: Colors.white,
+                    contentPadding: const EdgeInsets.all(20),
+                    content: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(top: 30,bottom: 10),
+                          child: Text(
+                            'Are you sure you want to logout?',
+                            style: TextStyle(fontSize: 19),
                           ),
-                        ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('Yes'),
-                          onPressed: () async {
-                            await clearUserData();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => UserLogin()),
-                            );
-                          },
-                        ),
-                        TextButton(
-                          child: const Text('No'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
                         ),
                       ],
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Yes'),
+                        onPressed: () async {
+                          await clearUserData();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => UserLogin()),
+                          );
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('No'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
+    ),
       body: SingleChildScrollView(
         child: Column(
           children: [

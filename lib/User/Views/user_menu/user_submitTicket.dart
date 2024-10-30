@@ -34,7 +34,7 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
         context,
         User: widget.firstName +' '+ widget.lastName,
         showLeading: false,
-          userId: widget.id
+        userId: widget.id
       ),
       body: Stack(
         children: [
@@ -65,7 +65,6 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                             child: Text("To get assistance on your naqlee journey.Please click on the ticket form below if you have any question about billing or logistics.",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
                                 fontSize: 16,
                               ),
                             ),
@@ -101,7 +100,7 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
-                                    fontWeight: FontWeight.normal,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -111,7 +110,6 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                             padding: const EdgeInsets.only(top: 40,bottom: 5),
                             child: Text("You can reach us via email at naqlee45@gmail.com if that would be more convenient for you in either case we try to reply to every communication Within 1 working day",
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
                                 fontSize: 16,
                               ),
                             ),
@@ -131,7 +129,6 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                               text: TextSpan(
                                 text: "Look no further if you are having trouble logging and navigating into our website or controlling your account information, don't worry our help ",
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w500,
                                   fontSize: 16,
                                   color: Colors.black, // Set the default text color
                                 ),
@@ -139,7 +136,6 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                                   TextSpan(
                                     text: "Doc",
                                     style: TextStyle(
-                                      fontWeight: FontWeight.w500,
                                       fontSize: 16,
                                       color: Colors.blue,
                                     ),
@@ -152,7 +148,6 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                                   TextSpan(
                                     text: " are available for you even when our employees are asleep.",
                                     style: TextStyle(
-                                      fontWeight: FontWeight.w500,
                                       fontSize: 16,
                                       color: Colors.black, // Set color back to default for remaining text
                                     ),
@@ -175,12 +170,7 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
               top: 20,
               child: GestureDetector(
                   onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
-                      ),
-                    );
+                    Navigator.pop(context);
                   },
                   child: const CircleAvatar(child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))))
         ],

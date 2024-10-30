@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
-import 'package:flutter_naqli/Single%20User/Views/singleUser_home_page.dart';
+import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
@@ -389,7 +389,7 @@ class UserService{
           else{
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => SingleUserHomePage(
+                builder: (context) => SuperUserHomePage(
                     firstName: firstName,
                     lastName: lastName,
                     token: token,
@@ -791,7 +791,6 @@ class UserService{
   }
 
 
-  // http://10.0.2.2:4000/api/partner/filtered-vendors
   Future<List<Map<String, dynamic>>?> userVehicleVendor(
       BuildContext context, {
         required String bookingId,

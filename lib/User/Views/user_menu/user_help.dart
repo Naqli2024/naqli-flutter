@@ -4,7 +4,12 @@ import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserHelp extends StatefulWidget {
-  const UserHelp({super.key});
+  final String ?firstName;
+  final String ?lastName;
+  final String ?token;
+  final String ?id;
+  final String ?email;
+  const UserHelp({super.key, this.firstName, this.lastName, this.token, this.id, this.email});
 
   @override
   State<UserHelp> createState() => _UserHelpState();
@@ -28,6 +33,9 @@ class _UserHelpState extends State<UserHelp> {
       appBar: commonWidgets.commonAppBar(
         context,
         showLeading: false,
+        User: widget.firstName! +' '+ widget.lastName!,
+        userId: widget.id,
+        showLanguage: false,
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.1),
           child: Column(
@@ -49,10 +57,12 @@ class _UserHelpState extends State<UserHelp> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(
-                    Icons.arrow_back_sharp,
-                    color: Colors.white,
-                    size: 25,
+                  icon: CircleAvatar(
+                    backgroundColor: Color(0xffB7B3F1),
+                    child: const Icon(
+                      Icons.arrow_back_sharp,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),

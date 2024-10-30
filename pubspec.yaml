@@ -155,6 +155,11 @@ flutter:
     - assets/booking_manager.svg
     - assets/payment.svg
     - assets/profile.svg
+    - assets/completed.svg
+    - assets/pending.svg
+    - assets/running.svg
+    - assets/delete.svg
+    - assets/edit.svg
     - assets/images/short-sides.svg
     - assets/images/curtain.svg
     - assets/images/refrigerator.svg

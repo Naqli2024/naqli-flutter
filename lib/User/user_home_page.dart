@@ -205,7 +205,8 @@ class _UserHomePageState extends State<UserHomePage> {
                   child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> UserHelp()));
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context)=> UserHelp()));
                 },
               ),
             ],

@@ -16,6 +16,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.d
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -873,7 +874,8 @@ class _CreateBookingState extends State<CreateBooking> {
           if (bookingId != null) {
             CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
             Future.delayed(const Duration(seconds: 2), () {
-              Navigator.push(
+              widget.accountType == 'Single User'
+              ? Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ChooseVendor(
@@ -897,7 +899,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     accountType: widget.accountType,
                   ),
                 ),
-              );
+              )
+              : null;
             });
           }
         });
@@ -936,7 +939,8 @@ class _CreateBookingState extends State<CreateBooking> {
         if (bookingId != null){
           CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
+            widget.accountType == 'Single User'
+            ? Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChooseVendor(
@@ -960,7 +964,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   accountType: widget.accountType,
                 ),
               ),
-            );
+            )
+            : null;
           });
         }
       }
@@ -999,7 +1004,8 @@ class _CreateBookingState extends State<CreateBooking> {
         if (bookingId != null){
           CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
+            widget.accountType == 'Single User'
+            ? Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChooseVendor(
@@ -1023,7 +1029,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   accountType: widget.accountType,
                 ),
               ),
-            );
+            )
+            : null;
           });
         }
       }
@@ -1061,7 +1068,8 @@ class _CreateBookingState extends State<CreateBooking> {
         if (bookingId != null){
           CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
+            widget.accountType == 'Single User'
+            ? Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ChooseVendor(
@@ -1085,7 +1093,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   accountType: widget.accountType,
                 ),
               ),
-            );
+            )
+            : null;
           });
         }
       }
@@ -1404,7 +1413,14 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Text('Help',style: TextStyle(fontSize: 25),),
               ),
               onTap: () {
-
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context)=> UserHelp(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            token: widget.token,
+                            id: widget.id,
+                            email: widget.email
+                        )));
               },
             ),
             ListTile(
