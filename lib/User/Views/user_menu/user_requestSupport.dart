@@ -105,8 +105,8 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                   padding: const EdgeInsets.only(top: 10),
                   child: Text('Enter your Email Address',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 23,
                     ),),
                 ),
               ),
@@ -128,8 +128,8 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                   padding: const EdgeInsets.only(top: 10,bottom: 10),
                   child: Text('Description',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 23,
                     ),),
                 ),
               ),
@@ -163,10 +163,10 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                 alignment: Alignment.topLeft,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 40,bottom: 10),
-                  child: Text('Supporting documentation\n(Optional)',
+                  child: Text('Supporting documentation(Optional)',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      fontSize: 23,
                     ),),
                 ),
               ),

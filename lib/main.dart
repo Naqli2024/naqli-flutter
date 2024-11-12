@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
@@ -18,6 +19,7 @@ void main() async {
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: ".env");
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
+  InAppWebViewController.setWebContentsDebuggingEnabled(true);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -172,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             token: token,
                             id: id,
                             email: email,
+                            accountType: accountType,
                           );
                         }
                       }

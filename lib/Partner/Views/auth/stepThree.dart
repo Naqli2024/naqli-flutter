@@ -136,6 +136,7 @@ class _StepThreeState extends State<StepThree> {
         bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
+              scrolledUnderElevation: 0,
               centerTitle: false,
               automaticallyImplyLeading: false,
               toolbarHeight: 80,

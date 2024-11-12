@@ -1571,13 +1571,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               ),
                               markers: markers,
                               polylines: polylines,
-                              gestureRecognizers: Set()
-                                ..add(Factory<PanGestureRecognizer>(
-                                      () => PanGestureRecognizer(),
-                                ))
-                                ..add(Factory<TapGestureRecognizer>(
-                                      () => TapGestureRecognizer(),
-                                )),
+                              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                                Factory<OneSequenceGestureRecognizer>(
+                                      () => EagerGestureRecognizer(),
+                                ),
+                              },
                             ),
                           ),
                           Positioned(
@@ -1835,7 +1833,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                     value: index.toString(),
                                     groupValue: selectedVendorId,
                                     onChanged: (String? value) {
-                                      if (!mounted) return; // Check if the widget is still mounted
+                                      if (!mounted) return;
                                       setState(() {
                                         selectedPartnerName = partnerName;
                                         selectedPartnerId = partnerId;

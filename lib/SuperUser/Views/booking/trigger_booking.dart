@@ -1,10 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
+import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
-
+import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class TriggerBooking extends StatefulWidget {
   final String firstName;
@@ -12,7 +21,13 @@ class TriggerBooking extends StatefulWidget {
   final String token;
   final String id;
   final String email;
-  const TriggerBooking({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.email});
+  const TriggerBooking(
+      {super.key,
+      required this.firstName,
+      required this.lastName,
+      required this.token,
+      required this.id,
+      required this.email});
 
   @override
   State<TriggerBooking> createState() => _TriggerBookingState();
@@ -22,7 +37,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final SuperUserServices superUserServices = SuperUserServices();
   final UserService userService = UserService();
-  int? selectedVendor;
+  String? selectedVendor;
   bool showCheckbox = false;
   bool isChecked = false;
   bool isLoading = false;
@@ -34,7 +49,20 @@ class _TriggerBookingState extends State<TriggerBooking> {
   String unitType = '';
   String unitClassification = '';
   String subClassification = '';
-  late Future<List<Map<String, dynamic>>?> _vendorsFuture;
+  String vendorName = '';
+  String? partnerId = '';
+  bool isOtherCardTapped = false;
+  bool isMADATapped = false;
+  bool isPayAdvance = false;
+  String? selectedPartnerName;
+  String? selectedOldQuotePrice;
+  int? selectedQuotePrice;
+  Map<String, String?> selectedVendors = {};
+  Map<String, int?> selectedQuotePrices = {};
+  int _selectedIndex = 4;
+  String? checkOutId;
+  String? integrityId;
+  int? resultCode;
 
   @override
   void initState() {
@@ -43,13 +71,45 @@ class _TriggerBookingState extends State<TriggerBooking> {
     fetchVendors();
   }
 
+
+  Future initiatePayment(String paymentBrand,int amount) async {
+    final result = await superUserServices.choosePayment(
+      context,
+      paymentBrand: paymentBrand,
+      amount: amount,
+    );
+      print('paymentBrand$paymentBrand');
+    if (result != null) {
+      setState(() {
+        checkOutId = result['id'];
+        integrityId = result['integrity'];
+      });
+    }
+  }
+// resultCode=000.100.110
+  Future<void> getPaymentStatus(String checkOutId) async {
+    final result = await superUserServices.getPaymentDetails(context, checkOutId);
+
+    if (result != null) {
+      setState(() {
+        resultCode = int.tryParse(result['code'] ?? '');
+
+        showPaymentSuccessDialog();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve payment status.')),
+      );
+    }
+  }
+
   Future<void> fetchBookingsData() async {
     setState(() {
       isLoading = true;
     });
     final bookingData = await superUserServices.getBookingsCount(widget.id, widget.token);
     setState(() {
-      notPaidBookings = bookingData['notPaidBookings'];
+      notPaidBookings = bookingData['notPaidBookings']??[];
       setState(() {
         isLoading = false;
       });
@@ -69,12 +129,11 @@ class _TriggerBookingState extends State<TriggerBooking> {
   Future<void> handleDeleteBooking() async {
     try {
       await userService.deleteBooking(context, bookingId, widget.token);
-      await clearUserData();
       isDeleting = false;
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => SuperUserHomePage(
+          builder: (context) => TriggerBooking(
             firstName: widget.firstName,
             lastName: widget.lastName,
             token: widget.token,
@@ -149,27 +208,58 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
+  Future<Map<String, String>> fetchPartnerDetailsForBooking(
+      String partnerId, String token) async {
+    try {
+      final partnerData =
+          await superUserServices.getPartnerDetails([partnerId], token);
+      print('Received partnerData for $partnerId: $partnerData');
+
+      if (partnerData is Map && partnerData.containsKey(partnerId)) {
+        final details = partnerData[partnerId];
+
+        return {
+          'partnerName': details?['partnerName'] ?? 'N/A',
+          'mobileNo': details?['mobileNo'] ?? 'N/A',
+        };
+      } else {
+        print('Unexpected data format for partner details: $partnerData');
+        return {
+          'partnerName': 'N/A',
+          'mobileNo': 'N/A',
+        };
+      }
+    } catch (e) {
+      print('Error fetching partner details for $partnerId: $e');
+      return {
+        'partnerName': 'N/A',
+        'mobileNo': 'N/A',
+      };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: commonWidgets.commonAppBar(
         context,
-        User: widget.firstName +' '+ widget.lastName,
+        User: widget.firstName + ' ' + widget.lastName,
         userId: widget.id,
         showLeading: false,
         showLanguage: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
-              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-              centerTitle: true,
-              automaticallyImplyLeading: false,
-              backgroundColor: const Color(0xff6A66D1),
-              title: const Text(
-                'Trigger Booking',
-                style: TextStyle(color: Colors.white),
-              ),
+            scrolledUnderElevation: 0,
+            toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+            centerTitle: true,
+            automaticallyImplyLeading: false,
+            backgroundColor: const Color(0xff6A66D1),
+            title: const Text(
+              'Trigger Booking',
+              style: TextStyle(color: Colors.white),
+            ),
             leading: IconButton(
               onPressed: () {
                 Navigator.of(context).push(
@@ -179,8 +269,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                         lastName: widget.lastName,
                         token: widget.token,
                         id: widget.id,
-                        email: widget.email
-                    ),
+                        email: widget.email),
                   ),
                 );
               },
@@ -196,270 +285,306 @@ class _TriggerBookingState extends State<TriggerBooking> {
         ),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator(),)
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
           : RefreshIndicator(
               onRefresh: () async {
                 await fetchVendors();
+                setState(() {});
               },
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Visibility(
-                visible: showCheckbox,
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.035,
-                      width: MediaQuery.of(context).size.width * 0.29,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        onPressed: toggleSelectAll,
-                        child: Text(
-                          allSelected ? 'Deselect All' : 'Select All',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              notPaidBookings.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: Text(
-                        'No bookings available.',
-                        style: TextStyle(fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey),
-                      ),
-                    ),
-                  )
-                : Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: notPaidBookings.length,
-                    itemBuilder: (context, index) {
-                      final booking = notPaidBookings[index];
-                      bookingId = booking['_id'];
-                      unitType = booking['unitType'];
-                      unitClassification = booking['name'];
-                      subClassification = booking['type']?.isNotEmpty ?? '' ? booking['type'][0]['typeName'] ?? 'N/A' : 'N/A';
-                      print(unitType);
-                      print(unitClassification);
-                      print(subClassification);
-                      return GestureDetector(
-                        onLongPress: () {
-                          setState(() {
-                            showCheckbox = true;
-                          });
-                        },
-                        onTap: () {
-                          if (showCheckbox) {
-                            setState(() {
-                              showCheckbox = false;
-                            });
-                          }
-                        },
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Visibility(
+                      visible: showCheckbox,
+                      child: Align(
+                        alignment: Alignment.topRight,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 5, 8, 5),
-                          child: Stack(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(25, 15, 25, 5),
-                                child: Card(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.0),
-                                  ),
-                                  color: Colors.white,
-                                  elevation: 5,
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          '${booking['unitType']}',
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          'Booking id: ${booking['_id']}',
-                                          style: TextStyle(color: Color(0xff914F9D), fontSize: 14),
-                                        ),
-                                      ),
-                                      FutureBuilder<List<Map<String, dynamic>>?>(
-                                        future: fetchVendors(),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState == ConnectionState.waiting) {
-                                            return Center(child: Padding(
-                                              padding: const EdgeInsets.all(12),
-                                              child: CircularProgressIndicator(),
-                                            ));
-                                          } else if (snapshot.hasError) {
-                                            return Center(child: Text('Error: ${snapshot.error}'));
-                                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                            return Center(child: Padding(
-                                              padding: const EdgeInsets.only(top: 22,bottom: 22),
-                                              child: Text('No vendors found'),
-                                            ));
-                                          }
-
-                                          final vendors = snapshot.data!;
-                                          return ListView.builder(
-                                            shrinkWrap: true,
-                                            physics: NeverScrollableScrollPhysics(),
-                                            itemCount: vendors.length,
-                                            itemBuilder: (context, index) {
-                                              final vendor = vendors[index];
-                                              return RadioListTile(
-                                                dense: true,
-                                                fillColor: MaterialStateProperty.resolveWith<Color>(
-                                                      (Set<MaterialState> states) {
-                                                    if (states.contains(MaterialState.selected)) {
-                                                      return Color(0xff6269FE);
-                                                    }
-                                                    return Color(0xff707070);
-                                                  },
-                                                ),
-                                                title: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    Expanded(
-                                                      flex: 3,
-                                                      child: Text(
-                                                        vendor['partnerName'] ?? 'No Partner Name',
-                                                        style: TextStyle(
-                                                          fontSize: 17,
-                                                          fontWeight: FontWeight.normal,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      flex: 4,
-                                                      child: Text(
-                                                        '${vendor['quotePrice'] ?? 'N/A'} SAR',
-                                                        style: TextStyle(
-                                                          fontSize: 17,
-                                                          fontWeight: FontWeight.normal,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                value: index + 1,
-                                                groupValue: selectedVendor,
-                                                onChanged: (value) {
-                                                  setState(() {
-                                                    selectedVendor = value!;
-                                                  });
-                                                },
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height * 0.054,
-                                        width: MediaQuery.of(context).size.width * 0.4,
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Color(0xff6269FE),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(30),
-                                            ),
-                                          ),
-                                          onPressed: () {},
-                                          child: Text(
-                                            'Pay Now',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 20,bottom: 20),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                             showConfirmationDialog();
-                                          },
-                                          child: Text(
-                                            'Cancel',
-                                            style: TextStyle(color: Colors.red, fontSize: 17),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.035,
+                            width: MediaQuery.of(context).size.width * 0.29,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xff6269FE),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                              Positioned(
-                                top: 35,
-                                left: 40,
-                                child: showCheckbox
-                                    ? Checkbox(
-                                  value: isCheckedList[index],
-                                  onChanged: (value) {
+                              onPressed: () {
+                                setState(() {
+                                  allSelected = !allSelected;
+                                  for (int i = 0;
+                                      i < notPaidBookings.length;
+                                      i++) {
+                                    notPaidBookings[i]['isSelected'] =
+                                        allSelected;
+                                  }
+                                });
+                              },
+                              child: Text(
+                                allSelected ? 'Deselect All' : 'Select All',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    notPaidBookings.isEmpty
+                        ? Padding(
+                            padding: EdgeInsets.only(top: MediaQuery.sizeOf(context).height * 0.35),
+                            child: Center(
+                              child: Text(
+                                'No bookings found',
+                                style: TextStyle(
+                                    fontSize: 18),
+                              ),
+                            ),
+                          )
+                        : Flexible(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: notPaidBookings.length,
+                              itemBuilder: (context, index) {
+                                final booking = notPaidBookings[index];
+                                bookingId = booking['_id'];
+                                unitType = booking['unitType'];
+                                unitClassification = booking['name'];
+                                subClassification = booking['type']?.isNotEmpty ?? ''
+                                        ? booking['type'][0]['typeName'] ?? 'N/A'
+                                        : 'N/A';
+                                print(unitType);
+                                print(unitClassification);
+                                print(subClassification);
+                                return GestureDetector(
+                                  onLongPress: () {
                                     setState(() {
-                                      isCheckedList[index] = value!;
+                                      showCheckbox = true;
                                     });
                                   },
-                                )
-                                    : CircleAvatar(
-                                  backgroundColor: Color(0xff572727),
-                                  minRadius: 6,
-                                  maxRadius: double.maxFinite,
-                                ),
-                              ),
-                              Positioned(
-                                top: 60,
-                                left: 20,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: List.generate(9, (index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                      child: CircleAvatar(
-                                        backgroundColor: Color(0xffD4D4D4),
-                                        radius: 9,
-                                      ),
-                                    );
-                                  }),
-                                ),
-                              ),
-                            ],
+                                  onTap: () {
+                                    if (showCheckbox) {
+                                      setState(() {
+                                        showCheckbox = false;
+                                      });
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(8, 5, 8, 5),
+                                    child: Stack(
+                                      children: [
+                                        Padding(padding: const EdgeInsets.fromLTRB(25, 15, 25, 5),
+                                          child: Card(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(15.0),
+                                            ),
+                                            color: Colors.white,
+                                            elevation: 5,
+                                            child: Column(
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Text(
+                                                    '${booking['unitType']}',
+                                                    style: TextStyle(fontSize: 16),
+                                                  ),
+                                                ),
+                                                Padding(padding: const EdgeInsets.all(8.0),
+                                                  child: Text(
+                                                    'Booking id: $bookingId',
+                                                    style: TextStyle(color: Color(0xff914F9D), fontSize: 14),
+                                                  ),
+                                                ),
+                                                FutureBuilder<List<Map<String, dynamic>>?>(
+                                                  future: fetchVendors(),
+                                                  builder: (context, snapshot) {
+                                                    /*if (snapshot.connectionState == ConnectionState.waiting) {
+                                                      return Center(
+                                                        child: Padding(padding: const EdgeInsets.all(12),
+                                                          child: Container(
+                                                            height: 20,
+                                                            width: 20,
+                                                            child: CircularProgressIndicator(strokeWidth: 3),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    }*/if (snapshot.hasError) {
+                                                      return Center(child: Text('Error: ${snapshot.error}'));
+                                                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                                      return Center(
+                                                        child: Padding(padding: const EdgeInsets.only(top: 22, bottom: 22),
+                                                          child: Text ('No vendors found'),
+                                                        ),
+                                                      );
+                                                    }
+
+                                                    final vendors = snapshot.data!;
+                                                    return ListView.builder(
+                                                      shrinkWrap: true,
+                                                      physics: NeverScrollableScrollPhysics(),
+                                                      itemCount: vendors.length,
+                                                      itemBuilder: (context, index) {
+                                                        final vendor = vendors[index];
+                                                        final partnerId = vendor['partnerId']?.toString() ?? 'No partnerId';
+                                                        final quotePrice = vendor['quotePrice']?.toString() ?? '0';
+
+                                                        return Padding(
+                                                          padding: const EdgeInsets.only(left: 20),
+                                                          child: RadioListTile(
+                                                            dense: true,
+                                                            fillColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState>states) {
+                                                                return states.contains(MaterialState.selected)
+                                                                    ? Color(0xff6269FE)
+                                                                    : Color(0xff707070);
+                                                              },
+                                                            ),
+                                                            title: Row(
+                                                              mainAxisAlignment: MainAxisAlignment.center,
+                                                              children: [
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child: Text(
+                                                                    vendor['partnerName'] ?? 'N/A',
+                                                                    style: TextStyle(
+                                                                      fontSize: 17,
+                                                                      fontWeight: FontWeight.normal,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Expanded(
+                                                                  flex: 4,
+                                                                  child: Text(
+                                                                    '${vendor['quotePrice'] ?? 'N/A'} SAR',
+                                                                    style: TextStyle(fontSize: 17,
+                                                                      fontWeight: FontWeight.normal,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                            value: partnerId,
+                                                            groupValue: selectedVendors[booking['_id'] ?? ''],
+                                                            onChanged: (String? value) {
+                                                              if (value != null) {
+                                                                _onRadioButtonSelected(booking['_id'] ?? "", value);
+                                                              }
+                                                              setState(() {
+                                                                selectedQuotePrices[booking['_id']] = int.tryParse(quotePrice);
+                                                              });
+                                                            },
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.only(top: 10),
+                                                  child: SizedBox(
+                                                    height: MediaQuery.of(context).size.height * 0.054,
+                                                    width: MediaQuery.of(context).size.width * 0.4,
+                                                    child: ElevatedButton(
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor: Color(0xff6269FE),
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30),
+                                                        ),
+                                                      ),
+                                                      onPressed: selectedVendors[booking['_id'] ?? ""] != null
+                                                          ? () {
+                                                              openPayOrAdvanceDialog(selectedVendors[booking['_id'] ?? ""] ?? "",
+                                                                widget.token,
+                                                                booking,
+                                                              );
+                                                            }
+                                                          : null,
+                                                      child: Text(
+                                                        'Pay Now',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 17,
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsets.only(top: 20,bottom: 20),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      showConfirmationDialog();
+                                                    },
+                                                    child: Text(
+                                                      'Cancel',
+                                                      style: TextStyle(color: Colors.red, fontSize: 17),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 30,
+                                          left: 40,
+                                          child: showCheckbox
+                                              ? Checkbox(value: notPaidBookings[index]['isSelected'] as bool? ?? false, // Access the boolean field
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      notPaidBookings[index]['isSelected'] = value;
+                                                    });
+                                                  },
+                                                )
+                                              : CircleAvatar(
+                                                  backgroundColor: Color(0xff572727),
+                                                  minRadius: 6,
+                                                  maxRadius: double.maxFinite,
+                                                ),
+                                        ),
+                                        Positioned(
+                                          top: 60,
+                                          left: 20,
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: List.generate(7, (index) {
+                                              return Padding(
+                                                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                                child: CircleAvatar(
+                                                  backgroundColor: Color(0xffD4D4D4),
+                                                  radius: 9,
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                  ],
                 ),
-            ],
-                    ),
-                  ),
-          ),
-
-
+              ),
+            ),
       bottomNavigationBar: Visibility(
         visible: showCheckbox,
+        replacement: commonWidgets.buildBottomNavigationBar(
+          selectedIndex: _selectedIndex,
+          onTabTapped: _onTabTapped,
+        ),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xff6269FE),
@@ -467,7 +592,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
               borderRadius: BorderRadius.circular(0),
             ),
           ),
-          onPressed: (){},
+          onPressed: () {},
           child: Container(
             color: Color(0xff6269FE),
             height: MediaQuery.of(context).size.height * 0.07,
@@ -491,12 +616,707 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  void toggleSelectAll() {
+  void _onTabTapped(int index) {
     setState(() {
-      allSelected = !allSelected;
-      for (int i = 0; i < isCheckedList.length; i++) {
-        isCheckedList[i] = allSelected;
-      }
+      _selectedIndex = index;
     });
+
+    switch (index) {
+      case 0:
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SuperUserHomePage(
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  id: widget.id,
+                  email: widget.email,
+                )));
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookingManager(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SuperUserPayment(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserProfile(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+    }
+  }
+
+  void _onRadioButtonSelected(String bookingId, String partnerId) {
+    setState(() {
+      selectedVendors[bookingId] = partnerId;
+    });
+  }
+
+  Future<void> openPayOrAdvanceDialog(
+      String partnerId, String token, Map<String, dynamic> booking) async {
+    Map<String, String> partnerDetails =
+        await fetchPartnerDetailsForBooking(partnerId, token);
+    String partnerName = partnerDetails['partnerName'] ?? 'N/A';
+    String mobileNo = partnerDetails['mobileNo'] ?? 'N/A';
+    showPayOrPayAdvanceDialog(booking, partnerName: partnerName, mobileNo: mobileNo);
+  }
+
+  void showPayOrPayAdvanceDialog(Map<String, dynamic> booking,
+      {String? partnerName, String? mobileNo}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 15),
+          backgroundColor: Colors.white,
+          child: SingleChildScrollView(
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.all(0),
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Stack(
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '${booking['unitType']}',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Booking id: ${booking['_id']}',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(15, 0, 15, 20),
+                            child: Card(
+                              elevation: 5,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                side: const BorderSide(
+                                  color: Color(0xffE0E0E0),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              'Name',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              partnerName ?? '',
+                                              style: const TextStyle(
+                                                  fontSize: 16),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(thickness: 0.4),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              'Mobile no',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              mobileNo ?? '',
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(thickness: 0.4),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              'Unit type',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              '${booking['unitType'] ?? 'N/A'}',
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(thickness: 0.4),
+                                    booking['pickup'] == null && booking['dropPoints'] == null
+                                    ? Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Expanded(
+                                                flex: 3,
+                                                child: Text(
+                                                  'CityName',
+                                                  style: TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  '${booking['cityName'] ?? 'N/A'}',
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                    : Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Expanded(
+                                                flex: 3,
+                                                child: Text(
+                                                  'From',
+                                                  style: TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  '${booking['pickup'] ?? 'N/A'}',
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Divider(thickness: 0.4),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Expanded(
+                                                flex: 3,
+                                                child: Text(
+                                                  'To',
+                                                  style: TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  (booking['dropPoints'] as List).join(', '),
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Divider(thickness: 0.4),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Expanded(
+                                            flex: 3,
+                                            child: Text(
+                                              'Additional labour',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              '${booking['additionalLabour'] ?? 'N/A'}',
+                                              style: const TextStyle(fontSize: 16),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.056,
+                            width: MediaQuery.of(context).size.width * 0.55,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xff6269FE),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                showSelectPaymentDialog(selectedQuotePrices[booking['_id']]! ~/ 2);
+                              },
+                              child: Text(
+                                'Pay Advance: ${selectedQuotePrices[booking['_id']]! ~/ 2} SAR',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight:
+                                  FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.056,
+                            width: MediaQuery.of(context).size.width * 0.55,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xff6269FE),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                              onPressed: () async {
+                                Navigator.pop(context);
+                                showSelectPaymentDialog(selectedQuotePrices[booking['_id']]??0);
+                              },
+                              child: Text(
+                                'Pay: ${selectedQuotePrices[booking['_id']] ?? 0} SAR',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight:
+                                  FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 30)
+                        ],
+                      ),
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Icon(Icons.cancel, color: Colors.grey,size: 30,)
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showSelectPaymentDialog(int amount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 25),
+          backgroundColor: Colors.white,
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.all(0),
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                          onPressed: () {
+                            isOtherCardTapped = false;
+                            isMADATapped = false;
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(
+                            Icons.cancel,
+                            color: Colors.grey,
+                          )),
+                    ),
+                    SizedBox(height: 15),
+                    GestureDetector(
+                      onTap: () async {
+                        setState(() {
+                          isMADATapped = true;
+                          isOtherCardTapped = false;
+                          Navigator.pop(context);
+                        });
+                        await initiatePayment('MADA', amount);
+                        showPaymentDialog(checkOutId??'', integrityId??'', true);
+                      },
+                      child: Container(
+                        color: isMADATapped
+                            ? Color(0xffD4D4D4)
+                            : Colors.transparent,
+                        padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Pay using MADA",
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            SvgPicture.asset(
+                              'assets/Mada_Logo.svg',
+                              height: 25,
+                              width: 20,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    GestureDetector(
+                      onTap: () async {
+                        setState(() {
+                          isMADATapped = false;
+                          isOtherCardTapped = true;
+                          Navigator.pop(context);
+                        });
+                        await initiatePayment('OTHER', amount);
+                        showPaymentDialog(checkOutId??'', integrityId??'', false);
+                      },
+                      child: Container(
+                        color: isOtherCardTapped
+                            ? Color(0xffD4D4D4)
+                            : Colors.transparent,
+                        padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("Pay using Other Card Types",
+                                style: TextStyle(fontSize: 18)),
+                            SvgPicture.asset('assets/visa-mastercard.svg',
+                                height: 40, width: 20)
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30)
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped) {
+    if (checkOutId.isEmpty || integrity.isEmpty) {
+      print('Error: checkOutId or integrity is empty');
+      return;
+    }
+
+    final String visaHtml = '''
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+          .paymentWidgets {
+            width: 50%;
+            max-width: 100px;
+            box-sizing: border-box;
+          }
+        </style>
+        <script>
+          function loadPaymentScript(checkoutId, integrity) {
+            const script = document.createElement('script');
+            script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+            script.crossOrigin = 'anonymous';
+            script.integrity = integrity;
+
+            script.onload = () => {
+              console.log('Payment widget script loaded');
+              const paymentForm = document.querySelector('.paymentWidgets');
+              if (paymentForm) {
+                paymentForm.addEventListener('submit', (event) => {
+                  event.preventDefault();
+                  console.log('Payment form submitted');
+                  if (window.flutter_inappwebview) {
+                    console.log('Calling Flutter handler...');
+                    window.flutter_inappwebview.callHandler('payButtonClicked', checkoutId);
+                  } else {
+                    console.log('Flutter handler not available');
+                  }
+                });
+              } else {
+                console.log('Payment form not found');
+              }
+            };
+            document.body.appendChild(script);
+          }
+          document.addEventListener("DOMContentLoaded", function() {
+            loadPaymentScript("${checkOutId}", "${integrity}");
+          });
+        </script>
+      </head>
+      <body>
+        <form action="https://naqli.onrender.com/api/payment-status/$checkOutId" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+      </body>
+    </html>
+  ''';
+
+    final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 10),
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.42,
+              child: WebView(
+                backgroundColor: Colors.transparent,
+                initialUrl: Uri.dataFromString(
+                    isMADATapped ? madaHtml : visaHtml,
+                    mimeType: 'text/html',
+                    encoding: Encoding.getByName('utf-8'))
+                    .toString(),
+                javascriptMode: JavascriptMode.unrestricted,
+                javascriptChannels: {
+                  JavascriptChannel(
+                    name: 'payButtonClicked',
+                    onMessageReceived: (JavascriptMessage message) async {
+                      await getPaymentStatus(checkOutId);
+                    },
+                  ),
+                },
+                onWebViewCreated: (WebViewController webViewController) {
+                  webViewController.clearCache();
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+  void showPaymentSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 20),
+          backgroundColor: Colors.white,
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.all(0),
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 15),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Payment Status',
+                        style: TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    resultCode != "000.100.110"
+                    ? Column(
+                      children: [
+                        Center(
+                          child:  LoadingAnimationWidget.fourRotatingDots(
+                            color: Colors.blue,
+                            size: 60,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Please wait!!\nYour payment is in process..Do not close the page',textAlign: TextAlign.center,style: TextStyle(fontSize: 17)),
+                        ),
+                      ],
+                    )
+                   : Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width,
+                            color: Color(0xffE6FFE5),
+                            padding: const EdgeInsets.only(top: 12, bottom: 12),
+                            child: Text('Payment Successful!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.green)),
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                              'You wil be redirected to dashboard by clicking this..',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 15)),
+                        ),
+                        SizedBox(height: 5),
+                        Container(
+                          margin: const EdgeInsets.only(top: 10),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.057,
+                            width: MediaQuery.of(context).size.width * 0.4,
+                            child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  LoadingAnimationWidget.staggeredDotsWave(
+                                    color: Colors.green,
+                                    size: 200,
+                                  );
+                                },
+                                child: Text(
+                                  'Go to Dashboard',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal),
+                                )),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 23),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 }

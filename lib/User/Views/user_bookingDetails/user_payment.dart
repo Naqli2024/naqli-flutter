@@ -428,6 +428,7 @@ class _PaymentState extends State<Payment> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            scrolledUnderElevation: 0,
             centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,

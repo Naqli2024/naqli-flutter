@@ -32,6 +32,7 @@ class _RoleState extends State<Role> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,

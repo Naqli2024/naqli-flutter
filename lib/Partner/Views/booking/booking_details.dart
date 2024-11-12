@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/partnerHelp.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 
@@ -110,18 +111,16 @@ class _BookingDetailsState extends State<BookingDetails> {
           print('Fetching details for booking ID: $bookingId');
           final details = await _authService.getBookingId(bookingId, widget.token, '', widget.quotePrice);
 
-          // Add quotePrice and paymentStatus to the details
           details['quotePrice'] = quotePrice;
           payment = details?['paymentStatus'];
 
           balance = details['remainingBalance'];
-          // payment = paymentType;
           print('Details retrieved: $details');
 
           if (details['bookingStatus'] != 'Completed') {
             if (details.isNotEmpty || details['bookingStatus'] == 'Running' &&
                 (paymentType == 'Pending' || paymentType == 'Paid' || paymentType == 'HalfPaid')) {
-              bookingDetails.add(details);  // Add the valid booking details
+              bookingDetails.add(details);
             } else {
               print("Booking is not running or payment status does not match for booking ID $bookingId.");
             }
@@ -168,6 +167,7 @@ class _BookingDetailsState extends State<BookingDetails> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+            scrolledUnderElevation: 0,
             centerTitle: false,
             toolbarHeight: 80,
             automaticallyImplyLeading: false,
@@ -207,6 +207,14 @@ class _BookingDetailsState extends State<BookingDetails> {
             context,
             MaterialPageRoute(
               builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+            ),
+          );
+        },
+        onHelpPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PartnerHelp(partnerName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
             ),
           );
         }

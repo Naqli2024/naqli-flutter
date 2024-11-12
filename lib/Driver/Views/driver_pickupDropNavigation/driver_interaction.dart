@@ -883,18 +883,11 @@ class _DriverInteractionState extends State<DriverInteraction> {
                     polylines: Set<Polyline>.of(polylines),
                     myLocationEnabled: false,
                     myLocationButtonEnabled: true,
-                    // buildingsEnabled: true,
-                    // rotateGesturesEnabled: true,
-                    // zoomControlsEnabled: true,
-                    // zoomGesturesEnabled: true,
-                    // scrollGesturesEnabled: true,
-                    gestureRecognizers: Set()
-                      ..add(Factory<PanGestureRecognizer>(
-                            () => PanGestureRecognizer(),
-                      ))
-                      ..add(Factory<TapGestureRecognizer>(
-                            () => TapGestureRecognizer(),
-                      )),
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                      ),
+                    },
                   ),
                 ),
                 Positioned(

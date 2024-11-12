@@ -41,6 +41,7 @@ class _UserHelpState extends State<UserHelp> {
           child: Column(
             children: [
               AppBar(
+                scrolledUnderElevation: 0,
                 toolbarHeight: 80,
                 automaticallyImplyLeading: false,
                 backgroundColor: const Color(0xff6A66D1),
@@ -119,66 +120,69 @@ class _UserHelpState extends State<UserHelp> {
   }
 
   Widget buildFAQItem(int index,String question,String answer) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 12, right: 12,top: 20),
-          child: Container(
-            color: isVisibleList[index]?Color(0xffF6F6FF):Colors.white,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  isVisibleList[index] = !isVisibleList[index];
-                });
-              },
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    flex: 12,
-                    child: Padding(
-                      padding: index < 9 ?EdgeInsets.all(8.0) :EdgeInsets.only(left: 8,right: 8,bottom: 50),
-                      child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: 16),),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(
-                        color: Color(0xff6269FE),
-                        isVisibleList[index]
-                            ? Icons.keyboard_arrow_up_outlined
-                            : Icons.keyboard_arrow_down_outlined,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Visibility(
-          visible: isVisibleList[index],
-          child: Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12),
+    return Padding(
+      padding: index==9? EdgeInsets.only(bottom: 50):EdgeInsets.only(bottom: 0),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12, right: 12,top: 20),
             child: Container(
               color: isVisibleList[index]?Color(0xffF6F6FF):Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(answer,style: TextStyle(fontSize: 15),),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isVisibleList[index] = !isVisibleList[index];
+                  });
+                },
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      flex: 12,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: 16),),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          color: Color(0xff6269FE),
+                          isVisibleList[index]
+                              ? Icons.keyboard_arrow_up_outlined
+                              : Icons.keyboard_arrow_down_outlined,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        if (index < 9)
-          Divider(
-          indent: 20,
-          endIndent: 20,
-          thickness: 1,
-        )
-      ],
+          Visibility(
+            visible: isVisibleList[index],
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              child: Container(
+                color: isVisibleList[index]?Color(0xffF6F6FF):Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(answer,style: TextStyle(fontSize: 15),),
+                ),
+              ),
+            ),
+          ),
+          if (index < 9)
+            Divider(
+            indent: 20,
+            endIndent: 20,
+            thickness: 1,
+          )
+        ],
+      ),
     );
   }
 

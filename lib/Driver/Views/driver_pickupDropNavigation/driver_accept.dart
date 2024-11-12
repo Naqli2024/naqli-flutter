@@ -373,13 +373,11 @@ class _OrderAcceptState extends State<OrderAccept> {
                     polylines: Set<Polyline>.of(polylines),
                     myLocationEnabled: true,
                     myLocationButtonEnabled: true,
-                    gestureRecognizers: Set()
-                      ..add(Factory<PanGestureRecognizer>(
-                            () => PanGestureRecognizer(),
-                      ))
-                      ..add(Factory<TapGestureRecognizer>(
-                            () => TapGestureRecognizer(),
-                      )),
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                      ),
+                    },
                   ),
                 ),
                 Positioned(

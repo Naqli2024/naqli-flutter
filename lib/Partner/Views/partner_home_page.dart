@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/partnerHelp.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -27,6 +28,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -119,7 +121,13 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
                 child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
               ),
               onTap: () {
-
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context)=> PartnerHelp(
+                        partnerName: widget.partnerName,
+                        token: widget.token,
+                        partnerId: widget.partnerId,
+                        email: '',
+                    )));
               },
             ),
           ],

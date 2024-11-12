@@ -28,7 +28,7 @@ class UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<UserProfile> {
   final CommonWidgets commonWidgets = CommonWidgets();
-
+  int _selectedIndex = 3;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,6 +42,7 @@ class _UserProfileState extends State<UserProfile> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(90.0),
           child: AppBar(
+              scrolledUnderElevation: 0,
               toolbarHeight: MediaQuery.of(context).size.height * 0.09,
               centerTitle: true,
               automaticallyImplyLeading: false,
@@ -399,88 +400,76 @@ class _UserProfileState extends State<UserProfile> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        elevation: 20,
-        shadowColor: Colors.black,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              children: [
-                SvgPicture.asset('assets/home.svg'),
-                Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Text('Home'),
-                ),
-              ],
-            ),
-            GestureDetector(
-              onTap: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => BookingManager(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    ),
-                  ),
-                );
-              },
-              child: Column(
-                children: [
-                  SvgPicture.asset('assets/booking_manager.svg'),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Text('Booking manager'),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SuperUserPayment(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    ),
-                  ),
-                );
-              },
-              child: Column(
-                children: [
-                  SvgPicture.asset('assets/payment.svg'),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Text('Payment'),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-              },
-              child: Column(
-                children: [
-                  SvgPicture.asset('assets/profile.svg'),
-                  Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Text('Profile'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
+        selectedIndex: _selectedIndex,
+        onTabTapped: _onTabTapped,
       ),
     );
   }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => SuperUserHomePage(
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  id: widget.id,
+                  email: widget.email,
+                )));
+        break;
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookingManager(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SuperUserPayment(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => UserProfile(
+              firstName: widget.firstName,
+              lastName: widget.lastName,
+              token: widget.token,
+              id: widget.id,
+              email: widget.email,
+            ),
+          ),
+        );
+        break;
+    }
+  }
+
   BarChartGroupData makeGroupData(
       int x,
       double y,

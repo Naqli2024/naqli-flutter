@@ -461,13 +461,11 @@ class _ViewMapState extends State<ViewMap> {
                   ),
                   markers: markers,
                   polylines: polylines,
-                  gestureRecognizers: Set()
-                    ..add(Factory<PanGestureRecognizer>(
-                          () => PanGestureRecognizer(),
-                    ))
-                    ..add(Factory<TapGestureRecognizer>(
-                          () => TapGestureRecognizer(),
-                    )),
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                          () => EagerGestureRecognizer(),
+                    ),
+                  },
                 ),
               ),
               Center(
@@ -774,6 +772,7 @@ Widget _buildTextField(String hintText, controller) {
       Padding(
         padding: const EdgeInsets.fromLTRB(40, 20, 40, 10),
         child: TextFormField(
+          textCapitalization: TextCapitalization.sentences,
           controller: controller,
           decoration: InputDecoration(
             hintText: hintText,

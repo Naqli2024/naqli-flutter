@@ -34,6 +34,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -175,6 +176,7 @@ class _ResetPasswordState extends State<ResetPassword> {
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          scrolledUnderElevation: 0,
           centerTitle: false,
           backgroundColor: Colors.white,
           automaticallyImplyLeading: false,
@@ -379,6 +381,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          scrolledUnderElevation: 0,
           centerTitle: false,
           backgroundColor: Colors.white,
           automaticallyImplyLeading: false,
@@ -535,6 +538,7 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
         title: Padding(

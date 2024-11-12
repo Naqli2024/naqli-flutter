@@ -158,6 +158,7 @@ class _StepOneState extends State<StepOne> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(70.0),
           child: AppBar(
+            scrolledUnderElevation: 0,
             centerTitle: false,
             automaticallyImplyLeading: false,
             backgroundColor: const Color(0xff6A66D1),
@@ -482,6 +483,7 @@ class _StepOneState extends State<StepOne> {
         Padding(
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
           child: TextFormField(
+            textCapitalization: TextCapitalization.sentences,
             controller: controller,
             decoration: const InputDecoration(
               border: OutlineInputBorder(

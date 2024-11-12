@@ -203,6 +203,7 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
           Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
+              scrolledUnderElevation: 0,
               centerTitle: false,
               backgroundColor: Color(0xffE6E5E3).withOpacity(0.1),
               toolbarHeight: MediaQuery.of(context).size.height * 0.15,

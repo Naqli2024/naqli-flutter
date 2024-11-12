@@ -84,18 +84,24 @@ class _PaymentPageState extends State<PaymentPage> {
     ''';
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
         title: Text('Payment'),
       ),
-      body: WebView(
-        initialUrl: Uri.dataFromString(html,
-                mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-            .toString(),
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          // Optional: Enable debugging
-          webViewController.clearCache(); // Optional: Clear cache
-        },
+      body: Padding(
+        padding: const EdgeInsets.only(top: 40),
+        child: WebView(
+          initialUrl: Uri.dataFromString(html,
+                  mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+              .toString(),
+          javascriptMode: JavascriptMode.unrestricted,
+          onWebViewCreated: (WebViewController webViewController) {
+            // Optional: Enable debugging
+            webViewController.clearCache(); // Optional: Clear cache
+          },
+        ),
       ),
     );
   }

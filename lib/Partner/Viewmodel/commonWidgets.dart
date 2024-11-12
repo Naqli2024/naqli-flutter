@@ -12,73 +12,78 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 
 class CommonWidgets {
+
   AppBar commonAppBar(BuildContext context,
-      {String? User, PreferredSizeWidget? bottom, bool showLeading = true, String? userId,bool showLanguage = true,}) {
+      {String? User, PreferredSizeWidget? bottom, bool showLeading = true, String? userId, bool showLanguage = true,ui.TextDirection? textDirection}) {
     return AppBar(
+      scrolledUnderElevation: 0,
+      elevation: 0,
       backgroundColor: Colors.white,
       automaticallyImplyLeading: false,
       leading: showLeading
           ? Builder(
-        builder: (BuildContext context) => IconButton(
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-          icon: const Icon(
-            Icons.menu,
-            color: Color(0xff5D5151),
-            size: 45,
-          ),
-        ),
+        builder: (BuildContext context) =>
+            IconButton(
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              icon: const Icon(
+                Icons.menu,
+                color: Color(0xff5D5151),
+                size: 45,
+              ),
+            ),
       )
           : null,
       title: Padding(
         padding: const EdgeInsets.only(top: 10),
         child: SvgPicture.asset('assets/naqlee-logo.svg',
-            height: MediaQuery.of(context).size.height * 0.05),
+            height: MediaQuery
+                .of(context)
+                .size
+                .height * 0.05),
       ),
-      actions:  [
+      actions: [
         Padding(
           padding: const EdgeInsets.only(top: 10),
           child: Row(
             children: [
               showLanguage
-                  ? PopupMenuButton<Locale>(
-                color: Colors.white,
-                offset: const Offset(0, 55),
-                icon: Icon(Icons.language, color: Colors.blue),
-                onSelected: (Locale locale) {
-                  context.setLocale(locale);
-                },
-                itemBuilder: (BuildContext context) {
-                  // Determine the current locale
-                  Locale currentLocale = context.locale;
-                  // Set text direction based on current locale
-                  ui.TextDirection textDirection = ui.TextDirection.ltr;
-
-                  return <PopupMenuEntry<Locale>>[
-                    PopupMenuItem(
-                      value: Locale('en', 'US'),
-                      child: Text(
-                        'English',
-                        textDirection: textDirection,
+                  ? Directionality(
+                textDirection: ui.TextDirection.ltr,
+                child: PopupMenuButton<Locale>(
+                  color: Colors.white,
+                  offset: const Offset(0, 55),
+                  icon: Icon(Icons.language, color: Colors.blue),
+                  onSelected: (Locale locale) {
+                    context.setLocale(locale);
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return <PopupMenuEntry<Locale>>[
+                      PopupMenuItem(
+                        value: Locale('en', 'US'),
+                        child: Text(
+                          'English'.tr(),
+                          textDirection: ui.TextDirection.ltr,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: Locale('ar', 'SA'),
-                      child: Text(
-                        'العربية',
-                        textDirection: textDirection,
+                      PopupMenuItem(
+                        value: Locale('ar', 'SA'),
+                        child: Text(
+                          'Arabic'.tr(),
+                          textDirection: textDirection ??ui.TextDirection.rtl,
+                        ),
                       ),
-                    ),
-                    PopupMenuItem(
-                      value: Locale('hi', 'IN'),
-                      child: Text(
-                        'हिन्दी',
-                        textDirection: textDirection,
+                      PopupMenuItem(
+                        value: Locale('hi', 'IN'),
+                        child: Text(
+                          'Hindi'.tr(),
+                          textDirection: ui.TextDirection.ltr,
+                        ),
                       ),
-                    ),
-                  ];
-                },
+                    ];
+                  },
+                ),
               )
                   : Container(),
               Text(
@@ -90,10 +95,10 @@ class CommonWidgets {
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: userService.getNotifications(userId ?? ''),
                     builder: (context, snapshot) {
-
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Padding(
-                          padding: const EdgeInsets.only(left: 9,right: 9,top: 8,bottom: 9),
+                          padding: const EdgeInsets.only(
+                              left: 9, right: 9, top: 8, bottom: 9),
                           child: const Icon(
                             Icons.notifications,
                             color: Color(0xff6A66D1),
@@ -108,7 +113,7 @@ class CommonWidgets {
                         );
                       } else if (snapshot.hasData) {
                         final notifications = snapshot.data!;
-                        print('Fetched notifications: $notifications'); // Debugging
+                        print('Fetched notifications: $notifications');
 
                         return PopupMenuButton(
                           color: Colors.white,
@@ -131,9 +136,13 @@ class CommonWidgets {
                               menuItems.add(
                                 PopupMenuItem(
                                   child: ListTile(
-                                    leading: const Icon(Icons.message, color: Colors.blue),
-                                    title: Text(notification['messageTitle'] ?? 'No Title'),
-                                    subtitle: Text(notification['messageBody'] ?? 'No Message'),
+                                    leading: const Icon(
+                                        Icons.message, color: Colors.blue),
+                                    title: Text(notification['messageTitle'] ??
+                                        'No Title'),
+                                    subtitle: Text(
+                                        notification['messageBody'] ??
+                                            'No Message'),
                                     onTap: () {
                                       Navigator.pop(context); // Close the menu
                                     },
@@ -157,7 +166,8 @@ class CommonWidgets {
                             color: Color(0xff6A66D1),
                             size: 30,
                           ),
-                          itemBuilder: (context) => [
+                          itemBuilder: (context) =>
+                          [
                             const PopupMenuItem(
                               child: ListTile(
                                 title: Text('No notifications'),
@@ -185,8 +195,10 @@ class CommonWidgets {
                       child: FutureBuilder<List<Map<String, dynamic>>>(
                         future: userService.getNotifications(userId ?? ''),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const SizedBox.shrink(); // Hide while loading
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox
+                                .shrink(); // Hide while loading
                           } else if (snapshot.hasData) {
                             return Text(
                               '${snapshot.data?.length}',
@@ -215,10 +227,11 @@ class CommonWidgets {
 
   Drawer createDrawer(BuildContext context,
       {VoidCallback? onBookingPressed,
-      String? partnerName,
-      String? partnerId,
-      VoidCallback? onPaymentPressed,
-      VoidCallback? onReportPressed}) {
+        String? partnerName,
+        String? partnerId,
+        VoidCallback? onPaymentPressed,
+        VoidCallback? onReportPressed,
+        VoidCallback? onHelpPressed}) {
     return Drawer(
       backgroundColor: Colors.white,
       child: ListView(
@@ -228,7 +241,10 @@ class CommonWidgets {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SvgPicture.asset('assets/naqlee-logo.svg',
-                    height: MediaQuery.of(context).size.height * 0.05),
+                    height: MediaQuery
+                        .of(context)
+                        .size
+                        .height * 0.05),
                 GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
@@ -249,13 +265,7 @@ class CommonWidgets {
                 ),
               ),
               onTap: onBookingPressed
-              //     () {
-              //   Navigator.push(
-              //       context,
-              //       MaterialPageRoute(
-              //           builder: (context) => const BookingDetails(partnerId: '',partnerName: '',)));
-              // },
-              ),
+          ),
           ListTile(
               leading: SvgPicture.asset('assets/payment_logo.svg'),
               title: const Padding(
@@ -285,7 +295,7 @@ class CommonWidgets {
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
             ),
-            onTap: () {},
+            onTap: onHelpPressed,
           ),
           ListTile(
             leading: Icon(
@@ -297,7 +307,9 @@ class CommonWidgets {
               padding: EdgeInsets.only(left: 10),
               child: Text(
                 'Logout',
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold,color: Colors.red),
+                style: TextStyle(fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red),
               ),
             ),
             onTap: () {
@@ -339,13 +351,14 @@ class CommonWidgets {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const LoginPage(
-                            partnerName: '',
-                            mobileNo: '',
-                            password: '',
-                            token: '',
-                            partnerId: '',
-                          )),
+                      builder: (context) =>
+                      const LoginPage(
+                        partnerName: '',
+                        mobileNo: '',
+                        password: '',
+                        token: '',
+                        partnerId: '',
+                      )),
                 );
               },
             ),
@@ -393,19 +406,25 @@ class CommonWidgets {
                   padding: const EdgeInsets.only(left: 10),
                   child: SvgPicture.asset(
                     'assets/generated_logo.svg',
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.1,
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
+                    height: MediaQuery
+                        .of(context)
+                        .size
+                        .height * 0.1,
                   ),
                 ),
               ),
               Positioned(
-                top: -15,
-                right: -15,
+                top: -14,
+                right: -13,
                 child: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(FontAwesomeIcons.multiply),
+                  icon: const Icon(Icons.cancel),
                 ),
               ),
             ],
@@ -435,16 +454,15 @@ class CommonWidgets {
     );
   }
 
-  Widget buildTextField(
-    String label,
-    TextEditingController controller, {
-    FocusNode? focusNode,
-    String? hintText,
-    String? labelText,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    TextEditingController? passwordController,
-  }) {
+  Widget buildTextField(String label,
+      TextEditingController controller, {
+        FocusNode? focusNode,
+        String? hintText,
+        String? labelText,
+        bool obscureText = false,
+        Widget? suffixIcon,
+        TextEditingController? passwordController,
+      }) {
     return Column(
       children: [
         Container(
@@ -461,6 +479,7 @@ class CommonWidgets {
         Padding(
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
           child: TextFormField(
+            textCapitalization: label != 'Email ID' && label != 'Email Address' && label != 'Password' && label != 'Confirm Password'?TextCapitalization.sentences:TextCapitalization.none,
             controller: controller,
             focusNode: focusNode,
             obscureText: obscureText,
@@ -476,9 +495,9 @@ class CommonWidgets {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter $label';
+                return '${'Please enter'.tr()} $label';
               }
-              if (label == 'Email ID' &&
+              if ((label == 'Email ID' || label == 'Email Address') &&
                   !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                 return 'Please enter a valid email address';
               }
@@ -513,4 +532,58 @@ class CommonWidgets {
       ],
     );
   }
+
+  Widget buildBottomNavigationBar({
+    required int selectedIndex,
+    required Function(int) onTabTapped,
+  }) {
+    return BottomAppBar(
+      color: Colors.white,
+      elevation: 20,
+      shadowColor: Colors.black,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildTabItem(0, 'assets/home.svg', 25, 'Home', selectedIndex, onTabTapped),
+          _buildTabItem(1, 'assets/booking_manager.svg', 26, 'Booking manager', selectedIndex, onTabTapped),
+          _buildTabItem(2, 'assets/payment.svg', 26, 'Payment', selectedIndex, onTabTapped),
+          _buildTabItem(3, 'assets/profile.svg', 26, 'Profile', selectedIndex, onTabTapped),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem(
+      int index,
+      String iconPath,
+      double height,
+      String label,
+      int selectedIndex,
+      Function(int) onTabTapped,
+      ) {
+    final isSelected = selectedIndex == index;
+    return GestureDetector(
+      onTap: () => onTabTapped(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            iconPath,
+            height: height,
+            color: isSelected ? Color(0xff7F6AFF) : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(6),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Color(0xff7F6AFF) :null,
+              )
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

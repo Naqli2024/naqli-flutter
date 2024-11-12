@@ -559,13 +559,11 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                       ),
                       markers: markers,
                       polylines: polylines,
-                      gestureRecognizers: Set()
-                        ..add(Factory<PanGestureRecognizer>(
-                              () => PanGestureRecognizer(),
-                        ))
-                        ..add(Factory<TapGestureRecognizer>(
-                              () => TapGestureRecognizer(),
-                        )),
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                        ),
+                      },
                     ),
                   ),
                   Positioned(

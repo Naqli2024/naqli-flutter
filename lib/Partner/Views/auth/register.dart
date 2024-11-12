@@ -49,6 +49,7 @@ class _RegisterState extends State<Register> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         centerTitle: false,
         automaticallyImplyLeading: false,
@@ -105,6 +106,7 @@ class _RegisterState extends State<Register> {
           child: Column(
             children: [
               _buildTextField(
+                textCapitalization: TextCapitalization.sentences,
                 context: context,
                 controller: nameController,
                 label: 'Name',
@@ -217,6 +219,7 @@ class _RegisterState extends State<Register> {
     required TextEditingController controller,
     required String label,
     bool obscureText = false,
+    TextCapitalization textCapitalization = TextCapitalization.none,
     String? Function(String?)? validator,
   }) {
     return Padding(
@@ -230,6 +233,7 @@ class _RegisterState extends State<Register> {
           ),
           const SizedBox(height: 10),
           TextFormField(
+            textCapitalization: textCapitalization,
             controller: controller,
             obscureText: obscureText,
             decoration: const InputDecoration(

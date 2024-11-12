@@ -447,13 +447,11 @@ class _DriverHomePageState extends State<DriverHomePage>
                           polylines: Set<Polyline>.of(polylines),
                           myLocationEnabled: false,
                           myLocationButtonEnabled: true,
-                          gestureRecognizers: Set()
-                            ..add(Factory<PanGestureRecognizer>(
-                                  () => PanGestureRecognizer(),
-                            ))
-                            ..add(Factory<TapGestureRecognizer>(
-                                  () => TapGestureRecognizer(),
-                            )),
+                          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                            Factory<OneSequenceGestureRecognizer>(
+                                  () => EagerGestureRecognizer(),
+                            ),
+                          },
                         ),
                       ),
                       Positioned(

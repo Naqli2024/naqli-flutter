@@ -746,13 +746,11 @@ class _PendingPaymentState extends State<PendingPayment> {
                     ),
                     markers: markers,
                     polylines: polylines,
-                    gestureRecognizers: Set()
-                      ..add(Factory<PanGestureRecognizer>(
-                            () => PanGestureRecognizer(),
-                      ))
-                      ..add(Factory<TapGestureRecognizer>(
-                            () => TapGestureRecognizer(),
-                      )),
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                      ),
+                    },
                   )
                 ),
                 Positioned(

@@ -1,9 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
-import 'package:flutter_naqli/User/Views/user_auth/user_mobileno.dart';
+import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 
 class UserRegister extends StatefulWidget {
@@ -33,8 +34,8 @@ class _UserRegisterState extends State<UserRegister> {
   bool isConfirmPasswordObscured = true;
   String? selectedAccount;
   String? selectedId;
-  final List<String> accountItems = ['Single User', 'Super User'];
-  final List<String> govtIdItems = ['iqama No', 'national ID'];
+  final List<String> accountItems = ['Single User'.tr(), 'Super User'.tr()];
+  final List<String> govtIdItems = ['iqama No'.tr(), 'national ID'.tr()];
   final UserService userService = UserService();
   final ScrollController _scrollController = ScrollController();
   final FocusNode firstNameFocusNode = FocusNode();
@@ -48,11 +49,10 @@ class _UserRegisterState extends State<UserRegister> {
   final FocusNode address2FocusNode = FocusNode();
   final FocusNode cityFocusNode = FocusNode();
 
-  // RegisterUser function
   void registerUser() async {
     if (registerKey.currentState!.validate()) {
       if (!_isChecked) {
-        commonWidgets.showToast('Please agree to the terms and conditions to proceed');
+        commonWidgets.showToast('Please agree to the terms and conditions to proceed'.tr());
         return;
       }
       setState(() {
@@ -121,230 +121,236 @@ class _UserRegisterState extends State<UserRegister> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        title: SvgPicture.asset(
-          'assets/naqlee-logo.svg',
-          fit: BoxFit.fitWidth,
-          height: 40,
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            centerTitle: false,
-            toolbarHeight: 80,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: const Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 40),
-                child: Text(
-                  'Create your account',
-                  style: TextStyle(color: Colors.white),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          centerTitle: false,
+          automaticallyImplyLeading: false,
+          title: SvgPicture.asset(
+            'assets/naqlee-logo.svg',
+            fit: BoxFit.fitWidth,
+            height: 40,
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              centerTitle: false,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff6A66D1),
+              title: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 40),
+                  child: Text(
+                    'Create your account'.tr(),
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(
-                Icons.arrow_back_sharp,
-                color: Colors.white,
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back_sharp,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
         ),
-      ),
-      body: isLoading
-          ? const Center(
-        child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        controller: _scrollController,
-        child: Form(
-          key: registerKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: commonWidgets.buildTextField('First Name', firstNameController,focusNode: firstNameFocusNode),
-            ),
-            commonWidgets.buildTextField('Last Name', lastNameController,focusNode: lastNameFocusNode),
-            commonWidgets.buildTextField('Email Address', emailController,focusNode: emailFocusNode),
+        body: isLoading
+            ? const Center(
+          child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          controller: _scrollController,
+          child: Form(
+            key: registerKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: commonWidgets.buildTextField('First Name'.tr(), firstNameController,focusNode: firstNameFocusNode),
+              ),
+              commonWidgets.buildTextField('Last Name'.tr(), lastNameController,focusNode: lastNameFocusNode),
+              commonWidgets.buildTextField('Email Address'.tr(), emailController,focusNode: emailFocusNode),
+                commonWidgets.buildTextField(
+                  'Password'.tr(),
+                  passwordController,focusNode: passwordFocusNode,
+                  obscureText: isPasswordObscured,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isPasswordObscured = !isPasswordObscured;
+                      });
+                    },
+                  ),),
               commonWidgets.buildTextField(
-                'Password',
-                passwordController,focusNode: passwordFocusNode,
-                obscureText: isPasswordObscured,
+                'Confirm Password'.tr(),
+                confirmPasswordController,focusNode: confirmPasswordFocusNode,
+                obscureText: isConfirmPasswordObscured,
+                passwordController: passwordController,
                 suffixIcon: IconButton(
-                  icon: Icon(
-                    isPasswordObscured ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      isPasswordObscured = !isPasswordObscured;
-                    });
-                  },
-                ),),
-            commonWidgets.buildTextField(
-              'Confirm Password',
-              confirmPasswordController,focusNode: confirmPasswordFocusNode,
-              obscureText: isConfirmPasswordObscured,
-              passwordController: passwordController,
-              suffixIcon: IconButton(
-              icon: Icon(
-                isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
-              ),
-              onPressed: () {
-                setState(() {
-                  isConfirmPasswordObscured = !isConfirmPasswordObscured;
-                });
-              },
-            ),),
-            commonWidgets.buildTextField('Contact Number', contactNoController,focusNode: contactNoFocusNode),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Alternate Number',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                  ),
+                icon: Icon(
+                  isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
-                child: TextFormField(
-                  controller: alternateNoController,
-                  decoration: InputDecoration(
-                    labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
-                    hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                onPressed: () {
+                  setState(() {
+                    isConfirmPasswordObscured = !isConfirmPasswordObscured;
+                  });
+                },
+              ),),
+              commonWidgets.buildTextField('Contact Number'.tr(), contactNoController,focusNode: contactNoFocusNode),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Alternate Number'.tr(),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
-              ),
-            commonWidgets.buildTextField('Address 1', address1Controller,focusNode: address1FocusNode),
-              Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    'Address 2',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
-                child: TextFormField(
-                  controller: address2Controller,
-                  decoration: InputDecoration(
-                    labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
-                    hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+                  child: TextFormField(
+                    controller: alternateNoController,
+                    decoration: InputDecoration(
+                      labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                      hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            commonWidgets.buildTextField('City', cityController,focusNode: cityFocusNode),
-            accountDropdownWidget(),
-            govtIdDropdownWidget(),
-              commonWidgets.buildTextField('Id Number', idNoController,focusNode: idNoFocusNode),
-              Container(
-                alignment: Alignment.center,
-                margin: EdgeInsets.only(
-                  left: MediaQuery.of(context).size.width * 0.15,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Checkbox(
-                      value: _isChecked,
-                      onChanged: _onCheckboxChanged,
-                      checkColor: Colors.white,
-                      activeColor: Color(0xff6A66D1),
-                      shape: CircleBorder(),
+              commonWidgets.buildTextField('Address 1'.tr(), address1Controller,focusNode: address1FocusNode),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Address 2'.tr(),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                     ),
-                    Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                          const TextSpan(
-                                    text: 'Agree with',
-                                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(
-                                    text: ' Terms & Conditions',
-                                    style: const TextStyle(color: Color(0xff6A66D1), fontWeight: FontWeight.bold),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () {
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+                  child: TextFormField(
+                    textCapitalization: TextCapitalization.sentences,
+                    controller: address2Controller,
+                    decoration: InputDecoration(
+                      labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                      hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+                      border: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ),
+              commonWidgets.buildTextField('City'.tr(), cityController,focusNode: cityFocusNode),
+              accountDropdownWidget(),
+              govtIdDropdownWidget(),
+                commonWidgets.buildTextField('Id Number'.tr(), idNoController,focusNode: idNoFocusNode),
+                Container(
+                  alignment: Alignment.center,
+                  margin: EdgeInsets.only(
+                    left: MediaQuery.of(context).size.width * 0.15,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Checkbox(
+                        value: _isChecked,
+                        onChanged: _onCheckboxChanged,
+                        checkColor: Colors.white,
+                        activeColor: Color(0xff6A66D1),
+                        shape: CircleBorder(),
+                      ),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            children: [
+                            TextSpan(
+                                      text: 'Agree with'.tr(),
+                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                    ),
+                                    TextSpan(
+                                      text: ' Terms & Conditions'.tr(),
+                                      style: const TextStyle(color: Color(0xff6A66D1), fontWeight: FontWeight.bold),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () {
 
-                                      },
-                                  ),
-                          ],
+                                        },
+                                    ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.06,
-                  width: MediaQuery.of(context).size.width * 0.5,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6269FE),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: registerUser,
-                    child: const Text(
-                      'Create Account',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: RichText(
-                  text: TextSpan(
-                    children: [
-                      const TextSpan(
-                        text: 'Already have an account?',
-                        style: const TextStyle(color: Colors.black),
-                      ),
-                      TextSpan(
-                        text: ' Sign in',
-                        style: const TextStyle(color: Color(0xff6A66D1)),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UserLogin(),
-                              ),
-                            );
-                          },
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                Container(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.06,
+                    width: MediaQuery.of(context).size.width * 0.5,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: registerUser,
+                      child: Text(
+                        'Create Account'.tr(),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Already have an account?'.tr(),
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                        TextSpan(
+                          text: 'Sign in'.tr(),
+                          style: const TextStyle(color: Color(0xff6A66D1)),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const UserLogin(),
+                                ),
+                              );
+                            },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -358,10 +364,10 @@ class _UserRegisterState extends State<UserRegister> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
-              'Account type',
+              'Account type'.tr(),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
             ),
           ),
@@ -380,7 +386,7 @@ class _UserRegisterState extends State<UserRegister> {
                   selectedAccount = newValue;
                 });
               },
-              hint: const Text('Account type'),
+              hint: Text('Account type'.tr()),
               icon: const Icon(Icons.keyboard_arrow_down, size: 25),
               items: accountItems.map((account) {
                 return DropdownMenuItem<String>(
@@ -389,7 +395,7 @@ class _UserRegisterState extends State<UserRegister> {
                 );
               }).toList(),
               validator: (value) =>
-              value == null ? 'Please select an account type' : null,
+              value == null ? 'Please select an account type'.tr() : null,
             ),
           ),
         ],
@@ -404,10 +410,10 @@ class _UserRegisterState extends State<UserRegister> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
-              'Govt ID',
+              'Govt ID'.tr(),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
             ),
           ),
@@ -426,7 +432,7 @@ class _UserRegisterState extends State<UserRegister> {
                   selectedId = newValue;
                 });
               },
-              hint: const Text('Govt ID'),
+              hint: Text('Govt ID'.tr()),
               icon: const Icon(Icons.keyboard_arrow_down, size: 25),
               items: govtIdItems.map((id) {
                 return DropdownMenuItem<String>(
@@ -435,7 +441,7 @@ class _UserRegisterState extends State<UserRegister> {
                 );
               }).toList(),
               validator: (value) =>
-              value == null ? 'Please select a Govt ID' : null,
+              value == null ? 'Please select a Govt ID'.tr() : null,
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
@@ -72,10 +73,20 @@ class UserService{
           ),
         );
       } else {
-        final message = responseBody['message'] ?? responseBody;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        if (responseBody['errors'] != null && responseBody['errors'] is List) {
+          for (var error in responseBody['errors']) {
+            if (error['msg'] != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(error['msg'])),
+              );
+            }
+          }
+        } else {
+          final message = responseBody['message'] ?? 'Registration failed';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        }
         print('Failed to register user: ${response.statusCode}');
         print('Response body: ${response.body}');
       }
@@ -121,7 +132,7 @@ class UserService{
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => VerifiedScreen(Image: 'assets/otp_verified.svg',title: 'Verified',subTitle: 'Your number have been verified successfully',)
+                builder: (context) => VerifiedScreen(Image: 'assets/otp_verified.svg',title: 'verified'.tr(),subTitle: 'number_verified_successfully'.tr(),)
             ),
           );
         } else {
@@ -375,7 +386,8 @@ class UserService{
                     lastName: lastName,
                     token: token,
                     id: id,
-                    email: email
+                    email: email,
+                    accountType: accountType,
                   ),
                 ),
               );
@@ -394,7 +406,8 @@ class UserService{
                     lastName: lastName,
                     token: token,
                     id: id,
-                    email: email
+                    email: email,
+                    accountType: accountType,
                 ),
               ),
             );
@@ -832,6 +845,7 @@ class UserService{
             'subClassification': item['subClassification'],
             'bookingId': item['bookingId'],
             'oldQuotePrice': item['oldQuotePrice'],
+            'mobileNo': item['mobileNo'],
           });
         }
         print('Fetched Vendors: $vendors');
@@ -1308,6 +1322,9 @@ class UserService{
         print('Failed to fetch notifications, Status Code: ${response.statusCode}');
         return [];
       }
+    }  on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('Error fetching notifications: $e');
       return [];

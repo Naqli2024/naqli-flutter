@@ -81,6 +81,7 @@ class _StepTwoState extends State<StepTwo> {
         bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
+              scrolledUnderElevation: 0,
               centerTitle: false,
               toolbarHeight: 80,
               automaticallyImplyLeading: false,

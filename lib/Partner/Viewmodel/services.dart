@@ -702,7 +702,6 @@ class AuthService {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
        print('dataaa$partnerData');
-        // Ensure the bookingRequest field is not null
         if (partnerData['bookingRequest'] != null) {
           final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
           final bookingIds = <Map<String, dynamic>>[];
@@ -710,26 +709,22 @@ class AuthService {
           for (var booking in bookingRequests) {
             final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
 
-            // Ensure quotePrice is parsed correctly
             final quotePrice = booking['quotePrice'] is int
-                ? booking['quotePrice'].toString() // Convert to String if it's an int
-                : booking['quotePrice'].toString(); // Ensure it's a String if it's already a String
+                ? booking['quotePrice'].toString()
+                : booking['quotePrice'].toString();
 
             final paymentStatus = booking['paymentStatus']?.toString() ?? 'Pending';
 
-            // Logging the values for verification
             print('Booking ID: $bookingId');
             print('Payment Status: $paymentStatus');
             print('Quote Price: $quotePrice');
 
-            // Call the function with the correct types
-            await getBookingId(bookingId, token, paymentStatus, quotePrice); // quotePrice is now a String
+            await getBookingId(bookingId, token, paymentStatus, quotePrice);
 
-            // Add to the list of booking IDs
             bookingIds.add({
               'bookingId': bookingId,
               'paymentStatus': paymentStatus,
-              'quotePrice': quotePrice, // This should be a String now
+              'quotePrice': quotePrice,
             });
           }
           return bookingIds;

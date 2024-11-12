@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -8,16 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
-import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
-import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -28,9 +26,8 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:permission_handler/permission_handler.dart'as permissionHandler;
-import 'dart:ui' as ui;
 
-class CreateBooking extends StatefulWidget {
+class SuperUserBooking extends StatefulWidget {
   final String firstName;
   final String lastName;
   final String selectedType;
@@ -39,17 +36,13 @@ class CreateBooking extends StatefulWidget {
   final String email;
   final String? accountType;
   final String? isFromUserType;
-  const CreateBooking(
-      {super.key,
-      required this.firstName,
-      required this.lastName,
-      required this.selectedType, required this.token, required this.id, required this.email, this.isFromUserType, this.accountType});
+  const SuperUserBooking({super.key, required this.firstName, required this.lastName, required this.selectedType, required this.token, required this.id, required this.email, this.accountType, this.isFromUserType});
 
   @override
-  State<CreateBooking> createState() => _CreateBookingState();
+  State<SuperUserBooking> createState() => _SuperUserBookingState();
 }
 
-class _CreateBookingState extends State<CreateBooking> {
+class _SuperUserBookingState extends State<SuperUserBooking> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
   final TextEditingController timeController = TextEditingController();
@@ -89,18 +82,17 @@ class _CreateBookingState extends State<CreateBooking> {
   LatLng? dropLatLng;
   final List<LatLng> _dropLatLngs = [];
   final String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-  List<String> _suggestions = [];
   Map<int, List<String>> _dropPointSuggestions = {};
   late List<String> _pickUpSuggestions = [];
   late List<String> _cityNameSuggestions = [];
   late List<String> _addressSuggestions = [];
   late List<String> _zipCodeSuggestions = [];
   Future<Map<String, dynamic>?>? booking;
-  FocusNode _pickUpFocusNode = FocusNode();
-  List<FocusNode> _dropPointFocusNodes = [];
   String currentPlace = '';
   int typeCount = 0;
   bool isLocating = false;
+
+
   @override
   void initState() {
     super.initState();
@@ -109,535 +101,439 @@ class _CreateBookingState extends State<CreateBooking> {
     _futureEquipment = userService.fetchUserEquipment();
     _futureSpecial = userService.fetchUserSpecialUnits();
     fetchLoadsForSelectedType(selectedTypeName ?? '');
-    booking = _fetchBookingDetails();
     _requestPermissions();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: ui.TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: commonWidgets.commonAppBar(
-          context,
-          User: widget.firstName +' '+ widget.lastName,
-          userId: widget.id,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(90.0),
-            child: AppBar(
-              scrolledUnderElevation: 0,
-              centerTitle: false,
-              toolbarHeight: 80,
-              automaticallyImplyLeading: false,
-              backgroundColor: const Color(0xff6A66D1),
-              title: Container(
-                alignment: Alignment.topLeft,
-                child: Column(
-                  children: [
-                    Text(
-                      widget.isFromUserType != null
-                          ?'createBooking'.tr()
-                          :'Get an estimate'.tr(),
-                      textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.white, fontSize: 24),
-                    ),
-                    Text(
-                      widget.isFromUserType != null
-                          ?'${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
-                          :'${'step'.tr()} $_currentStep ${'of 3'.tr()}',
-                      style: const TextStyle(color: Colors.white, fontSize: 17),
-                    ),
-                  ],
-                ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: commonWidgets.commonAppBar(
+        context,
+        User: widget.firstName +' '+ widget.lastName,
+        userId: widget.id,
+        showLeading: true,
+        showLanguage: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(90.0),
+          child: AppBar(
+            scrolledUnderElevation: 0,
+            centerTitle: false,
+            toolbarHeight: 80,
+            automaticallyImplyLeading: false,
+            backgroundColor: const Color(0xff6A66D1),
+            title: Container(
+              alignment: Alignment.topLeft,
+              child: Column(
+                children: [
+                  Text(
+                    widget.isFromUserType != null
+                        ?'Create Booking'
+                        :'Get an estimate',
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                  ),
+                  Text(
+                    widget.isFromUserType != null
+                        ?'Step $_currentStep of 3 - booking'
+                        :'Step $_currentStep of 3',
+                    style: const TextStyle(color: Colors.white, fontSize: 17),
+                  ),
+                ],
               ),
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserType(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
-                },
-                icon: const Icon(
-                  Icons.arrow_back_sharp,
-                  color: Colors.white,
-                ),
+            ),
+            leading: IconButton(
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context)=> SuperUsertype(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
+              },
+              icon: const Icon(
+                Icons.arrow_back_sharp,
+                color: Colors.white,
               ),
             ),
           ),
         ),
-        drawer: Drawer(
-          backgroundColor: Colors.white,
-          child: ListView(
-            children: <Widget>[
-              ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SvgPicture.asset('assets/naqlee-logo.svg',
-                        height: MediaQuery.of(context).size.height * 0.05),
-                    GestureDetector(
-                        onTap: (){
-                          Navigator.pop(context);
-                        },
-                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                  ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: ListView(
+          children: <Widget>[
+            ListTile(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset('assets/naqlee-logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.05),
+                  GestureDetector(
+                      onTap: (){
+                        Navigator.pop(context);
+                      },
+                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: Icon(Icons.home,size: 30,),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Home',style: TextStyle(fontSize: 25),),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SuperUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
+                  ),
+                );
+              },
+            ),
+            ListTile(
+                leading: SvgPicture.asset('assets/booking_logo.svg',
+                    height: MediaQuery.of(context).size.height * 0.035),
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: Text('Trigger Booking',style: TextStyle(fontSize: 25),),
                 ),
-              ),
-              const Divider(),
-              ListTile(
-                  leading: Icon(Icons.home,size: 30,color: Color(0xff707070)),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('Home'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserType(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/booking_logo.svg'),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('booking'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: ()async {
-                    try {
-                      final bookingData = await booking;
-
-                      if (bookingData != null) {
-                        bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus'] == 'NotPaid'
-                            ? Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChooseVendor(
-                              id: widget.id,
-                              bookingId: bookingData['_id'] ?? '',
-                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                              unitType: bookingData['unitType'] ?? '',
-                              unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                              unit: bookingData['name'] ?? '',
-                              pickup: bookingData['pickup'] ?? '',
-                              dropPoints: bookingData['dropPoints'] ?? [],
-                              token: widget.token,
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              selectedType: widget.selectedType,
-                              cityName: bookingData['cityName'] ?? '',
-                              address: bookingData['address'] ?? '',
-                              zipCode: bookingData['zipCode'] ?? '',
-                              email: widget.email,
-                              accountType: widget.accountType,
-                            ),
-                          ),
-                        )
-                            : bookingData['paymentStatus']== 'HalfPaid'
-                            ? Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PendingPayment(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: widget.selectedType,
-                                token: widget.token,
-                                unit: bookingData['name'] ?? '',
-                                load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                                size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                                bookingId: bookingData['_id'] ?? '',
-                                unitType: bookingData['unitType'] ?? '',
-                                pickup: bookingData['pickup'] ?? '',
-                                dropPoints: bookingData['dropPoints'] ?? [],
-                                cityName: bookingData['cityName'] ?? '',
-                                address: bookingData['address'] ?? '',
-                                zipCode: bookingData['zipCode'] ?? '',
-                                unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                                id: widget.id,
-                                partnerName: '',
-                                partnerId: bookingData['partner'] ?? '',
-                                oldQuotePrice: '',
-                                paymentStatus: bookingData['paymentStatus'] ?? '',
-                                quotePrice: '',
-                                advanceOrPay: bookingData['remainingBalance'] ?? 0,
-                                bookingStatus: bookingData['bookingStatus'] ?? '',
-                                email: widget.email,
-                              )
-                          ),
-                        )
-                            : Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PaymentCompleted(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: widget.selectedType,
-                                token: widget.token,
-                                unit: bookingData['name'] ?? '',
-                                load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                                size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                                bookingId: bookingData['_id'] ?? '',
-                                unitType: bookingData['unitType'] ?? '',
-                                pickup: bookingData['pickup'] ?? '',
-                                dropPoints: bookingData['dropPoints'] ?? [],
-                                cityName: bookingData['cityName'] ?? '',
-                                address: bookingData['address'] ?? '',
-                                zipCode: bookingData['zipCode'] ?? '',
-                                unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                                id: widget.id,
-                                partnerId: bookingData['partner'] ?? '',
-                                bookingStatus: bookingData['bookingStatus'] ?? '',
-                                email: widget.email,
-                              )
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id,email: widget.email,)
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      // Handle errors here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error fetching booking details: $e')),
-                      );
-                    }
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/booking_history.svg',
-                      height: MediaQuery.of(context).size.height * 0.035),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('booking_history'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/payment_logo.svg'),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('payment'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.only(left: 20,bottom: 10,top: 15),
-                child: Text('more_info_and_support'.tr(),style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold)),
-              ),
-              ListTile(
-                leading: SvgPicture.asset('assets/report_logo.svg'),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
+                onTap: (){
+                  Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: SvgPicture.asset('assets/help_logo.svg'),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 7),
-                  child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserHelp(
+                      builder: (context) => TriggerBooking(
                           firstName: widget.firstName,
                           lastName: widget.lastName,
                           token: widget.token,
                           id: widget.id,
                           email: widget.email
-                      )));
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
-                title: Padding(
+                      ),
+                    ),
+                  );
+                }
+            ),
+            ListTile(
+                leading: SvgPicture.asset('assets/booking_manager.svg'),
+                title: const Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
+                  child: Text('Booking Manager',style: TextStyle(fontSize: 25),),
                 ),
-                onTap: () {
-
-                },
+                onTap: (){
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => BookingManager(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      ),
+                    ),
+                  );
+                }
+            ),
+            ListTile(
+              leading: SvgPicture.asset('assets/payment.svg'),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Payments',style: TextStyle(fontSize: 25),),
               ),
-              ListTile(
-                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
-                ),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        backgroundColor: Colors.white,
-                        contentPadding: const EdgeInsets.all(20),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(top: 30,bottom: 10),
-                              child: Text(
-                                'are_you_sure_you_want_to_logout'.tr(),
-                                style: TextStyle(fontSize: 19),
-                              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SuperUserPayment(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: SvgPicture.asset('assets/report_logo.svg'),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Report',style: TextStyle(fontSize: 25),),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: SvgPicture.asset('assets/help_logo.svg'),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 7),
+                child: Text('Help',style: TextStyle(fontSize: 25),),
+              ),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context)=> UserHelp(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email
+                    )));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+              title: const Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(20),
+                      content: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 30,bottom: 10),
+                            child: Text(
+                              'Are you sure you want to logout?',
+                              style: TextStyle(fontSize: 19),
                             ),
-                          ],
-                        ),
-                        actions: <Widget>[
-                          TextButton(
-                            child: Text('yes'.tr()),
-                            onPressed: () async {
-                              await clearUserData();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => UserLogin()),
-                              );
-                            },
-                          ),
-                          TextButton(
-                            child: Text('no'.tr()),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
                           ),
                         ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Yes'),
+                          onPressed: () async {
+                            await clearUserData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserLogin()),
+                            );
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('No'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildStep(1),
+                  _buildLine(),
+                  _buildStep(2),
+                  _buildLine(),
+                  _buildStep(3),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: _buildStepContent(_currentStep),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        height: MediaQuery.sizeOf(context).height * 0.11,
+        color: Colors.white,
+        child:  Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildStep(1),
-                    _buildLine(),
-                    _buildStep(2),
-                    _buildLine(),
-                    _buildStep(3),
-                  ],
+              if (_currentStep == 1) Container(),
+              if (_currentStep > 1)
+                Container(
+                  padding: const EdgeInsets.only(left: 12, bottom: 10),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (_currentStep > 1) {
+                          if (_currentStep == 2) {
+                            selectedLoad = null;
+                          }
+                          _currentStep--;
+                        }
+                      });
+                    },
+                    child: const Text(
+                      'Back',
+                      style: TextStyle(
+                          color: Color(0xff6269FE),
+                          fontSize: 21,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: _buildStepContent(_currentStep),
-              ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: BottomAppBar(
-          height: MediaQuery.sizeOf(context).height * 0.11,
-          color: Colors.white,
-          child:  Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (_currentStep == 1) Container(),
-                if (_currentStep > 1)
-                  Container(
-                    padding: const EdgeInsets.only(left: 12, bottom: 10),
-                    child: GestureDetector(
-                      onTap: () {
+              if (_currentStep < 3)
+                Container(
+                  padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.055,
+                    width: MediaQuery.of(context).size.width * 0.3,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () async{
                         setState(() {
-                          if (_currentStep > 1) {
-                            if (_currentStep == 2) {
-                              selectedLoad = null;
+                          if (widget.selectedType == 'vehicle') {
+                            if (_currentStep == 1) {
+                              if (selectedTypeName == null) {
+                                commonWidgets.showToast('Please select an option');
+                              } else {
+                                _currentStep++;
+                              }
+                            }else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null ||
+                                  productController.text.isEmpty) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                // Await the fetchLoadsForSelectedType function
+                                fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
+                                  print('Fetched loadTypes: $loadTypes');
+                                  if (loadTypes.isEmpty || selectedLoad !=null) {
+
+                                    setState(() {
+                                      _currentStep++;
+                                    });
+                                  } else {
+                                    if (loadTypes.isNotEmpty) {
+                                      commonWidgets.showToast(
+                                          'Please select Load type');
+                                    }
+                                  }
+                                }).catchError((error) {
+                                  // Handle errors
+                                  print('Error fetching load types: $error');
+                                  commonWidgets.showToast('Error fetching load types');
+                                });
+                              }
                             }
-                            _currentStep--;
+                          }
+                          if (widget.selectedType == 'bus') {
+                            if (_currentStep == 1) {
+                              if (selectedBus == null) {
+                                commonWidgets.showToast('Please select Bus');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null ||
+                                  productController.text.isEmpty) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
+                          }
+                          if (widget.selectedType == 'equipment') {
+                            if (_currentStep == 1) {
+                              if (selectedTypeName ==null) {
+                                commonWidgets.showToast('Please select an option');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
+                          }
+                          if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                            if (_currentStep == 1) {
+                              if (selectedSpecial ==null) {
+                                commonWidgets.showToast('Please select Special/Other Units');
+                              } else {
+                                _currentStep++;
+                              }
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null) {
+                                commonWidgets.showToast('Please fill all fields');
+                              } else {
+                                _currentStep++;
+                              }
+                            }
                           }
                         });
                       },
-                      child: Text(
-                        'back'.tr(),
+                      child: const Text(
+                        'Next',
                         style: TextStyle(
-                            color: Color(0xff6269FE),
+                            color: Colors.white,
                             fontSize: 21,
-                            fontWeight: FontWeight.w500),
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                if (_currentStep < 3)
-                  Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                ),
+              if (_currentStep == 3)
+                Container(
+                  padding: const EdgeInsets.only(right: 10, bottom: 0),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.055,
+                    width: MediaQuery.of(context).size.width * 0.52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                        onPressed: () async{
-                          setState(() {
-                            if (widget.selectedType == 'vehicle') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName == null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                    print('Fetched loadTypes: $loadTypes');
-                                    if (loadTypes.isEmpty || selectedLoad !=null) {
-
-                                      setState(() {
-                                        _currentStep++;
-                                      });
-                                    } else {
-                                      if (loadTypes.isNotEmpty) {
-                                        commonWidgets.showToast('Please select Load type'.tr());
-                                      }
-                                    }
-                                  }).catchError((error) {
-                                    print('Error fetching load types: $error');
-                                    commonWidgets.showToast('Error fetching load types');
-                                  });
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'bus') {
-                              if (_currentStep == 1) {
-                                if (selectedBus == null) {
-                                  commonWidgets.showToast('Please select Bus'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'equipment') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName ==null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
-                              if (_currentStep == 1) {
-                                if (selectedSpecial ==null) {
-                                  commonWidgets.showToast('Please select Special/Other Units'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                          });
-                        },
-                        child: Text(
-                          'next'.tr(),
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold),
-                        ),
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          createBooking();
+                        });
+                      },
+                      child: const Text(
+                        'Create Booking',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                if (_currentStep == 3)
-                  Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        onPressed: () async {
-                          setState(() {
-                            createBooking();
-                          });
-                        },
-                        child: Text(
-                          'createBooking'.tr(),
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -705,8 +601,8 @@ class _CreateBookingState extends State<CreateBooking> {
           Marker(
             markerId: const MarkerId('currentLocation'),
             position: currentLocation,
-            infoWindow: InfoWindow(
-              title: 'your_location'.tr(),
+            infoWindow: const InfoWindow(
+              title: 'Your Location',
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueBlue,
@@ -777,7 +673,6 @@ class _CreateBookingState extends State<CreateBooking> {
       desiredAccuracy: geo.LocationAccuracy.high,
     );
 
-    // Convert the coordinates into a human-readable address (Reverse Geocoding)
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
     String reverseGeocodeUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
@@ -790,14 +685,12 @@ class _CreateBookingState extends State<CreateBooking> {
       if (data != null && data['status'] == 'OK') {
         final formattedAddress = data['results'][0]['formatted_address'];
 
-        // Update the pickup controller with the current location address
         setState(() {
           cityNameController.text = formattedAddress;
           isLocating = false;
           _cityNameSuggestions = [];
         });
 
-        // Optionally, place a marker for the current location on the map
         setState(() {
           markers.add(
             Marker(
@@ -1078,7 +971,6 @@ class _CreateBookingState extends State<CreateBooking> {
     }
   }
 
-
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylinePoints = [];
     int index = 0, len = encoded.length;
@@ -1270,22 +1162,22 @@ class _CreateBookingState extends State<CreateBooking> {
   Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
     try {
       List<Vehicle> vehicles =
-          await userService.fetchUserVehicle();
+      await userService.fetchUserVehicle();
 
       var selectedType = vehicles
           .expand((vehicle) => vehicle.types)
           .firstWhere(
             (type) => type.typeName == selectedTypeName,
-            orElse: () => VehicleType(
-                typeName: '',
-                typeOfLoad: [],
-                typeImage: '',
-                scale: ''), // Default value
-          );
+        orElse: () => VehicleType(
+            typeName: '',
+            typeOfLoad: [],
+            typeImage: '',
+            scale: ''), // Default value
+      );
 
       print('Selected Type: ${selectedType.typeOfLoad}'); // Debugging line
 
-      return selectedType.typeOfLoad;
+      return selectedType.typeOfLoad; // Return the list of LoadType
     } catch (e) {
       print('Error fetching loads: $e');
       return [];
@@ -1370,7 +1262,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
     if (widget.selectedType == 'vehicle') {
       if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
-        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
+        commonWidgets.showToast('Choose Pickup and DropPoints');
       } else {
         // Print debugging info
         print('name$selectedName');
@@ -1410,22 +1302,10 @@ class _CreateBookingState extends State<CreateBooking> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ChooseVendor(
-                    bookingId: bookingId,
-                    size: scale.toString(),
-                    unitType: widget.selectedType,
-                    unitTypeName: selectedTypeName.toString(),
-                    load: selectedLoad.toString(),
-                    unit: selectedName.toString(),
-                    pickup: pickUpController.text,
-                    dropPoints: dropPlaces,
-                    token: widget.token,
+                  builder: (context) => SuperUserHomePage(
                     firstName: widget.firstName,
                     lastName: widget.lastName,
-                    selectedType: widget.selectedType,
-                    cityName: cityNameController.text,
-                    address: addressController.text,
-                    zipCode: zipCodeController.text,
+                    token: widget.token,
                     id: widget.id,
                     email: widget.email,
                     accountType: widget.accountType,
@@ -1442,7 +1322,7 @@ class _CreateBookingState extends State<CreateBooking> {
           dropPlaces.contains('') ||
           dropPlaces.isEmpty) {
         commonWidgets.showToast(
-            'Choose Pickup and DropPoints'.tr());
+            'Choose Pickup and DropPoints');
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1473,22 +1353,10 @@ class _CreateBookingState extends State<CreateBooking> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChooseVendor(
-                  bookingId: bookingId,
-                  size: scale.toString(),
-                  unitType: widget.selectedType,
-                  load: selectedLoad.toString(),
-                  unit: selectedName.toString(),
-                  unitTypeName: '',
-                  pickup: pickUpController.text,
-                  dropPoints: dropPlaces,
-                  token: widget.token,
+                builder: (context) => SuperUserHomePage(
                   firstName: widget.firstName,
                   lastName: widget.lastName,
-                  selectedType: widget.selectedType,
-                  cityName: '',
-                  address: '',
-                  zipCode: '',
+                  token: widget.token,
                   id: widget.id,
                   email: widget.email,
                   accountType: widget.accountType,
@@ -1503,7 +1371,7 @@ class _CreateBookingState extends State<CreateBooking> {
       if (cityNameController.text.isEmpty ||
           addressController.text.isEmpty) {
         commonWidgets.showToast(
-            'Choose City name and Address'.tr());
+            'Choose City name and Address');
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1536,22 +1404,10 @@ class _CreateBookingState extends State<CreateBooking> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChooseVendor(
-                  bookingId: bookingId,
-                  size: scale.toString(),
-                  unitType: widget.selectedType,
-                  load: selectedLoad.toString(),
-                  unit: selectedName.toString(),
-                  unitTypeName: selectedTypeName.toString(),
-                  pickup: pickUpController.text,
-                  dropPoints: dropPlaces,
-                  token: widget.token,
+                builder: (context) => SuperUserHomePage(
                   firstName: widget.firstName,
                   lastName: widget.lastName,
-                  selectedType: widget.selectedType,
-                  cityName: cityNameController.text,
-                  address: addressController.text,
-                  zipCode: zipCodeController.text,
+                  token: widget.token,
                   id: widget.id,
                   email: widget.email,
                   accountType: widget.accountType,
@@ -1566,7 +1422,7 @@ class _CreateBookingState extends State<CreateBooking> {
       if (cityNameController.text.isEmpty ||
           addressController.text.isEmpty) {
         commonWidgets.showToast(
-            'Choose City name and Address'.tr());
+            'Choose City name and Address');
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1598,22 +1454,10 @@ class _CreateBookingState extends State<CreateBooking> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChooseVendor(
-                  bookingId: bookingId,
-                  size: scale.toString(),
-                  unitType: widget.selectedType,
-                  unitTypeName: '',
-                  load: selectedLoad.toString(),
-                  unit: selectedName.toString(),
-                  pickup: '',
-                  dropPoints: [],
-                  token: widget.token,
+                builder: (context) => SuperUserHomePage(
                   firstName: widget.firstName,
                   lastName: widget.lastName,
-                  selectedType: widget.selectedType,
-                  cityName: cityNameController.text,
-                  address: addressController.text,
-                  zipCode: zipCodeController.text,
+                  token: widget.token,
                   id: widget.id,
                   email: widget.email,
                   accountType: widget.accountType,
@@ -1733,13 +1577,13 @@ class _CreateBookingState extends State<CreateBooking> {
     switch (selectedType) {
       case 'vehicle':
         return UserVehicleStepTwo(
-          selectedTypeName??'',
-          selectedName??'',
-          typeImage??'',
-          scale??''
+            selectedTypeName??'',
+            selectedName??'',
+            typeImage??'',
+            scale??''
         );
       case 'bus':
-          return UserBusStepTwo();
+        return UserBusStepTwo();
       case 'equipment':
         return UserEquipmentStepTwo();
       case 'special':
@@ -1760,10 +1604,10 @@ class _CreateBookingState extends State<CreateBooking> {
             typeImage??'',
             scale??'',
             _selectedDate .toString(),
-          _selectedFromTime.toString(),
-          productController.text,
-          selectedLoad??'',
-          selectedLabour.toString()
+            _selectedFromTime.toString(),
+            productController.text,
+            selectedLoad??'',
+            selectedLabour.toString()
         );
       case 'bus':
         return UserBusStepThree();
@@ -1796,8 +1640,8 @@ class _CreateBookingState extends State<CreateBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_vehicle_units'.tr(),
+                child: const Text(
+                  'Available Vehicle Units',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1806,7 +1650,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   itemCount: vehicles.length,
                   itemBuilder: (context, index) {
                     final vehicle = vehicles[index];
-                    final selectedType = _selectedSubClassification[vehicle.name] ?? '';
+                    final selectedType =
+                        _selectedSubClassification[vehicle.name] ?? '';
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -1825,7 +1670,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             Expanded(
                               flex: 6,
                               child: Text(
-                                vehicle.name.tr(),
+                                vehicle.name,
                                 style: const TextStyle(
                                     fontSize: 15.0,
                                     fontWeight: FontWeight.bold),
@@ -1835,7 +1680,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               flex: 1,
                               child: Container(
                                 height:
-                                    MediaQuery.of(context).size.height * 0.05,
+                                MediaQuery.of(context).size.height * 0.05,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -1844,116 +1689,135 @@ class _CreateBookingState extends State<CreateBooking> {
                             ),
                             Expanded(
                               flex: 7,
-                              child: Directionality(
-                                textDirection: ui.TextDirection.ltr,
-                                child: Container(
-                                  width: double.infinity,
-                                  child: PopupMenuButton<String>(
-                                    elevation: 5,
-                                    constraints: BoxConstraints(
-                                      minWidth:350,
-                                      maxWidth:350,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    offset:  Offset(0, 55),
-                                    padding: EdgeInsets.zero,
-                                    color: Colors.white,
-                                    onSelected: (newValue) {
-                                      setState(() {
-                                        _selectedSubClassification[vehicle.name] = newValue;
-                                        selectedTypeName = newValue;
-                                        selectedName = vehicle.name;
-                                        scale = vehicle.types
-                                            ?.firstWhere((type) => type.typeName == newValue)
-                                            .scale;
-                                        typeImage = vehicle.types
-                                            ?.firstWhere((type) => type.typeName == newValue)
-                                            .typeImage;
-                                      });
-                                    },
-                                    itemBuilder: (context) {
-                                      return vehicle.types?.asMap().entries.map((entry) {
-                                        int index = entry.key;
-                                        var type = entry.value;
-                                        typeCount = index + 1;
-                                        print('Dropdown item ${index + 1}: ${typeCount}');
-                                            return PopupMenuItem<String>(
-                                              value: type.typeName,
-                                              child: Directionality(
-                                                textDirection: ui.TextDirection.ltr,
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(15),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 1,
-                                                        child: FutureBuilder(
-                                                          future: _loadSvg(type.typeImage),
-                                                          builder: (context, snapshot) {
-                                                            if (snapshot.connectionState == ConnectionState.waiting) {
-                                                              return const SizedBox(
-                                                                width: 24,
-                                                                height: 24,
-                                                                child: Icon(Icons.rotate_right),
-                                                              );
-                                                            } else if (snapshot.hasError) {
-                                                              return const Icon(Icons.error);
-                                                            } else {
-                                                              return SvgPicture.asset(
-                                                                type.typeImage,
-                                                                width: 40,
-                                                                height: 30,
-                                                              );
-                                                            }
-                                                          },
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 20),
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            Text(type.typeName.tr(),
-                                                                style: const TextStyle(fontSize: 16.0)),
-                                                            Text(type.scale,
-                                                                style: const TextStyle(fontSize: 14.0)),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                              child: Container(
+                                width: double.infinity,
+                                child: PopupMenuButton<String>(
+                                  elevation: 5,
+                                  constraints: BoxConstraints(
+                                    minWidth:350,
+                                    maxWidth:350,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  offset:  Offset(0, 55),
+                                  padding: EdgeInsets.zero,
+                                  color: Colors.white,
+                                  onSelected: (newValue) {
+                                    setState(() {
+                                      _selectedSubClassification[vehicle.name] = newValue;
+                                      selectedTypeName = newValue;
+                                      selectedName = vehicle.name;
+                                      scale = vehicle.types
+                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          .scale;
+                                      typeImage = vehicle.types
+                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          .typeImage;
+                                    });
+                                  },
+                                  itemBuilder: (context) {
+                                    return vehicle.types?.asMap().entries.map((entry) {
+                                      int index = entry.key;
+                                      var type = entry.value;
+                                      typeCount = index + 1;
+                                      print('Dropdown item ${index + 1}: ${typeCount}');
+                                      return PopupMenuItem<String>(
+                                        value: type.typeName,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                flex: 1,
+                                                child: FutureBuilder(
+                                                  future: _loadSvg(
+                                                      type.typeImage),
+                                                  builder:
+                                                      (context, snapshot) {
+                                                    if (snapshot
+                                                        .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const SizedBox(
+                                                        width: 24,
+                                                        height: 24,
+                                                        child: Icon(Icons
+                                                            .rotate_right),
+                                                      );
+                                                    } else if (snapshot
+                                                        .hasError) {
+                                                      return const Icon(
+                                                          Icons.error);
+                                                    } else {
+                                                      return SvgPicture
+                                                          .asset(
+                                                        type.typeImage,
+                                                        width: 40,
+                                                        height: 30,
+                                                      );
+                                                    }
+                                                  },
                                                 ),
                                               ),
-                                            );
-                                          }).toList() ??
-                                          [];
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                      width: double.infinity,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              selectedType.isEmpty
-                                                  ? 'select'.tr()
-                                                  : selectedType.isNotEmpty
-                                                      ? selectedType.tr()
-                                                      : vehicle.types?.isNotEmpty == true
-                                                          ? vehicle.types!.first.typeName
-                                                          : 'no_data'.tr(),
-                                              style: const TextStyle(fontSize: 16.0),
-                                            ),
+                                              const SizedBox(width: 20),
+                                              Expanded(
+                                                flex: 3,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                  CrossAxisAlignment
+                                                      .start,
+                                                  children: [
+                                                    Text(type.typeName,
+                                                        style:
+                                                        const TextStyle(
+                                                            fontSize:
+                                                            16.0)),
+                                                    Text(type.scale,
+                                                        style:
+                                                        const TextStyle(
+                                                            fontSize:
+                                                            14.0)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 10),
-                                          const Icon(Icons.arrow_drop_down),
-                                        ],
-                                      ),
+                                        ),
+                                      );
+                                    }).toList() ??
+                                        [];
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    width: double.infinity,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            selectedType.isEmpty
+                                                ? 'Select'
+                                                : selectedType.isNotEmpty
+                                                ? selectedType
+                                                : vehicle.types
+                                                ?.isNotEmpty ==
+                                                true
+                                                ? vehicle.types!.first
+                                                .typeName
+                                                : 'No Data ',
+                                            style:
+                                            const TextStyle(fontSize: 16.0),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Icon(Icons.arrow_drop_down),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -1991,8 +1855,8 @@ class _CreateBookingState extends State<CreateBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_bus_units'.tr(),
+                child: const Text(
+                  'Available Bus Units',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -2003,7 +1867,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     crossAxisSpacing: 0, // Space between columns
                     mainAxisSpacing: 0, // Space between rows
                     childAspectRatio:
-                        1, // Aspect ratio for card width and height
+                    1, // Aspect ratio for card width and height
                   ),
                   itemCount: buses.length,
                   itemBuilder: (context, index) {
@@ -2035,23 +1899,23 @@ class _CreateBookingState extends State<CreateBooking> {
                                   side: BorderSide(
                                       color: isBusSelected
                                           ? Color(
-                                              0xff6A66D1,
-                                            )
+                                        0xff6A66D1,
+                                      )
                                           : Color(0xffACACAD),
                                       width: isBusSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Column(
                                   children: [
-                                Padding(
-                                padding: const EdgeInsets.only(
-                                    top: 45, bottom: 10),
-                                child: SvgPicture.asset(
-                                  bus.image,
-                                  width: 30,
-                                  height: 40,
-                                ),
-                              ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 45, bottom: 10),
+                                      child: SvgPicture.asset(
+                                        bus.image,
+                                        width: 30,
+                                        height: 40,
+                                      ),
+                                    ),
                                     Divider(
                                       indent: 7,
                                       endIndent: 7,
@@ -2061,7 +1925,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                     Text(
                                       bus.name,
                                       textAlign:
-                                          TextAlign.center, // Center the text
+                                      TextAlign.center, // Center the text
                                     )
                                   ],
                                 ),
@@ -2099,8 +1963,8 @@ class _CreateBookingState extends State<CreateBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_equipments_units'.tr(),
+                child: const Text(
+                  'Available Equipments Units',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -2109,7 +1973,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   itemCount: equipment.length,
                   itemBuilder: (context, index) {
                     final equipments = equipment[index];
-                    final selectedType = _selectedSubClassification[equipments.name] ?? '';
+                    final selectedType =
+                        _selectedSubClassification[equipments.name] ?? '';
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 10),
@@ -2128,7 +1993,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                equipments.name.tr(),
+                                equipments.name,
                                 style: const TextStyle(
                                     fontSize: 16.0,
                                     fontWeight: FontWeight.bold),
@@ -2138,7 +2003,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               flex: 1,
                               child: Container(
                                 height:
-                                    MediaQuery.of(context).size.height * 0.05,
+                                MediaQuery.of(context).size.height * 0.05,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -2152,7 +2017,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
                                   constraints:
-                                      BoxConstraints.tightFor(width: 350),
+                                  BoxConstraints.tightFor(width: 350),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -2162,7 +2027,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   onSelected: (newValue) {
                                     setState(() {
                                       _selectedSubClassification[
-                                          equipments.name] = newValue;
+                                      equipments.name] = newValue;
                                       selectedTypeName = newValue;
                                       selectedName = equipments.name;
                                       typeImage = equipments.types
@@ -2172,49 +2037,58 @@ class _CreateBookingState extends State<CreateBooking> {
                                   },
                                   itemBuilder: (context) {
                                     return equipments.types?.map((type) {
-                                          return PopupMenuItem<String>(
-                                            value: type.typeName,
-                                            child: Directionality(
-                                              textDirection: ui.TextDirection.ltr,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(15),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Expanded(
-                                                      child: FutureBuilder(
-                                                        future: _loadSvg(type.typeImage),
-                                                        builder: (context, snapshot) {
-                                                          if (snapshot.connectionState == ConnectionState.waiting) {
-                                                            return const SizedBox(
-                                                              width: 24,
-                                                              height: 24,
-                                                              child:Icon(Icons.rotate_right),
-                                                            );
-                                                          } else if (snapshot.hasError) {
-                                                            return const Icon(Icons.error);
-                                                          } else {
-                                                            return SvgPicture.asset(
-                                                              type.typeImage,
-                                                              width: 40,
-                                                              height: 30,
-                                                            );
-                                                          }
-                                                        },
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 20),
-                                                    Expanded(
-                                                      flex: 3,
-                                                      child: Text(type.typeName.tr(),
-                                                          style: const TextStyle(fontSize: 16.0)),
-                                                    ),
-                                                  ],
+                                      return PopupMenuItem<String>(
+                                        value: type.typeName,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(15),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: FutureBuilder(
+                                                  future: _loadSvg(
+                                                      type.typeImage),
+                                                  builder:
+                                                      (context, snapshot) {
+                                                    if (snapshot
+                                                        .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const SizedBox(
+                                                        width: 24,
+                                                        height: 24,
+                                                        child:Icon(Icons
+                                                            .rotate_right),
+                                                      );
+                                                    } else if (snapshot
+                                                        .hasError) {
+                                                      return const Icon(
+                                                          Icons.error);
+                                                    } else {
+                                                      return SvgPicture
+                                                          .asset(
+                                                        type.typeImage,
+                                                        width: 40,
+                                                        height: 30,
+                                                      );
+                                                    }
+                                                  },
                                                 ),
                                               ),
-                                            ),
-                                          );
-                                        }).toList() ??
+                                              const SizedBox(width: 20),
+                                              Expanded(
+                                                flex: 3,
+                                                child: Text(type.typeName,
+                                                    style: const TextStyle(
+                                                        fontSize: 16.0)),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList() ??
                                         [];
                                   },
                                   child: Container(
@@ -2223,19 +2097,22 @@ class _CreateBookingState extends State<CreateBooking> {
                                     width: double.infinity,
                                     child: Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             selectedType.isEmpty
-                                                ? 'select'.tr()
+                                                ? 'Select'
                                                 : selectedType.isNotEmpty
-                                                    ? selectedType.tr()
-                                                    : equipments.types?.isNotEmpty == true
-                                                        ? equipments.types!.first.typeName
-                                                        : 'no_data'.tr(),
+                                                ? selectedType
+                                                : equipments.types
+                                                ?.isNotEmpty ==
+                                                true
+                                                ? equipments.types!
+                                                .first.typeName
+                                                : 'No Data for Sub Classification',
                                             style:
-                                                const TextStyle(fontSize: 16.0),
+                                            const TextStyle(fontSize: 16.0),
                                           ),
                                         ),
                                         const SizedBox(width: 10),
@@ -2278,8 +2155,8 @@ class _CreateBookingState extends State<CreateBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_special_others_units'.tr(),
+                child: const Text(
+                  'Available Special / Others Units',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -2289,7 +2166,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     crossAxisCount: 2, // Two columns
                     crossAxisSpacing: 0, // Space between columns
                     mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio: 1,
+                    childAspectRatio:
+                    1, // Aspect ratio for card width and height
                   ),
                   itemCount: special.length,
                   itemBuilder: (context, index) {
@@ -2320,21 +2198,24 @@ class _CreateBookingState extends State<CreateBooking> {
                                 shape: RoundedRectangleBorder(
                                   side: BorderSide(
                                       color: isSpecialSelected
-                                          ? Color(0xff6A66D1,)
+                                          ? Color(
+                                        0xff6A66D1,
+                                      )
                                           : Color(0xffACACAD),
                                       width: isSpecialSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Column(
                                   children: [
-                                Padding(
-                                padding: const EdgeInsets.only(top: 45, bottom: 10),
-                                child: SvgPicture.asset(
-                                  specials.image,
-                                  width: 30,
-                                  height: 40,
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 45, bottom: 10),
+                                      child: SvgPicture.asset(
+                                        specials.image,
+                                        width: 30,
+                                        height: 40,
+                                      ),
                                     ),
-                                  ),
                                     Divider(
                                       indent: 7,
                                       endIndent: 7,
@@ -2342,8 +2223,9 @@ class _CreateBookingState extends State<CreateBooking> {
                                       thickness: 1,
                                     ),
                                     Text(
-                                      specials.name.tr(),
-                                      textAlign: TextAlign.center, // Center the text
+                                      specials.name,
+                                      textAlign:
+                                      TextAlign.center, // Center the text
                                     )
                                   ],
                                 ),
@@ -2371,6 +2253,7 @@ class _CreateBookingState extends State<CreateBooking> {
         children: [
           Text('Others Content',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          // Add more widgets as needed
         ],
       ),
     );
@@ -2379,7 +2262,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget defaultContent() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Text('please_select_a_type_to_see_content'.tr(),
+      child: const Text('Please select a type to see content',
           style: TextStyle(fontSize: 18)),
     );
   }
@@ -2392,254 +2275,16 @@ class _CreateBookingState extends State<CreateBooking> {
       ) {
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
-      child: Directionality(
-        textDirection: ui.TextDirection.ltr,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Time'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                _selectTime(context);
-              },
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xffBCBCBC)),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
-                    ),
-                    Container(
-                      height: 50,
-                      child: const VerticalDivider(
-                        color: Colors.grey,
-                        thickness: 1.2,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: (){
-                        _selectTime(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Date'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                _selectDate(context);
-              },
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xffBCBCBC)),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
-                    ),
-                    Container(
-                      height: 50,
-                      child: const VerticalDivider(
-                        color: Colors.grey,
-                        thickness: 1.2,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: (){
-                        _selectDate(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'valueOfProduct'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              child: TextFormField(
-                onTapOutside: (event) {
-                  FocusScope.of(context).unfocus();
-                },
-                focusNode: productValueFocusNode,
-                controller: productController,
-                decoration: InputDecoration(
-                  hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    borderSide: const BorderSide(
-                      color: Color(0xffBCBCBC),
-                      width: 1.0, // Border width
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    borderSide: const BorderSide(
-                      color: Color(0xffBCBCBC),
-                      width: 1.0, // Border width
-                    ),
-                  ),
-                ),keyboardType: TextInputType.number,
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'loadType'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: LoadTypeDropdown(
-                selectedName: selectedTypeName,
-                selectedLoad: selectedLoad,
-                onLoadChanged: (newValue) async {
-                  setState(() {
-                    selectedLoad = newValue;
-                  });
-                  await Future.delayed(Duration(milliseconds: -1));
-                  if (productValueFocusNode.hasFocus) {
-                    productValueFocusNode.unfocus();
-                  }
-                },
-                fetchLoadsForSelectedType: fetchLoadsForSelectedType,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: isChecked,
-                    onChanged: _onCheckboxChanged,
-                    checkColor: Colors.white,
-                    activeColor: const Color(0xff6A66D1),
-                  ),
-                  Container(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'needAdditionalLabour'.tr(),
-                        style:
-                            TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isChecked)
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Column(
-                  children: [
-                    RadioListTile(
-                      title: const Text('1'),
-                      value: 1,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('2'),
-                      value: 2,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('3'),
-                      value: 3,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget UserBusStepTwo() {
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Time'.tr(),
+                'Time',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2659,7 +2304,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectTime(context),
-                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
                   ),
                   Container(
                     height: 50,
@@ -2674,7 +2319,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
                     ),
                   ),
                 ],
@@ -2684,10 +2329,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Date'.tr(),
+                'Date',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2732,10 +2377,245 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'valueOfProduct'.tr(),
+                'Value of product',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+            child: TextFormField(
+              onTapOutside: (event) {
+                FocusScope.of(context).unfocus();
+              },
+              focusNode: productValueFocusNode,
+              controller: productController,
+              decoration: InputDecoration(
+                hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
+                border: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC), // Border color
+                    width: 1.0, // Border width
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC), // Border color when enabled
+                    width: 1.0, // Border width
+                  ),
+                ),
+              ),keyboardType: TextInputType.number,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Load type',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+            child: LoadTypeDropdown(
+              selectedName: selectedTypeName,
+              selectedLoad: selectedLoad,
+              onLoadChanged: (newValue) async {
+                setState(() {
+                  selectedLoad = newValue;
+                });
+                await Future.delayed(Duration(milliseconds: -1));
+                if (productValueFocusNode.hasFocus) {
+                  productValueFocusNode.unfocus();
+                }
+              },
+              fetchLoadsForSelectedType: fetchLoadsForSelectedType,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isChecked,
+                  onChanged: _onCheckboxChanged,
+                  checkColor: Colors.white,
+                  activeColor: const Color(0xff6A66D1),
+                ),
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Need Additional Labour',
+                      style:
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isChecked)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: const Text('1'),
+                    value: 1,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('2'),
+                    value: 2,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('3'),
+                    value: 3,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserBusStepTwo() {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Time',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: (){
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                  ),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: (){
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Date',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: (){
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                  ),
+                  Container(
+                    height: 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: (){
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Value of product',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2779,12 +2659,12 @@ class _CreateBookingState extends State<CreateBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: Padding(
+                  child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'needAdditionalLabour'.tr(),
+                      'Need Additional Labour',
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2843,10 +2723,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'fromTime'.tr(),
+                'From Time',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2886,10 +2766,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'toTime'.tr(),
+                'To Time',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2929,10 +2809,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'startingDate'.tr(),
+                'Starting Date',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2981,12 +2861,12 @@ class _CreateBookingState extends State<CreateBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: Padding(
+                  child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'needAdditionalLabour'.tr(),
+                      'Need Additional Labour',
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -3045,10 +2925,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'fromTime'.tr(),
+                'From Time',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3088,10 +2968,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'toTime'.tr(),
+                'To Time',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3131,10 +3011,10 @@ class _CreateBookingState extends State<CreateBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'startingDate'.tr(),
+                'Starting Date',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3183,12 +3063,12 @@ class _CreateBookingState extends State<CreateBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: Padding(
+                  child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'needAdditionalLabour'.tr(),
+                      'Need Additional Labour',
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -3250,11 +3130,11 @@ class _CreateBookingState extends State<CreateBooking> {
       String additionalLabour,
       ) {
     return  GestureDetector(
-       onTap: () {
-          setState(() {
+      onTap: () {
+        setState(() {
           _dismissSuggestions();
-          });
-        },
+        });
+      },
       child: SingleChildScrollView(
         child: Center(
           child: Stack(
@@ -3285,171 +3165,172 @@ class _CreateBookingState extends State<CreateBooking> {
                   padding: const EdgeInsets.only(left: 30, right: 30),
                   child: Column(
                     children: [
-                    Card(
-                    color: Colors.white,
-                    child: Column(
-                      children: [
-                        Row(
+                      Card(
+                        color: Colors.white,
+                        child: Column(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(10,17,10,10),
-                              child: CircleAvatar(
-                                backgroundColor: Color(0xff009E10),
-                                minRadius: 6,
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: 40,
-                                child: TextFormField(
-                                  textCapitalization: TextCapitalization.sentences,
-                                  onChanged: (value) => _fetchSuggestions(value, -1, true),
-                                  controller: pickUpController,
-                                  decoration: InputDecoration(
-                                    suffixIcon: Padding(
-                                      padding: const EdgeInsets.only(right: 8,top: 5),
-                                      child: Tooltip(
-                                        message: 'Locate Current Location'.tr(),
-                                        child: IconButton(
-                                            onPressed: ()async{
-                                              FocusScope.of(context).unfocus();
-                                              await locateCurrentPosition();
-                                            },
-                                            icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
-                                      ),
-                                    ),
-                                    hintText: 'Pick Up'.tr(),
-                                    hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                    border: InputBorder.none,
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xff009E10),
+                                    minRadius: 6,
                                   ),
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            height: 200,
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            child: ListView.builder(
-                              itemCount: _pickUpSuggestions.length + 1,
-                              itemBuilder: (context, index) {
-                                if (index == 0) {
-
-                                  return ListTile(
-                                    title: Row(
-                                      children: [
-                                        Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                          child: Text('Current Location'.tr()),
-                                        ),
-                                        isLocating ? Container(
-                                          height: 15,
-                                          width: 15,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                Expanded(
+                                  child: Container(
+                                    height: 40,
+                                    child: TextFormField(
+                                      textCapitalization: TextCapitalization.sentences,
+                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
+                                      controller: pickUpController,
+                                      decoration: InputDecoration(
+                                        suffixIcon: Padding(
+                                          padding: const EdgeInsets.only(right: 8,top: 5),
+                                          child: Tooltip(
+                                            message: 'Locate Current Location',
+                                            child: IconButton(
+                                                onPressed: ()async{
+                                                  FocusScope.of(context).unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
-                                        ):Container()
-                                      ],
-                                    ),
-                                      onTap: () async {
-                                        await currentPositionSuggestion();
-                                    },
-                                  );
-                                } else {
-                                  return ListTile(
-                                    title: Text(_pickUpSuggestions[index - 1]),
-                                    onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                        const Divider(
-                          indent: 5,
-                          endIndent: 5,
-                        ),
-                        ..._dropPointControllers.asMap().entries.map((entry) {
-                          int i = entry.key;
-                          TextEditingController controller = entry.value;
-                          return Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,10,5,10),
-                                    child: CircleAvatar(
-                                      backgroundColor: Color(0xffE20808),
-                                      minRadius: 6,
+                                        ),
+                                        hintText: 'Pick up',
+                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        border: InputBorder.none,
+                                      ),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Container(
-                                      height: 43,
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: TextFormField(
-                                        textCapitalization: TextCapitalization.sentences,
-                                        onChanged: (value) => _fetchSuggestions(value, i, false),
-                                        controller: controller,
-                                        decoration: InputDecoration(
-                                          isDense: true,
-                                          hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                          hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                                          border: InputBorder.none,
-                                          suffixIcon: i == _dropPointControllers.length - 1
-                                              ? Padding(
+                                ),
+                              ],
+                            ),
+                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                height: 200,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ListView.builder(
+                                  itemCount: _pickUpSuggestions.length + 1,  // +1 to include the "Current Location"
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      // Show "Current Location" as the first suggestion
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                              child: Text('Current Location'),
+                                            ),
+                                            isLocating ? Container(
+                                              height: 15,
+                                              width: 15,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ):Container()
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          await currentPositionSuggestion();
+                                        },
+                                      );
+                                    } else {
+                                      // Show other suggestions from the list
+                                      return ListTile(
+                                        title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
+                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            const Divider(
+                              indent: 5,
+                              endIndent: 5,
+                            ),
+                            ..._dropPointControllers.asMap().entries.map((entry) {
+                              int i = entry.key;
+                              TextEditingController controller = entry.value;
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color(0xffE20808),
+                                          minRadius: 6,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: 43,
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextFormField(
+                                            textCapitalization: TextCapitalization.sentences,
+                                            onChanged: (value) => _fetchSuggestions(value, i, false),
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              hintText: 'Drop Point ${i + 1}',
+                                              hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                              border: InputBorder.none,
+                                              suffixIcon: i == _dropPointControllers.length - 1
+                                                  ? Padding(
                                                 padding: const EdgeInsets.only(right: 15),
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.end,
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                if (_dropPointControllers.length > 1)
-                                                  GestureDetector(
-                                                    onTap: () => _removeTextField(i),
-                                                    child: Icon(Icons.cancel_outlined, color: Colors.red),
-                                                  ),
-                                                if (_dropPointControllers.length == 1)
-                                                  GestureDetector(
-                                                    onTap: _addTextField,
-                                                    child: Icon(Icons.add_circle_outline_sharp),
-                                                  ),
+                                                    if (_dropPointControllers.length > 1)
+                                                      GestureDetector(
+                                                        onTap: () => _removeTextField(i),
+                                                        child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                      ),
+                                                    if (_dropPointControllers.length == 1)
+                                                      GestureDetector(
+                                                        onTap: _addTextField,
+                                                        child: Icon(Icons.add_circle_outline_sharp),
+                                                      ),
                                                   ],
                                                 ),
                                               )
-                                              : null,
+                                                  : null,
+                                            ),
+                                          ),
                                         ),
                                       ),
+                                    ],
+                                  ),
+                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      height: 200,
+                                      child: ListView.builder(
+                                        itemCount: _dropPointSuggestions[i]!.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_dropPointSuggestions[i]![index]),
+                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
+                                  if (i < _dropPointControllers.length - 1)
+                                    Divider(
+                                      indent: 5,
+                                      endIndent: 5,
+                                    ),
                                 ],
-                              ),
-                              if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
-                                Container(
-                                  padding: EdgeInsets.all(8),
-                                  height: 200,
-                                  child: ListView.builder(
-                                    itemCount: _dropPointSuggestions[i]!.length,
-                                    itemBuilder: (context, index) {
-                                      return ListTile(
-                                        title: Text(_dropPointSuggestions[i]![index]),
-                                        onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              if (i < _dropPointControllers.length - 1)
-                                Divider(
-                                  indent: 5,
-                                  endIndent: 5,
-                                ),
-                            ],
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ),
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SizedBox(
@@ -3466,8 +3347,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               FocusScope.of(context).unfocus();
                               _fetchCoordinates();
                             },
-                            child: Text(
-                              'getDirection'.tr(),
+                            child: const Text(
+                              'Get Location',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -3549,7 +3430,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8,top: 5),
                                           child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                            message: 'Locate Current Location',
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3558,7 +3439,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'Pick Up'.tr(),
+                                        hintText: 'Pick up',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3583,7 +3464,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                             Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                             Padding(
                                               padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                              child: Text('Current Location'.tr()),
+                                              child: Text('Current Location'),
                                             ),
                                             isLocating ? Container(
                                               height: 15,
@@ -3636,7 +3517,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                             controller: controller,
                                             decoration: InputDecoration(
                                               isDense: true,
-                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
+                                              hintText: 'Drop Point ${i + 1}',
                                               hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                               border: InputBorder.none,
                                               suffixIcon: i == _dropPointControllers.length - 1
@@ -3707,8 +3588,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               FocusScope.of(context).unfocus();
                               _fetchCoordinates();
                             },
-                            child: Text(
-                              'getDirection'.tr(),
+                            child: const Text(
+                              'Get Location',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -3781,7 +3662,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                            message: 'Locate Current Location',
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3790,7 +3671,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'enterCityName'.tr(),
+                                        hintText: 'Enter city name',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3815,7 +3696,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                           Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                           Padding(
                                             padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'.tr()),
+                                            child: Text('Current Location'),
                                           ),
                                           isLocating ? Container(
                                             height: 15,
@@ -3855,7 +3736,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      hintText: 'enterYourAddress'.tr(),
+                                      hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
@@ -3899,8 +3780,8 @@ class _CreateBookingState extends State<CreateBooking> {
                             FocusScope.of(context).unfocus();
                             _fetchAddressCoordinates();
                           },
-                          child: Text(
-                            'getDirection'.tr(),
+                          child: const Text(
+                            'Get Location',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -3984,7 +3865,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                            message: 'Locate Current Location',
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3993,7 +3874,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'enterCityName'.tr(),
+                                        hintText: 'Enter city name',
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -4018,7 +3899,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                           Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                           Padding(
                                             padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'.tr()),
+                                            child: Text('Current Location'),
                                           ),
                                           isLocating ? Container(
                                             height: 15,
@@ -4058,7 +3939,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      hintText: 'enterYourAddress'.tr(),
+                                      hintText: 'Enter your address',
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
@@ -4102,8 +3983,8 @@ class _CreateBookingState extends State<CreateBooking> {
                             FocusScope.of(context).unfocus();
                             _fetchAddressCoordinates();
                           },
-                          child: Text(
-                            'getDirection'.tr(),
+                          child: const Text(
+                            'Get Location',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -4179,7 +4060,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
   @override
   void initState() {
     super.initState();
-    _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+    _loadTypesFuture =
+        widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
   }
 
   @override
@@ -4187,7 +4069,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedName != oldWidget.selectedName) {
       setState(() {
-        _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+        _loadTypesFuture =
+            widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
       });
     }
   }
@@ -4227,7 +4110,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                   Text(
                     (widget.selectedLoad?.isNotEmpty ?? false)
                         ? widget.selectedLoad!
-                        : 'loadType'.tr(),
+                        : 'Load type',
                     style: TextStyle(fontSize: 16),
                   ),
                   const Icon(Icons.arrow_drop_down,size: 26),
@@ -4236,16 +4119,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
               itemBuilder: (BuildContext context) {
                 return loadItems.map((LoadType load) {
                   return PopupMenuItem<String>(
-                    value: load.load.tr(),
-                    child: Directionality(
-                      textDirection: ui.TextDirection.ltr,
-                      child: Row(
-                        children: [
-                          Text(load.load.tr(),
-                              style: const TextStyle(fontSize: 16.0)),
-                        ],
-                      ),
-                    ),
+                    value: load.load,
+                    child: Text(load.load),
                   );
                 }).toList();
               },

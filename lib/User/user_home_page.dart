@@ -8,6 +8,7 @@ import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepTwo.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -31,6 +32,7 @@ class _UserHomePageState extends State<UserHomePage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          scrolledUnderElevation: 0,
           automaticallyImplyLeading: false,
           centerTitle: false,
           backgroundColor: Colors.white,
@@ -63,8 +65,8 @@ class _UserHomePageState extends State<UserHomePage> {
                       ),
                     );
                   },
-                  child: const Text(
-                    'Sign in',
+                  child: Text(
+                    'Sign in'.tr(),
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -81,68 +83,44 @@ class _UserHomePageState extends State<UserHomePage> {
                     )),
                 Stack(
                   children: [
-                    PopupMenuButton<Locale>(
-                      color: Colors.white,
-                      offset: const Offset(0, 55),
-                      icon: Icon(Icons.language, color: Colors.blue),
-                      onSelected: (Locale locale) {
-                        context.setLocale(locale);
-                      },
-                      itemBuilder: (BuildContext context) {
-                        // Determine the current locale
-                        Locale currentLocale = context.locale;
-                        // Set text direction based on current locale
-                        ui.TextDirection textDirection = ui.TextDirection.ltr;
-
-
-                        return <PopupMenuEntry<Locale>>[
-                          PopupMenuItem(
-                            value: Locale('en', 'US'),
-                            child: Text(
-                              'English',
-                              textDirection: textDirection,
+                    Directionality(
+                      textDirection: ui.TextDirection.ltr,
+                      child: PopupMenuButton<Locale>(
+                        color: Colors.white,
+                        offset: const Offset(0, 55),
+                        icon: Icon(Icons.language, color: Colors.blue),
+                        onSelected: (Locale locale) {
+                          context.setLocale(locale);
+                        },
+                        itemBuilder: (BuildContext context) {
+                          Locale currentLocale = context.locale;
+                          ui.TextDirection textDirection = ui.TextDirection.ltr;
+                          return <PopupMenuEntry<Locale>>[
+                            PopupMenuItem(
+                              value: Locale('en', 'US'),
+                              child: Text(
+                                'English'.tr(),
+                                textDirection: ui.TextDirection.ltr,
+                              ),
                             ),
-                          ),
-                          PopupMenuItem(
-                            value: Locale('ar', 'SA'),
-                            child: Text(
-                              'العربية',
-                              textDirection: textDirection,
+                            PopupMenuItem(
+                              value: Locale('ar', 'SA'),
+                              child: Text(
+                                'Arabic'.tr(),
+                                textDirection: textDirection ??ui.TextDirection.rtl,
+                              ),
                             ),
-                          ),
-                          PopupMenuItem(
-                            value: Locale('hi', 'IN'),
-                            child: Text(
-                              'हिन्दी',
-                              textDirection: textDirection,
+                            PopupMenuItem(
+                              value: Locale('hi', 'IN'),
+                              child: Text(
+                                'Hindi'.tr(),
+                                textDirection: ui.TextDirection.ltr,
+                              ),
                             ),
-                          ),
-                        ];
-                      },
-                    ),
-                    /*Positioned(
-                      right: 10,
-                      top: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: const Text(
-                          '1',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                          ];
+                        },
                       ),
-                    ),*/
+                    ),
                   ],
                 ),
               ],
@@ -170,9 +148,9 @@ class _UserHomePageState extends State<UserHomePage> {
               const Divider(),
               ListTile(
                 leading: Icon(FontAwesomeIcons.userGroup),
-                title: const Padding(
+                title: Padding(
                   padding: EdgeInsets.only(left: 15,top: 5),
-                  child: Text('Partner',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Partner'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context)=> PartnerHomePage(mobileNo: '', partnerName: '', password: '', partnerId: '', token: '')));
@@ -180,9 +158,9 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               ListTile(
                 leading: Icon(FontAwesomeIcons.car),
-                title: const Padding(
+                title: Padding(
                   padding: EdgeInsets.only(left: 15,top: 5),
-                  child: Text('Driver',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Driver'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverLogin()));
@@ -190,9 +168,9 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               ListTile(
                 leading: Icon(FontAwesomeIcons.phone),
-                title: const Padding(
+                title: Padding(
                   padding: EdgeInsets.only(left: 15,top: 5),
-                  child: Text('Contact us',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Contact us'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
 
@@ -200,9 +178,9 @@ class _UserHomePageState extends State<UserHomePage> {
               ),
               ListTile(
                 leading: SvgPicture.asset('assets/help_logo.svg'),
-                title: const Padding(
+                title: Padding(
                   padding: EdgeInsets.only(left: 13,top: 5),
-                  child: Text('Help',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                  child: Text('Help'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
@@ -463,7 +441,6 @@ class _UserHomePageState extends State<UserHomePage> {
                   },
                   child: SizedBox(
                     width: MediaQuery.sizeOf(context).width * 0.36,
-                    // height: MediaQuery.sizeOf(context).height * 0.21,
                     child: Card(
                       shape: RoundedRectangleBorder(
                         side: const BorderSide(color: Color(0xffACACAD), width: 1),
@@ -541,74 +518,77 @@ void _showModalBottomSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
-      return DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.70,
-        minChildSize: 0,
-        maxChildSize: 0.75,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return  Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16.0),
-            width: MediaQuery.sizeOf(context).width,
-            child: SingleChildScrollView(
-              child: Stack(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const Text(
-                        'How may we assist you?',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      return Directionality(
+        textDirection: ui.TextDirection.ltr,
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.70,
+          minChildSize: 0,
+          maxChildSize: 0.75,
+          builder: (BuildContext context, ScrollController scrollController) {
+            return  Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(16.0),
+              width: MediaQuery.sizeOf(context).width,
+              child: SingleChildScrollView(
+                child: Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'how_may_we_assist_you'.tr(),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text('please_select_service'.tr()),
+                        bottomCard('assets/vehicle.svg', 'Vehicle'.tr()),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Card(
+                      elevation: 5,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0), // Rounded corners
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0), // Border color
+                          width: 1, // Border width
+                        ),
                       ),
-                      const Text('Please select a service so that we can assist you'),
-                      bottomCard('assets/vehicle.svg', 'Vehicle'),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Card(
-                    elevation: 5,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0), // Rounded corners
-                      side: const BorderSide(
-                        color: Color(0xffE0E0E0), // Border color
-                        width: 1, // Border width
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset('assets/bus.png', width: 90, height: 70),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 50),
+                            child: Text('Bus'.tr(), style: TextStyle(fontSize: 20)),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.asset('assets/bus.png', width: 90, height: 70),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 50),
-                          child: Text('Bus', style: TextStyle(fontSize: 20)),
-                        ),
+                  ),
+                        bottomCard('assets/equipment.svg', 'Equipment'.tr()),
+                        bottomCard('assets/special.svg', 'Special'.tr()),
+                        bottomCard('assets/others.svg', 'Others'.tr()),
                       ],
                     ),
-                  ),
+                    Positioned(
+                      top: -15,
+                      right: -10,
+                      child: IconButton(
+                          alignment: Alignment.topRight,
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(FontAwesomeIcons.multiply)),
+                    ),
+                  ],
                 ),
-                      bottomCard('assets/equipment.svg', 'Equipment'),
-                      bottomCard('assets/special.svg', 'Special'),
-                      bottomCard('assets/others.svg', 'Others'),
-                    ],
-                  ),
-                  Positioned(
-                    top: -15,
-                    right: -10,
-                    child: IconButton(
-                        alignment: Alignment.topRight,
-                        onPressed: (){
-                          Navigator.pop(context);
-                        },
-                        icon: Icon(FontAwesomeIcons.multiply)),
-                  ),
-                ],
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       );
     },
   );

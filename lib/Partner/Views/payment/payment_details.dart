@@ -96,7 +96,6 @@ class _PaymentDetailsState extends State<PaymentDetails> {
         return bookings.where((booking) => booking['paymentStatus'] == 'NotPaid' || booking['paymentStatus'] == 'Pending' || booking['paymentStatus'] == 'HalfPaid').toList();
       }
     return bookings;
-    // return bookings.where((booking) => booking['paymentStatus'] == _currentFilter).toList();
   }
 
   void _updateFilter(String filter) {
@@ -258,6 +257,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           child: Column(
             children: [
               AppBar(
+                scrolledUnderElevation: 0,
                 toolbarHeight: 80,
                 automaticallyImplyLeading: false,
                 backgroundColor: const Color(0xffA09CEC),
