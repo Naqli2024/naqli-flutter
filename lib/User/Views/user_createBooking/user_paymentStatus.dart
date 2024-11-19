@@ -1,21 +1,19 @@
 import 'dart:convert';
-
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
+import 'dart:ui' as ui;
 
 class NewBooking extends StatefulWidget {
   final String token;
@@ -41,67 +39,83 @@ class _NewBookingState extends State<NewBooking> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        showLeading: false,
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          showLeading: false,
           userId: widget.id,
-      ),
-      body: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                    top: MediaQuery.sizeOf(context).height * 0.17),
-                child: SvgPicture.asset('assets/createBooking.svg'),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 60, bottom: 30),
-                child: Text(
-                  "Looks like you don't have any booking\nyet. Start by creating your first booking",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        body: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                          onTap: (){
+                            Navigator.pop(context);
+                          },
+                          child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply,size: 20,))),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.07,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6A66D1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: MediaQuery.sizeOf(context).height * 0.17),
+                  child: SvgPicture.asset('assets/createBooking.svg'),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 60, bottom: 30),
+                  child: Text(
+                    "${"Looks like you don't have any booking".tr()}\n${'yet. Start by creating your New booking'.tr()}",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.07,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6A66D1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => UserType(
-                                token: widget.token,
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                id: widget.id,email: widget.email,)),
-                      );
-                    },
-                    child: const Text(
-                      'Create Booking',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UserType(
+                                  token: widget.token,
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  id: widget.id,email: widget.email,)),
+                        );
+                      },
+                      child: Text(
+                        'createBooking'.tr(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -185,7 +199,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
           partnerData = data;
         });
       } else {
-        // If the data is empty, log it
         print('No partner data available');
       }
     } catch (e) {
@@ -530,181 +543,184 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        showLeading: false
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async{
-          await fetchPartnerData();
-        },
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    height: MediaQuery.sizeOf(context).height * 0.4,
-                    child: GoogleMap(
-                      onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;
-                      },
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(0, 0), // Default position
-                        zoom: 1,
-                      ),
-                      markers: markers,
-                      polylines: polylines,
-                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                        Factory<OneSequenceGestureRecognizer>(
-                              () => EagerGestureRecognizer(),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          showLeading: false
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async{
+            await fetchPartnerData();
+          },
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      height: MediaQuery.sizeOf(context).height * 0.4,
+                      child: GoogleMap(
+                        onMapCreated: (GoogleMapController controller) {
+                          mapController = controller;
+                        },
+                        initialCameraPosition: const CameraPosition(
+                          target: LatLng(0, 0), // Default position
+                          zoom: 1,
                         ),
-                      },
+                        markers: markers,
+                        polylines: polylines,
+                        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                          Factory<OneSequenceGestureRecognizer>(
+                                () => EagerGestureRecognizer(),
+                          ),
+                        },
+                      ),
                     ),
-                  ),
-                  Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Container(
-                              child: GestureDetector(
-                                  onTap: (){
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
-                                      ),
-                                    );
-                                  },
-                                  child: const CircleAvatar(backgroundColor: Colors.white,child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
-                            ),
-                            Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(80),
-                              ),
-                              color: Colors.white,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 15),
-                                        child: SvgPicture.asset('assets/moving_truck.svg'),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Container(
-                                            alignment: Alignment.center,
-                                            // height: 50,
-                                            width:
-                                                MediaQuery.sizeOf(context).width *
-                                                    0.55,
-                                            child: Column(
-                                              children: [
-                                                Text('Booking Id'),
-                                                Text(widget.bookingId),
-                                              ],
-                                            )),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
+                    Positioned(
+                        top: 15,
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Container(
+                                child: GestureDetector(
+                                    onTap: (){
+                                      Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) =>
-                                                UserType(
-                                                  firstName: widget.firstName,
-                                                  lastName: widget.lastName,
-                                                  token: widget.token,
-                                                  id: widget.id,
-                                                  email: widget.email,
-                                                )));
-                                  },
-                                  icon: const Icon(FontAwesomeIcons.multiply)),
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * 0.03,
-                    left: 15,
-                    right: 15,
-                    bottom: 10),
-                child: Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    side: const BorderSide(
-                      color: Color(0xffE0E0E0), // Border color
-                      width: 1, // Border width
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15),
-                    child: partnerData == null
-                        ? Center(
-                            child: CircularProgressIndicator())
-                        : Column(
-                            children: [
-                              _buildDetailRow('Vendor name',
-                                  partnerData![0]['partnerName'] ?? 'Unknown'),
-                              Divider(),
-                              _buildDetailRow('Operator name',
-                                partnerData != null && partnerData!.isNotEmpty
-                                    ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                    ? (partnerData?[0]['operatorName'] ?? 'N/A')
-                                    : (partnerData?[0]['assignOperatorName'] ?? 'N/A'))
-                                    : 'No Data'),
-                              Divider(),
-                              _buildDetailRow('Operator mobile no',
-                                partnerData != null && partnerData!.isNotEmpty
-                                    ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                    ? (partnerData?[0]['mobileNo'] ?? 'N/A')
-                                    : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'))
-                                    : 'No Data',),
-                              Divider(),
-                              _buildDetailRow(
-                                  'Mode', partnerData![0]['mode'] ?? 'Unknown'),
-                              Divider(),
-                              _buildDetailRow('Booking status',
-                                  widget.bookingStatus),
+                                            builder: (context) => UserType(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)
+                                        ),
+                                      );
+                                    },
+                                    child: const CircleAvatar(backgroundColor: Colors.white,child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))),
+                              ),
+                              Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(80),
+                                ),
+                                color: Colors.white,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 15),
+                                          child: SvgPicture.asset('assets/moving_truck.svg'),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Container(
+                                              alignment: Alignment.center,
+                                              // height: 50,
+                                              width:
+                                                  MediaQuery.sizeOf(context).width *
+                                                      0.55,
+                                              child: Column(
+                                                children: [
+                                                  Text('Booking id'.tr()),
+                                                  Text(widget.bookingId),
+                                                ],
+                                              )),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  UserType(
+                                                    firstName: widget.firstName,
+                                                    lastName: widget.lastName,
+                                                    token: widget.token,
+                                                    id: widget.id,
+                                                    email: widget.email,
+                                                  )));
+                                    },
+                                    icon: const Icon(FontAwesomeIcons.multiply)),
+                              ),
                             ],
                           ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 15,bottom: 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 0),
-                      child: Text('Payment Successful' ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
-                    ),
+                        )),
                   ],
                 ),
-              )
-            ],
+                Container(
+                  margin: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * 0.03,
+                      left: 15,
+                      right: 15,
+                      bottom: 10),
+                  child: Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: const BorderSide(
+                        color: Color(0xffE0E0E0), // Border color
+                        width: 1, // Border width
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(15),
+                      child: partnerData == null
+                          ? Center(
+                              child: CircularProgressIndicator())
+                          : Column(
+                              children: [
+                                _buildDetailRow('Vendor Name'.tr(),
+                                    partnerData?[0]['partnerName'] ?? 'no_data'.tr()),
+                                Divider(),
+                                _buildDetailRow('Operator Name'.tr(),
+                                  partnerData != null && partnerData!.isNotEmpty
+                                      ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                      ? (partnerData?[0]['operatorName'] ?? 'N/A')
+                                      : (partnerData?[0]['assignOperatorName'] ?? 'N/A'))
+                                      : 'no_data'.tr()),
+                                Divider(),
+                                _buildDetailRow('Operator Mobile'.tr(),
+                                  partnerData != null && partnerData!.isNotEmpty
+                                      ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                      ? (partnerData?[0]['mobileNo'] ?? 'N/A')
+                                      : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'))
+                                      : 'no_data'.tr()),
+                                Divider(),
+                                _buildDetailRow(
+                                    'Mode'.tr(), partnerData?[0]['mode'] ?? 'no_data'.tr()),
+                                Divider(),
+                                _buildDetailRow('Booking Status'.tr(),
+                                    widget.bookingStatus.tr()),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 15,bottom: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 0),
+                        child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),

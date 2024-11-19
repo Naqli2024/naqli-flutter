@@ -8,6 +8,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 
@@ -149,8 +150,6 @@ class CommonWidgets {
                                   ),
                                 ),
                               );
-
-                              // Add a divider after each notification except the last one
                               if (i < notifications.length - 1) {
                                 menuItems.add(const PopupMenuDivider());
                               }
@@ -178,7 +177,6 @@ class CommonWidgets {
                       }
                     },
                   ),
-                  // Display the count of notifications
                   Positioned(
                     right: 8,
                     top: 4,
@@ -226,9 +224,10 @@ class CommonWidgets {
   }
 
   Drawer createDrawer(BuildContext context,
-      {VoidCallback? onBookingPressed,
-        String? partnerName,
-        String? partnerId,
+      String partnerId,
+      String partnerName,
+      {VoidCallback? onEditProfilePressed,
+        VoidCallback? onBookingPressed,
         VoidCallback? onPaymentPressed,
         VoidCallback? onReportPressed,
         VoidCallback? onHelpPressed}) {
@@ -237,30 +236,32 @@ class CommonWidgets {
       child: ListView(
         children: <Widget>[
           ListTile(
+            leading: CircleAvatar(
+              child: Icon(Icons.person,color: Colors.grey,size: 30),
+            ),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SvgPicture.asset('assets/naqlee-logo.svg',
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.05),
-                GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: const CircleAvatar(
-                        child: Icon(FontAwesomeIcons.multiply)))
+                Text(partnerName,
+                  style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                Icon(Icons.edit,color: Colors.grey,size: 20),
               ],
             ),
+            subtitle: Text(partnerId,
+              style: TextStyle(color: Color(0xff8E8D96),
+              ),),
+            onTap: onEditProfilePressed,
           ),
-          const Divider(),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Divider(),
+          ),
           ListTile(
               leading: SvgPicture.asset('assets/booking_logo.svg'),
-              title: const Padding(
+              title: Padding(
                 padding: EdgeInsets.only(left: 15),
                 child: Text(
-                  'Booking',
+                  'booking'.tr(),
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -268,30 +269,30 @@ class CommonWidgets {
           ),
           ListTile(
               leading: SvgPicture.asset('assets/payment_logo.svg'),
-              title: const Padding(
+              title: Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: Text(
-                  'Payment',
+                  'payment'.tr(),
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
               ),
               onTap: onPaymentPressed),
           ListTile(
               leading: SvgPicture.asset('assets/report_logo.svg'),
-              title: const Padding(
+              title: Padding(
                 padding: EdgeInsets.only(left: 15),
                 child: Text(
-                  'Report',
+                  'report'.tr(),
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                 ),
               ),
               onTap: onReportPressed),
           ListTile(
             leading: SvgPicture.asset('assets/help_logo.svg'),
-            title: const Padding(
+            title: Padding(
               padding: EdgeInsets.only(left: 10),
               child: Text(
-                'Help',
+                'help'.tr(),
                 style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
             ),
@@ -303,10 +304,10 @@ class CommonWidgets {
               color: Colors.red,
               size: 30,
             ),
-            title: const Padding(
+            title: Padding(
               padding: EdgeInsets.only(left: 10),
               child: Text(
-                'Logout',
+                'logout'.tr(),
                 style: TextStyle(fontSize: 25,
                     fontWeight: FontWeight.bold,
                     color: Colors.red),
@@ -325,50 +326,53 @@ class CommonWidgets {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          backgroundColor: Colors.white,
-          contentPadding: const EdgeInsets.all(20),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 30, bottom: 10),
-                child: Text(
-                  'Are you sure you want to logout?',
-                  style: TextStyle(fontSize: 19),
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.all(20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 30, bottom: 10),
+                  child: Text(
+                    'are_you_sure_you_want_to_logout'.tr(),
+                    style: TextStyle(fontSize: 19),
+                  ),
                 ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('yes'.tr()),
+                onPressed: () async {
+                  await clearPartnerData();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const LoginPage(
+                          partnerName: '',
+                          mobileNo: '',
+                          password: '',
+                          token: '',
+                          partnerId: '',
+                        )),
+                  );
+                },
+              ),
+              TextButton(
+                child: Text('no'.tr()),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () async {
-                await clearPartnerData();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                      const LoginPage(
-                        partnerName: '',
-                        mobileNo: '',
-                        password: '',
-                        token: '',
-                        partnerId: '',
-                      )),
-                );
-              },
-            ),
-            TextButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -406,14 +410,8 @@ class CommonWidgets {
                   padding: const EdgeInsets.only(left: 10),
                   child: SvgPicture.asset(
                     'assets/generated_logo.svg',
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width,
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height * 0.1,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height * 0.1,
                   ),
                 ),
               ),
@@ -435,7 +433,7 @@ class CommonWidgets {
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
                 child: Text(
-                  'Booking Generated',
+                  'Booking Generated'.tr(),
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -443,7 +441,7 @@ class CommonWidgets {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Text(
-                  'Booking id $bookingId',
+                  '${'Booking id'.tr()} $bookingId',
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
@@ -460,6 +458,8 @@ class CommonWidgets {
         String? hintText,
         String? labelText,
         bool obscureText = false,
+        bool readOnly = false,
+        FontWeight fontWeight = FontWeight.w500,
         Widget? suffixIcon,
         TextEditingController? passwordController,
       }) {
@@ -472,13 +472,14 @@ class CommonWidgets {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               label,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 20, fontWeight: fontWeight),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
           child: TextFormField(
+            readOnly: readOnly,
             textCapitalization: label != 'Email ID' && label != 'Email Address' && label != 'Password' && label != 'Confirm Password'?TextCapitalization.sentences:TextCapitalization.none,
             controller: controller,
             focusNode: focusNode,
@@ -534,20 +535,22 @@ class CommonWidgets {
   }
 
   Widget buildBottomNavigationBar({
+    required BuildContext context,
     required int selectedIndex,
     required Function(int) onTabTapped,
   }) {
     return BottomAppBar(
+      height: MediaQuery.sizeOf(context).height * 0.1,
       color: Colors.white,
       elevation: 20,
       shadowColor: Colors.black,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildTabItem(0, 'assets/home.svg', 25, 'Home', selectedIndex, onTabTapped),
-          _buildTabItem(1, 'assets/booking_manager.svg', 26, 'Booking manager', selectedIndex, onTabTapped),
-          _buildTabItem(2, 'assets/payment.svg', 26, 'Payment', selectedIndex, onTabTapped),
-          _buildTabItem(3, 'assets/profile.svg', 26, 'Profile', selectedIndex, onTabTapped),
+          _buildTabItem(0, 'assets/home.svg', 25, 'Home'.tr(), selectedIndex, onTabTapped),
+          _buildTabItem(1, 'assets/booking_manager.svg', 26, 'Booking Manager'.tr(), selectedIndex, onTabTapped),
+          _buildTabItem(2, 'assets/payment.svg', 26, 'payment'.tr(), selectedIndex, onTabTapped),
+          _buildTabItem(3, 'assets/profile.svg', 26, 'Profile'.tr(), selectedIndex, onTabTapped),
         ],
       ),
     );

@@ -174,14 +174,9 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         print('Success');
-        Fluttertoast.showToast(
-          msg: 'OTP Send Successfully',
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0,
+        final message = responseBody['message'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
         );
       } else {
         final message = responseBody['message'];
@@ -1269,14 +1264,14 @@ class UserService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
-        final message = responseBody['message']; // Fixed type issue
+        final message = responseBody['message'];
         commonWidgets.showToast(message);
 
         if (responseBody.containsKey('booking')) {
           final booking = responseBody['booking'];
-          final String bookingId = booking['_id']; // Extracting the booking ID
+          final String bookingId = booking['_id'];
           print('Fetched pending bookingId: $bookingId');
-          return bookingId; // Return the extracted bookingId
+          return bookingId;
         } else {
           print('No booking found in the response');
           return null;

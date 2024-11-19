@@ -4,11 +4,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 Future<void> savePartnerData(String partnerId, String token, String partnerName, String email) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('partnerId', partnerId);
-  await prefs.setString('token', token);
-  await prefs.setString('partnerName', partnerName);
-  await prefs.setString('email', email);
+  try{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('partnerId', partnerId);
+    await prefs.setString('token', token);
+    await prefs.setString('partnerName', partnerName);
+    await prefs.setString('email', email);
+    print('PartnerData saved: partnerName=$partnerName, token=$token, id=$partnerId, email=$email');
+  }
+  catch (e) {
+    print('Error saving partnerData: $e');
+  }
 }
 
 Future<Map<String, String?>> getSavedPartnerData() async {

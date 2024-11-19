@@ -1,30 +1,26 @@
-import 'dart:developer';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/Partner/Views/auth/login.dart';
-import 'package:flutter_naqli/Partner/Views/auth/register.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 
-class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({super.key});
+class DriverForgotPassword extends StatefulWidget {
+  const DriverForgotPassword({super.key});
 
   @override
-  State<ForgotPassword> createState() => _ForgotPasswordState();
+  State<DriverForgotPassword> createState() => _DriverForgotPasswordState();
 }
 
-class _ForgotPasswordState extends State<ForgotPassword> {
+class _DriverForgotPasswordState extends State<DriverForgotPassword> {
   final otpKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  final DriverService driverService = DriverService();
   final CommonWidgets commonWidgets = CommonWidgets();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController forgotPasswordEmailController = TextEditingController();
-  final TextEditingController forgotPasswordController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isLoading = false;
@@ -101,10 +97,9 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               setState(() {
                                 isLoading = true;
                               });
-                              await _authService.forgotPassword(
+                              await driverService.driverForgotPassword(
                                 context,
-                                    (context) => ResetPassword(email: emailController.text,),
-                                email: emailController.text,
+                                emailAddress: emailController.text,
                               );
                               setState(() {
                                 isLoading = false;
@@ -126,7 +121,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       onTap: (){
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                          MaterialPageRoute(builder: (context) => DriverLogin()),
                         );
                       },
                       child: Padding(
@@ -156,20 +151,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 }
 
 
-class ResetPassword extends StatefulWidget {
-  final String email;
-  const ResetPassword({super.key, required this.email});
+class DriverResetPassword extends StatefulWidget {
+  final String emailAddress;
+  const DriverResetPassword({super.key, required this.emailAddress});
 
   @override
-  State<ResetPassword> createState() => _ResetPasswordState();
+  State<DriverResetPassword> createState() => _DriverResetPasswordState();
 }
 
-class _ResetPasswordState extends State<ResetPassword> {
+class _DriverResetPasswordState extends State<DriverResetPassword> {
   final passwordKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  final DriverService driverService = DriverService();
   final CommonWidgets commonWidgets = CommonWidgets();
-  final TextEditingController forgotPasswordEmailController = TextEditingController();
-  final TextEditingController forgotPasswordController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final List<TextEditingController> otpControllers = List.generate(6, (_) => TextEditingController());
   bool isNewPasswordObscured = true;
@@ -291,7 +285,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => SetNewPassword(otp: otp),
+                                      builder: (context) => DriverSetNewPassword(otp: otp),
                                     ),
                                   );
                                 }
@@ -323,9 +317,9 @@ class _ResetPasswordState extends State<ResetPassword> {
                                     for (var controller in otpControllers) {
                                       controller.clear();
                                     }
-                                    await _authService.forgotPasswordResendOTP(
+                                    await driverService.driverForgotPasswordResendOTP(
                                         context,
-                                        email: widget.email);
+                                        emailAddress: widget.emailAddress);
                                   },
                               ),
                             ],
@@ -335,7 +329,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                           onTap: (){
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                              MaterialPageRoute(builder: (context) => DriverLogin()),
                             );
                           },
                           child: Padding(
@@ -365,17 +359,17 @@ class _ResetPasswordState extends State<ResetPassword> {
   }
 }
 
-class SetNewPassword extends StatefulWidget {
+class DriverSetNewPassword extends StatefulWidget {
   final String otp;
-  const SetNewPassword({super.key, required this.otp});
+  const DriverSetNewPassword({super.key, required this.otp});
 
   @override
-  State<SetNewPassword> createState() => _SetNewPasswordState();
+  State<DriverSetNewPassword> createState() => _DriverSetNewPasswordState();
 }
 
-class _SetNewPasswordState extends State<SetNewPassword> {
+class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
   final passwordKey = GlobalKey<FormState>();
-  final AuthService _authService = AuthService();
+  final DriverService driverService = DriverService();
   final CommonWidgets commonWidgets = CommonWidgets();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
@@ -475,10 +469,11 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                               ),
                               onPressed: () async{
                                 if (passwordKey.currentState!.validate()) {
+                                  String otp = otpControllers.map((controller) => controller.text).join();
                                   setState(() {
                                     isLoading = true;
                                   });
-                                  await _authService.forgotPasswordReset(
+                                  await driverService.driverForgotPasswordReset(
                                       context,
                                       otp: widget.otp,
                                       newPassword: passwordController.text,
@@ -505,7 +500,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                           onTap: (){
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                              MaterialPageRoute(builder: (context) => DriverLogin()),
                             );
                           },
                           child: Padding(
@@ -536,14 +531,14 @@ class _SetNewPasswordState extends State<SetNewPassword> {
 }
 
 
-class ForgotPasswordSuccess extends StatefulWidget {
-  const ForgotPasswordSuccess({super.key});
+class DriverForgotPasswordSuccess extends StatefulWidget {
+  const DriverForgotPasswordSuccess({super.key});
 
   @override
-  State<ForgotPasswordSuccess> createState() => _ForgotPasswordSuccessState();
+  State<DriverForgotPasswordSuccess> createState() => _DriverForgotPasswordSuccessState();
 }
 
-class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
+class _DriverForgotPasswordSuccessState extends State<DriverForgotPasswordSuccess> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -552,6 +547,7 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           scrolledUnderElevation: 0,
+          centerTitle: false,
           backgroundColor: Colors.white,
           automaticallyImplyLeading: false,
           title: Padding(
@@ -602,8 +598,7 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),);
+                              builder: (context) => DriverLogin()));
                     },
                     child: Text(
                       'Continue'.tr(),

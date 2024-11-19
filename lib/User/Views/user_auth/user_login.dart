@@ -292,21 +292,6 @@ class _UserLoginState extends State<UserLogin> {
                                             ),
                                           ),
                                         ),
-                                        GestureDetector(
-                                          onTap: () {
-
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.only(top: 7,bottom: 10),
-                                            child: Text(
-                                              'Use without Login'.tr(),
-                                              style: TextStyle(
-                                                color: Color(0xff6A66D1),
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),

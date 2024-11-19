@@ -3,26 +3,19 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
-import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
-import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
-import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
-import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
-import 'package:flutter_naqli/main.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 
 class UserType extends StatefulWidget {
@@ -88,7 +81,6 @@ class _UserTypeState extends State<UserType> {
     String? bookingId = data['_id'];
     final String? token = data['token'];
 
-    // If bookingId is null, call getPaymentPendingBooking API
     if (bookingId == null || token == null) {
       print('No bookingId found, fetching pending booking details.');
 
@@ -144,21 +136,36 @@ class _UserTypeState extends State<UserType> {
           backgroundColor: Colors.white,
           child: ListView(
             children: <Widget>[
-              ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SvgPicture.asset('assets/naqlee-logo.svg',
-                        height: MediaQuery.of(context).size.height * 0.05),
-                    GestureDetector(
-                        onTap: (){
-                          Navigator.pop(context);
-                        },
-                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                  ],
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                    ),
+                  );
+                },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.person,color: Colors.grey,size: 30),
+                  ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(widget.firstName +' '+ widget.lastName,
+                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                      Icon(Icons.edit,color: Colors.grey,size: 20),
+                    ],
+                  ),
+                  subtitle: Text(widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96),
+                    ),),
                 ),
               ),
-              const Divider(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Divider(),
+              ),
               ListTile(
                   leading: SvgPicture.asset('assets/booking_logo.svg'),
                   title: Padding(
@@ -178,10 +185,10 @@ class _UserTypeState extends State<UserType> {
                             builder: (context) => ChooseVendor(
                               id: widget.id,
                               bookingId: bookingData['_id'] ?? '',
-                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : 'N/A',
+                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : 'N/A'.tr(),
                               unitType: bookingData['unitType'] ?? '',
                               unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? 'N/A' : 'N/A',
-                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : 'N/A',
+                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : 'N/A'.tr(),
                               unit: bookingData['name'] ?? '',
                               pickup: bookingData['pickup'] ?? '',
                               dropPoints: bookingData['dropPoints'] ?? [],
@@ -346,6 +353,7 @@ class _UserTypeState extends State<UserType> {
                   child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
+
                 },
               ),
               ListTile(

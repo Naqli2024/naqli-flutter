@@ -1,9 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepTwo.dart';
-
+import 'dart:ui' as ui;
 
 class StepOne extends StatefulWidget {
   final String partnerName;
@@ -45,7 +46,7 @@ class _StepOneState extends State<StepOne> {
   bool istimaraError = false;
   bool vehicleError = false;
   bool isLoading = false;
-
+  int _currentStep = 1;
 
   String unitMap(int value) {
     switch (value) {
@@ -150,75 +151,94 @@ class _StepOneState extends State<StepOne> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.partnerName,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(70.0),
-          child: AppBar(
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: const Text(
-              'Operator/Owner',
-              style: TextStyle(color: Colors.white),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(
-                Icons.arrow_back_sharp,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Form(
-        key: _formKey,
-        child: Container(
-          color: Colors.white,
-          child: SingleChildScrollView(
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.partnerName,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(125.0),
             child: Column(
               children: [
-                Container(
-                  margin: const EdgeInsets.fromLTRB(40, 20, 30, 5),
-                  alignment: Alignment.topLeft,
-                  child: const Text(
-                    'Select Unit',
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500
+                AppBar(
+                  scrolledUnderElevation: 0,
+                  centerTitle: false,
+                  automaticallyImplyLeading: false,
+                  backgroundColor: const Color(0xff6A66D1),
+                  title: Text(
+                    'Operator/Owner'.tr(),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  leading: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back_sharp,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                _buildUnitRadioList(),
-                _buildUnitClassificationDropdown(),
-                _buildSubClassificationDropdown(),
-                _buildTextField('Plate Information',plateInfoController),
-                commonWidgets.buildTextField('Istimara no',istimaraNoController),
-                _buildIstimaraFileUploadButton('Istimara Card'),
-                _buildVehicleFileUploadButton('Picture of Vehicle'),
-                Container(
-                  margin: const EdgeInsets.only(top:20,bottom: 20),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.057,
-                    width: MediaQuery.of(context).size.width * 0.55,
-                    child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildStep(1),
+                      _buildLine(),
+                      _buildStep(2),
+                      _buildLine(),
+                      _buildStep(3),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        body: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : Form(
+          key: _formKey,
+          child: Container(
+            color: Colors.white,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(40, 20, 30, 5),
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      'Select Unit'.tr(),
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500
+                      ),
+                    ),
+                  ),
+                  _buildUnitRadioList(),
+                  _buildUnitClassificationDropdown(),
+                  _buildSubClassificationDropdown(),
+                  _buildTextField('Plate Information'.tr(),plateInfoController),
+                  commonWidgets.buildTextField('Istimara No'.tr(),istimaraNoController),
+                  _buildIstimaraFileUploadButton('Istimara Card'.tr()),
+                  _buildVehicleFileUploadButton('Picture of Vehicle'.tr()),
+                  Container(
+                    margin: const EdgeInsets.only(top:20,bottom: 20),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.057,
+                      width: MediaQuery.of(context).size.width * 0.55,
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
-                        ),
-                        onPressed: () {
-                          if (!istimaraUpload && !vehicleUpload) {
+                          onPressed: () {
+                            if (!istimaraUpload && !vehicleUpload) {
                               istimaraError =true;
                               vehicleError =true;
                               setState(() {});
@@ -253,23 +273,56 @@ class _StepOneState extends State<StepOne> {
                                             token: widget.token,
                                           )));
                             }
-                        },
-                        child: const Text(
-                          'Next',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500),
-                        )),
+                          },
+                          child: Text(
+                            'Next'.tr(),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500),
+                          )),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildStep(int step) {
+    bool isActive = step == _currentStep;
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: isActive ? const Color(0xff6A66D1) : const Color(0xffACACAD),
+            width: 1),
+      ),
+      child: CircleAvatar(
+        radius: 20,
+        backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
+        child: Text(
+          step.toString(),
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLine() {
+    return Container(
+      width: 40,
+      height: 2,
+      color: Colors.grey,
+    );
+  }
+
 
   Widget _buildUnitRadioList() {
     return Column(
@@ -279,8 +332,8 @@ class _StepOneState extends State<StepOne> {
             left: MediaQuery.of(context).size.width * 0.04,
           ),
           child: RadioListTile(
-            title: const Text(
-              'Vehicle',
+            title: Text(
+              'Vehicle'.tr(),
             ),
             value: 1,
             groupValue: selectedUnit,
@@ -297,8 +350,8 @@ class _StepOneState extends State<StepOne> {
             left: MediaQuery.of(context).size.width * 0.04,
           ),
           child: RadioListTile(
-            title: const Text(
-              'Bus',
+            title: Text(
+              'Bus'.tr(),
             ),
             value: 2,
             groupValue: selectedUnit,
@@ -315,8 +368,8 @@ class _StepOneState extends State<StepOne> {
             left: MediaQuery.of(context).size.width * 0.04,
           ),
           child: RadioListTile(
-            title: const Text(
-              'Equipment',
+            title: Text(
+              'Equipment'.tr(),
             ),
             value: 3,
             groupValue: selectedUnit,
@@ -333,8 +386,8 @@ class _StepOneState extends State<StepOne> {
             left: MediaQuery.of(context).size.width * 0.04,
           ),
           child: RadioListTile(
-            title: const Text(
-              'Special',
+            title: Text(
+              'Special'.tr(),
             ),
             value: 4,
             groupValue: selectedUnit,
@@ -351,8 +404,8 @@ class _StepOneState extends State<StepOne> {
             left: MediaQuery.of(context).size.width * 0.04,
           ),
           child: RadioListTile(
-            title: const Text(
-              'Others',
+            title: Text(
+              'Others'.tr(),
             ),
             value: 5,
             groupValue: selectedUnit,
@@ -375,10 +428,10 @@ class _StepOneState extends State<StepOne> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8.0),
             child: Text(
-              'Unit Classification',
+              'Unit Classification'.tr(),
               style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w500
@@ -395,12 +448,21 @@ class _StepOneState extends State<StepOne> {
                 ),
               ),
               value: _selectedUnitClassification,
-              hint: const Text('Select Unit Classification'),
+              hint: Text('Select Unit Classification'.tr()),
               icon: const Icon(Icons.keyboard_arrow_down, size: 25),
               items: _unitClassifications.map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Container(color:Colors.white,child: Text(value)),
+                  child: Container(
+                      color:Colors.white,
+                      child: Directionality(
+                        textDirection: ui.TextDirection.ltr,
+                        child: Row(
+                          children: [
+                            Text(value.tr()),
+                          ],
+                        ),
+                      )),
                 );
               }).toList(),
               onChanged: (value) {
@@ -423,10 +485,10 @@ class _StepOneState extends State<StepOne> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8.0),
             child: Text(
-              'Sub Classification',
+              'Sub Classification'.tr(),
               style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w500
@@ -448,12 +510,19 @@ class _StepOneState extends State<StepOne> {
                   _selectedSubClassification = newValue;
                 });
               },
-              hint: const Text('No Data for Sub Classification'),
+              hint: Text('No Data for Sub Classification'.tr()),
               icon: const Icon(Icons.keyboard_arrow_down, size: 25),
               items: _subClassifications.map((subClass) {
                 return DropdownMenuItem<String>(
                   value: subClass,
-                  child: Text(subClass),
+                  child: Directionality(
+                    textDirection: ui.TextDirection.ltr,
+                    child: Row(
+                      children: [
+                        Text(subClass.tr()),
+                      ],
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -492,7 +561,7 @@ class _StepOneState extends State<StepOne> {
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter $label';
+                return '${'Please enter'.tr()} $label';
               }
               return null;
             },
@@ -524,7 +593,7 @@ class _StepOneState extends State<StepOne> {
           margin: const EdgeInsets.only(left: 40, bottom: 10),
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.065,
-            width: MediaQuery.of(context).size.width * 0.6,
+            width: MediaQuery.of(context).size.width * 0.8,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -547,7 +616,7 @@ class _StepOneState extends State<StepOne> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   const Expanded(
-                    flex: 2,
+                    flex: 1,
                     child: Icon(
                       Icons.file_upload_outlined,
                       color: Colors.black,
@@ -558,7 +627,7 @@ class _StepOneState extends State<StepOne> {
                     child: Text(
                       istimaraUpload
                           ? istimaraCardFile!.name
-                          : 'Upload a file',
+                          : 'Upload a file'.tr(),
                       style: const TextStyle(
                           color: Colors.black,
                           fontSize: 18,
@@ -574,8 +643,8 @@ class _StepOneState extends State<StepOne> {
           Container(
             margin: const EdgeInsets.only(left: 60, bottom: 20),
             alignment: Alignment.centerLeft,
-            child: const Text(
-              'Please upload a file',
+            child: Text(
+              'Please upload a file'.tr(),
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,
@@ -585,7 +654,6 @@ class _StepOneState extends State<StepOne> {
       ],
     );
   }
-
 
   Widget _buildVehicleFileUploadButton(String label) {
     return Column(
@@ -608,7 +676,7 @@ class _StepOneState extends State<StepOne> {
           margin: const EdgeInsets.only(left: 40, bottom: 5),
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.065,
-            width: MediaQuery.of(context).size.width * 0.6,
+            width: MediaQuery.of(context).size.width * 0.8,
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -631,7 +699,7 @@ class _StepOneState extends State<StepOne> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     const Expanded(
-                      flex: 2,
+                      flex: 1,
                       child: Icon(
                         Icons.file_upload_outlined,
                         color: Colors.black,
@@ -640,7 +708,7 @@ class _StepOneState extends State<StepOne> {
                     Expanded(
                       flex: 5,
                       child: Text(
-                        vehicleUpload?vehilePictureFile!.name:'Upload a file',
+                        vehicleUpload?vehilePictureFile!.name:'Upload a file'.tr(),
                         style: const TextStyle(
                             color: Colors.black,
                             fontSize: 18,
@@ -655,8 +723,8 @@ class _StepOneState extends State<StepOne> {
           Container(
             margin: const EdgeInsets.only(left: 60, bottom: 20),
             alignment: Alignment.centerLeft,
-            child: const Text(
-              'Please upload a file',
+            child: Text(
+              'Please upload a file'.tr(),
               style: TextStyle(
                 color: Colors.red,
                 fontSize: 12,

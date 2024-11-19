@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -26,6 +28,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:permission_handler/permission_handler.dart'as permissionHandler;
+import 'dart:ui' as ui;
 
 class SuperUserBooking extends StatefulWidget {
   final String firstName;
@@ -106,121 +109,159 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        userId: widget.id,
-        showLeading: true,
-        showLanguage: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            toolbarHeight: 80,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: Container(
-              alignment: Alignment.topLeft,
-              child: Column(
-                children: [
-                  Text(
-                    widget.isFromUserType != null
-                        ?'Create Booking'
-                        :'Get an estimate',
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
-                  Text(
-                    widget.isFromUserType != null
-                        ?'Step $_currentStep of 3 - booking'
-                        :'Step $_currentStep of 3',
-                    style: const TextStyle(color: Colors.white, fontSize: 17),
-                  ),
-                ],
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          userId: widget.id,
+          showLeading: true,
+          showLanguage: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              centerTitle: false,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff6A66D1),
+              title: Container(
+                alignment: Alignment.topLeft,
+                child: Column(
+                  children: [
+                    Text(
+                      widget.isFromUserType != null
+                          ?'createBooking'.tr()
+                          :'Get an estimate'.tr(),
+                      textAlign: TextAlign.left,
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                    Text(
+                      widget.isFromUserType != null
+                          ?'${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
+                          :'${'step'.tr()} $_currentStep ${'of 3'.tr()}',
+                      style: const TextStyle(color: Colors.white, fontSize: 17),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context)=> SuperUsertype(
-                      firstName: widget.firstName,
-                      lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
-              },
-              icon: const Icon(
-                Icons.arrow_back_sharp,
-                color: Colors.white,
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=> SuperUsertype(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
+                },
+                icon: const Icon(
+                  Icons.arrow_back_sharp,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
         ),
-      ),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SvgPicture.asset('assets/naqlee-logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.05),
-                  GestureDetector(
-                      onTap: (){
-                        Navigator.pop(context);
-                      },
-                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                ],
-              ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(Icons.home,size: 30,),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Home',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => SuperUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
-                  ),
-                );
-              },
-            ),
-            ListTile(
-                leading: SvgPicture.asset('assets/booking_logo.svg',
-                    height: MediaQuery.of(context).size.height * 0.035),
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 5),
-                  child: Text('Trigger Booking',style: TextStyle(fontSize: 25),),
-                ),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              GestureDetector(
                 onTap: (){
-                  Navigator.of(context).push(
+                  Navigator.push(
+                    context,
                     MaterialPageRoute(
-                      builder: (context) => TriggerBooking(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      ),
+                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
-                }
-            ),
-            ListTile(
-                leading: SvgPicture.asset('assets/booking_manager.svg'),
-                title: const Padding(
+                },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.person,color: Colors.grey,size: 30),
+                  ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(widget.firstName +' '+ widget.lastName,
+                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                      Icon(Icons.edit,color: Colors.grey,size: 20),
+                    ],
+                  ),
+                  subtitle: Text(widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96),
+                    ),),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Divider(),
+              ),
+              ListTile(
+                leading: Icon(Icons.home,size: 30,),
+                title: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('Booking Manager',style: TextStyle(fontSize: 25),),
+                  child: Text('Home'.tr(),style: TextStyle(fontSize: 25),),
                 ),
-                onTap: (){
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SuperUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                  leading: SvgPicture.asset('assets/booking_logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.035),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Text('Trigger Booking'.tr(),style: TextStyle(fontSize: 25),),
+                  ),
+                  onTap: (){
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TriggerBooking(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            token: widget.token,
+                            id: widget.id,
+                            email: widget.email
+                        ),
+                      ),
+                    );
+                  }
+              ),
+              ListTile(
+                  leading: SvgPicture.asset('assets/booking_manager.svg'),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text('Booking Manager'.tr(),style: TextStyle(fontSize: 25),),
+                  ),
+                  onTap: (){
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BookingManager(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            token: widget.token,
+                            id: widget.id,
+                            email: widget.email
+                        ),
+                      ),
+                    );
+                  }
+              ),
+              ListTile(
+                leading: SvgPicture.asset('assets/payment.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('Payments'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => BookingManager(
+                      builder: (context) => SuperUserPayment(
                           firstName: widget.firstName,
                           lastName: widget.lastName,
                           token: widget.token,
@@ -229,314 +270,299 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       ),
                     ),
                   );
-                }
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/payment.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Payments',style: TextStyle(fontSize: 25),),
+                },
               ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SuperUserPayment(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/report_logo.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Report',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/help_logo.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 7),
-                child: Text('Help',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context)=> UserHelp(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    )));
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      backgroundColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(20),
-                      content: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 30,bottom: 10),
-                            child: Text(
-                              'Are you sure you want to logout?',
-                              style: TextStyle(fontSize: 19),
-                            ),
-                          ),
-                        ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('Yes'),
-                          onPressed: () async {
-                            await clearUserData();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => UserLogin()),
-                            );
-                          },
-                        ),
-                        TextButton(
-                          child: const Text('No'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildStep(1),
-                  _buildLine(),
-                  _buildStep(2),
-                  _buildLine(),
-                  _buildStep(3),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _buildStepContent(_currentStep),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        height: MediaQuery.sizeOf(context).height * 0.11,
-        color: Colors.white,
-        child:  Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (_currentStep == 1) Container(),
-              if (_currentStep > 1)
-                Container(
-                  padding: const EdgeInsets.only(left: 12, bottom: 10),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (_currentStep > 1) {
-                          if (_currentStep == 2) {
-                            selectedLoad = null;
-                          }
-                          _currentStep--;
-                        }
-                      });
-                    },
-                    child: const Text(
-                      'Back',
-                      style: TextStyle(
-                          color: Color(0xff6269FE),
-                          fontSize: 21,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
+              ListTile(
+                leading: SvgPicture.asset('assets/report_logo.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
                 ),
-              if (_currentStep < 3)
-                Container(
-                  padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.055,
-                    width: MediaQuery.of(context).size.width * 0.3,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff6269FE),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () async{
-                        setState(() {
-                          if (widget.selectedType == 'vehicle') {
-                            if (_currentStep == 1) {
-                              if (selectedTypeName == null) {
-                                commonWidgets.showToast('Please select an option');
-                              } else {
-                                _currentStep++;
-                              }
-                            }else if (_currentStep == 2) {
-                              if (_selectedFromTime == null ||
-                                  _selectedDate == null ||
-                                  productController.text.isEmpty) {
-                                commonWidgets.showToast('Please fill all fields');
-                              } else {
-                                // Await the fetchLoadsForSelectedType function
-                                fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                  print('Fetched loadTypes: $loadTypes');
-                                  if (loadTypes.isEmpty || selectedLoad !=null) {
-
-                                    setState(() {
-                                      _currentStep++;
-                                    });
-                                  } else {
-                                    if (loadTypes.isNotEmpty) {
-                                      commonWidgets.showToast(
-                                          'Please select Load type');
-                                    }
-                                  }
-                                }).catchError((error) {
-                                  // Handle errors
-                                  print('Error fetching load types: $error');
-                                  commonWidgets.showToast('Error fetching load types');
-                                });
-                              }
-                            }
-                          }
-                          if (widget.selectedType == 'bus') {
-                            if (_currentStep == 1) {
-                              if (selectedBus == null) {
-                                commonWidgets.showToast('Please select Bus');
-                              } else {
-                                _currentStep++;
-                              }
-                            } else if (_currentStep == 2) {
-                              if (_selectedFromTime == null ||
-                                  _selectedDate == null ||
-                                  productController.text.isEmpty) {
-                                commonWidgets.showToast('Please fill all fields');
-                              } else {
-                                _currentStep++;
-                              }
-                            }
-                          }
-                          if (widget.selectedType == 'equipment') {
-                            if (_currentStep == 1) {
-                              if (selectedTypeName ==null) {
-                                commonWidgets.showToast('Please select an option');
-                              } else {
-                                _currentStep++;
-                              }
-                            } else if (_currentStep == 2) {
-                              if (_selectedFromTime == null ||
-                                  _selectedDate == null) {
-                                commonWidgets.showToast('Please fill all fields');
-                              } else {
-                                _currentStep++;
-                              }
-                            }
-                          }
-                          if (widget.selectedType == 'special' || widget.selectedType == 'others') {
-                            if (_currentStep == 1) {
-                              if (selectedSpecial ==null) {
-                                commonWidgets.showToast('Please select Special/Other Units');
-                              } else {
-                                _currentStep++;
-                              }
-                            } else if (_currentStep == 2) {
-                              if (_selectedFromTime == null ||
-                                  _selectedDate == null) {
-                                commonWidgets.showToast('Please fill all fields');
-                              } else {
-                                _currentStep++;
-                              }
-                            }
-                          }
-                        });
-                      },
-                      child: const Text(
-                        'Next',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 21,
-                            fontWeight: FontWeight.bold),
-                      ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
-                  ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: SvgPicture.asset('assets/help_logo.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 7),
+                  child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
                 ),
-              if (_currentStep == 3)
-                Container(
-                  padding: const EdgeInsets.only(right: 10, bottom: 0),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.055,
-                    width: MediaQuery.of(context).size.width * 0.52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff6269FE),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      onPressed: () async {
-                        setState(() {
-                          createBooking();
-                        });
-                      },
-                      child: const Text(
-                        'Create Booking',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 21,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
+                onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=> UserHelp(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      )));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
                 ),
+                onTap: () {
+                  showLogoutDialog();
+                },
+              ),
             ],
           ),
         ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildStep(1),
+                    _buildLine(),
+                    _buildStep(2),
+                    _buildLine(),
+                    _buildStep(3),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: _buildStepContent(_currentStep),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: BottomAppBar(
+          height: MediaQuery.sizeOf(context).height * 0.11,
+          color: Colors.white,
+          child:  Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_currentStep == 1) Container(),
+                if (_currentStep > 1)
+                  Container(
+                    padding: const EdgeInsets.only(left: 12, bottom: 10),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (_currentStep > 1) {
+                            if (_currentStep == 2) {
+                              selectedLoad = null;
+                            }
+                            _currentStep--;
+                          }
+                        });
+                      },
+                      child: Text(
+                        'back'.tr(),
+                        style: TextStyle(
+                            color: Color(0xff6269FE),
+                            fontSize: 21,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                if (_currentStep < 3)
+                  Container(
+                    padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.3,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6269FE),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async{
+                          setState(() {
+                            if (widget.selectedType == 'vehicle') {
+                              if (_currentStep == 1) {
+                                if (selectedTypeName == null) {
+                                  commonWidgets.showToast('Please select an option'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null ||
+                                    productController.text.isEmpty) {
+                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                } else {
+                                  fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
+                                    print('Fetched loadTypes: $loadTypes');
+                                    if (loadTypes.isEmpty || selectedLoad !=null) {
+
+                                      setState(() {
+                                        _currentStep++;
+                                      });
+                                    } else {
+                                      if (loadTypes.isNotEmpty) {
+                                        commonWidgets.showToast('Please select Load type'.tr());
+                                      }
+                                    }
+                                  }).catchError((error) {
+                                    print('Error fetching load types: $error');
+                                    commonWidgets.showToast('Error fetching load types');
+                                  });
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'bus') {
+                              if (_currentStep == 1) {
+                                if (selectedBus == null) {
+                                  commonWidgets.showToast('Please select Bus'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null ||
+                                    productController.text.isEmpty) {
+                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'equipment') {
+                              if (_currentStep == 1) {
+                                if (selectedTypeName ==null) {
+                                  commonWidgets.showToast('Please select an option'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null) {
+                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                              if (_currentStep == 1) {
+                                if (selectedSpecial ==null) {
+                                  commonWidgets.showToast('Please select Special/Other Units'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null) {
+                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                          });
+                        },
+                        child: Text(
+                          'next'.tr(),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_currentStep == 3)
+                  Container(
+                    padding: const EdgeInsets.only(right: 10, bottom: 0),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.055,
+                      width: MediaQuery.of(context).size.width * 0.52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff6269FE),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            createBooking();
+                          });
+                        },
+                        child: Text(
+                          'createBooking'.tr(),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  void showLogoutDialog(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.all(20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                  child: Text(
+                    'are_you_sure_you_want_to_logout'.tr(),
+                    style: TextStyle(fontSize: 19),
+                  ),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('yes'.tr()),
+                onPressed: () async {
+                  await clearUserData();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserLogin()),
+                  );
+                },
+              ),
+              TextButton(
+                child: Text('no'.tr()),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -564,9 +590,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   void _dismissSuggestions() {
     setState(() {
-      _pickUpSuggestions = []; // Clear pick-up suggestions
+      _pickUpSuggestions = [];
       for (var i = 0; i < _dropPointSuggestions.length; i++) {
-        _dropPointSuggestions[i] = []; // Clear all drop point suggestions
+        _dropPointSuggestions[i] = [];
       }
     });
   }
@@ -584,25 +610,22 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         desiredAccuracy: geo.LocationAccuracy.high,
       );
 
-      // Get the current location as LatLng
       LatLng currentLocation = LatLng(position.latitude, position.longitude);
 
-      // Update the map to center on current location
       if (mapController != null) {
         mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(currentLocation, 10.0),
         );
       }
 
-      // Add a marker at the current location
       setState(() {
         markers.clear();
         markers.add(
           Marker(
             markerId: const MarkerId('currentLocation'),
             position: currentLocation,
-            infoWindow: const InfoWindow(
-              title: 'Your Location',
+            infoWindow: InfoWindow(
+              title: 'your_location'.tr(),
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueBlue,
@@ -623,7 +646,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       desiredAccuracy: geo.LocationAccuracy.high,
     );
 
-    // Convert the coordinates into a human-readable address (Reverse Geocoding)
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
     String reverseGeocodeUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
@@ -636,14 +658,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       if (data != null && data['status'] == 'OK') {
         final formattedAddress = data['results'][0]['formatted_address'];
 
-        // Update the pickup controller with the current location address
         setState(() {
           pickUpController.text = formattedAddress;
           isLocating = false;
           _pickUpSuggestions = [];
         });
 
-        // Optionally, place a marker for the current location on the map
         setState(() {
           markers.add(
             Marker(
@@ -673,6 +693,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       desiredAccuracy: geo.LocationAccuracy.high,
     );
 
+    // Convert the coordinates into a human-readable address (Reverse Geocoding)
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
     String reverseGeocodeUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
@@ -685,12 +706,14 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       if (data != null && data['status'] == 'OK') {
         final formattedAddress = data['results'][0]['formatted_address'];
 
+        // Update the pickup controller with the current location address
         setState(() {
           cityNameController.text = formattedAddress;
           isLocating = false;
           _cityNameSuggestions = [];
         });
 
+        // Optionally, place a marker for the current location on the map
         setState(() {
           markers.add(
             Marker(
@@ -880,24 +903,20 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     try {
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
 
-      // Retrieve city name, address, and zip code
       String cityName = cityNameController.text.trim();
       String address = addressController.text.trim();
       String zipCode = zipCodeController.text.trim();
 
-      // Validate city name and address
       if (cityName.isEmpty || address.isEmpty) {
-        // Show an alert or a Snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
                 'Please enter both city name and address to locate the place.'),
           ),
         );
-        return; // Exit the function if either is missing
+        return;
       }
 
-      // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
       if (zipCode.isNotEmpty) {
         fullAddress += ', $zipCode';
@@ -1058,7 +1077,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Future<void> _fetchSuggestions(String query, int index, bool isPickUp) async {
     if (query.isEmpty) {
       setState(() {
-        // Clear suggestions if the text field is empty
         if (isPickUp) {
           _pickUpSuggestions = [];
         } else {
@@ -1068,8 +1086,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+    final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -1172,12 +1189,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             typeName: '',
             typeOfLoad: [],
             typeImage: '',
-            scale: ''), // Default value
+            scale: ''),
       );
 
-      print('Selected Type: ${selectedType.typeOfLoad}'); // Debugging line
+      print('Selected Type: ${selectedType.typeOfLoad}');
 
-      return selectedType.typeOfLoad; // Return the list of LoadType
+      return selectedType.typeOfLoad;
     } catch (e) {
       print('Error fetching loads: $e');
       return [];
@@ -1262,7 +1279,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
     if (widget.selectedType == 'vehicle') {
       if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
-        commonWidgets.showToast('Choose Pickup and DropPoints');
+        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
         // Print debugging info
         print('name$selectedName');
@@ -1321,8 +1338,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       if (pickUpController.text.isEmpty ||
           dropPlaces.contains('') ||
           dropPlaces.isEmpty) {
-        commonWidgets.showToast(
-            'Choose Pickup and DropPoints');
+        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1370,8 +1386,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     if(widget.selectedType=='equipment') {
       if (cityNameController.text.isEmpty ||
           addressController.text.isEmpty) {
-        commonWidgets.showToast(
-            'Choose City name and Address');
+        commonWidgets.showToast('Choose City name and Address'.tr());
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1421,8 +1436,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     if(widget.selectedType=='special') {
       if (cityNameController.text.isEmpty ||
           addressController.text.isEmpty) {
-        commonWidgets.showToast(
-            'Choose City name and Address');
+        commonWidgets.showToast('Choose City name and Address'.tr());
       }
       else {
         print('unitType${widget.selectedType}');
@@ -1479,7 +1493,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     String? bookingId = data['_id'];
     final String? token = data['token'];
 
-    // If bookingId is null, call getPaymentPendingBooking API
     if (bookingId == null || token == null) {
       print('No bookingId found, fetching pending booking details.');
 
@@ -1487,7 +1500,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         bookingId = await userService.getPaymentPendingBooking(widget.id, token);
 
         if (bookingId != null) {
-          // Optionally, save the bookingId to shared preferences
           // await saveBookingIdToPreferences(bookingId, token);
         } else {
           print('No pending booking found, navigating to NewBooking.');
@@ -1499,7 +1511,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       }
     }
 
-    // Proceed to fetch booking details if bookingId is available
     if (bookingId != null && token != null) {
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
@@ -1640,8 +1651,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: const Text(
-                  'Available Vehicle Units',
+                child: Text(
+                  'available_vehicle_units'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1650,8 +1661,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   itemCount: vehicles.length,
                   itemBuilder: (context, index) {
                     final vehicle = vehicles[index];
-                    final selectedType =
-                        _selectedSubClassification[vehicle.name] ?? '';
+                    final selectedType = _selectedSubClassification[vehicle.name] ?? '';
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -1670,7 +1680,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             Expanded(
                               flex: 6,
                               child: Text(
-                                vehicle.name,
+                                vehicle.name.tr(),
                                 style: const TextStyle(
                                     fontSize: 15.0,
                                     fontWeight: FontWeight.bold),
@@ -1689,135 +1699,116 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             ),
                             Expanded(
                               flex: 7,
-                              child: Container(
-                                width: double.infinity,
-                                child: PopupMenuButton<String>(
-                                  elevation: 5,
-                                  constraints: BoxConstraints(
-                                    minWidth:350,
-                                    maxWidth:350,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  offset:  Offset(0, 55),
-                                  padding: EdgeInsets.zero,
-                                  color: Colors.white,
-                                  onSelected: (newValue) {
-                                    setState(() {
-                                      _selectedSubClassification[vehicle.name] = newValue;
-                                      selectedTypeName = newValue;
-                                      selectedName = vehicle.name;
-                                      scale = vehicle.types
-                                          ?.firstWhere((type) => type.typeName == newValue)
-                                          .scale;
-                                      typeImage = vehicle.types
-                                          ?.firstWhere((type) => type.typeName == newValue)
-                                          .typeImage;
-                                    });
-                                  },
-                                  itemBuilder: (context) {
-                                    return vehicle.types?.asMap().entries.map((entry) {
-                                      int index = entry.key;
-                                      var type = entry.value;
-                                      typeCount = index + 1;
-                                      print('Dropdown item ${index + 1}: ${typeCount}');
-                                      return PopupMenuItem<String>(
-                                        value: type.typeName,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(15),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment
-                                                .spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                flex: 1,
-                                                child: FutureBuilder(
-                                                  future: _loadSvg(
-                                                      type.typeImage),
-                                                  builder:
-                                                      (context, snapshot) {
-                                                    if (snapshot
-                                                        .connectionState ==
-                                                        ConnectionState
-                                                            .waiting) {
-                                                      return const SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child: Icon(Icons
-                                                            .rotate_right),
-                                                      );
-                                                    } else if (snapshot
-                                                        .hasError) {
-                                                      return const Icon(
-                                                          Icons.error);
-                                                    } else {
-                                                      return SvgPicture
-                                                          .asset(
-                                                        type.typeImage,
-                                                        width: 40,
-                                                        height: 30,
-                                                      );
-                                                    }
-                                                  },
-                                                ),
+                              child: Directionality(
+                                textDirection: ui.TextDirection.ltr,
+                                child: Container(
+                                  width: double.infinity,
+                                  child: PopupMenuButton<String>(
+                                    elevation: 5,
+                                    constraints: BoxConstraints(
+                                      minWidth:350,
+                                      maxWidth:350,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    offset:  Offset(0, 55),
+                                    padding: EdgeInsets.zero,
+                                    color: Colors.white,
+                                    onSelected: (newValue) {
+                                      setState(() {
+                                        _selectedSubClassification[vehicle.name] = newValue;
+                                        selectedTypeName = newValue;
+                                        selectedName = vehicle.name;
+                                        scale = vehicle.types
+                                            ?.firstWhere((type) => type.typeName == newValue)
+                                            .scale;
+                                        typeImage = vehicle.types
+                                            ?.firstWhere((type) => type.typeName == newValue)
+                                            .typeImage;
+                                      });
+                                    },
+                                    itemBuilder: (context) {
+                                      return vehicle.types?.asMap().entries.map((entry) {
+                                        int index = entry.key;
+                                        var type = entry.value;
+                                        typeCount = index + 1;
+                                        print('Dropdown item ${index + 1}: ${typeCount}');
+                                        return PopupMenuItem<String>(
+                                          value: type.typeName,
+                                          child: Directionality(
+                                            textDirection: ui.TextDirection.ltr,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(15),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: FutureBuilder(
+                                                      future: _loadSvg(type.typeImage),
+                                                      builder: (context, snapshot) {
+                                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                                          return const SizedBox(
+                                                            width: 24,
+                                                            height: 24,
+                                                            child: Icon(Icons.rotate_right),
+                                                          );
+                                                        } else if (snapshot.hasError) {
+                                                          return const Icon(Icons.error);
+                                                        } else {
+                                                          return SvgPicture.asset(
+                                                            type.typeImage,
+                                                            width: 40,
+                                                            height: 30,
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 20),
+                                                  Expanded(
+                                                    flex: 3,
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(type.typeName.tr(),
+                                                            style: const TextStyle(fontSize: 16.0)),
+                                                        Text(type.scale,
+                                                            style: const TextStyle(fontSize: 14.0)),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 20),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                  CrossAxisAlignment
-                                                      .start,
-                                                  children: [
-                                                    Text(type.typeName,
-                                                        style:
-                                                        const TextStyle(
-                                                            fontSize:
-                                                            16.0)),
-                                                    Text(type.scale,
-                                                        style:
-                                                        const TextStyle(
-                                                            fontSize:
-                                                            14.0)),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    }).toList() ??
-                                        [];
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    width: double.infinity,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            selectedType.isEmpty
-                                                ? 'Select'
-                                                : selectedType.isNotEmpty
-                                                ? selectedType
-                                                : vehicle.types
-                                                ?.isNotEmpty ==
-                                                true
-                                                ? vehicle.types!.first
-                                                .typeName
-                                                : 'No Data ',
-                                            style:
-                                            const TextStyle(fontSize: 16.0),
+                                        );
+                                      }).toList() ??
+                                          [];
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                      width: double.infinity,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              selectedType.isEmpty
+                                                  ? 'select'.tr()
+                                                  : selectedType.isNotEmpty
+                                                  ? selectedType.tr()
+                                                  : vehicle.types?.isNotEmpty == true
+                                                  ? vehicle.types!.first.typeName
+                                                  : 'no_data'.tr(),
+                                              style: const TextStyle(fontSize: 16.0),
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        const Icon(Icons.arrow_drop_down),
-                                      ],
+                                          const SizedBox(width: 10),
+                                          const Icon(Icons.arrow_drop_down),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1855,8 +1846,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: const Text(
-                  'Available Bus Units',
+                child: Text(
+                  'available_bus_units'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1963,8 +1954,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: const Text(
-                  'Available Equipments Units',
+                child: Text(
+                  'available_equipments_units'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1973,8 +1964,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   itemCount: equipment.length,
                   itemBuilder: (context, index) {
                     final equipments = equipment[index];
-                    final selectedType =
-                        _selectedSubClassification[equipments.name] ?? '';
+                    final selectedType = _selectedSubClassification[equipments.name] ?? '';
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 10),
@@ -1993,7 +1983,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             Expanded(
                               flex: 3,
                               child: Text(
-                                equipments.name,
+                                equipments.name.tr(),
                                 style: const TextStyle(
                                     fontSize: 16.0,
                                     fontWeight: FontWeight.bold),
@@ -2039,52 +2029,43 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                     return equipments.types?.map((type) {
                                       return PopupMenuItem<String>(
                                         value: type.typeName,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(15),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                            MainAxisAlignment
-                                                .spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: FutureBuilder(
-                                                  future: _loadSvg(
-                                                      type.typeImage),
-                                                  builder:
-                                                      (context, snapshot) {
-                                                    if (snapshot
-                                                        .connectionState ==
-                                                        ConnectionState
-                                                            .waiting) {
-                                                      return const SizedBox(
-                                                        width: 24,
-                                                        height: 24,
-                                                        child:Icon(Icons
-                                                            .rotate_right),
-                                                      );
-                                                    } else if (snapshot
-                                                        .hasError) {
-                                                      return const Icon(
-                                                          Icons.error);
-                                                    } else {
-                                                      return SvgPicture
-                                                          .asset(
-                                                        type.typeImage,
-                                                        width: 40,
-                                                        height: 30,
-                                                      );
-                                                    }
-                                                  },
+                                        child: Directionality(
+                                          textDirection: ui.TextDirection.ltr,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(15),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: FutureBuilder(
+                                                    future: _loadSvg(type.typeImage),
+                                                    builder: (context, snapshot) {
+                                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                                        return const SizedBox(
+                                                          width: 24,
+                                                          height: 24,
+                                                          child:Icon(Icons.rotate_right),
+                                                        );
+                                                      } else if (snapshot.hasError) {
+                                                        return const Icon(Icons.error);
+                                                      } else {
+                                                        return SvgPicture.asset(
+                                                          type.typeImage,
+                                                          width: 40,
+                                                          height: 30,
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 20),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Text(type.typeName,
-                                                    style: const TextStyle(
-                                                        fontSize: 16.0)),
-                                              ),
-                                            ],
+                                                const SizedBox(width: 20),
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(type.typeName.tr(),
+                                                      style: const TextStyle(fontSize: 16.0)),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       );
@@ -2102,15 +2083,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         Expanded(
                                           child: Text(
                                             selectedType.isEmpty
-                                                ? 'Select'
+                                                ? 'select'.tr()
                                                 : selectedType.isNotEmpty
-                                                ? selectedType
-                                                : equipments.types
-                                                ?.isNotEmpty ==
-                                                true
-                                                ? equipments.types!
-                                                .first.typeName
-                                                : 'No Data for Sub Classification',
+                                                ? selectedType.tr()
+                                                : equipments.types?.isNotEmpty == true
+                                                ? equipments.types!.first.typeName
+                                                : 'no_data'.tr(),
                                             style:
                                             const TextStyle(fontSize: 16.0),
                                           ),
@@ -2155,8 +2133,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               Container(
                 alignment: Alignment.topLeft,
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: const Text(
-                  'Available Special / Others Units',
+                child: Text(
+                  'available_special_others_units'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -2166,8 +2144,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     crossAxisCount: 2, // Two columns
                     crossAxisSpacing: 0, // Space between columns
                     mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio:
-                    1, // Aspect ratio for card width and height
+                    childAspectRatio: 1,
                   ),
                   itemCount: special.length,
                   itemBuilder: (context, index) {
@@ -2198,9 +2175,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 shape: RoundedRectangleBorder(
                                   side: BorderSide(
                                       color: isSpecialSelected
-                                          ? Color(
-                                        0xff6A66D1,
-                                      )
+                                          ? Color(0xff6A66D1,)
                                           : Color(0xffACACAD),
                                       width: isSpecialSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
@@ -2208,8 +2183,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 child: Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 45, bottom: 10),
+                                      padding: const EdgeInsets.only(top: 45, bottom: 10),
                                       child: SvgPicture.asset(
                                         specials.image,
                                         width: 30,
@@ -2223,9 +2197,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                       thickness: 1,
                                     ),
                                     Text(
-                                      specials.name,
-                                      textAlign:
-                                      TextAlign.center, // Center the text
+                                      specials.name.tr(),
+                                      textAlign: TextAlign.center, // Center the text
                                     )
                                   ],
                                 ),
@@ -2253,7 +2226,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         children: [
           Text('Others Content',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          // Add more widgets as needed
         ],
       ),
     );
@@ -2262,7 +2234,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget defaultContent() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: const Text('Please select a type to see content',
+      child: Text('please_select_a_type_to_see_content'.tr(),
           style: TextStyle(fontSize: 18)),
     );
   }
@@ -2275,234 +2247,237 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       ) {
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Time',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      child: Directionality(
+        textDirection: ui.TextDirection.ltr,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Time'.tr(),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
-                  ),
-                  Container(
-                    height: 50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Date',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectDate(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
-                  ),
-                  Container(
-                    height: 50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Value of product',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            child: TextFormField(
-              onTapOutside: (event) {
-                FocusScope.of(context).unfocus();
+            GestureDetector(
+              onTap: (){
+                _selectTime(context);
               },
-              focusNode: productValueFocusNode,
-              controller: productController,
-              decoration: InputDecoration(
-                hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
-                border: OutlineInputBorder(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC), // Border color
-                    width: 1.0, // Border width
-                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC), // Border color when enabled
-                    width: 1.0, // Border width
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectTime(context),
+                      icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
+                    ),
+                    Container(
+                      height: 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: (){
+                        _selectTime(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
+                      ),
+                    ),
+                  ],
                 ),
-              ),keyboardType: TextInputType.number,
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Load type',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
-          ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-            child: LoadTypeDropdown(
-              selectedName: selectedTypeName,
-              selectedLoad: selectedLoad,
-              onLoadChanged: (newValue) async {
-                setState(() {
-                  selectedLoad = newValue;
-                });
-                await Future.delayed(Duration(milliseconds: -1));
-                if (productValueFocusNode.hasFocus) {
-                  productValueFocusNode.unfocus();
-                }
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Date'.tr(),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: (){
+                _selectDate(context);
               },
-              fetchLoadsForSelectedType: fetchLoadsForSelectedType,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: isChecked,
-                  onChanged: _onCheckboxChanged,
-                  checkColor: Colors.white,
-                  activeColor: const Color(0xff6A66D1),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'Need Additional Labour',
-                      style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectDate(context),
+                      icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                     ),
-                  ),
+                    Container(
+                      height: 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: (){
+                        _selectDate(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          if (isChecked)
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'valueOfProduct'.tr(),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
             Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                focusNode: productValueFocusNode,
+                controller: productController,
+                decoration: InputDecoration(
+                  hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),keyboardType: TextInputType.number,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'loadType'.tr(),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: LoadTypeDropdown(
+                selectedName: selectedTypeName,
+                selectedLoad: selectedLoad,
+                onLoadChanged: (newValue) async {
+                  setState(() {
+                    selectedLoad = newValue;
+                  });
+                  await Future.delayed(Duration(milliseconds: -1));
+                  if (productValueFocusNode.hasFocus) {
+                    productValueFocusNode.unfocus();
+                  }
+                },
+                fetchLoadsForSelectedType: fetchLoadsForSelectedType,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
                 children: [
-                  RadioListTile(
-                    title: const Text('1'),
-                    value: 1,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
+                  Checkbox(
+                    value: isChecked,
+                    onChanged: _onCheckboxChanged,
+                    checkColor: Colors.white,
+                    activeColor: const Color(0xff6A66D1),
                   ),
-                  RadioListTile(
-                    title: const Text('2'),
-                    value: 2,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('3'),
-                    value: 3,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
+                  Container(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'needAdditionalLabour'.tr(),
+                        style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-        ],
+            if (isChecked)
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Column(
+                  children: [
+                    RadioListTile(
+                      title: const Text('1'),
+                      value: 1,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: const Text('2'),
+                      value: 2,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: const Text('3'),
+                      value: 3,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -2516,10 +2491,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Time',
+                'Time'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2564,10 +2539,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Date',
+                'Date'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2612,10 +2587,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Value of product',
+                'valueOfProduct'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2659,10 +2634,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'Need Additional Labour',
+                      'needAdditionalLabour'.tr(),
                       style:
                       TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -2723,10 +2698,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'From Time',
+                'fromTime'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2766,10 +2741,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'To Time',
+                'toTime'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2809,10 +2784,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Starting Date',
+                'startingDate'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2861,10 +2836,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'Need Additional Labour',
+                      'needAdditionalLabour'.tr(),
                       style:
                       TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -2925,10 +2900,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'From Time',
+                'fromTime'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -2968,10 +2943,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'To Time',
+                'toTime'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3011,10 +2986,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           Container(
             margin: const EdgeInsets.only(left: 22),
             alignment: Alignment.topLeft,
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'Starting Date',
+                'startingDate'.tr(),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
@@ -3063,10 +3038,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 ),
                 Container(
                   alignment: Alignment.topLeft,
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
-                      'Need Additional Labour',
+                      'needAdditionalLabour'.tr(),
                       style:
                       TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
@@ -3189,7 +3164,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8,top: 5),
                                           child: Tooltip(
-                                            message: 'Locate Current Location',
+                                            message: 'Locate Current Location'.tr(),
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3198,7 +3173,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'Pick up',
+                                        hintText: 'Pick Up'.tr(),
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3213,17 +3188,17 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 height: 200,
                                 width: MediaQuery.of(context).size.width * 0.9,
                                 child: ListView.builder(
-                                  itemCount: _pickUpSuggestions.length + 1,  // +1 to include the "Current Location"
+                                  itemCount: _pickUpSuggestions.length + 1,
                                   itemBuilder: (context, index) {
                                     if (index == 0) {
-                                      // Show "Current Location" as the first suggestion
+
                                       return ListTile(
                                         title: Row(
                                           children: [
                                             Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                             Padding(
                                               padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                              child: Text('Current Location'),
+                                              child: Text('Current Location'.tr()),
                                             ),
                                             isLocating ? Container(
                                               height: 15,
@@ -3239,9 +3214,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         },
                                       );
                                     } else {
-                                      // Show other suggestions from the list
                                       return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
+                                        title: Text(_pickUpSuggestions[index - 1]),
                                         onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
                                       );
                                     }
@@ -3276,7 +3250,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                             controller: controller,
                                             decoration: InputDecoration(
                                               isDense: true,
-                                              hintText: 'Drop Point ${i + 1}',
+                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
                                               hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                               border: InputBorder.none,
                                               suffixIcon: i == _dropPointControllers.length - 1
@@ -3347,8 +3321,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               FocusScope.of(context).unfocus();
                               _fetchCoordinates();
                             },
-                            child: const Text(
-                              'Get Location',
+                            child: Text(
+                              'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -3430,7 +3404,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8,top: 5),
                                           child: Tooltip(
-                                            message: 'Locate Current Location',
+                                            message: 'Locate Current Location'.tr(),
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3439,7 +3413,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'Pick up',
+                                        hintText: 'Pick Up'.tr(),
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3464,7 +3438,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                             Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                             Padding(
                                               padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                              child: Text('Current Location'),
+                                              child: Text('Current Location'.tr()),
                                             ),
                                             isLocating ? Container(
                                               height: 15,
@@ -3517,7 +3491,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                             controller: controller,
                                             decoration: InputDecoration(
                                               isDense: true,
-                                              hintText: 'Drop Point ${i + 1}',
+                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
                                               hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                               border: InputBorder.none,
                                               suffixIcon: i == _dropPointControllers.length - 1
@@ -3588,8 +3562,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               FocusScope.of(context).unfocus();
                               _fetchCoordinates();
                             },
-                            child: const Text(
-                              'Get Location',
+                            child: Text(
+                              'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -3662,7 +3636,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location',
+                                            message: 'Locate Current Location'.tr(),
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3671,7 +3645,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'Enter city name',
+                                        hintText: 'enterCityName'.tr(),
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3696,7 +3670,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                           Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                           Padding(
                                             padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'),
+                                            child: Text('Current Location'.tr()),
                                           ),
                                           isLocating ? Container(
                                             height: 15,
@@ -3736,7 +3710,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      hintText: 'Enter your address',
+                                      hintText: 'enterYourAddress'.tr(),
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
@@ -3780,8 +3754,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             FocusScope.of(context).unfocus();
                             _fetchAddressCoordinates();
                           },
-                          child: const Text(
-                            'Get Location',
+                          child: Text(
+                            'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -3865,7 +3839,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         suffixIcon: Padding(
                                           padding: const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location',
+                                            message: 'Locate Current Location'.tr(),
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
@@ -3874,7 +3848,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
-                                        hintText: 'Enter city name',
+                                        hintText: 'enterCityName'.tr(),
                                         hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                         border: InputBorder.none,
                                       ),
@@ -3899,7 +3873,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                           Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
                                           Padding(
                                             padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'),
+                                            child: Text('Current Location'.tr()),
                                           ),
                                           isLocating ? Container(
                                             height: 15,
@@ -3939,7 +3913,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                     onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
-                                      hintText: 'Enter your address',
+                                      hintText: 'enterYourAddress'.tr(),
                                       hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
@@ -3983,8 +3957,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             FocusScope.of(context).unfocus();
                             _fetchAddressCoordinates();
                           },
-                          child: const Text(
-                            'Get Location',
+                          child: Text(
+                            'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -4060,8 +4034,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
   @override
   void initState() {
     super.initState();
-    _loadTypesFuture =
-        widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+    _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
   }
 
   @override
@@ -4069,8 +4042,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedName != oldWidget.selectedName) {
       setState(() {
-        _loadTypesFuture =
-            widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+        _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
       });
     }
   }
@@ -4110,7 +4082,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                   Text(
                     (widget.selectedLoad?.isNotEmpty ?? false)
                         ? widget.selectedLoad!
-                        : 'Load type',
+                        : 'loadType'.tr(),
                     style: TextStyle(fontSize: 16),
                   ),
                   const Icon(Icons.arrow_drop_down,size: 26),
@@ -4119,8 +4091,16 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
               itemBuilder: (BuildContext context) {
                 return loadItems.map((LoadType load) {
                   return PopupMenuItem<String>(
-                    value: load.load,
-                    child: Text(load.load),
+                    value: load.load.tr(),
+                    child: Directionality(
+                      textDirection: ui.TextDirection.ltr,
+                      child: Row(
+                        children: [
+                          Text(load.load.tr(),
+                              style: const TextStyle(fontSize: 16.0)),
+                        ],
+                      ),
+                    ),
                   );
                 }).toList();
               },

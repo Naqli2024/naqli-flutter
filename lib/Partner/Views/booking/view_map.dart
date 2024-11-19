@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +8,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:ui' as ui;
 
 class ViewMap extends StatefulWidget {
   final String partnerName;
@@ -67,8 +70,8 @@ class _ViewMapState extends State<ViewMap> {
   late String remainingBalance;
   final AuthService _authService = AuthService();
   final CommonWidgets commonWidgets = CommonWidgets();
-  String ?paymentStatus;
-  String ?bookingStatus;
+  String paymentStatus ='';
+  String bookingStatus = '';
   String ?balance;
   String errorMessage = '';
   Map<String, dynamic>? bookingDetails;
@@ -97,13 +100,11 @@ class _ViewMapState extends State<ViewMap> {
     try {
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
 
-      // Retrieve city name, address, and zip code
       String cityName = widget.cityName.trim();
       String address = widget.address.trim();
       String zipCode = widget.zipCode.trim();
 
 
-      // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
       if (zipCode.isNotEmpty) {
         fullAddress += ', $zipCode';
@@ -115,7 +116,6 @@ class _ViewMapState extends State<ViewMap> {
         dropLatLng!=[];
       });
 
-      // Fetch pickup coordinates
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(fullAddress)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
@@ -133,7 +133,6 @@ class _ViewMapState extends State<ViewMap> {
               pickupLatLng =
                   LatLng(pickupLocation['lat'], pickupLocation['lng']);
 
-              // Display the city name, address, and zip code in the snippet
               String snippetText = '$address, $cityName';
               if (zipCode.isNotEmpty) {
                 snippetText += ', $zipCode';
@@ -152,7 +151,6 @@ class _ViewMapState extends State<ViewMap> {
                 ),
               );
 
-              // Clear existing polylines and drop points list
               polylines.clear();
               dropLatLng!=[];
             });
@@ -347,7 +345,7 @@ class _ViewMapState extends State<ViewMap> {
           'Updated Remaining Balance: $updatedRemainingBalance'); // Print for debugging
       setState(() {
         remainingBalance =
-            updatedRemainingBalance; // Update the state with the new balance
+            updatedRemainingBalance;
       });
     } else {
       print('Failed to update remaining balance');
@@ -367,7 +365,7 @@ class _ViewMapState extends State<ViewMap> {
         widget.quotePrice,
       );
 
-      print("API Response: $details"); // Log the entire response
+      print("API Response: $details");
 
       setState(() {
         if (details != null && details.isNotEmpty) {
@@ -375,7 +373,7 @@ class _ViewMapState extends State<ViewMap> {
           paymentStatus = bookingDetails?['paymentStatus'];
           bookingStatus = bookingDetails?['bookingStatus'];
           // remainingBalance = bookingDetails?['remainingBalance'];
-          print("Updated Payment Status: $paymentStatus"); // Track status updates
+          print("Updated Payment Status: $paymentStatus");
         } else {
           errorMessage = 'No booking details found for the selected ID.';
         }
@@ -390,375 +388,387 @@ class _ViewMapState extends State<ViewMap> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.partnerName,
-          userId: widget.partnerId
-      ),
-      drawer: commonWidgets.createDrawer(context,
-          onPaymentPressed: () {
-        Navigator.push(
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
           context,
-          MaterialPageRoute(
-              builder: (context) => PaymentDetails(
-                    token: widget.token,
-                    partnerId: widget.partnerId,
-                    partnerName: widget.partnerName,
-                    quotePrice: widget.quotePrice,
-                    paymentStatus: widget.paymentStatus,
-                    email: widget.email,
-                  )),
-        );
-      }, onBookingPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => BookingDetails(
-                    token: widget.token,
-                    partnerId: widget.partnerId,
-                    partnerName: widget.partnerName,
-                    quotePrice: widget.quotePrice,
-                    paymentStatus: widget.paymentStatus,
-                    email: widget.email,
-                  )),
-        );
-      },
-          onReportPressed: (){
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
-              ),
-            );
-          }
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async{
-          await fetchBookingDetails();
-          setState(() {
-            if (widget.cityName != null) {
-              fetchAddressCoordinates();
-            } else {
-              _fetchCoordinates();
-            }
-          });
-        },
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Stack(
-            children: [
-              Container(
-                height: MediaQuery.sizeOf(context).height * 0.4,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0), // Default position
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                    ),
-                  },
+          User: widget.partnerName,
+            userId: widget.partnerId
+        ),
+        drawer: commonWidgets.createDrawer(context,
+            widget.partnerId,
+            widget.partnerName,
+            onEditProfilePressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PartnerEditProfile(partnerName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,)
                 ),
-              ),
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      // height: MediaQuery.sizeOf(context).height * 0.37,
-                      margin: EdgeInsets.only(
-                          top: MediaQuery.sizeOf(context).height * 0.25,
-                          left: 15,
-                          right: 15,
-                          bottom: 10),
-                      child: Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          side: const BorderSide(
-                            color: Color(0xffE0E0E0), // Border color
-                            width: 1, // Border width
+              );
+            },
+            onPaymentPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PaymentDetails(
+                      token: widget.token,
+                      partnerId: widget.partnerId,
+                      partnerName: widget.partnerName,
+                      quotePrice: widget.quotePrice,
+                      paymentStatus: widget.paymentStatus,
+                      email: widget.email,
+                    )),
+          );
+        }, onBookingPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => BookingDetails(
+                      token: widget.token,
+                      partnerId: widget.partnerId,
+                      partnerName: widget.partnerName,
+                      quotePrice: widget.quotePrice,
+                      paymentStatus: widget.paymentStatus,
+                      email: widget.email,
+                    )),
+          );
+        },
+            onReportPressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+                ),
+              );
+            }
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async{
+            await fetchBookingDetails();
+            setState(() {
+              if (widget.cityName != null) {
+                fetchAddressCoordinates();
+              } else {
+                _fetchCoordinates();
+              }
+            });
+          },
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Stack(
+              children: [
+                Container(
+                  height: MediaQuery.sizeOf(context).height * 0.4,
+                  child: GoogleMap(
+                    onMapCreated: (GoogleMapController controller) {
+                      mapController = controller;
+                    },
+                    initialCameraPosition: const CameraPosition(
+                      target: LatLng(0, 0),
+                      zoom: 1,
+                    ),
+                    markers: markers,
+                    polylines: polylines,
+                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                      Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer(),
+                      ),
+                    },
+                  ),
+                ),
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.only(
+                            top: MediaQuery.sizeOf(context).height * 0.25,
+                            left: 15,
+                            right: 15,
+                            bottom: 10),
+                        child: Card(
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            side: const BorderSide(
+                              color: Color(0xffE0E0E0),
+                              width: 1, // Border width
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'User name'.tr(),
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          widget.userName,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'User id'.tr(),
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          widget.userId,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Mode'.tr(),
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          widget.mode.tr(),
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Booking Status'.tr(),
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          bookingStatus.tr(),
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'PaymentStatus'.tr(),
+                                          style: TextStyle(
+                                              color: Color(0xff79797C),
+                                              fontSize: 16),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          paymentStatus.tr(),
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                      ),
+                      remainingBalance == '0' || paymentStatus == 'Completed'
+                          ? Container()
+                          : Padding(
+                        padding: EdgeInsets.only(left: 50, right: 50,top: 10,bottom: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Text(
+                              'Pending Amount'.tr(),
+                              style: TextStyle(fontSize: 17),
+                            ),
+                            Text(
+                              remainingBalance != null
+                                  ? '$remainingBalance SAR'
+                                  : 'N/A',
+                              style:
+                              TextStyle(color: Color(0xffAD1C86), fontSize: 17),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'Additional Charges'.tr(),
+                        style: TextStyle(fontSize: 17),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 70, right: 70),
+                        child: TextFormField(
+                          controller: chargesController,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      _buildTextField('Reason'.tr(), reasonController),
+                      Visibility(
+                        visible: paymentStatus == 'Completed',
                         child: Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Column(
+                          padding: const EdgeInsets.only(top: 15,bottom: 15),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'User name',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        widget.userName,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'User id',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        widget.userId,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Mode',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        widget.mode,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Booking status',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        bookingStatus??'',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        'Payment status',
-                                        style: TextStyle(
-                                            color: Color(0xff79797C),
-                                            fontSize: 16),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        paymentStatus??'',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                padding: const EdgeInsets.only(left: 8),
+                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Colors.green,fontSize: 20,fontWeight: FontWeight.w500),),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                    remainingBalance == '0' || paymentStatus == 'Completed'
-                        ? Container()
-                        : Padding(
-                      padding: EdgeInsets.only(left: 50, right: 50,top: 10,bottom: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Pending Amount',
-                            style: TextStyle(fontSize: 17),
+                          Container(
+                            margin: const EdgeInsets.only(top: 10, left: 10,bottom: 20),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.054,
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff6269FE),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    chargesController.text.isEmpty || reasonController.text.isEmpty
+                                    ? commonWidgets.showToast('Please add Additional charges and Reason'.tr())
+                                    : requestPayment();
+                                  },
+                                  child: Text(
+                                    'Request Payment'.tr(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.normal),
+                                  )),
+                            ),
                           ),
-                          Text(
-                            remainingBalance != null
-                                ? '$remainingBalance SAR'
-                                : 'N/A',
-                            style:
-                            TextStyle(color: Color(0xffAD1C86), fontSize: 17),
+                          Container(
+                            margin: const EdgeInsets.only(top: 10, right: 10,bottom: 20),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.054,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff6F181C),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  onPressed: () async{
+                                    setState(() {
+                                      isTerminating = true;
+                                    });
+                                    await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token,widget.email);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              BookingDetails(partnerName: widget.partnerName,
+                                                partnerId: widget.partnerId,
+                                                token: widget.token,
+                                                quotePrice: '',
+                                                paymentStatus: '',email: widget.email,)
+                                      ),
+                                    );
+                                    setState(() {
+                                      isTerminating = false;
+                                    });
+                                    },
+                                  child: isTerminating
+                                      ? Container(
+                                            height: 15,
+                                            width: 15,
+                                            child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                            ),
+                                        )
+                                      : Text(
+                                    'Terminate'.tr(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.normal),
+                                  )),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    Text(
-                      'Additional Charges',
-                      style: TextStyle(fontSize: 17),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 70, right: 70),
-                      child: TextFormField(
-                        controller: chargesController,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    _buildTextField('Reason', reasonController),
-                    Visibility(
-                      visible: paymentStatus == 'Completed',
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 15,bottom: 15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Text('Payment Successful!!' ,style: TextStyle(color: Colors.green,fontSize: 20,fontWeight: FontWeight.w500),),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 10, left: 10,bottom: 20),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.054,
-                            width: MediaQuery.of(context).size.width * 0.5,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6269FE),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  chargesController.text.isEmpty || reasonController.text.isEmpty
-                                  ? commonWidgets.showToast('Please add Additional charges and Reason')
-                                  : requestPayment();
-                                },
-                                child: Text(
-                                  'Request Payment',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10, right: 10,bottom: 20),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.054,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6F181C),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                ),
-                                onPressed: () async{
-                                  setState(() {
-                                    isTerminating = true;
-                                  });
-                                  await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token,widget.email);
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            BookingDetails(partnerName: widget.partnerName,
-                                              partnerId: widget.partnerId,
-                                              token: widget.token,
-                                              quotePrice: '',
-                                              paymentStatus: '',email: widget.email,)
-                                    ),
-                                  );
-                                  setState(() {
-                                    isTerminating = false;
-                                  });
-                                  },
-                                child: isTerminating
-                                    ? Container(
-                                          height: 15,
-                                          width: 15,
-                                          child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                          ),
-                                      )
-                                    : Text(
-                                  'Terminate',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -783,7 +793,7 @@ Widget _buildTextField(String hintText, controller) {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter $hintText';
+              return '${'Please enter'.tr()} $hintText';
             }
             return null;
           },

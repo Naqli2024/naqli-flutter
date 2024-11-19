@@ -97,6 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
               final partnerId = partnerData['partnerId'] ?? '';
               final token = partnerData['token'] ?? '';
               final email = partnerData['email'] ?? '';
+              print('Partner data: partnerName=$partnerName, token=$token, id=$partnerId');
               if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
                 return BookingDetails(
                   partnerName: partnerName,

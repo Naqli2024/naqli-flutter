@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/User/user_home_page.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:ui' as ui;
 
 class UserHelp extends StatefulWidget {
   final String ?firstName;
@@ -28,92 +28,66 @@ class _UserHelpState extends State<UserHelp> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        showLeading: false,
-        User: widget.firstName! +' '+ widget.lastName!,
-        userId: widget.id,
-        showLanguage: false,
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.1),
-          child: Column(
-            children: [
-              AppBar(
-                scrolledUnderElevation: 0,
-                toolbarHeight: 80,
-                automaticallyImplyLeading: false,
-                backgroundColor: const Color(0xff6A66D1),
-                title: const Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 25),
-                    child: Text(
-                      'FAQ',
-                      style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 25),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          showLeading: false,
+          User: '${widget.firstName ?? ''} ${widget.lastName ?? ''}',
+          userId: widget.id,
+          showLanguage: true,
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.1),
+            child: Column(
+              children: [
+                AppBar(
+                  scrolledUnderElevation: 0,
+                  toolbarHeight: 80,
+                  automaticallyImplyLeading: false,
+                  backgroundColor: const Color(0xff6A66D1),
+                  title: Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: 25),
+                      child: Text(
+                        'FAQ'.tr(),
+                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 25),
+                      ),
+                    ),
+                  ),
+                  leading: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: CircleAvatar(
+                      backgroundColor: Color(0xffB7B3F1),
+                      child: const Icon(
+                        Icons.arrow_back_sharp,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-                leading: IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: CircleAvatar(
-                    backgroundColor: Color(0xffB7B3F1),
-                    child: const Icon(
-                      Icons.arrow_back_sharp,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            buildFAQItem(0,'How do I book a vehicle through your website?',
-                'To book a vehicle, simply choose the type of service you need,'
-                    'Select the date and time, enter the value of the product, specify'
-                    'additional information, submit your booking request to receive'
-                    'quote from our partners.'),
-            buildFAQItem(1,'How long does it take to receive a quote after booking?',
-                'Once the booking request is submitted, our module will obtain'
-                "quotes from partners within 5 seconds. You'll receive the top 3"
-                'lowest price to choose from.'),
-            buildFAQItem(2, 'Can I choose my preferred vendor?',
-                'Yes! After receiving quotes, you can select the vendor the best fits'
-                'your budget and requirement.'),
-            buildFAQItem(3, 'What payment option do you offer?',
-                'You can choose to pay the full amount upfront or pay a partial'
-                'advance. Payment methods include credit/debit card and other'
-                'secure options available  on our site.'),
-            buildFAQItem(4, 'How can I track my order?',
-                'After your booking is confirmed and the order has started , you can'
-                "view the live location of your vehicle in the booking section. you'll"
-                "receive detailed information including the vendor name , operator"
-                "name the type of vehicle selected as well as the booking  status"
-                "and payment status for you convenience."),
-            buildFAQItem(5, 'Will I be notified when my driver is arriving?',
-                "Yes, the driver will notify you once they are en-route to your location,"
-                "ensuring you are informed about their arrival time."),
-            buildFAQItem(6, 'What should I do when I need to cancel my booking?',
-                'If you need to cancel your booking you can easily do so by clicking'
-                'the cancel icon located in the top right corner during the vendor'
-                'selection process. Follow the prompts to complete you cancellation.'),
-            buildFAQItem(7, 'Are there any additional fee that I should be aware of?',
-                'While we aim to provide clear pricing, additional fees may apply'
-                'based on specific services or circumstances. This will be disclosed'
-                'in the quotes you receive.'),
-            buildFAQItem(8, 'What happen if my vehicle does not arrive on time?',
-                'If your vehicle is late, please contact our support team, We will'
-                'assist you in tracking the status and addressing the issues.'),
-            buildFAQItem(9, 'How do I contact customer support?',
-                'You can reach our customer support team via the report section in'
-                'the website or email to us. We are here to assist you 24 hours.'),
-          ],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              buildFAQItem(0,'question1'.tr(),'answer1'.tr()),
+              buildFAQItem(1,'question2'.tr(),'answer2'.tr()),
+              buildFAQItem(2,'question3'.tr(),'answer3'.tr()),
+              buildFAQItem(3,'question4'.tr(),'answer4'.tr()),
+              buildFAQItem(4,'question5'.tr(),'answer5'.tr()),
+              buildFAQItem(5,'question6'.tr(),'answer6'.tr()),
+              buildFAQItem(6,'question7'.tr(),'answer7'.tr()),
+              buildFAQItem(7,'question8'.tr(),'answer8'.tr()),
+              buildFAQItem(8,'question9'.tr(),'answer9'.tr()),
+              buildFAQItem(9,'question10'.tr(),'answer10'.tr()),
+            ],
+          ),
         ),
       ),
     );

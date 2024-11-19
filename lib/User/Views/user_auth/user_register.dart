@@ -78,9 +78,7 @@ class _UserRegisterState extends State<UserRegister> {
         isLoading = false;
       });
     } else {
-      // Scroll up and focus on the first error field
-      FocusScope.of(context).unfocus(); // Remove focus from any field
-
+      FocusScope.of(context).unfocus();
       if (firstNameController.text.isEmpty) {
         _focusAndScroll(firstNameFocusNode);
       } else if (lastNameController.text.isEmpty) {

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
@@ -105,9 +106,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
       setState(() {
         isLoading = true;
       });
-      String pickupPlace = widget.pickUp; // Pickup location (city name)
-
-      // Step 1: Get the current location (device's location)
+      String pickupPlace = widget.pickUp;
       Position currentPosition = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng =
@@ -117,8 +116,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
         markers.clear();
         polylines.clear();
       });
-
-      // Step 2: Fetch pickup coordinates
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
@@ -136,8 +133,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
             double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
 
             BitmapDescriptor customIcon = await BitmapDescriptor.fromAssetImage(
-              const ImageConfiguration(size: Size(100, 48)), // Customize size here
-              'assets/carDirection.png', // Path to your custom icon
+              const ImageConfiguration(size: Size(100, 48)),
+              'assets/carDirection.png',
             );
 
             setState(() {
@@ -146,8 +143,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                     markerId: const MarkerId('currentLocation'),
                     position: currentLatLng,
                     infoWindow: InfoWindow(
-                      title: 'Current Location',
-                      snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km',
+                      title: 'Current Location'.tr(),
+                      snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                     ),
                     icon: customIcon),
               );
@@ -157,8 +154,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                   markerId: const MarkerId('pickup'),
                   position: pickupLatLng,
                   infoWindow: InfoWindow(
-                    title: 'Drop Point',
-                    snippet: '$pickupAddress - Distance: ${distanceToPickup.toStringAsFixed(2)} km',
+                    title: 'Drop Point'.tr(),
+                    snippet: '$pickupAddress - ${'Distance:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                   ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueRed),
@@ -166,13 +163,11 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
               );
             });
 
-            // Step 3: Fetch route from current location to pickup point
             String directionsUrlFromCurrentToPickup =
                 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng.latitude},${pickupLatLng.longitude}&key=$apiKey';
             final directionsResponseFromCurrentToPickup =
             await http.get(Uri.parse(directionsUrlFromCurrentToPickup));
 
-            // Draw the polyline for current location to pickup point
             if (directionsResponseFromCurrentToPickup.statusCode == 200) {
               final directionsData =
               json.decode(directionsResponseFromCurrentToPickup.body);
@@ -197,7 +192,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                 timeToPickup = durationToPickup;
                 print('Travel time to Pickup: $durationToPickup');
 
-                // Center the map to the route
                 mapController?.animateCamera(CameraUpdate.newLatLngZoom(
                     LatLng(
                         (currentLatLng.latitude + pickupLatLng.latitude) / 2,
@@ -230,7 +224,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
       final data = json.decode(response.body);
       List<LatLng> points = [];
 
-      // Extract points from the route
       if (data['routes'].isNotEmpty) {
         final polylinePoints = data['routes'][0]['overview_polyline']['points'];
         points = _decodePolyline(polylinePoints);
@@ -242,28 +235,20 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
   }
 
   String formatDistance(double? distanceInKm) {
-    // Debug log to see the value of distanceInKm
     print('Distance in KM: $distanceInKm');
-
-    // Return "0 ft" if distance is null or 0
     if (distanceInKm == null || distanceInKm <= 0) {
       print('Distance is null or zero, returning 0 ft');
-      return '0 ft'; // Ensure "0 ft" is returned when launching or if distance is 0
+      return '0 ft';
     }
-
-    // Convert distance from kilometers to feet
     double distanceInFeet = distanceInKm * 3280.84;
     print('Distance in Feet: $distanceInFeet');
 
-    // Convert feet to miles
     double distanceInMiles = distanceInFeet / 5280;
 
-    // Return the distance in feet if less than 1 mile
     if (distanceInMiles < 1) {
       print('Distance is less than 1 mile, returning in feet');
       return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
-      // Return the distance in miles and remaining feet if greater than or equal to 1 mile
       int miles = distanceInMiles.floor();
       double remainingFeet = distanceInFeet - (miles * 5280);
       print('Distance is more than 1 mile, returning in miles and feet');
@@ -277,22 +262,19 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
       double heading = currentPosition.heading;
 
-      // Update camera position
       await mapController?.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: currentLatLng,
-          zoom: 20, // Adjust zoom level as needed
+          zoom: 20,
           tilt: 20,
           bearing: heading,
         ),
       ));
 
-      // Check if pickupLatLng is not null
       if (pickupLatLng != null) {
         final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
         List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
 
-        // Draw polyline on the map
         setState(() {
           polylines.add(Polyline(
             polylineId: PolylineId('route'),
@@ -302,7 +284,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           ));
         });
 
-        // Optional: Zoom to fit the route
         if (routePoints.isNotEmpty) {
           LatLngBounds bounds = LatLngBounds(
             southwest: LatLng(
@@ -314,7 +295,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
               routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
             ),
           );
-          // mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50)); // 50 is the padding
         }
       } else {
         print("Pickup location is not available.");
@@ -333,7 +313,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
             cos(_degToRad(start.latitude)) * cos(_degToRad(end.latitude)) *
                 sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c; // Distance in kilometers
+    return R * c;
   }
 
   double _degToRad(double deg) {
@@ -376,9 +356,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
   }
 
   String calculateFeet(Position position) {
-    // Example logic to calculate distance in feet
-    double distanceInMeters = position.accuracy; // Replace with your distance logic
-    return (distanceInMeters * 3.28084).toStringAsFixed(0); // Convert to feet and format
+    double distanceInMeters = position.accuracy;
+    return (distanceInMeters * 3.28084).toStringAsFixed(0);
   }
 
   @override
@@ -403,8 +382,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
 
   void _initLocationListener() async {
     location_package.Location location = location_package.Location();
-
-    // Request permission from the location package
     location_package.PermissionStatus permission = await location.requestPermission();
 
     if (permission == location_package.PermissionStatus.granted) {
@@ -418,19 +395,16 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
   }
 
   void _initializePickupLocation() async {
-    // Log the pickup string
     print('Pickup string: "${widget.pickUp}"');
 
-    // Clean the pickup string by removing whitespace
     String cleanedPickup = widget.pickUp.trim();
 
     if (cleanedPickup.isNotEmpty) {
-      // Call geocoding function to get LatLng
       LatLng? latLng = await getLatLngFromAddress(cleanedPickup);
 
       if (latLng != null) {
         pickupLatLng = latLng;
-        print('Pickup location set to: $pickupLatLng'); // Debugging output
+        print('Pickup location set to: $pickupLatLng');
       } else {
         print('Could not get coordinates for the pickup location');
       }
@@ -457,7 +431,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
     } else {
       print('Error fetching geocode: ${response.statusCode}');
     }
-    return null; // Return null if something goes wrong
+    return null;
   }
 
   Future<void> startLocationUpdates() async {
@@ -480,8 +454,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           markers.add(Marker(
             markerId: const MarkerId('currentLocation'),
             position: newLocation,
-            infoWindow: const InfoWindow(
-              title: 'Current Location',
+            infoWindow: InfoWindow(
+              title: 'Current Location'.tr(),
             ),
             icon: customArrowIcon!,
           ));
@@ -495,26 +469,20 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
 
   Future<void> _updateRealTimeData(LatLng currentLatLng) async {
     try {
-      // Check if pickupLatLng is available
       if (pickupLatLng == null) {
         print('pickupLatLng is null');
-        return; // Exit early if pickupLatLng is null
+        return;
       }
 
-      // Step 1: Calculate distance to pickup
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
       String updatedFeet = formatDistance(distanceToPickup);
-
-      // Step 2: Fetch route points from Google Directions API
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-
-      // Step 3: Reverse geocode the current location to get the location name
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String reverseGeocodeUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
       final reverseGeocodeResponse = await http.get(Uri.parse(reverseGeocodeUrl));
 
-      String currentLocationName = 'Unknown Location'; // Default value
+      String currentLocationName = 'Unknown Location';
 
       if (reverseGeocodeResponse.statusCode == 200) {
         final reverseGeocodeData = json.decode(reverseGeocodeResponse.body);
@@ -528,8 +496,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           }
         }
       }
-
-      // Step 4: Fetch travel time and route details
       String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
       final directionsResponse = await http.get(Uri.parse(directionsUrl));
 
@@ -539,39 +505,30 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
           final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
 
-          // Check if the widget is still mounted before updating the state
           if (!mounted) return;
 
           setState(() {
-            // Step 5: Update real-time data (polylines and markers)
             pickUpDistance = distanceToPickup;
             timeToPickup = durationToPickup;
             feet = updatedFeet;
-
-            // Clear previous polylines and set the new route
             polylines.clear();
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
               color: Colors.blue,
               width: 5,
-              points: updatedRoutePoints, // Route points from Google Directions API
+              points: updatedRoutePoints,
             ));
-
-            // Remove previous marker for the current location
             markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-
-            // Add updated marker for the current location
             markers.add(Marker(
               markerId: const MarkerId('currentLocation'),
               position: currentLatLng,
               infoWindow: InfoWindow(
                 title: placeName,
-                snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
+                snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
               ),
-              icon: customArrowIcon!, // Use custom icon if available
+              icon: customArrowIcon!,
             ));
 
-            // Optionally, move the camera to the current location or zoom to fit the route
             mapController?.animateCamera(CameraUpdate.newLatLngBounds(
               LatLngBounds(
                 southwest: LatLng(
@@ -583,7 +540,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                   currentLatLng.longitude > pickupLatLng!.longitude ? currentLatLng.longitude : pickupLatLng!.longitude,
                 ),
               ),
-              100.0, // Padding to ensure both markers fit on the screen
+              100.0,
             ));
           });
         }
@@ -601,8 +558,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           markerId: MarkerId('current_location'),
           position: position,
           icon: customArrowIcon!,
-          rotation: heading,  // Rotate the arrow based on the heading
-          anchor: Offset(0.5, 0.5),  // Center the arrow marker
+          rotation: heading,
+          anchor: Offset(0.5, 0.5),
         );
       });
     }
@@ -615,16 +572,10 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
   }
 
   Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    // Check if pickup location exists
     if (pickupLatLng != null) {
-      // Calculate the distance to the pickup point
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
       String feet = formatDistance(distanceToPickup);
-
-      // Fetch updated directions from current location to pickup point
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-
-      // Fetch updated travel time from API
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String directionsUrl =
           'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
@@ -633,12 +584,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
       if (response.statusCode == 200) {
         final directionsData = json.decode(response.body);
         if (directionsData['status'] == 'OK') {
-          // Extract the duration to pickup location
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-
-          // Update the polyline, distance, and time in the UI
           setState(() {
-            // Remove the old polyline and add the new one
             polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
@@ -646,8 +593,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
               width: 5,
               points: updatedRoutePoints,
             ));
-
-            // Update distance and time for the user interface
             pickUpDistance = distanceToPickup;
             timeToPickup = durationToPickup;
             feet = formatDistance(distanceToPickup);
@@ -685,7 +630,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
           });
         }
         setState(() {
-          currentIndex = 0; // Reset to the first place when new data is fetched
+          currentIndex = 0;
         });
       } else {
         print('Error fetching places: ${nearbyPlacesData['status']}');
@@ -716,218 +661,227 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-          context,
-          showLeading: false
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.93,
-                  child: GoogleMap(
-                    mapType: MapType.normal,
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 5,
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+            context,
+            showLeading: false,
+          User: widget.firstName +' '+ widget.lastName,
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    height: MediaQuery.sizeOf(context).height * 0.93,
+                    child: GoogleMap(
+                      mapType: MapType.normal,
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                      },
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(0, 0),
+                        zoom: 5,
+                      ),
+                      markers: Set<Marker>.of(markers),
+                      polylines: Set<Polyline>.of(polylines),
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: true,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                        ),
+                      },
                     ),
-                    markers: Set<Marker>.of(markers),
-                    polylines: Set<Polyline>.of(polylines),
-                    myLocationEnabled: false,
-                    myLocationButtonEnabled: true,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                            () => EagerGestureRecognizer(),
-                      ),
-                    },
                   ),
-                ),
-                Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10,right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 5), // changes position of shadow
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: (){
-                                    // Navigator.push(context,
-                                    //     MaterialPageRoute(builder: (context) => DriverHomePage()));
-                                  },
-                                  icon: Icon(FontAwesomeIcons.multiply)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-                Positioned(
-                    top: MediaQuery.sizeOf(context).height * 0.1,
-                    child: Container(
-                      margin: EdgeInsets.only(left: 20),
-                      width: MediaQuery.sizeOf(context).width * 0.92,
-                      // height: MediaQuery.sizeOf(context).height * 0.13,
-                      child: Card(
-                        color: Colors.white,
-                        child: Column(
+                  Positioned(
+                      top: 15,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        padding: const EdgeInsets.only(left: 10,right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                            Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: (){
+                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          token: widget.token,
+                                          id: widget.id,
+                                          partnerId: widget.partnerId,
+                                          mode: 'online')));
+                                    },
+                                    icon: Icon(FontAwesomeIcons.multiply)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                  Positioned(
+                      top: MediaQuery.sizeOf(context).height * 0.1,
+                      child: Container(
+                        margin: EdgeInsets.only(left: 20),
+                        width: MediaQuery.sizeOf(context).width * 0.92,
+                        // height: MediaQuery.sizeOf(context).height * 0.13,
+                        child: Card(
+                          color: Colors.white,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
+                                      child: Column(
+                                        children: [
+                                          Icon(Icons.location_on,color: Color(0xff6069FF),size: 30,),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(currentPlace.isNotEmpty
+                                                ? currentPlace
+                                                : 'Fetching Current Location.....'.tr(),
+                                                textAlign: TextAlign.start,
+                                                style: TextStyle(fontSize: 16,color: Color(0xff676565))),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                  ),
+                  Positioned(
+                      bottom: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                              child: Column(
                                 children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          timeToPickup ?? '',
+                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SvgPicture.asset('assets/person.svg'),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          pickUpDistance!=0
+                                              ? '${pickUpDistance.toStringAsFixed(2)} km'
+                                              : 'Calculating...'.tr(),
+                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Divider(
+                                    indent: 15,
+                                    endIndent: 15,
+                                  ),
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
-                                    child: Column(
-                                      children: [
-                                        Icon(Icons.location_on,color: Color(0xff6069FF),size: 30,),
-                                      ],
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      widget.userName,
+                                      style: TextStyle(fontSize: 20, color: Color(0xff676565)),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(currentPlace.isNotEmpty
-                                              ? currentPlace
-                                              : 'Fetching Current Location.....',
-                                              textAlign: TextAlign.start,
-                                              style: TextStyle(fontSize: 16,color: Color(0xff676565))),
-                                        ],
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 15, top: 20),
+                                    child: SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.07,
+                                      width: MediaQuery.of(context).size.width * 0.62,
+                                      child: SlideAction(
+                                        borderRadius: 12,
+                                        elevation: 0,
+                                        submittedIcon: Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                        ),
+                                        innerColor: Color(0xff6069FF),
+                                        outerColor: Color(0xff6069FF),
+                                        sliderButtonIcon: Icon(
+                                          Icons.arrow_forward_outlined,
+                                          color: Colors.white,
+                                        ),
+                                        text: "Complete Order".tr(),
+                                        textStyle: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        onSubmit: () async{
+                                          setState(() {
+                                            isCompleting =true;
+                                          });
+                                          await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+                                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                              firstName: widget.firstName,
+                                              lastName: widget.lastName,
+                                              token: widget.token,
+                                              id: widget.id,
+                                              partnerId: widget.partnerId,
+                                              mode: 'online')));
+                                          setState(() {
+                                            isCompleting =false;
+                                          });
+                                        },
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    )
-                ),
-                Positioned(
-                    bottom: 20,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 15, right: 30),
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width * 0.93,
-                        child: Card(
-                          color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        timeToPickup ?? '',
-                                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: SvgPicture.asset('assets/person.svg'),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        pickUpDistance!=0
-                                            ? '${pickUpDistance.toStringAsFixed(2)} km'
-                                            : 'Calculating...',
-                                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Divider(
-                                  indent: 15,
-                                  endIndent: 15,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    widget.userName,
-                                    style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 15, top: 20),
-                                  child: SizedBox(
-                                    height: MediaQuery.of(context).size.height * 0.07,
-                                    width: MediaQuery.of(context).size.width * 0.62,
-                                    child: SlideAction(
-                                      borderRadius: 12,
-                                      elevation: 0,
-                                      submittedIcon: Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                      ),
-                                      innerColor: Color(0xff6069FF),
-                                      outerColor: Color(0xff6069FF),
-                                      sliderButtonIcon: Icon(
-                                        Icons.arrow_forward_outlined,
-                                        color: Colors.white,
-                                      ),
-                                      text: "Complete Order",
-                                      textStyle: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      onSubmit: () async{
-                                        setState(() {
-                                          isCompleting =true;
-                                        });
-                                        await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                            firstName: widget.firstName,
-                                            lastName: widget.lastName,
-                                            token: widget.token,
-                                            id: widget.id,
-                                            partnerId: widget.partnerId,
-                                            mode: 'online')));
-                                        setState(() {
-                                          isCompleting =false;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
-                      ),
-                    )
-                ),
-              ],
-            ),
-          ],
+                      )
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

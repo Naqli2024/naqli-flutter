@@ -1,9 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
-
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -92,9 +93,9 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   void _startLocationUpdates() {
     positionStream = Geolocator.getPositionStream().listen((Position position) {
       setState(() {
-        currentLatLng = LatLng(position.latitude, position.longitude); // Update current location
+        currentLatLng = LatLng(position.latitude, position.longitude);
       });
-      checkPickupLocation(); // Call your method whenever a new location is received
+      checkPickupLocation();
     });
   }
 
@@ -104,9 +105,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
       setState(() {
         isLoading = true;
       });
-      String pickupPlace = widget.pickUp; // Pickup location (city name)
+      String pickupPlace = widget.pickUp;
 
-      // Step 1: Get the current location (device's location)
       Position currentPosition = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng =
@@ -117,7 +117,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         polylines.clear();
       });
 
-      // Step 2: Fetch pickup coordinates
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
@@ -135,8 +134,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
             double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
 
             BitmapDescriptor customIcon = await BitmapDescriptor.fromAssetImage(
-              const ImageConfiguration(size: Size(100, 48)), // Customize size here
-              'assets/carDirection.png', // Path to your custom icon
+              const ImageConfiguration(size: Size(100, 48)),
+              'assets/carDirection.png',
             );
 
             setState(() {
@@ -145,8 +144,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
                     markerId: const MarkerId('currentLocation'),
                     position: currentLatLng,
                     infoWindow: InfoWindow(
-                      title: 'Current Location',
-                      snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km',
+                      title: 'Current Location'.tr(),
+                      snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                     ),
                     icon: customIcon),
               );
@@ -156,8 +155,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
                   markerId: const MarkerId('pickup'),
                   position: pickupLatLng,
                   infoWindow: InfoWindow(
-                    title: 'Pickup Point',
-                    snippet: '$pickupAddress - Distance: ${distanceToPickup.toStringAsFixed(2)} km',
+                    title: 'Pickup Point'.tr(),
+                    snippet: '$pickupAddress - ${'Distance:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                   ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueRed),
@@ -165,13 +164,11 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
               );
             });
 
-            // Step 3: Fetch route from current location to pickup point
             String directionsUrlFromCurrentToPickup =
                 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng.latitude},${pickupLatLng.longitude}&key=$apiKey';
             final directionsResponseFromCurrentToPickup =
             await http.get(Uri.parse(directionsUrlFromCurrentToPickup));
 
-            // Draw the polyline for current location to pickup point
             if (directionsResponseFromCurrentToPickup.statusCode == 200) {
               final directionsData =
               json.decode(directionsResponseFromCurrentToPickup.body);
@@ -190,7 +187,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
                 });
                 double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
                 pickUpDistance = distanceToPickup;
-                // Extract travel time
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
@@ -241,28 +237,22 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   String formatDistance(double? distanceInKm) {
-    // Debug log to see the value of distanceInKm
     print('Distance in KM: $distanceInKm');
 
-    // Return "0 ft" if distance is null or 0
     if (distanceInKm == null || distanceInKm <= 0) {
       print('Distance is null or zero, returning 0 ft');
-      return '0 ft'; // Ensure "0 ft" is returned when launching or if distance is 0
+      return '0 ft';
     }
 
-    // Convert distance from kilometers to feet
     double distanceInFeet = distanceInKm * 3280.84;
     print('Distance in Feet: $distanceInFeet');
 
-    // Convert feet to miles
     double distanceInMiles = distanceInFeet / 5280;
 
-    // Return the distance in feet if less than 1 mile
     if (distanceInMiles < 1) {
       print('Distance is less than 1 mile, returning in feet');
       return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
-      // Return the distance in miles and remaining feet if greater than or equal to 1 mile
       int miles = distanceInMiles.floor();
       double remainingFeet = distanceInFeet - (miles * 5280);
       print('Distance is more than 1 mile, returning in miles and feet');
@@ -278,22 +268,19 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
       double heading = currentPosition.heading;
 
-      // Update camera position
       await mapController?.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: currentLatLng,
-          zoom: 20, // Adjust zoom level as needed
+          zoom: 20,
           tilt: 20,
           bearing: heading,
         ),
       ));
 
-      // Check if pickupLatLng is not null
       if (pickupLatLng != null) {
         final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
         List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
 
-        // Draw polyline on the map
         setState(() {
           polylines.add(Polyline(
             polylineId: PolylineId('route'),
@@ -303,7 +290,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           ));
         });
 
-        // Optional: Zoom to fit the route
         if (routePoints.isNotEmpty) {
           LatLngBounds bounds = LatLngBounds(
             southwest: LatLng(
@@ -315,7 +301,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
               routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
             ),
           );
-          // mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50)); // 50 is the padding
         }
       } else {
         print("Pickup location is not available.");
@@ -326,7 +311,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   double _haversineDistance(LatLng start, LatLng end) {
-    const double R = 6371; // Radius of the Earth in kilometers
+    const double R = 6371;
     double dLat = _degToRad(end.latitude - start.latitude);
     double dLon = _degToRad(end.longitude - start.longitude);
     double a =
@@ -334,7 +319,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
             cos(_degToRad(start.latitude)) * cos(_degToRad(end.latitude)) *
                 sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c; // Distance in kilometers
+    return R * c;
   }
 
   double _degToRad(double deg) {
@@ -377,9 +362,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   String calculateFeet(Position position) {
-    // Example logic to calculate distance in feet
-    double distanceInMeters = position.accuracy; // Replace with your distance logic
-    return (distanceInMeters * 3.28084).toStringAsFixed(0); // Convert to feet and format
+    double distanceInMeters = position.accuracy;
+    return (distanceInMeters * 3.28084).toStringAsFixed(0);
   }
 
   @override
@@ -404,8 +388,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
 
   void _initLocationListener() async {
     location_package.Location location = location_package.Location();
-
-    // Request permission from the location package
     location_package.PermissionStatus permission = await location.requestPermission();
 
     if (permission == location_package.PermissionStatus.granted) {
@@ -413,9 +395,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         checkPickupLocation();
         currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
         _updateRealTimeData(currentLatLng);
-        // if (pickupLatLng != null && _isNearPickup(currentLatLng!, pickupLatLng!)) {
-        //   _calculateAndDisplayRouteFromPickupToDropPoints();
-        // }
       });
     } else {
       print('Location permission denied');
@@ -423,19 +402,16 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   void _initializePickupLocation() async {
-    // Log the pickup string
     print('Pickup string: "${widget.pickUp}"');
 
-    // Clean the pickup string by removing whitespace
     String cleanedPickup = widget.pickUp.trim();
 
     if (cleanedPickup.isNotEmpty) {
-      // Call geocoding function to get LatLng
       LatLng? latLng = await getLatLngFromAddress(cleanedPickup);
 
       if (latLng != null) {
         pickupLatLng = latLng;
-        print('Pickup location set to: $pickupLatLng'); // Debugging output
+        print('Pickup location set to: $pickupLatLng');
       } else {
         print('Could not get coordinates for the pickup location');
       }
@@ -462,7 +438,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
     } else {
       print('Error fetching geocode: ${response.statusCode}');
     }
-    return null; // Return null if something goes wrong
+    return null;
   }
 
   Future<void> startLocationUpdates() async {
@@ -485,8 +461,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           markers.add(Marker(
             markerId: const MarkerId('currentLocation'),
             position: newLocation,
-            infoWindow: const InfoWindow(
-              title: 'Current Location',
+            infoWindow: InfoWindow(
+              title: 'Current Location'.tr(),
             ),
             icon: customArrowIcon!,
           ));
@@ -503,16 +479,12 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
     try {
       if (pickupLatLng == null) {
         print('pickupLatLng is null');
-        return; // Exit early if pickupLatLng is null
+        return;
       }
-
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
       String updatedFeet = formatDistance(distanceToPickup);
-
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
       await fetchNearbyPlaces(currentLatLng);
-      // checkPickupLocation();
-      // Fetch travel time and other details from the Google Directions API
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
       final directionsResponse = await http.get(Uri.parse(directionsUrl));
@@ -523,7 +495,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
           final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
 
-          // Check if the widget is still mounted before calling setState
           if (!mounted) return;
 
           setState(() {
@@ -550,7 +521,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
               position: currentLatLng,
               infoWindow: InfoWindow(
                 title: placeName,
-                snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
+                snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
               ),
               icon: customArrowIcon!,
             ));
@@ -570,8 +541,8 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           markerId: MarkerId('current_location'),
           position: position,
           icon: customArrowIcon!,
-          rotation: heading,  // Rotate the arrow based on the heading
-          anchor: Offset(0.5, 0.5),  // Center the arrow marker
+          rotation: heading,
+          anchor: Offset(0.5, 0.5),
         );
       });
     }
@@ -584,16 +555,10 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    // Check if pickup location exists
     if (pickupLatLng != null) {
-      // Calculate the distance to the pickup point
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
       String feet = formatDistance(distanceToPickup);
-
-      // Fetch updated directions from current location to pickup point
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-
-      // Fetch updated travel time from API
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String directionsUrl =
           'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
@@ -602,12 +567,9 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
       if (response.statusCode == 200) {
         final directionsData = json.decode(response.body);
         if (directionsData['status'] == 'OK') {
-          // Extract the duration to pickup location
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
 
-          // Update the polyline, distance, and time in the UI
           setState(() {
-            // Remove the old polyline and add the new one
             polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
@@ -616,7 +578,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
               points: updatedRoutePoints,
             ));
 
-            // Update distance and time for the user interface
             pickUpDistance = distanceToPickup;
             timeToPickup = durationToPickup;
             feet = formatDistance(distanceToPickup);
@@ -654,7 +615,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           });
         }
         setState(() {
-          currentIndex = 0; // Reset to the first place when new data is fetched
+          currentIndex = 0;
         });
       } else {
         print('Error fetching places: ${nearbyPlacesData['status']}');
@@ -672,27 +633,20 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
     print('Current LatLng: $currentLatLng');
     print('Pickup LatLng: $pickupLatLng');
 
-    // Check if pickup location is available
     if (pickupLatLng == null) {
       print('Pickup location is null, cannot check distance.');
       return;
     }
 
-    // Calculate the distance to pickup in kilometers
     double distanceToPickupInKm = _haversineDistance(currentLatLng, pickupLatLng!);
-
-    // Convert kilometers to feet (1 km = 3280.84 feet)
     double distanceToPickupInFeet = distanceToPickupInKm * 3280.84;
 
-    // Debugging log
     print('Distance to Pickup in Feet: $distanceToPickupInFeet');
 
-    // Check if the distance is less than or equal to 50 feet and hasn't navigated yet
-    if (distanceToPickupInFeet <= 111190 && !hasNavigated) {
-      hasNavigated = true; // Prevent multiple navigations
+    if (distanceToPickupInFeet <= 50 && !hasNavigated) {
+      hasNavigated = true;
 
       if (mounted) {
-        // Stop position stream and navigate to CustomerNotified page
         await positionStream?.cancel();
         Navigator.pushReplacement(
           context,
@@ -755,251 +709,254 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        showLeading: false,
-        User: widget.firstName +' '+ widget.lastName,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.93,
-                  child: GoogleMap(
-                    mapType: MapType.normal,
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 2,
-                    ),
-                    markers: Set<Marker>.of(markers),
-                    polylines: Set<Polyline>.of(polylines),
-                    myLocationEnabled: false,
-                    myLocationButtonEnabled: true,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                            () => EagerGestureRecognizer(),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          showLeading: false,
+          User: widget.firstName +' '+ widget.lastName,
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    height: MediaQuery.sizeOf(context).height * 0.93,
+                    child: GoogleMap(
+                      mapType: MapType.normal,
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                      },
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(0, 0),
+                        zoom: 2,
                       ),
-                    },
+                      markers: Set<Marker>.of(markers),
+                      polylines: Set<Polyline>.of(polylines),
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: true,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                        ),
+                      },
+                    ),
                   ),
-                ),
-                Positioned(
-                    top: 15,
+                  Positioned(
+                      top: 15,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        padding: const EdgeInsets.only(left: 10,right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: (){
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(FontAwesomeIcons.multiply)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                  Positioned(
+                    top: MediaQuery.sizeOf(context).height * 0.1,
                     child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10,right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 5), // changes position of shadow
+                      margin: EdgeInsets.only(left: 20),
+                      width: MediaQuery.sizeOf(context).width * 0.92,
+                      child: Card(
+                        color: Colors.white,
+                        child: nearbyPlaces.isNotEmpty
+                            ? Column(
+                          children: [
+                            if (nearbyPlaces.isNotEmpty && currentIndex < nearbyPlaces.length)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 15, right: 10),
+                                      child: Column(
+                                        children: [
+                                          SvgPicture.asset('assets/upArrow.svg'),
+                                          Text(
+                                            feet == null?'0 ft':'$feet',
+                                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(nearbyPlaces[currentIndex]['name'] ?? ''),
+                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            Divider(
+                              indent: 15,
+                              endIndent: 15,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Icon(
+                                    Icons.location_on,
+                                    color: Color(0xff6069FF),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    children: [
+                                      Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: (){
-                                    Navigator.pop(context);
-                                  },
-                                  icon: Icon(FontAwesomeIcons.multiply)),
+                          ],
+                        )
+                            : Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: MediaQuery.sizeOf(context).height * 0.27,
+                    child: GestureDetector(
+                      onTap: recenterMap,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Color(0xff6069FF),
+                            width: 6,
+                          ),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 2,
                             ),
                           ),
-                        ],
+                          child: CircleAvatar(
+                              minRadius: 45,
+                              maxRadius: double.maxFinite,
+                              backgroundColor: Color(0xff6069FF),
+                              child: Text(
+                                'Move'.tr(),
+                                style:
+                                TextStyle(color: Colors.white, fontSize: 20),
+                              )),
+                        ),
                       ),
-                    )),
-                Positioned(
-                  top: MediaQuery.sizeOf(context).height * 0.1,
-                  child: Container(
-                    margin: EdgeInsets.only(left: 20),
-                    width: MediaQuery.sizeOf(context).width * 0.92,
-                    child: Card(
-                      color: Colors.white,
-                      child: nearbyPlaces.isNotEmpty
-                          ? Column(
-                        children: [
-                          if (nearbyPlaces.isNotEmpty && currentIndex < nearbyPlaces.length)
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 20,
+                    child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
+                              child: Column(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 15, right: 10),
-                                    child: Column(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
                                       children: [
-                                        SvgPicture.asset('assets/upArrow.svg'),
-                                        Text(
-                                          feet == null?'0 ft':'$feet', // Ensure this is updated dynamically
-                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                        Padding(
+                                          padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width * 0.18),
+                                          child: SvgPicture.asset('assets/person.svg'),
+                                        ),
+                                        Container(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            firstName != null
+                                                ? '$firstName'
+                                                : '' + '${lastName != null ? '$lastName' : ''}',
+                                            style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Expanded( // Wrap in Expanded to avoid overflow
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                  // Show updated distance and time
+                                  Text(
+                                    timeToPickup ==null ?'Calculating...'.tr():'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
+                                    style: TextStyle(fontSize: 17, color: Color(0xff676565)),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 20),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        Text(nearbyPlaces[currentIndex]['name'] ?? ''),
-                                        Text('Towards', style: TextStyle(fontWeight: FontWeight.bold)),
-                                        Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center),
+                                        Icon(Icons.call, color: Color(0xff6069FF)),
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Text('Call'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
+                                        ),
+                                        Icon(Icons.message, color: Color(0xff6069FF)),
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8),
+                                          child: Text('Message'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
+                                        ),
+                                        Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF)),
+                                        Text('Cancel'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          Divider(
-                            indent: 15,
-                            endIndent: 15,
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Icon(
-                                  Icons.location_on,
-                                  color: Color(0xff6069FF),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  children: [
-                                    Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                          : Center(child: CircularProgressIndicator()),
+                        )
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: MediaQuery.sizeOf(context).height * 0.27,
-                  child: GestureDetector(
-                    onTap: recenterMap,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: Color(0xff6069FF),
-                          width: 6,
-                        ),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                            minRadius: 45,
-                            maxRadius: double.maxFinite,
-                            backgroundColor: Color(0xff6069FF),
-                            child: Text(
-                              'Move',
-                              style:
-                              TextStyle(color: Colors.white, fontSize: 20),
-                            )),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 20,
-                  child: Padding(
-                      padding: const EdgeInsets.only(left: 15, right: 30),
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width * 0.93,
-                        child: Card(
-                          color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width * 0.18),
-                                        child: SvgPicture.asset('assets/person.svg'),
-                                      ),
-                                      Container(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          firstName != null
-                                              ? '$firstName'
-                                              : '' + '${lastName != null ? '$lastName' : ''}',
-                                          style: TextStyle(fontSize: 24, color: Color(0xff676565)),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Show updated distance and time
-                                Text(
-                                  timeToPickup ==null ?'Calculating...':'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
-                                  style: TextStyle(fontSize: 17, color: Color(0xff676565)),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Icon(Icons.call, color: Color(0xff6069FF)),
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: Text('Call', style: TextStyle(fontSize: 17, color: Color(0xff676565))),
-                                      ),
-                                      Icon(Icons.message, color: Color(0xff6069FF)),
-                                      Padding(
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: Text('Message', style: TextStyle(fontSize: 17, color: Color(0xff676565))),
-                                      ),
-                                      Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF)),
-                                      Text('Cancel', style: TextStyle(fontSize: 17, color: Color(0xff676565))),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

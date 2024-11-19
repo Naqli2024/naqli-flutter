@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -510,7 +511,7 @@ class AuthService {
         globalPartnerId = partnerId;
         print('Upload successful');
         Fluttertoast.showToast(
-          msg: 'Operator added Successfully',
+          msg: 'Operator added Successfully'.tr(),
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
@@ -713,13 +714,11 @@ class AuthService {
                 ? booking['quotePrice'].toString()
                 : booking['quotePrice'].toString();
 
-            final paymentStatus = booking['paymentStatus']?.toString() ?? 'Pending';
+            final paymentStatus = booking['paymentStatus']?.toString() ?? '';
 
             print('Booking ID: $bookingId');
             print('Payment Status: $paymentStatus');
             print('Quote Price: $quotePrice');
-
-            await getBookingId(bookingId, token, paymentStatus, quotePrice);
 
             bookingIds.add({
               'bookingId': bookingId,

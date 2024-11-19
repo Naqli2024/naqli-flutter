@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_addresNavigation/driver_addressInteraction.dart';
+import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -13,6 +15,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'dart:ui' as ui;
 
 class AcceptAddressOrder extends StatefulWidget {
   final String firstName;
@@ -66,9 +69,8 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
       setState(() {
         isLoading = true;
       });
-      String pickupPlace = widget.pickUp; // Pickup location (city name)
+      String pickupPlace = widget.pickUp;
 
-      // Step 1: Get the current location (device's location)
       Position currentPosition = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng =
@@ -79,7 +81,6 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
         polylines.clear();
       });
 
-      // Step 2: Fetch pickup coordinates
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
@@ -97,8 +98,8 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
             double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
 
             BitmapDescriptor customIcon = await BitmapDescriptor.fromAssetImage(
-              const ImageConfiguration(size: Size(100, 48)), // Customize size here
-              'assets/carDirection.png', // Path to your custom icon
+              const ImageConfiguration(size: Size(100, 48)),
+              'assets/carDirection.png',
             );
 
             setState(() {
@@ -107,8 +108,8 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                     markerId: const MarkerId('currentLocation'),
                     position: currentLatLng,
                     infoWindow: InfoWindow(
-                      title: 'Current Location',
-                      snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km',
+                      title: 'Current Location'.tr(),
+                      snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                     ),
                     icon: customIcon),
               );
@@ -118,22 +119,18 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                   markerId: const MarkerId('pickup'),
                   position: pickupLatLng,
                   infoWindow: InfoWindow(
-                    title: 'Pickup Point',
-                    snippet: '$pickupAddress - Distance: ${distanceToPickup.toStringAsFixed(2)} km',
+                    title: 'Pickup Point'.tr(),
+                    snippet: '$pickupAddress - ${'Distance:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                   ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueRed),
                 ),
               );
             });
-
-            // Step 3: Fetch route from current location to pickup point
             String directionsUrlFromCurrentToPickup =
                 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng.latitude},${pickupLatLng.longitude}&key=$apiKey';
             final directionsResponseFromCurrentToPickup =
             await http.get(Uri.parse(directionsUrlFromCurrentToPickup));
-
-            // Draw the polyline for current location to pickup point
             if (directionsResponseFromCurrentToPickup.statusCode == 200) {
               final directionsData =
               json.decode(directionsResponseFromCurrentToPickup.body);
@@ -152,13 +149,11 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                 });
                 double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
                 pickUpDistance = distanceToPickup;
-                // Extract travel time
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
                 print('Travel time to Pickup: $durationToPickup');
 
-                // Center the map to the route
                 mapController?.animateCamera(CameraUpdate.newLatLngZoom(
                     LatLng(
                         (currentLatLng.latitude + pickupLatLng.latitude) / 2,
@@ -179,7 +174,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
   }
 
   double _haversineDistance(LatLng start, LatLng end) {
-    const double earthRadius = 6371.0; // Earth's radius in kilometers
+    const double earthRadius = 6371.0;
     final double dLat = _degreesToRadians(end.latitude - start.latitude);
     final double dLon = _degreesToRadians(end.longitude - start.longitude);
 
@@ -237,14 +232,11 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       print('Location services are disabled.');
       return;
     }
-
-    // Check for location permissions
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -259,14 +251,12 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
       return;
     }
 
-    // Fetch the current location
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
 
-    // Move camera to current location on the map
     if (mapController != null && currentLocation != null) {
       mapController!.animateCamera(CameraUpdate.newLatLng(currentLocation!));
     }
@@ -274,181 +264,184 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        showLeading: false,
-        User: widget.firstName +' '+ widget.lastName,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.93,
-                  child: GoogleMap(
-                    mapType: MapType.normal,
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 5,
-                    ),
-                    markers: Set<Marker>.of(markers),
-                    polylines: Set<Polyline>.of(polylines),
-                    myLocationEnabled: false,
-                    myLocationButtonEnabled: true,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                            () => EagerGestureRecognizer(),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          showLeading: false,
+          User: widget.firstName +' '+ widget.lastName,
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    height: MediaQuery.sizeOf(context).height * 0.93,
+                    child: GoogleMap(
+                      mapType: MapType.normal,
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                      },
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(0, 0),
+                        zoom: 5,
                       ),
-                    },
+                      markers: Set<Marker>.of(markers),
+                      polylines: Set<Polyline>.of(polylines),
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: true,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                        ),
+                      },
+                    ),
                   ),
-                ),
-                Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10,right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 5), // changes position of shadow
+                  Positioned(
+                      top: 15,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        padding: const EdgeInsets.only(left: 10,right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5), // changes position of shadow
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: (){
+                                      Navigator.pop(context);
+                                    },
+                                    icon: Icon(FontAwesomeIcons.multiply)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                  Positioned(
+                    bottom: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 15,right: 30),
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width * 0.93,
+                        child: Card(
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10,right: 10),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 15),
+                                  child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',height: 35,)),
+                                ),
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 35,left: 8),
+                                      child: SvgPicture.asset('assets/person.svg',),
+                                    ),
+                                    Align(
+                                        alignment: Alignment.center,
+                                        child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: 35 ),)),
+                                  ],
+                                ),
+                                isLoading
+                                    ? Center(child: CircularProgressIndicator())
+                                    : Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8,top: 15,bottom: 20),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Column(
+                                            children: [
+                                              SvgPicture.asset('assets/direction.svg',height: MediaQuery.of(context).size.height * 0.100,),
+                                            ],
+                                          ),
+                                          Expanded(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                children: [
+                                                  Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(right: 45),
+                                                    child: Text(widget.pickUp,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 20),
+                                                    child: Text(widget.address,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15),
+                                      child: SizedBox(
+                                        height: MediaQuery.of(context).size.height * 0.057,
+                                        width: MediaQuery.of(context).size.width * 0.4,
+                                        child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Color(0xff6069FF),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.push(context,
+                                                  MaterialPageRoute(builder: (context) => DriverAddressInteraction(
+                                                    firstName: widget.firstName,
+                                                    lastName: widget.lastName,
+                                                    token: widget.token,
+                                                    id: widget.id,
+                                                    partnerId: widget.partnerId,
+                                                    bookingId: widget.bookingId,
+                                                    pickUp: widget.pickUp,
+                                                    quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
+                                                    userId: widget.userId,
+                                                  )));
+                                            },
+                                            child: Text(
+                                              'Accept'.tr(),
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w500),
+                                            )),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: (){
-                                    Navigator.pop(context);
-                                  },
-                                  icon: Icon(FontAwesomeIcons.multiply)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-                Positioned(
-                  bottom: 20,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 15,right: 30),
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width * 0.93,
-                      child: Card(
-                        color: Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10,right: 10),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 15),
-                                child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',height: 35,)),
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 35,left: 8),
-                                    child: SvgPicture.asset('assets/person.svg',),
-                                  ),
-                                  Align(
-                                      alignment: Alignment.center,
-                                      child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: 35 ),)),
-                                ],
-                              ),
-                              isLoading
-                                  ? Center(child: CircularProgressIndicator())
-                                  : Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8,top: 15,bottom: 20),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Column(
-                                          children: [
-                                            SvgPicture.asset('assets/direction.svg',height: MediaQuery.of(context).size.height * 0.100,),
-                                          ],
-                                        ),
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.start,
-                                              children: [
-                                                Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)away',style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
-                                                Padding(
-                                                  padding: const EdgeInsets.only(right: 45),
-                                                  child: Text(widget.pickUp,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsets.only(bottom: 20),
-                                                  child: Text(widget.address,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 15),
-                                    child: SizedBox(
-                                      height: MediaQuery.of(context).size.height * 0.057,
-                                      width: MediaQuery.of(context).size.width * 0.4,
-                                      child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Color(0xff6069FF),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            Navigator.push(context,
-                                                MaterialPageRoute(builder: (context) => DriverAddressInteraction(
-                                                  firstName: widget.firstName,
-                                                  lastName: widget.lastName,
-                                                  token: widget.token,
-                                                  id: widget.id,
-                                                  partnerId: widget.partnerId,
-                                                  bookingId: widget.bookingId,
-                                                  pickUp: widget.pickUp,
-                                                  quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
-                                                  userId: widget.userId,
-                                                )));
-                                          },
-                                          child: const Text(
-                                            'Accept',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w500),
-                                          )),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -8,7 +9,7 @@ import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:permission_handler/permission_handler.dart'as permissionHandler;
+import 'dart:ui' as ui;
 
 class EditBooking extends StatefulWidget {
   final String firstName;
@@ -67,14 +69,15 @@ class _EditBookingState extends State<EditBooking> {
   int typeCount = 0;
   bool isLocating = false;
   int _selectedIndex = 1;
+
   @override
   void initState() {
     super.initState();
     selectedUnitType();
     pickUpPointController = TextEditingController(text: widget.pickUpPoint);
     cityNameController = TextEditingController(text: widget.cityName);
-    modeController = TextEditingController(text: widget.mode);
-    modeClassificationController = TextEditingController(text: widget.modeClassification);
+    modeController = TextEditingController(text: widget.mode.tr());
+    modeClassificationController = TextEditingController(text: widget.modeClassification.tr());
     _selectedStartDate = widget.date != null
         ? DateFormat("yyyy-MM-dd").parse(widget.date)
         : DateTime.now();
@@ -151,7 +154,6 @@ class _EditBookingState extends State<EditBooking> {
       print('Error fetching suggestions: $e');
     }
   }
-
 
   Future<void> currentPositionSuggestion() async {
     setState(() {
@@ -271,9 +273,9 @@ class _EditBookingState extends State<EditBooking> {
 
   void _dismissSuggestions() {
     setState(() {
-      _pickUpSuggestions = []; // Clear pick-up suggestions
+      _pickUpSuggestions = [];
       for (var i = 0; i < _dropPointSuggestions.length; i++) {
-        _dropPointSuggestions[i] = []; // Clear all drop point suggestions
+        _dropPointSuggestions[i] = [];
       }
     });
   }
@@ -293,7 +295,6 @@ class _EditBookingState extends State<EditBooking> {
     });
   }
 
-
   void _onAddressSuggestionTap(String suggestion, TextEditingController controller, String type) {
     setState(() {
       controller.text = suggestion;
@@ -307,457 +308,461 @@ class _EditBookingState extends State<EditBooking> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        userId: widget.id,
-        showLeading: false,
-        showLanguage: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            scrolledUnderElevation: 0,
-            toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-            centerTitle: true,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff807BE5),
-            title: const Text(
-              'Edit Booking',
-              style: TextStyle(color: Colors.white),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => BookingManager(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          userId: widget.id,
+          showLeading: false,
+          showLanguage: false,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+              centerTitle: true,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff807BE5),
+              title: Text(
+                'Edit Booking'.tr(),
+                style: TextStyle(color: Colors.white),
+              ),
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => BookingManager(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      ),
                     ),
+                  );
+                },
+                icon: CircleAvatar(
+                  backgroundColor: Color(0xffB7B3F1),
+                  child: const Icon(
+                    Icons.arrow_back_sharp,
+                    color: Colors.white,
                   ),
-                );
-              },
-              icon: CircleAvatar(
-                backgroundColor: Color(0xffB7B3F1),
-                child: const Icon(
-                  Icons.arrow_back_sharp,
-                  color: Colors.white,
                 ),
               ),
             ),
           ),
         ),
-      ),
-      body: GestureDetector(
-        onTap: (){
-          setState(() {
-            _dismissSuggestions();
-          });
-        },
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              buildUnitRadioList(setState),
-              widget.pickUpPoint.isEmpty && widget.dropPoint.isEmpty
-              ? Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20,20,0,5,),
-                      child: Text('City'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
-                    child: TextFormField(
-                      textCapitalization: TextCapitalization.sentences,
-                      controller: cityNameController,
-                      onChanged: (value) => _fetchSuggestions(value, -1, true),
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.circle,size: 15,color: Color(0xff009E10)),
-                        border: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                              color: Color(0xffBCBCBC)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+        body: GestureDetector(
+          onTap: (){
+            setState(() {
+              _dismissSuggestions();
+            });
+          },
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                buildUnitRadioList(setState),
+                widget.pickUpPoint.isEmpty && widget.dropPoint.isEmpty
+                ? Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20,20,0,5,),
+                        child: Text('City'.tr()),
                       ),
                     ),
-                  ),
-                  if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      height: 200,
-                      width: MediaQuery.of(context).size.width * 0.9,
-                      child: ListView.builder(
-                        itemCount: _cityNameSuggestions.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return ListTile(
-                              title: Row(
-                                children: [
-                                  Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                    child: Text('Current Location'),
-                                  ),
-                                  isLocating ? Container(
-                                    height: 15,
-                                    width: 15,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ):Container()
-                                ],
-                              ),
-                              onTap: () async {
-                                await currentPositionSuggestionForCity();
-                              },
-                            );
-                          } else {
-                            return ListTile(
-                              title: Text(_cityNameSuggestions[index - 1]),
-                              onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                ],
-              )
-              : Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20,20,0,5,),
-                      child: Text('Pickup Point'),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
-                    child: TextFormField(
-                      textCapitalization: TextCapitalization.sentences,
-                      controller: pickUpPointController,
-                      onChanged: (value) => _fetchSuggestions(value, -1, true),
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.circle,size: 15,color: Color(0xff009E10)),
-                        border: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                              color: Color(0xffBCBCBC)),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (_pickUpSuggestions.isNotEmpty && pickUpPointController.text.isNotEmpty)
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      height: 200,
-                      width: MediaQuery.of(context).size.width * 0.9,
-                      child: ListView.builder(
-                        itemCount: _pickUpSuggestions.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return ListTile(
-                              title: Row(
-                                children: [
-                                  Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                    child: Text('Current Location'),
-                                  ),
-                                  isLocating ? Container(
-                                    height: 15,
-                                    width: 15,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ):Container()
-                                ],
-                              ),
-                              onTap: () async {
-                                await currentPositionSuggestion();
-                              },
-                            );
-                          } else {
-                            return ListTile(
-                              title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
-                              onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpPointController, true),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                      child: Text('Drop Point'),
-                    ),
-                  ),
-                  ..._dropPointControllers.asMap().entries.map((entry) {
-                    int i = entry.key;
-                    TextEditingController controller = entry.value;
-                    return Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
-                          child: TextFormField(
-                            textCapitalization: TextCapitalization.sentences,
-                            onChanged: (value) => _fetchSuggestions(value, i, false),
-                            controller: controller,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: const BorderSide(color: Color(0xffBCBCBC)),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              hintText: 'Drop Point ${i + 1}',
-                              hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
-                              prefixIcon: Icon(Icons.circle, size: 15, color: Color(0xffE20808)),
-                              suffixIcon: i == _dropPointControllers.length - 1
-                                  ? Padding(
-                                padding: const EdgeInsets.only(right: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (_dropPointControllers.length > 1)
-                                      GestureDetector(
-                                        onTap: () => _removeTextField(i),
-                                        child: Icon(Icons.cancel_outlined, color: Colors.red),
-                                      ),
-                                    if (_dropPointControllers.length == 1)
-                                      GestureDetector(
-                                        onTap: _addTextField,
-                                        child: Icon(Icons.add_circle_outline_sharp),
-                                      ),
-                                  ],
-                                ),
-                              )
-                                  : null,
-                            ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
+                      child: TextFormField(
+                        textCapitalization: TextCapitalization.sentences,
+                        controller: cityNameController,
+                        onChanged: (value) => _fetchSuggestions(value, -1, true),
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.circle,size: 15,color: Color(0xff009E10)),
+                          border: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xffBCBCBC)),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        _buildSuggestionList(i, controller),
-                      ],
-                    );
-                  }).toList(),
-                ],
-              ),
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                  child: Text('Mode'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
-                child: TextFormField(
-                  readOnly: true,
-                  controller: modeController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Color(0xffBCBCBC)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                  child: Text('Mode Classification'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
-                child: TextFormField(
-                  readOnly: true,
-                  controller: modeClassificationController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Color(0xffBCBCBC)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-          Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                  child: Text('Date'),
-                ),
-              ),
-              GestureDetector(
-                onTap: (){
-                  selectStartDate(context, setState);
-                },
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xffBCBCBC)),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      IconButton(
-                        onPressed: () => selectStartDate(context, setState),
-                        icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                       ),
+                    ),
+                    if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
                       Container(
-                        height: 50,
-                        child: const VerticalDivider(
-                          color: Colors.grey,
-                          thickness: 1.2,
+                        padding: EdgeInsets.all(8),
+                        height: 200,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        child: ListView.builder(
+                          itemCount: _cityNameSuggestions.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return ListTile(
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                      child: Text('Current Location'.tr()),
+                                    ),
+                                    isLocating ? Container(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ):Container()
+                                  ],
+                                ),
+                                onTap: () async {
+                                  await currentPositionSuggestionForCity();
+                                },
+                              );
+                            } else {
+                              return ListTile(
+                                title: Text(_cityNameSuggestions[index - 1]),
+                                onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
+                              );
+                            }
+                          },
                         ),
                       ),
-                      GestureDetector(
-                        onTap: (){
-                          selectStartDate(context, setState);
+                  ],
+                )
+                : Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20,20,0,5,),
+                        child: Text('Pickup Point'.tr()),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
+                      child: TextFormField(
+                        textCapitalization: TextCapitalization.sentences,
+                        controller: pickUpPointController,
+                        onChanged: (value) => _fetchSuggestions(value, -1, true),
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.circle,size: 15,color: Color(0xff009E10)),
+                          border: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color: Color(0xffBCBCBC)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_pickUpSuggestions.isNotEmpty && pickUpPointController.text.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        height: 200,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        child: ListView.builder(
+                          itemCount: _pickUpSuggestions.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              return ListTile(
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
+                                      child: Text('Current Location'.tr()),
+                                    ),
+                                    isLocating ? Container(
+                                      height: 15,
+                                      width: 15,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ):Container()
+                                  ],
+                                ),
+                                onTap: () async {
+                                  await currentPositionSuggestion();
+                                },
+                              );
+                            } else {
+                              return ListTile(
+                                title: Text(_pickUpSuggestions[index - 1]),
+                                onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpPointController, true),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
+                        child: Text('Drop Point'.tr()),
+                      ),
+                    ),
+                    ..._dropPointControllers.asMap().entries.map((entry) {
+                      int i = entry.key;
+                      TextEditingController controller = entry.value;
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
+                            child: TextFormField(
+                              textCapitalization: TextCapitalization.sentences,
+                              onChanged: (value) => _fetchSuggestions(value, i, false),
+                              controller: controller,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(color: Color(0xffBCBCBC)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                hintText: '${'Drop Point'.tr()} ${i + 1}',
+                                hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                prefixIcon: Icon(Icons.circle, size: 15, color: Color(0xffE20808)),
+                                suffixIcon: i == _dropPointControllers.length - 1
+                                    ? Padding(
+                                  padding: const EdgeInsets.only(right: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (_dropPointControllers.length > 1)
+                                        GestureDetector(
+                                          onTap: () => _removeTextField(i),
+                                          child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                        ),
+                                      if (_dropPointControllers.length == 1)
+                                        GestureDetector(
+                                          onTap: _addTextField,
+                                          child: Icon(Icons.add_circle_outline_sharp),
+                                        ),
+                                    ],
+                                  ),
+                                )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          _buildSuggestionList(i, controller),
+                        ],
+                      );
+                    }).toList(),
+                  ],
+                ),
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
+                    child: Text('Mode'.tr()),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
+                  child: TextFormField(
+                    readOnly: true,
+                    controller: modeController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Color(0xffBCBCBC)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
+                    child: Text('Mode Classification'.tr()),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20,right:20,bottom: 5),
+                  child: TextFormField(
+                    readOnly: true,
+                    controller: modeClassificationController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Color(0xffBCBCBC)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+            Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
+                    child: Text('Date'.tr()),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: (){
+                    selectStartDate(context, setState);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 15),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xffBCBCBC)),
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        IconButton(
+                          onPressed: () => selectStartDate(context, setState),
+                          icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                        ),
+                        Container(
+                          height: 50,
+                          child: const VerticalDivider(
+                            color: Colors.grey,
+                            thickness: 1.2,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: (){
+                            selectStartDate(context, setState);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                                DateFormat('yyyy-MM-dd').format(_selectedStartDate),
+                                style: TextStyle(fontSize: 16)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: isChecked,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isChecked = value ?? false;
+                          });
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                              DateFormat('yyyy-MM-dd').format(_selectedStartDate),
-                              style: TextStyle(fontSize: 16)),
+                        checkColor: Colors.white,
+                        activeColor: const Color(0xff6A66D1),
+                      ),
+                      Container(
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          'needAdditionalLabour'.tr(),
+                          style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Row(
-                  children: [
-                    Checkbox(
-                      value: isChecked,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          isChecked = value ?? false;
-                        });
-                      },
-                      checkColor: Colors.white,
-                      activeColor: const Color(0xff6A66D1),
-                    ),
-                    Container(
-                      alignment: Alignment.topLeft,
-                      child: Text(
-                        'Need Additional Labour',
-                        style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                if (isChecked)
+                  Column(
+                    children: [
+                      RadioListTile(
+                        title: const Text('1'),
+                        value: 1,
+                        groupValue: selectedLabour,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedLabour = value!;
+                          });
+                        },
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isChecked)
-                Column(
-                  children: [
-                    RadioListTile(
-                      title: const Text('1'),
-                      value: 1,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('2'),
-                      value: 2,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('3'),
-                      value: 3,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20, bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.055,
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6269FE),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                      RadioListTile(
+                        title: const Text('2'),
+                        value: 2,
+                        groupValue: selectedLabour,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedLabour = value!;
+                          });
+                        },
                       ),
-                    ),
-                    onPressed: () async {
-                      setState(() {
-                        isLoading = true;
-                      });
-                      String updatedDate = DateFormat('yyyy-MM-dd').format(_selectedStartDate);
-                      String updatedPickup = pickUpPointController.text;
-                      List<String> updatedDropPoints = _dropPointControllers.map((controller) => controller.text).toList();
-                      await superUserServices.updateBooking(
-                        widget.token,
-                        widget.bookingId,
-                        updatedDate,
-                        updatedPickup,
-                        updatedDropPoints,
-                        selectedLabour,
-                      );
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => BookingManager(
-                            firstName: widget.firstName,
-                            lastName: widget.lastName,
-                            token: widget.token,
-                            id: widget.id,
-                            email: widget.email,
-                          ),
+                      RadioListTile(
+                        title: const Text('3'),
+                        value: 3,
+                        groupValue: selectedLabour,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedLabour = value!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20, bottom: 20),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.055,
+                    width: MediaQuery.of(context).size.width * 0.6,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                      );
-                      setState(() {
-                        isLoading = false;
-                      });
-                    },
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        String updatedDate = DateFormat('yyyy-MM-dd').format(_selectedStartDate);
+                        String updatedPickup = pickUpPointController.text;
+                        List<String> updatedDropPoints = _dropPointControllers.map((controller) => controller.text).toList();
+                        await superUserServices.updateBooking(
+                          widget.token,
+                          widget.bookingId,
+                          updatedDate,
+                          updatedPickup,
+                          updatedDropPoints,
+                          selectedLabour,
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => BookingManager(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,
+                              email: widget.email,
+                            ),
+                          ),
+                        );
+                        setState(() {
+                          isLoading = false;
+                        });
+                      },
+                      child: Text(
+                        'Save'.tr(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onTabTapped: _onTabTapped,
+        bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
+          context: context,
+          selectedIndex: _selectedIndex,
+          onTabTapped: _onTabTapped,
+        ),
       ),
     );
   }
@@ -812,13 +817,7 @@ class _EditBookingState extends State<EditBooking> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserProfile(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              token: widget.token,
-              id: widget.id,
-              email: widget.email,
-            ),
+            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;
@@ -846,9 +845,6 @@ class _EditBookingState extends State<EditBooking> {
     return Container();
   }
 
-
-
-
   Widget buildUnitRadioList(StateSetter setState) {
     return Column(
       children: [
@@ -860,7 +856,7 @@ class _EditBookingState extends State<EditBooking> {
               Expanded(
                 child: RadioListTile(
                   dense: true,
-                  title: const Text('Vehicle', style: TextStyle(fontSize: 14,color: Colors.black)),
+                  title: Text('Vehicle'.tr(), style: TextStyle(fontSize: 14,color: Colors.black)),
                   value: 1,
                   groupValue: selectedUnit,
                   onChanged: null,
@@ -869,7 +865,7 @@ class _EditBookingState extends State<EditBooking> {
               Expanded(
                 child: RadioListTile(
                   dense: true,
-                  title: const Text('Bus', style: TextStyle(fontSize: 14,color: Colors.black)),
+                  title: Text('Bus'.tr(), style: TextStyle(fontSize: 14,color: Colors.black)),
                   value: 2,
                   groupValue: selectedUnit,
                   onChanged: null,
@@ -884,7 +880,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: const Text('Equipment',style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Equipment'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
                 value: 3,
                 groupValue: selectedUnit,
                 onChanged: null,
@@ -893,7 +889,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: const Text('Special',style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Special'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
                 value: 4,
                 groupValue: selectedUnit,
                 onChanged: null,
@@ -907,7 +903,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: const Text('Others',style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Others'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
                 value: 5,
                 groupValue: selectedUnit,
                 onChanged: null,

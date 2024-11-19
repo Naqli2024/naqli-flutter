@@ -1,11 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:ui' as ui;
 
 class ViewBooking extends StatefulWidget {
   final String partnerName;
@@ -87,8 +90,8 @@ class _ViewBookingState extends State<ViewBooking> {
 
   Future<void> fetchBookingDetails() async {
     setState(() {
-      isLoading = true; // Start loading
-      errorMessage = ''; // Clear any previous error message
+      isLoading = true;
+      errorMessage = '';
     });
 
     try {
@@ -102,7 +105,7 @@ class _ViewBookingState extends State<ViewBooking> {
       setState(() {
         isLoading = false; // Stop loading
         if (details != null && details.isNotEmpty) {
-          bookingDetails = details; // Store fetched details
+          bookingDetails = details;
           paymentStatus = bookingDetails?['paymentStatus'];
           bookingStatus = bookingDetails?['bookingStatus'];
           print(paymentStatus);
@@ -112,7 +115,7 @@ class _ViewBookingState extends State<ViewBooking> {
       });
     } catch (e) {
       setState(() {
-        isLoading = false; // Stop loading
+        isLoading = false;
         errorMessage = 'Error fetching booking details: $e';
       });
     }
@@ -137,413 +140,428 @@ class _ViewBookingState extends State<ViewBooking> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.partnerName,
-        userId: widget.partnerId,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            toolbarHeight: 80,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: const Center(
-              child: Padding(
-                padding: EdgeInsets.only(right: 25),
-                child: Text(
-                  'Booking',
-                  style: TextStyle(color: Colors.white),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.partnerName,
+          userId: widget.partnerId,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              centerTitle: false,
+              toolbarHeight: 80,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff6A66D1),
+              title: Center(
+                child: Padding(
+                  padding: EdgeInsets.only(right: 25),
+                  child: Text(
+                    'booking'.tr(),
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(
-                Icons.arrow_back_sharp,
-                color: Colors.white,
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  Icons.arrow_back_sharp,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
         ),
-      ),
-      drawer: commonWidgets.createDrawer(context,
-        onPaymentPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
-          ),
-        );
-      },
-        onBookingPressed: (){
+        drawer: commonWidgets.createDrawer(context,
+            widget.partnerId,
+            widget.partnerName,
+            onEditProfilePressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PartnerEditProfile(partnerName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,)
+                ),
+              );
+            },
+          onPaymentPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
+                builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
             ),
           );
         },
-          onReportPressed: (){
+          onBookingPressed: (){
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+                  builder: (context) => BookingDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
               ),
             );
-          }
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-          ? Center(child: Text(errorMessage))
-          : bookingDetails == null
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-           backgroundColor: Colors.white,
-            onRefresh:()async{
-              await fetchBookingDetails();
-              if (bookingStatus == 'Yet to start' || paymentStatus == 'NotPaid') {
+          },
+            onReportPressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+                ),
+              );
+            }
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : errorMessage.isNotEmpty
+            ? Center(child: Text(errorMessage))
+            : bookingDetails == null
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+             backgroundColor: Colors.white,
+              onRefresh:()async{
                 await fetchBookingDetails();
-                setState(() {});
-              } else {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ViewMap(
-                      partnerName: widget.partnerName,
-                      userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
-                      userId: widget.userId,
-                      mode: '${bookingDetails?['name'] ?? 'No name available'} ${bookingDetails?['typeName'] ?? ''}',
-                      bookingStatus: widget.bookingStatus,
-                      pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
-                      dropPoint: bookingDetails?['dropPoints'] ?? [],
-                      remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
-                      bookingId: widget.bookingId,
-                      token: widget.token,
-                      partnerId: widget.partnerId,
-                      quotePrice: widget.quotePrice,
-                      paymentStatus: widget.paymentStatus,
-                      cityName: widget.cityName,
-                      address: widget.address,
-                      zipCode: widget.zipCode,
-                      email: widget.email,
-                    ),
-                  ),
-                );
-                setState(() {});
-              }
-            },
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 40, 8, 0),
-                    child: Card(
-            elevation: 15,
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(flex:7,child: Text('Booked by')),
-                        Expanded(flex:2,child: Text('Booking Id')),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(flex:7,child: Text(firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',style: TextStyle(color: Color(0xffAD1C86)))),
-                        Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86))),
-                      ],
-                    ),
-                  ),
-                  Card(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0), // Rounded corners
-                      side: const BorderSide(
-                        color: Color(0xffE0E0E0), // Border color
-                        width: 1, // Border width
+                if (bookingStatus == 'Yet to start' || paymentStatus == 'NotPaid') {
+                  await fetchBookingDetails();
+                  setState(() {});
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewMap(
+                        partnerName: widget.partnerName,
+                        userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
+                        userId: widget.userId,
+                        mode: '${bookingDetails?['name'] ?? 'No name available'} ${bookingDetails?['typeName'] ?? ''}',
+                        bookingStatus: widget.bookingStatus,
+                        pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
+                        dropPoint: bookingDetails?['dropPoints'] ?? [],
+                        remainingBalance: '${bookingDetails?['remainingBalance'] ?? 'No balance'}',
+                        bookingId: widget.bookingId,
+                        token: widget.token,
+                        partnerId: widget.partnerId,
+                        quotePrice: widget.quotePrice,
+                        paymentStatus: widget.paymentStatus,
+                        cityName: widget.cityName,
+                        address: widget.address,
+                        zipCode: widget.zipCode,
+                        email: widget.email,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
+                  );
+                  setState(() {});
+                }
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 40, 8, 0),
+                      child: Card(
+              elevation: 15,
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Mode')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['name'] ?? 'N/A'}'+
-                                  ' ${bookingDetails?['typeName'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),)),
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Load')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Date')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Time')),
-                              bookingDetails?['time'] == null
-                              ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
-                              : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),))
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Additional Labour')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
-                            ],
-                          ),
-                          const Divider(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(flex:6,child: Text('Value of the Product')),
-                              Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
-                            ],
+                          Expanded(flex:7,child: Text('Booked by'.tr())),
+                          Expanded(flex:2,child: Text('Booking id'.tr())),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(flex:7,child: Text(firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',style: TextStyle(color: Color(0xffAD1C86)))),
+                          Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86))),
+                        ],
+                      ),
+                    ),
+                    Card(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Mode'.tr())),
+                                Expanded(flex:2,child: Text('${bookingDetails?['name'] ?? 'N/A'}'.tr()+
+                                    ' ${bookingDetails?['typeName'] ?? ''}'.tr(),style: TextStyle(color: Color(0xff79797C)),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Load'.tr())),
+                                Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'N/A'.tr()}'.tr(),style: TextStyle(color: Color(0xff79797C)),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Date'.tr())),
+                                Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Time'.tr())),
+                                bookingDetails?['time'] == null
+                                ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
+                                : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),))
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Additional Labour'.tr())),
+                                Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C)),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('valueOfProduct'.tr())),
+                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C)),)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    DottedDivider(),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 30),
+                      child: Row(
+                        children: [
+                          SvgPicture.asset('assets/pickup_drop.svg'),
+                          bookingDetails?['cityName'] != null
+                          ? Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom:0,left: 10),
+                                  child: Column(
+                                    children: [
+                                      Text('${bookingDetails?['cityName'] ?? 'No cityName available'}',textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 16),),
+                                      Text('${bookingDetails?['address'] ?? 'No address available'}',textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 16),),
+                                      Text('${bookingDetails?['zipCode'] ?? ''}',textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 16),),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom:35,left: 0),
+                                  child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',textAlign: TextAlign.left,
+                                    style: const TextStyle(fontSize: 20),),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 0),
+                                  child: Text('${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',textAlign: TextAlign.left,
+                                    style: const TextStyle(fontSize: 20),),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  DottedDivider(),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 30),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset('assets/pickup_drop.svg'),
-                        bookingDetails?['cityName'] != null
-                        ? Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom:0,left: 10),
-                                child: Column(
-                                  children: [
-                                    Text('${bookingDetails?['cityName'] ?? 'No cityName available'}',textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 16),),
-                                    Text('${bookingDetails?['address'] ?? 'No address available'}',textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 16),),
-                                    Text('${bookingDetails?['zipCode'] ?? ''}',textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 16),),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom:35,left: 0),
-                                child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',textAlign: TextAlign.left,
-                                  style: const TextStyle(fontSize: 20),),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 0),
-                                child: Text('${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',textAlign: TextAlign.left,
-                                  style: const TextStyle(fontSize: 20),),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  DottedDivider(),
-                  widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
-                  ? Padding(
-                    padding: EdgeInsets.fromLTRB(50, 0, 50, 10),
-                    child: Container(
-                    height: MediaQuery.sizeOf(context).width * 0.12,
-                    width: MediaQuery.sizeOf(context).width * 0.65,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xffBCBCBC)),
-                      borderRadius: const BorderRadius.all(Radius.circular(15)),
-                    ),
-                      child: Center(child: Text(widget.quotePrice)),
-                    ))
-                  : Padding(
-                    padding: const EdgeInsets.fromLTRB(50, 0, 50, 10),
-                    child: TextField(
-                      controller: quotePriceController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter Quote Price',
-                        hintStyle: const TextStyle(),
-                        border: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                        ),
+                    DottedDivider(),
+                    widget.paymentStatus == 'Paid' ||  widget.paymentStatus == 'Completed' ||  widget.paymentStatus == 'HalfPaid'
+                    ? Padding(
+                      padding: EdgeInsets.fromLTRB(50, 0, 50, 10),
+                      child: Container(
+                      height: MediaQuery.sizeOf(context).width * 0.12,
+                      width: MediaQuery.sizeOf(context).width * 0.65,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xffBCBCBC)),
+                        borderRadius: const BorderRadius.all(Radius.circular(15)),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 20),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.057,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
-                                      ? const Color(0xffa09fc3)
-                                      : const Color(0xff6269FE),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () async{
-                                  setState(() {
-                                    isSending =true;
-                                  });
-                                    paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
-                                        ? null
-                                        : quotePriceController.text.isEmpty
-                                        ? CommonWidgets().showToast('Please enter Quote price to send')
-                                        : await _authService.sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
-                                  setState(() {
-                                    isSending =false;
-                                  });
-                                },
-                                child: isSending
-                              ? Container(
-                                  height: 15,
-                                  width: 15,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              :Text(
-                                  'Send Quote',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.normal),
-                                )),
+                        child: Center(child: Text(widget.quotePrice)),
+                      ))
+                    : Padding(
+                      padding: const EdgeInsets.fromLTRB(50, 0, 50, 10),
+                      child: TextField(
+                        controller: quotePriceController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter Quote Price'.tr(),
+                          hintStyle: const TextStyle(),
+                          border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                         ),
-                        Container(
-                          margin: const EdgeInsets.only(top: 20),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.057,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
-                                  ? const Color(0xff513434)
-                                  : const Color(0xff6F181C),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 20),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.057,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
+                                        ? const Color(0xffa09fc3)
+                                        : const Color(0xff6269FE),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
-                                        ? null
-                                        : showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          backgroundColor: Colors.white,
-                                          contentPadding: const EdgeInsets.all(20),
-                                          content: const Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsets.only(top: 30,bottom: 10),
-                                                child: Text(
-                                                  'Are you sure you want to cancel?',
-                                                  style: TextStyle(fontSize: 19),
+                                  onPressed: () async{
+                                    setState(() {
+                                      isSending =true;
+                                    });
+                                      paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
+                                          ? null
+                                          : quotePriceController.text.isEmpty
+                                          ? CommonWidgets().showToast('Please enter Quote price to send')
+                                          : await _authService.sendQuotePrice(context, quotePrice: quotePriceController.text, partnerId: widget.partnerId, bookingId: widget.bookingId,token: widget.token);
+                                    setState(() {
+                                      isSending =false;
+                                    });
+                                  },
+                                  child: isSending
+                                ? Container(
+                                    height: 15,
+                                    width: 15,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                :Text(
+                                    'Send Quote'.tr(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.normal),
+                                  )),
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 20),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.057,
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
+                                    ? const Color(0xff513434)
+                                    : const Color(0xff6F181C),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      paymentStatus == 'Paid' ||  paymentStatus == 'Completed' ||  paymentStatus == 'HalfPaid'
+                                          ? null
+                                          : showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return Directionality(
+                                            textDirection: ui.TextDirection.ltr,
+                                            child: AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            backgroundColor: Colors.white,
+                                            contentPadding: const EdgeInsets.all(20),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Padding(
+                                                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                                                  child: Text(
+                                                    'Are you sure you want to cancel?'.tr(),
+                                                    style: TextStyle(fontSize: 19),
+                                                  ),
                                                 ),
+                                              ],
+                                            ),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('yes'.tr()),
+                                                onPressed: () async {
+                                                  await _authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text('no'.tr()),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
                                               ),
                                             ],
-                                          ),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              child: const Text('Yes'),
-                                              onPressed: () async {
-                                                await _authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
-                                              },
-                                            ),
-                                            TextButton(
-                                              child: const Text('No'),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  });
-                                },
-                                child: const Text(
-                                  'Cancel Quote',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.normal),
-                                )),
+                                          ),);
+                                        },
+                                      );
+                                    });
+                                  },
+                                  child: Text(
+                                    'Cancel Quote'.tr(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.normal),
+                                  )),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+                      ),
                     ),
+                  ],
                   ),
-                ],
-                ),
-                ),
-          ),
+                  ),
+            ),
 
+      ),
     );
   }
 }

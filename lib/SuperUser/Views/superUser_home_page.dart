@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,13 @@ import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 
 class SuperUserHomePage extends StatefulWidget {
   final String firstName;
@@ -61,9 +64,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   bool showCompletedData = false;
   bool showPendingData = false;
   final List<String> sectionLabels = [
-    'HalfPaid',
-    'Completed',
-    'Pending',
+    'HalfPaid'.tr(),
+    'Completed'.tr(),
+    'Pending'.tr(),
   ];
   final List<Color> sectionColors = [
     Color(0xffC968FF),
@@ -91,773 +94,85 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   @override
   Widget build(BuildContext context) {
     assert(dropdownItems.contains(selectedDuration), 'selectedDuration must be in dropdownItems');
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-        context,
-        User: widget.firstName +' '+ widget.lastName,
-        userId: widget.id,
-        showLeading: false,
-        showLanguage: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(90.0),
-          child: AppBar(
-            scrolledUnderElevation: 0,
-            toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-            centerTitle: true,
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff6A66D1),
-            title: const Text(
-              'Home',
-              style: TextStyle(color: Colors.white),
-            ),
-            leading: Builder(
-              builder: (BuildContext context) => IconButton(
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                icon: const Icon(
-                  Icons.menu,
-                  color: Colors.white,
-                  size: 35,
-                ),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+          context,
+          User: widget.firstName +' '+ widget.lastName,
+          userId: widget.id,
+          showLeading: false,
+          showLanguage: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(90.0),
+            child: AppBar(
+              scrolledUnderElevation: 0,
+              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+              centerTitle: true,
+              automaticallyImplyLeading: false,
+              backgroundColor: const Color(0xff6A66D1),
+              title: Text(
+                'Home'.tr(),
+                style: TextStyle(color: Colors.white),
               ),
-            )
+              leading: Builder(
+                builder: (BuildContext context) => IconButton(
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  icon: const Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                    size: 35,
+                  ),
+                ),
+              )
+            ),
           ),
         ),
-      ),
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SvgPicture.asset('assets/naqlee-logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.05),
-                  GestureDetector(
-                      onTap: (){
-                        Navigator.pop(context);
-                      },
-                      child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                ],
-              ),
-            ),
-            const Divider(),
-            ListTile(
-                leading: SvgPicture.asset('assets/booking_logo.svg',
-                    height: MediaQuery.of(context).size.height * 0.035),
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 5),
-                  child: Text('Trigger Booking',style: TextStyle(fontSize: 25),),
-                ),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              GestureDetector(
                 onTap: (){
-                  Navigator.of(context).push(
+                  Navigator.push(
+                    context,
                     MaterialPageRoute(
-                      builder: (context) => TriggerBooking(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      ),
+                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
-                }
-            ),
-            ListTile(
-                leading: SvgPicture.asset('assets/booking_manager.svg'),
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('Booking Manager',style: TextStyle(fontSize: 25),),
-                ),
-                onTap: (){
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => BookingManager(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      ),
-                    ),
-                  );
-                }
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/payment.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Payments',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SuperUserPayment(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    ),
+                },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.person,color: Colors.grey,size: 30),
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/report_logo.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Report',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(widget.firstName +' '+ widget.lastName,
+                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                      Icon(Icons.edit,color: Colors.grey,size: 20),
+                    ],
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: SvgPicture.asset('assets/help_logo.svg'),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 7),
-                child: Text('Help',style: TextStyle(fontSize: 25),),
-              ),
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context)=> UserHelp(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email
-                    )));
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout,color: Colors.red,size: 30,),
-              title: const Padding(
-                padding: EdgeInsets.only(left: 10),
-                child: Text('Logout',style: TextStyle(fontSize: 25,color: Colors.red),),
-              ),
-              onTap: () {
-                showLogoutDialog();
-              },
-            ),
-          ],
-        ),
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(left: 10, top: 25),
-                    height: MediaQuery.sizeOf(context).height * 0.16,
-                    child: Card(
-                      color: Color(0xffF5B369),
-                      shadowColor: Colors.black,
-                      elevation: 3.0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('$totalBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text('Total Booking'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(top: 25,left: 5,right: 5),
-                    height: MediaQuery.sizeOf(context).height * 0.16,
-                    child: Card(
-                      color: Color(0xffC7ED6D),
-                      shadowColor: Colors.black,
-                      elevation: 3.0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('$completedBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30),),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text('Completed'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(right: 10, top: 25),
-                    height: MediaQuery.sizeOf(context).height * 0.16,
-                    child: Card(
-                      color: Color(0xff52FFA9),
-                      shadowColor: Colors.black,
-                      elevation: 3.0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('$yetToStartBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text('Hold'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            CarouselSlider(
-              options: CarouselOptions(
-                enlargeCenterPage: true,
-                autoPlay: true,
-                aspectRatio: 10 / 9,
-                autoPlayCurve: Curves.fastOutSlowIn,
-                enableInfiniteScroll: true,
-                autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                viewportFraction: 1,
-              ),
-              items:[
-                Container(
-                  padding: const EdgeInsets.fromLTRB(8,12,8,10),
-                  child: Card(
-                    color: Colors.white,
-                    shadowColor: Colors.black,
-                    elevation: 3.0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: Color(0xff707070),width: 0.2)
-                    ),
-                    child: Stack(
-                      children: [
-                        GestureDetector(
-                          onTapDown: (details) {
-                            Offset localPosition = details.localPosition;
-
-                            setState(() {
-                              tooltipMessage = null;
-                            });
-                          },
-                          child: PieChart(
-                            PieChartData(
-                              startDegreeOffset: 250,
-                              sectionsSpace: 0,
-                              centerSpaceRadius: 100,
-                              pieTouchData: PieTouchData(
-                                touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
-                                  setState(() {
-                                    if (event is PointerUpEvent || event is PointerExitEvent) {
-                                      tooltipMessage = null;
-                                      touchedSectionIndex = null;
-                                    } else if (response != null && response.touchedSection != null) {
-                                      touchedSectionIndex = response.touchedSection!.touchedSectionIndex;
-                                      if (touchedSectionIndex != null &&
-                                          touchedSectionIndex! >= 0 &&
-                                          touchedSectionIndex! < sectionLabels.length) {
-                                        tooltipMessage = '  ${touchedSectionIndex ==  0
-                                            ? halfPaidPaymentCount
-                                            : touchedSectionIndex ==  1
-                                            ? totalCompleted
-                                            : tripCompletedBookingsCount
-                                        } ${sectionLabels[touchedSectionIndex!]}';
-                                      } else {
-                                        touchedSectionIndex = null;
-                                        tooltipMessage = null;
-                                      }
-                                    }
-                                  });
-                                },
-                              ),
-                              sections: [
-                                PieChartSectionData(
-                                  value: halfPaidPaymentCount.toDouble(),
-                                  color: Color(0xffC968FF),
-                                  radius: 20,
-                                  showTitle: false,
-                                ),
-                                PieChartSectionData(
-                                  value: totalCompleted.toDouble(),
-                                  color: Color(0xff70CF97),
-                                  radius: 30,
-                                  showTitle: false,
-                                ),
-                                PieChartSectionData(
-                                  value: tripCompletedBookingsCount.toDouble(),
-                                  color: Color(0xffED5A6B),
-                                  radius: 40,
-                                  showTitle: false,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return Dialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        insetPadding: EdgeInsets.symmetric(horizontal: 10),
-                                        backgroundColor: Colors.white,
-                                        child: Container(
-                                          width: MediaQuery.of(context).size.width,
-                                          padding: const EdgeInsets.all(0),
-                                          child: StatefulBuilder(
-                                            builder: (BuildContext context, StateSetter setState) {
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Container(
-                                                    width: MediaQuery.of(context).size.width * 0.8,
-                                                    height: MediaQuery.of(context).size.height * 0.53,
-                                                    child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Stack(
-                                                            children: [
-                                                              PieChart(
-                                                                PieChartData(
-                                                                  startDegreeOffset: 250,
-                                                                  sectionsSpace: 0,
-                                                                  centerSpaceRadius: 80,
-                                                                  pieTouchData: PieTouchData(
-                                                                    touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
-                                                                      setState(() {
-                                                                        if (event is! PointerUpEvent && event is! PointerExitEvent) {
-                                                                          if (response != null && response.touchedSection != null) {
-                                                                            touchedSectionIndex = response.touchedSection!.touchedSectionIndex;
-                                                                          }
-                                                                        } else {
-                                                                          touchedSectionIndex = null;
-                                                                        }
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                  sections: [
-                                                                    PieChartSectionData(
-                                                                      value: halfPaidPaymentCount.toDouble(),
-                                                                      color: Color(0xffC968FF),
-                                                                      radius: 20,
-                                                                      showTitle: false,
-                                                                    ),
-                                                                    PieChartSectionData(
-                                                                      value: totalCompleted.toDouble(),
-                                                                      color: Color(0xff70CF97),
-                                                                      radius: 30,
-                                                                      showTitle: false,
-                                                                    ),
-                                                                    PieChartSectionData(
-                                                                      value: tripCompletedBookingsCount.toDouble(),
-                                                                      color: Color(0xffED5A6B),
-                                                                      radius: 40,
-                                                                      showTitle: false,
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              Positioned.fill(
-                                                                child: Column(
-                                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                                  children: [
-                                                                    Container(
-                                                                      height: 160,
-                                                                      width: 160,
-                                                                      child: Center(
-                                                                        child: totalBookingsCount!= 0
-                                                                            ? Text(
-                                                                          touchedSectionIndex != null
-                                                                              ? getSectionTitle(touchedSectionIndex!)
-                                                                              : totalCompleted!=0
-                                                                              ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\nCompleted Successfully"
-                                                                              : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\nCompleted",
-                                                                          textAlign: TextAlign.center,
-                                                                          style: TextStyle(fontSize: 20),
-                                                                        )
-                                                                            : Text('No Bookings Found'),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              )
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding: const EdgeInsets.fromLTRB(35, 8, 8, 8),
-                                                          child: Column(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            children: [
-                                                              Padding(
-                                                                padding: const EdgeInsets.all(3),
-                                                                child: Row(
-                                                                  children: [
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Color(0xff009E10),
-                                                                      minRadius: 6,
-                                                                    ),
-                                                                    Padding(
-                                                                      padding: const EdgeInsets.only(left: 20),
-                                                                      child: Text(
-                                                                        'Completed',
-                                                                        style: TextStyle(
-                                                                          fontSize: 16,
-                                                                          color: Color(0xff7F6AFF),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              Padding(
-                                                                padding: const EdgeInsets.all(3),
-                                                                child: Row(
-                                                                  children: [
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Color(0xffC968FF),
-                                                                      minRadius: 6,
-                                                                    ),
-                                                                    Padding(
-                                                                      padding: const EdgeInsets.only(left: 20),
-                                                                      child: Text(
-                                                                        'Half Paid',
-                                                                        style: TextStyle(
-                                                                          fontSize: 16,
-                                                                          color: Color(0xff7F6AFF),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              Padding(
-                                                                padding: const EdgeInsets.fromLTRB(3, 3, 3, 20),
-                                                                child: Row(
-                                                                  children: [
-                                                                    CircleAvatar(
-                                                                      backgroundColor: Color(0xffED5A6B),
-                                                                      minRadius: 6,
-                                                                    ),
-                                                                    Padding(
-                                                                      padding: const EdgeInsets.only(left: 20),
-                                                                      child: Text(
-                                                                        'Pending',
-                                                                        style: TextStyle(
-                                                                          fontSize: 16,
-                                                                          color: Color(0xff7F6AFF),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Container(
-                                  height: 160,
-                                  width: 160,
-                                  child: Center(
-                                    child: totalBookingsCount!=0
-                                        ? Text(
-                                      touchedSectionIndex != null
-                                          ? getSectionTitle(touchedSectionIndex!)
-                                          : totalCompleted!=0
-                                            ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\nCompleted Successfully"
-                                            : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\nCompleted",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(fontSize: 20),
-                                            )
-                                          : Text('No Bookings Found'),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (tooltipMessage != null)
-                          Container(
-                            padding: EdgeInsets.all(8),
-                            color: Colors.white,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 20,
-                                  height: 20,
-                                  color: sectionColors[touchedSectionIndex!],
-                                ),
-                                Text(
-                                  tooltipMessage!,
-                                  style: TextStyle(color: Colors.black,fontSize: 15),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
-                  child: Card(
-                    color: Colors.white,
-                    shadowColor: Colors.black,
-                    elevation: 3.0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: Color(0xff707070),width: 0.2)
-                    ),
-                    child: Stack(
-                      children: <Widget>[
-                        AspectRatio(
-                          aspectRatio: 1.15,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              right: 0,
-                              left: 0,
-                              top: MediaQuery.sizeOf(context).height * 0.13,
-                              bottom: 0,
-                            ),
-                            child: LineChart(
-                              showCompletedData
-                                  ? completedChartData!
-                                  : showPendingData
-                                  ? pendingChartData!
-                                  : allChartData!,
-                            ),
-                          ),
-                        ),
-                        totalBookingsCount!=0
-                        ? Positioned(
-                          top: 20,
-                          left: 20,
-                          child: GestureDetector(
-                            onTap: (){
-                              setState(() {
-                                if (showCompletedData) {
-                                  showCompletedData = false;
-                                  showPendingData = false;
-                                  updateAllChartData(selectedDuration);
-                                } else {
-                                  showCompletedData = true;
-                                  showPendingData = false;
-                                  updateChartData(selectedDuration);
-                                }
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: showCompletedData?Color(0xffF6F6F6):Colors.white,
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: Color(0xff009E10),
-                                      minRadius: 6,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'Completed',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Color(0xff7F6AFF),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                        : Container(),
-                        totalBookingsCount!=0
-                        ? Positioned(
-                          top: 20,
-                          left: MediaQuery.sizeOf(context).width * 0.35,
-                          child: GestureDetector(
-                            onTap: (){
-                              setState(() {
-                                if (showPendingData) {
-                                  showPendingData = false;
-                                  showCompletedData = false;
-                                  updateAllChartData(selectedDuration);
-                                } else {
-                                  showPendingData = true;
-                                  showCompletedData = false;
-                                  updateChartData(selectedDuration);
-                                }
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: showPendingData?Color(0xffF6F6F6):Colors.white,
-                                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: Color(0xffE20808),
-                                      minRadius: 6,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        'Hold',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Color(0xff7F6AFF),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                        : Container(),
-                        Positioned(
-                          top: 20,
-                          right: 15,
-                          child: Stack(
-                            children: <Widget>[
-                              Container(
-                                width: MediaQuery.sizeOf(context).width * 0.3,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffF6F6F6),
-                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 8, right: 8),
-                                    child: DropdownButton<String>(
-                                      value: selectedDuration,
-                                      dropdownColor: Colors.white,
-                                      icon: Icon(Icons.keyboard_arrow_down),
-                                      items: dropdownItems.map<DropdownMenuItem<String>>((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(value),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        if (newValue != null) {
-                                          setState(() {
-                                            selectedDuration = newValue;
-                                            showPendingData == true || showCompletedData == true
-                                                ? updateChartData(selectedDuration)
-                                                : updateAllChartData(selectedDuration);
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ]
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.07,
-                width: MediaQuery.of(context).size.width,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shadowColor: Colors.black,
-                    elevation: 5,
-                    backgroundColor: const Color(0xff6269FE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => SuperUsertype(
-                            firstName: widget.firstName,
-                            lastName: widget.lastName,
-                            token: widget.token,
-                            id: widget.id,
-                            email: widget.email
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'New Booking',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal),
-                  ),
+                  subtitle: Text(widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96),
+                    ),),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.07,
-                width: MediaQuery.of(context).size.width,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shadowColor: Colors.black,
-                    elevation: 5,
-                    backgroundColor: Color(0xff6269FE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Divider(),
+              ),
+              ListTile(
+                  leading: SvgPicture.asset('assets/booking_logo.svg',
+                      height: MediaQuery.of(context).size.height * 0.035),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Text('Trigger Booking'.tr(),style: TextStyle(fontSize: 25),),
                   ),
-                  onPressed: () {
+                  onTap: (){
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => TriggerBooking(
@@ -869,24 +184,741 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                         ),
                       ),
                     );
-                  },
-                  child: const Text(
-                    'Trigger Booking',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal),
+                  }
+              ),
+              ListTile(
+                  leading: SvgPicture.asset('assets/booking_manager.svg'),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text('Booking Manager'.tr(),style: TextStyle(fontSize: 25),),
+                  ),
+                  onTap: (){
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BookingManager(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            token: widget.token,
+                            id: widget.id,
+                            email: widget.email
+                        ),
+                      ),
+                    );
+                  }
+              ),
+              ListTile(
+                leading: SvgPicture.asset('assets/payment.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('Payments'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SuperUserPayment(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: SvgPicture.asset('assets/report_logo.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: SvgPicture.asset('assets/help_logo.svg'),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 7),
+                  child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=> UserHelp(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email
+                      )));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 10),
+                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
+                ),
+                onTap: () {
+                  showLogoutDialog();
+                },
+              ),
+            ],
+          ),
+        ),
+        body: isLoading
+            ? Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.only(left: 10, top: 25),
+                      height: MediaQuery.sizeOf(context).height * 0.16,
+                      child: Card(
+                        color: Color(0xffF5B369),
+                        shadowColor: Colors.black,
+                        elevation: 3.0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('$totalBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text('Total Bookings'.tr()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.only(top: 25,left: 5,right: 5),
+                      height: MediaQuery.sizeOf(context).height * 0.16,
+                      child: Card(
+                        color: Color(0xffC7ED6D),
+                        shadowColor: Colors.black,
+                        elevation: 3.0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('$completedBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30),),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text('Completed'.tr()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.only(right: 10, top: 25),
+                      height: MediaQuery.sizeOf(context).height * 0.16,
+                      child: Card(
+                        color: Color(0xff52FFA9),
+                        shadowColor: Colors.black,
+                        elevation: 3.0,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('$yetToStartBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text('Hold'.tr()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              CarouselSlider(
+                options: CarouselOptions(
+                  enlargeCenterPage: true,
+                  autoPlay: true,
+                  aspectRatio: 10 / 9,
+                  autoPlayCurve: Curves.fastOutSlowIn,
+                  enableInfiniteScroll: true,
+                  autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                  viewportFraction: 1,
+                ),
+                items:[
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8,12,8,10),
+                    child: Card(
+                      color: Colors.white,
+                      shadowColor: Colors.black,
+                      elevation: 3.0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Color(0xff707070),width: 0.2)
+                      ),
+                      child: Stack(
+                        children: [
+                          GestureDetector(
+                            onTapDown: (details) {
+                              Offset localPosition = details.localPosition;
+
+                              setState(() {
+                                tooltipMessage = null;
+                              });
+                            },
+                            child: PieChart(
+                              PieChartData(
+                                startDegreeOffset: 250,
+                                sectionsSpace: 0,
+                                centerSpaceRadius: 100,
+                                pieTouchData: PieTouchData(
+                                  touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
+                                    setState(() {
+                                      if (event is PointerUpEvent || event is PointerExitEvent) {
+                                        tooltipMessage = null;
+                                        touchedSectionIndex = null;
+                                      } else if (response != null && response.touchedSection != null) {
+                                        touchedSectionIndex = response.touchedSection!.touchedSectionIndex;
+                                        if (touchedSectionIndex != null &&
+                                            touchedSectionIndex! >= 0 &&
+                                            touchedSectionIndex! < sectionLabels.length) {
+                                          tooltipMessage = '  ${touchedSectionIndex ==  0
+                                              ? halfPaidPaymentCount
+                                              : touchedSectionIndex ==  1
+                                              ? totalCompleted
+                                              : tripCompletedBookingsCount
+                                          } ${sectionLabels[touchedSectionIndex!]}';
+                                        } else {
+                                          touchedSectionIndex = null;
+                                          tooltipMessage = null;
+                                        }
+                                      }
+                                    });
+                                  },
+                                ),
+                                sections: [
+                                  PieChartSectionData(
+                                    value: halfPaidPaymentCount.toDouble(),
+                                    color: Color(0xffC968FF),
+                                    radius: 20,
+                                    showTitle: false,
+                                  ),
+                                  PieChartSectionData(
+                                    value: totalCompleted.toDouble(),
+                                    color: Color(0xff70CF97),
+                                    radius: 30,
+                                    showTitle: false,
+                                  ),
+                                  PieChartSectionData(
+                                    value: tripCompletedBookingsCount.toDouble(),
+                                    color: Color(0xffED5A6B),
+                                    radius: 40,
+                                    showTitle: false,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return Directionality(
+                                          textDirection: ui.TextDirection.ltr,
+                                          child: Dialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                                            backgroundColor: Colors.white,
+                                            child: Container(
+                                              width: MediaQuery.of(context).size.width,
+                                              padding: const EdgeInsets.all(0),
+                                              child: StatefulBuilder(
+                                                builder: (BuildContext context, StateSetter setState) {
+                                                  return Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Container(
+                                                        width: MediaQuery.of(context).size.width * 0.8,
+                                                        height: MediaQuery.of(context).size.height * 0.53,
+                                                        child: Column(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Expanded(
+                                                              child: Stack(
+                                                                children: [
+                                                                  PieChart(
+                                                                    PieChartData(
+                                                                      startDegreeOffset: 250,
+                                                                      sectionsSpace: 0,
+                                                                      centerSpaceRadius: 80,
+                                                                      pieTouchData: PieTouchData(
+                                                                        touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
+                                                                          setState(() {
+                                                                            if (event is! PointerUpEvent && event is! PointerExitEvent) {
+                                                                              if (response != null && response.touchedSection != null) {
+                                                                                touchedSectionIndex = response.touchedSection!.touchedSectionIndex;
+                                                                              }
+                                                                            } else {
+                                                                              touchedSectionIndex = null;
+                                                                            }
+                                                                          });
+                                                                        },
+                                                                      ),
+                                                                      sections: [
+                                                                        PieChartSectionData(
+                                                                          value: halfPaidPaymentCount.toDouble(),
+                                                                          color: Color(0xffC968FF),
+                                                                          radius: 20,
+                                                                          showTitle: false,
+                                                                        ),
+                                                                        PieChartSectionData(
+                                                                          value: totalCompleted.toDouble(),
+                                                                          color: Color(0xff70CF97),
+                                                                          radius: 30,
+                                                                          showTitle: false,
+                                                                        ),
+                                                                        PieChartSectionData(
+                                                                          value: tripCompletedBookingsCount.toDouble(),
+                                                                          color: Color(0xffED5A6B),
+                                                                          radius: 40,
+                                                                          showTitle: false,
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                  Positioned.fill(
+                                                                    child: Column(
+                                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                                      children: [
+                                                                        Container(
+                                                                          height: 160,
+                                                                          width: 160,
+                                                                          child: Center(
+                                                                            child: totalBookingsCount!= 0
+                                                                                ? Text(
+                                                                              touchedSectionIndex != null
+                                                                                  ? getSectionTitle(touchedSectionIndex!)
+                                                                                  : totalCompleted!=0
+                                                                                  ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed Successfully'.tr()}"
+                                                                                  : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed'.tr()}",
+                                                                              textAlign: TextAlign.center,
+                                                                              style: TextStyle(fontSize: 20),
+                                                                            )
+                                                                                : Text('No Bookings Found'.tr()),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  )
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Padding(
+                                                              padding: const EdgeInsets.fromLTRB(35, 8, 8, 8),
+                                                              child: Column(
+                                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                                children: [
+                                                                  Padding(
+                                                                    padding: const EdgeInsets.all(3),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        CircleAvatar(
+                                                                          backgroundColor: Color(0xff009E10),
+                                                                          minRadius: 6,
+                                                                        ),
+                                                                        Padding(
+                                                                          padding: const EdgeInsets.only(left: 20),
+                                                                          child: Text(
+                                                                            'Completed'.tr(),
+                                                                            style: TextStyle(
+                                                                              fontSize: 16,
+                                                                              color: Color(0xff7F6AFF),
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                  Padding(
+                                                                    padding: const EdgeInsets.all(3),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        CircleAvatar(
+                                                                          backgroundColor: Color(0xffC968FF),
+                                                                          minRadius: 6,
+                                                                        ),
+                                                                        Padding(
+                                                                          padding: const EdgeInsets.only(left: 20),
+                                                                          child: Text(
+                                                                            'HalfPaid'.tr(),
+                                                                            style: TextStyle(
+                                                                              fontSize: 16,
+                                                                              color: Color(0xff7F6AFF),
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                  Padding(
+                                                                    padding: const EdgeInsets.fromLTRB(3, 3, 3, 20),
+                                                                    child: Row(
+                                                                      children: [
+                                                                        CircleAvatar(
+                                                                          backgroundColor: Color(0xffED5A6B),
+                                                                          minRadius: 6,
+                                                                        ),
+                                                                        Padding(
+                                                                          padding: const EdgeInsets.only(left: 20),
+                                                                          child: Text(
+                                                                            'Pending'.tr(),
+                                                                            style: TextStyle(
+                                                                              fontSize: 16,
+                                                                              color: Color(0xff7F6AFF),
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: Container(
+                                    height: 160,
+                                    width: 160,
+                                    child: Center(
+                                      child: totalBookingsCount!=0
+                                          ? Text(
+                                        touchedSectionIndex != null
+                                            ? getSectionTitle(touchedSectionIndex!)
+                                            : totalCompleted!=0
+                                              ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed Successfully'.tr()}"
+                                              : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed'.tr()}",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(fontSize: 20),
+                                              )
+                                            : Text('No Bookings Found'.tr()),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (tooltipMessage != null)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              color: Colors.white,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 20,
+                                    height: 20,
+                                    color: sectionColors[touchedSectionIndex!],
+                                  ),
+                                  Text(
+                                    tooltipMessage!,
+                                    style: TextStyle(color: Colors.black,fontSize: 15),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+                    child: Card(
+                      color: Colors.white,
+                      shadowColor: Colors.black,
+                      elevation: 3.0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Color(0xff707070),width: 0.2)
+                      ),
+                      child: Stack(
+                        children: <Widget>[
+                          AspectRatio(
+                            aspectRatio: 1.15,
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: 0,
+                                left: 0,
+                                top: MediaQuery.sizeOf(context).height * 0.13,
+                                bottom: 0,
+                              ),
+                              child: LineChart(
+                                showCompletedData
+                                    ? completedChartData!
+                                    : showPendingData
+                                    ? pendingChartData!
+                                    : allChartData!,
+                              ),
+                            ),
+                          ),
+                          totalBookingsCount!=0
+                          ? Positioned(
+                            top: 20,
+                            left: 20,
+                            child: GestureDetector(
+                              onTap: (){
+                                setState(() {
+                                  if (showCompletedData) {
+                                    showCompletedData = false;
+                                    showPendingData = false;
+                                    updateAllChartData(selectedDuration);
+                                  } else {
+                                    showCompletedData = true;
+                                    showPendingData = false;
+                                    updateChartData(selectedDuration);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: showCompletedData?Color(0xffF6F6F6):Colors.white,
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: Color(0xff009E10),
+                                        minRadius: 6,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          'Completed'.tr(),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Color(0xff7F6AFF),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          : Container(),
+                          totalBookingsCount!=0
+                          ? Positioned(
+                            top: 20,
+                            left: MediaQuery.sizeOf(context).width * 0.35,
+                            child: GestureDetector(
+                              onTap: (){
+                                setState(() {
+                                  if (showPendingData) {
+                                    showPendingData = false;
+                                    showCompletedData = false;
+                                    updateAllChartData(selectedDuration);
+                                  } else {
+                                    showPendingData = true;
+                                    showCompletedData = false;
+                                    updateChartData(selectedDuration);
+                                  }
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: showPendingData?Color(0xffF6F6F6):Colors.white,
+                                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor: Color(0xffE20808),
+                                        minRadius: 6,
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          'Hold'.tr(),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Color(0xff7F6AFF),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          : Container(),
+                          Positioned(
+                            top: 20,
+                            right: 15,
+                            child: Stack(
+                              children: <Widget>[
+                                Container(
+                                  width: MediaQuery.sizeOf(context).width * 0.3,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xffF6F6F6),
+                                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 8, right: 8),
+                                      child: DropdownButton<String>(
+                                        value: selectedDuration,
+                                        dropdownColor: Colors.white,
+                                        icon: Icon(Icons.keyboard_arrow_down),
+                                        items: dropdownItems.map<DropdownMenuItem<String>>((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Directionality(
+                                              textDirection: ui.TextDirection.ltr,
+                                              child: Row(
+                                                children: [
+                                                  Text(value.tr()),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (String? newValue) {
+                                          if (newValue != null) {
+                                            setState(() {
+                                              selectedDuration = newValue;
+                                              showPendingData == true || showCompletedData == true
+                                                  ? updateChartData(selectedDuration)
+                                                  : updateAllChartData(selectedDuration);
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ]
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shadowColor: Colors.black,
+                      elevation: 5,
+                      backgroundColor: const Color(0xff6269FE),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => SuperUsertype(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,
+                              email: widget.email
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'NewBooking'.tr(),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.normal),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.07,
+                  width: MediaQuery.of(context).size.width,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shadowColor: Colors.black,
+                      elevation: 5,
+                      backgroundColor: Color(0xff6269FE),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => TriggerBooking(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,
+                              email: widget.email
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Trigger Booking'.tr(),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.normal),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
 
-      bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onTabTapped: _onTabTapped,
+        bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
+          context: context,
+          selectedIndex: _selectedIndex,
+          onTabTapped: _onTabTapped,
+        ),
       ),
     );
   }
@@ -940,13 +972,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserProfile(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              token: widget.token,
-              id: widget.id,
-              email: widget.email,
-            ),
+            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;
@@ -991,42 +1017,45 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          backgroundColor: Colors.white,
-          contentPadding: const EdgeInsets.all(20),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 30,bottom: 10),
-                child: Text(
-                  'Are you sure you want to logout?',
-                  style: TextStyle(fontSize: 19),
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.all(20),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                  child: Text(
+                    'are_you_sure_you_want_to_logout'.tr(),
+                    style: TextStyle(fontSize: 19),
+                  ),
                 ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('yes'.tr()),
+                onPressed: () async {
+                  await clearUserData();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserLogin()),
+                  );
+                },
+              ),
+              TextButton(
+                child: Text('no'.tr()),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () async {
-                await clearUserData();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserLogin()),
-                );
-              },
-            ),
-            TextButton(
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
@@ -1035,13 +1064,13 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   String getSectionTitle(int index) {
     switch (index) {
       case 0:
-        return "${(halfPaidPaymentCount/totalBookingsCount*100).toInt()}%\nHalf Paid";
+        return "${(halfPaidPaymentCount/totalBookingsCount*100).toInt()}%\n${'HalfPaid'.tr()}";
       case 1:
-        return "${(totalCompleted/totalBookingsCount*100).toInt()}%\nCompleted";
+        return "${(totalCompleted/totalBookingsCount*100).toInt()}%\n${'Completed'.tr()}";
       case 2:
-        return "${(tripCompletedBookingsCount/totalBookingsCount*100).toInt()}%\nPending";
+        return "${(tripCompletedBookingsCount/totalBookingsCount*100).toInt()}%\n${'Pending'.tr()}";
       default:
-        return "${(totalCompleted/totalBookingsCount*100).toInt()}%\nCompleted Successfully";
+        return "${(totalCompleted/totalBookingsCount*100).toInt()}%\n${'Completed Successfully'.tr()}";
     }
   }
 
@@ -1053,43 +1082,43 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     Widget text;
     switch (value.toInt()) {
       case 1:
-        text = const Text('Jan', style: style);
+        text = Text('Jan'.tr(), style: style);
         break;
       case 2:
-        text = const Text('Feb', style: style);
+        text = Text('Feb'.tr(), style: style);
         break;
       case 3:
-        text = const Text('Mar', style: style);
+        text = Text('Mar'.tr(), style: style);
         break;
       case 4:
-        text = const Text('Apr', style: style);
+        text = Text('Apr'.tr(), style: style);
         break;
       case 5:
-        text = const Text('May', style: style);
+        text = Text('May'.tr(), style: style);
         break;
       case 6:
-        text = const Text('Jun', style: style);
+        text = Text('Jun'.tr(), style: style);
         break;
       case 7:
-        text = const Text('Jul', style: style);
+        text = Text('Jul'.tr(), style: style);
         break;
       case 8:
-        text = const Text('Aug', style: style);
+        text = Text('Aug'.tr(), style: style);
         break;
       case 9:
-        text = const Text('Sep', style: style);
+        text = Text('Sep'.tr(), style: style);
         break;
       case 10:
-        text = const Text('Oct', style: style);
+        text = Text('Oct'.tr(), style: style);
         break;
       case 11:
-        text = const Text('Nov', style: style);
+        text = Text('Nov'.tr(), style: style);
         break;
       case 12:
-        text = const Text('Dec', style: style);
+        text = Text('Dec'.tr(), style: style);
         break;
       default:
-        text = const Text('', style: style);
+        text = Text('', style: style);
         break;
     }
 
@@ -1099,31 +1128,8 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     );
   }
 
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 15,
-    );
-    String text;
-    switch (value.toInt()) {
-      case 1:
-        text = '10K';
-        break;
-      case 3:
-        text = '30k';
-        break;
-      case 5:
-        text = '50k';
-        break;
-      default:
-        return Container();
-    }
-
-    return Text(text, style: style, textAlign: TextAlign.left);
-  }
-
   List<FlSpot> generateWeeklySpots(List<String> bookingDates) {
-    final dailyCounts = countBookingsByDay(bookingDates); // Implement this function to count bookings for each day of the week
+    final dailyCounts = countBookingsByDay(bookingDates);
     return List.generate(7, (index) {
       return FlSpot(index.toDouble(), dailyCounts[index].toDouble());
     });
@@ -1161,12 +1167,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
           : generateSpotsFromMonthlyData(countBookingsByMonth(pendingBookingDates));
     }
 
-    List<String> weekDays = [
-      'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat',
-    ];
-
-
-    List<String> allTimeTitles = ['All Bookings', 'Hold', 'Completed'];
+    List<String> weekDays = ['Sun'.tr(), 'Mon'.tr(), 'Tue'.tr(), 'Wed'.tr(), 'Thu'.tr(), 'Fri'.tr(), 'Sat'.tr(),];
+    List<String> months = ['', 'Jan'.tr(), 'Feb'.tr(), 'Mar'.tr(), 'Apr'.tr(), 'May'.tr(), 'Jun'.tr(), 'Jul'.tr(), 'Aug'.tr(), 'Sep'.tr(), 'Oct'.tr(), 'Nov'.tr(), 'Dec'.tr(), ''];
+    List<String> allTimeTitles = ['All Bookings'.tr(), 'Hold'.tr(), 'Completed'.tr()];
 
     return LineChartData(
       gridData: FlGridData(
@@ -1210,7 +1213,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 }
               } else {
                 if (value < 0 || value > 12) return Text('');
-                const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
                 return Text(months[value.toInt()]);
               }
             },
@@ -1328,9 +1330,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     }
 
 
-    List<String> weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    List<String> months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
-    List<String> allTimeTitles = ['All Bookings', 'Hold'];
+    List<String> weekDays = ['Sun'.tr(), 'Mon'.tr(), 'Tue'.tr(), 'Wed'.tr(), 'Thu'.tr(), 'Fri'.tr(), 'Sat'.tr()];
+    List<String> months = ['', 'Jan'.tr(), 'Feb'.tr(), 'Mar'.tr(), 'Apr'.tr(), 'May'.tr(), 'Jun'.tr(), 'Jul'.tr(), 'Aug'.tr(), 'Sep'.tr(), 'Oct'.tr(), 'Nov'.tr(), 'Dec'.tr(), ''];
+    List<String> allTimeTitles = ['All Bookings'.tr(), 'Hold'.tr()];
 
 
     return LineChartData(
@@ -1429,9 +1431,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     }
 
 
-    List<String> weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    List<String> months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
-    List<String> allTimeTitles = ['All Bookings', 'Completed'];
+    List<String> weekDays = ['Sun'.tr(), 'Mon'.tr(), 'Tue'.tr(), 'Wed'.tr(), 'Thu'.tr(), 'Fri'.tr(), 'Sat'.tr()];
+    List<String> months = ['', 'Jan'.tr(), 'Feb'.tr(), 'Mar'.tr(), 'Apr'.tr(), 'May'.tr(), 'Jun'.tr(), 'Jul'.tr(), 'Aug'.tr(), 'Sep'.tr(), 'Oct'.tr(), 'Nov'.tr(), 'Dec'.tr(), ''];
+    List<String> allTimeTitles = ['All Bookings'.tr(), 'Completed'.tr()];
     print("Monthly counts: ${countBookingsByMonth(filteredDates)}");
     print("Spots generated: $spots");
 
@@ -1609,7 +1611,8 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             ? generateWeeklySpots(filteredDates)
             : generateSpotsFromMonthlyData(monthlyCounts);
 
-        List<String> weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        List<String> weekDays = ['Sun'.tr(), 'Mon'.tr(), 'Tue'.tr(), 'Wed'.tr(), 'Thu'.tr(), 'Fri'.tr(), 'Sat'.tr()];
+        List<String> months = ['', 'Jan'.tr(), 'Feb'.tr(), 'Mar'.tr(), 'Apr'.tr(), 'May'.tr(), 'Jun'.tr(), 'Jul'.tr(), 'Aug'.tr(), 'Sep'.tr(), 'Oct'.tr(), 'Nov'.tr(), 'Dec'.tr(), ''];
 
         double maxY = monthlyCounts.values.isNotEmpty
             ? monthlyCounts.values.reduce((a, b) => a > b ? a : b).toDouble() * 1.1
@@ -1669,7 +1672,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                       }
                     } else {
                       if (value < 0 || value > 12) return Text('');
-                      const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
                       return Text(months[value.toInt()]);
                     }
                   },
@@ -1731,7 +1733,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                       }
                     } else {
                       if (value < 0 || value > 12) return Text('');
-                      const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', ''];
                       return Text(months[value.toInt()]);
                     }
                   },
@@ -1836,107 +1837,10 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     }).toList();
   }
 
-
-  LineChartData avgData() {
-    return LineChartData(
-      lineTouchData: const LineTouchData(enabled: false),
-      gridData: FlGridData(
-        show: true,
-        drawHorizontalLine: true,
-        verticalInterval: 1,
-        horizontalInterval: 1,
-        getDrawingVerticalLine: (value) {
-          return const FlLine(
-            color: Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-        getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            color: Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: bottomTitleWidgets,
-            interval: 1,
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: leftTitleWidgets,
-            reservedSize: 42,
-            interval: 1,
-          ),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: const Color(0xff37434d)),
-      ),
-      minX: 0,
-      maxX: 11,
-      minY: 0,
-      maxY: 6,
-      lineBarsData: [
-        LineChartBarData(
-          spots: const [
-            FlSpot(0, 3.44),
-            FlSpot(2.6, 3.44),
-            FlSpot(4.9, 3.44),
-            FlSpot(6.8, 3.44),
-            FlSpot(8, 3.44),
-            FlSpot(9.5, 3.44),
-            FlSpot(11, 3.44),
-          ],
-          isCurved: true,
-          gradient: LinearGradient(
-            colors: [
-              ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                  .lerp(0.2)!,
-              ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                  .lerp(0.2)!,
-            ],
-          ),
-          barWidth: 5,
-          isStrokeCapRound: true,
-          dotData: const FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              colors: [
-                ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                    .lerp(0.2)!
-                    .withOpacity(0.1),
-                ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                    .lerp(0.2)!
-                    .withOpacity(0.1),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class AppColors {
-  static const Color contentColorRed = Colors.red; // Example color
-  static const Color contentColorGreen = Colors.green; // Example color
-  static const Color mainGridLineColor = Color(0xffB6A3FF); // Example color
+  static const Color contentColorRed = Colors.red;
+  static const Color contentColorGreen = Colors.green;
+  static const Color mainGridLineColor = Color(0xffB6A3FF);
 }

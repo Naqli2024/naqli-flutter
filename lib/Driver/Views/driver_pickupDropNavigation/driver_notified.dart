@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
@@ -94,9 +95,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
   void _startLocationUpdates() {
     positionStream = Geolocator.getPositionStream().listen((Position position) {
       setState(() {
-        currentLatLng = LatLng(position.latitude, position.longitude); // Update current location
+        currentLatLng = LatLng(position.latitude, position.longitude);
       });
-      // checkDropLocation(); // Call your method whenever a new location is received
     });
   }
 
@@ -113,7 +113,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
       if (newLocation != currentLatLng) {
         await _updateRealTimeDataToDropPoints(newLocation);
         await fetchNearbyPlaces(newLocation);
-        // Check if the widget is still mounted
         if (mounted) {
           setState(() {
             currentLatLng = newLocation;
@@ -202,7 +201,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
           if (directionsData['status'] == 'OK') {
             final durationToDrop = directionsData['routes'][0]['legs'][0]['duration']['text'];
             final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
-            // Check if the widget is still mounted before calling setState()
             if (mounted) {
               setState(() {
                 dropPointsDistance.add(distanceToDrop);
@@ -223,7 +221,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                   position: dropLatLng!,
                   infoWindow: InfoWindow(
                     title: placeName,
-                    snippet: 'Distance: ${distanceToDrop.toStringAsFixed(2)} km\nFeet: $updatedFeet\nTime: $durationToDrop',
+                    snippet: '${'Distance:'} ${distanceToDrop.toStringAsFixed(2)} km\nFeet: $updatedFeet\nTime: $durationToDrop',
                   ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
                 ));
@@ -240,13 +238,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
 
   void _initLocationListener() async {
     location_package.Location location = location_package.Location();
-
-    // Request permission from the location package
     location_package.PermissionStatus permission = await location.requestPermission();
 
     if (permission == location_package.PermissionStatus.granted) {
       location.onLocationChanged.listen((location_package.LocationData newLocation) {
-        // Update currentLatLng with new location
         currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
         _updateRealTimeDataToDropPoints(currentLatLng);
         print('Updated Current LatLng: $currentLatLng');
@@ -275,7 +270,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
     } else {
       print('Error fetching geocode: ${response.statusCode}');
     }
-    return null; // Return null if something goes wrong
+    return null;
   }
 
   void updateLocationMarker(LatLng position, double heading) {
@@ -288,8 +283,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
             title: '$currentPlace',
           ),
           icon: customArrowIcon!,
-          rotation: heading,  // Rotate the arrow based on the heading
-          anchor: Offset(0.5, 0.5),  // Center the arrow marker
+          rotation: heading,
+          anchor: Offset(0.5, 0.5),
         );
       });
     }
@@ -302,16 +297,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
   }
 
   Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    // Check if pickup location exists
     if (pickupLatLng != null) {
-      // Calculate the distance to the pickup point
       double distanceToPickup = _haversineDistance(currentLatLng, dropPointLatLng!);
       String feet = formatDistance(distanceToPickup);
-
-      // Fetch updated directions from current location to pickup point
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, dropPointLatLng!);
-
-      // Fetch updated travel time from API
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String directionsUrl =
           'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${dropPointLatLng!.latitude},${dropPointLatLng!.longitude}&key=$apiKey';
@@ -320,12 +309,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
       if (response.statusCode == 200) {
         final directionsData = json.decode(response.body);
         if (directionsData['status'] == 'OK') {
-          // Extract the duration to pickup location
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-
-          // Update the polyline, distance, and time in the UI
           setState(() {
-            // Remove the old polyline and add the new one
             polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
@@ -333,8 +318,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
               width: 5,
               points: updatedRoutePoints,
             ));
-
-            // Update distance and time for the user interface
             pickUpDistance = distanceToPickup;
             timeToDrop = durationToPickup;
             feet = formatDistance(distanceToPickup);
@@ -359,7 +342,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
       final nearbyPlacesData = json.decode(response.body);
 
       setState(() {
-        nearbyPlaces = []; // Clear previous places
+        nearbyPlaces = [];
       });
 
       if (nearbyPlacesData['status'] == 'OK') {
@@ -371,7 +354,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
           });
         }
         setState(() {
-          currentIndex = 0; // Reset to the first place when new data is fetched
+          currentIndex = 0;
         });
       } else {
         print('Error fetching places: ${nearbyPlacesData['status']}');
@@ -397,8 +380,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       List<LatLng> points = [];
-
-      // Extract points from the route
       if (data['routes'].isNotEmpty) {
         final polylinePoints = data['routes'][0]['overview_polyline']['points'];
         points = _decodePolyline(polylinePoints);
@@ -433,18 +414,14 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
       await mapController?.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: currentLatLng,
-          zoom: 20, // Adjust zoom level as needed
+          zoom: 20,
           tilt: 20,
           bearing: heading,
         ),
       ));
-
-      // Check if pickupLatLng is not null
       if (pickupLatLng != null) {
         final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
         List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
-
-        // Draw polyline on the map
         setState(() {
           polylines.add(Polyline(
             polylineId: PolylineId('route'),
@@ -453,8 +430,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
             width: 5,
           ));
         });
-
-        // Optional: Zoom to fit the route
         if (routePoints.isNotEmpty) {
           LatLngBounds bounds = LatLngBounds(
             southwest: LatLng(
@@ -477,7 +452,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
   }
 
   double _haversineDistance(LatLng start, LatLng end) {
-    const double R = 6371; // Radius of the Earth in kilometers
+    const double R = 6371;
     double dLat = _degToRad(end.latitude - start.latitude);
     double dLon = _degToRad(end.longitude - start.longitude);
     double a =
@@ -485,7 +460,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
             cos(_degToRad(start.latitude)) * cos(_degToRad(end.latitude)) *
                 sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c; // Distance in kilometers
+    return R * c;
   }
 
   double _degToRad(double deg) {
@@ -528,9 +503,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
   }
 
   String calculateFeet(Position position) {
-    // Example logic to calculate distance in feet
-    double distanceInMeters = position.accuracy; // Replace with your distance logic
-    return (distanceInMeters * 3.28084).toStringAsFixed(0); // Convert to feet and format
+    double distanceInMeters = position.accuracy;
+    return (distanceInMeters * 3.28084).toStringAsFixed(0);
   }
   double formattedDistance(double distanceInMeters) {
     return distanceInMeters * 3.28084; // Convert meters to feet and return as double
@@ -566,428 +540,431 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: commonWidgets.commonAppBar(
-          context,
-          showLeading: false,
-        User: widget.firstName +' '+ widget.lastName,
-      ),
-      body: isCompleting
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: MediaQuery.sizeOf(context).height * 0.93,
-                  child: GoogleMap(
-                    mapType: MapType.normal,
-                    onMapCreated: (GoogleMapController controller) {
-                      mapController = controller;
-                    },
-                    initialCameraPosition: const CameraPosition(
-                      target: LatLng(0, 0), // Default position
-                      zoom: 2,
-                    ),
-                    markers: Set<Marker>.of(markers),
-                    polylines: Set<Polyline>.of(polylines),
-                    myLocationEnabled: false,
-                    myLocationButtonEnabled: true,
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                            () => EagerGestureRecognizer(),
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: commonWidgets.commonAppBar(
+            context,
+            showLeading: false,
+          User: widget.firstName +' '+ widget.lastName,
+        ),
+        body: isCompleting
+            ? Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    height: MediaQuery.sizeOf(context).height * 0.93,
+                    child: GoogleMap(
+                      mapType: MapType.normal,
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                      },
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(0, 0),
+                        zoom: 2,
                       ),
-                    },
-                  ),),
-                Positioned(
-                    top: 15,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: const EdgeInsets.only(left: 10,right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 5), // changes position of shadow
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                  onPressed: (){
-                                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                        firstName: widget.firstName,
-                                        lastName: widget.lastName,
-                                        token: widget.token,
-                                        id: widget.id,
-                                        partnerId: widget.partnerId,
-                                        mode: 'online')));
-                                  },
-                                  icon: Icon(FontAwesomeIcons.multiply)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-                Positioned(
-                  top: MediaQuery.sizeOf(context).height * 0.1,
-                  child: isAtDropLocation
-                    ? Container(
-                    margin: EdgeInsets.only(left: 20),
-                    width: MediaQuery.sizeOf(context).width * 0.92,
-                    // height: MediaQuery.sizeOf(context).height * 0.13,
-                    child: Card(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.location_on,color: Color(0xff6069FF),size: 30,),
-                                    ],
+                      markers: Set<Marker>.of(markers),
+                      polylines: Set<Polyline>.of(polylines),
+                      myLocationEnabled: false,
+                      myLocationButtonEnabled: true,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                        ),
+                      },
+                    ),),
+                  Positioned(
+                      top: 15,
+                      child: Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        padding: const EdgeInsets.only(left: 10,right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: 16,color: Color(0xff676565))),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: IconButton(
+                                    onPressed: (){
+                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          token: widget.token,
+                                          id: widget.id,
+                                          partnerId: widget.partnerId,
+                                          mode: 'online')));
+                                    },
+                                    icon: Icon(FontAwesomeIcons.multiply)),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                    : Container(
-                    margin: EdgeInsets.only(left: 20),
-                    width: MediaQuery.sizeOf(context).width * 0.92,
-                    child: Card(
-                      color: Colors.white,
-                      child: nearbyPlaces.isNotEmpty
-                          ? Column(
-                        children: [
-                          if (nearbyPlaces.isNotEmpty && currentIndex < nearbyPlaces.length)
+                          ],
+                        ),
+                      )),
+                  Positioned(
+                    top: MediaQuery.sizeOf(context).height * 0.1,
+                    child: isAtDropLocation
+                      ? Container(
+                      margin: EdgeInsets.only(left: 20),
+                      width: MediaQuery.sizeOf(context).width * 0.92,
+                      // height: MediaQuery.sizeOf(context).height * 0.13,
+                      child: Card(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 15, right: 10),
+                                    padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
                                     child: Column(
                                       children: [
-                                        SvgPicture.asset('assets/upArrow.svg'),
-                                        Text(
-                                          '$feet', // Ensure this is updated dynamically
-                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                                        ),
+                                        Icon(Icons.location_on,color: Color(0xff6069FF),size: 30,),
                                       ],
                                     ),
                                   ),
-                                  Expanded( // Wrap in Expanded to avoid overflow
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Text(nearbyPlaces[currentIndex]['name'] ?? 'Xxxxxxxxx'),
-                                        Text('Towards', style: TextStyle(fontWeight: FontWeight.bold)),
-                                        Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
-                                      ],
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: 16,color: Color(0xff676565))),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          Divider(
-                            indent: 15,
-                            endIndent: 15,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Icon(
-                                  Icons.location_on,
-                                  color: Color(0xff6069FF),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: Column(
+                          ],
+                        ),
+                      ),
+                    )
+                      : Container(
+                      margin: EdgeInsets.only(left: 20),
+                      width: MediaQuery.sizeOf(context).width * 0.92,
+                      child: Card(
+                        color: Colors.white,
+                        child: nearbyPlaces.isNotEmpty
+                            ? Column(
+                          children: [
+                            if (nearbyPlaces.isNotEmpty && currentIndex < nearbyPlaces.length)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 15, right: 10),
+                                      child: Column(
+                                        children: [
+                                          SvgPicture.asset('assets/upArrow.svg'),
+                                          Text(
+                                            '$feet',
+                                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded( // Wrap in Expanded to avoid overflow
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(nearbyPlaces[currentIndex]['name'] ?? 'Xxxxxxxxx'),
+                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      )
-                          : Center(child: CircularProgressIndicator()),
-                    ),
-                  )
-                ),
-        if (!isAtDropLocation)
-          Positioned(
-      bottom: MediaQuery.sizeOf(context).height * 0.27,
-      child: GestureDetector(
-        onTap: recenterMap,
-        child: Container(
-          width: MediaQuery.sizeOf(context).width,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 5),
-              ),
-            ],
-            border: Border.all(
-              color: Color(0xff6069FF),
-              width: 6,
-            ),
-          ),
+                            Divider(
+                              indent: 15,
+                              endIndent: 15,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Icon(
+                                    Icons.location_on,
+                                    color: Color(0xff6069FF),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    children: [
+                                      Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                            : Center(child: CircularProgressIndicator()),
+                      ),
+                    )
+                  ),
+          if (!isAtDropLocation)
+            Positioned(
+        bottom: MediaQuery.sizeOf(context).height * 0.27,
+        child: GestureDetector(
+          onTap: recenterMap,
           child: Container(
+            width: MediaQuery.sizeOf(context).width,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 5),
+                ),
+              ],
               border: Border.all(
-                color: Colors.white,
-                width: 2,
+                color: Color(0xff6069FF),
+                width: 6,
               ),
             ),
-            child: CircleAvatar(
-              minRadius: 45,
-              maxRadius: double.maxFinite,
-              backgroundColor: Color(0xff6069FF),
-              child: Text(
-                'Move',
-                style: TextStyle(color: Colors.white, fontSize: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                minRadius: 45,
+                maxRadius: double.maxFinite,
+                backgroundColor: Color(0xff6069FF),
+                child: Text(
+                  'Move'.tr(),
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
-          Positioned(
-      bottom: 20,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 15, right: 30),
-        child: isMoveClicked
-            ? Container(
-          width: MediaQuery.sizeOf(context).width * 0.93,
-          child: Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          timeToDrop == null ?'Calculating...' :timeToDrop ?? '',
-                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SvgPicture.asset('assets/person.svg'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          dropPointsDistance.isNotEmpty
-                              ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                              : 'Calculating...',
-                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20, right: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Positioned(
+        bottom: 20,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 15, right: 30),
+          child: isMoveClicked
+              ? Container(
+            width: MediaQuery.sizeOf(context).width * 0.93,
+            child: Card(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.call, color: Color(0xff6069FF)),
-                        Icon(Icons.message, color: Color(0xff6069FF)),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            timeToDrop == null ?'Calculating...'.tr() :timeToDrop ?? '',
+                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SvgPicture.asset('assets/person.svg'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            dropPointsDistance.isNotEmpty
+                                ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
+                                : 'Calculating...'.tr(),
+                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Text(
-                      'Dropping of Product',
-                      style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(Icons.call, color: Color(0xff6069FF)),
+                          Icon(Icons.message, color: Color(0xff6069FF)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        'Dropping of Product'.tr(),
+                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+              : isAtDropLocation
+              ? Container(
+            width: MediaQuery.sizeOf(context).width * 0.93,
+            child: Card(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            timeToDrop ?? '',
+                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SvgPicture.asset('assets/person.svg'),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            dropPointsDistance.isNotEmpty
+                                ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
+                                : 'Calculating...'.tr(),
+                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Divider(
+                      indent: 15,
+                      endIndent: 15,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        widget.userName,
+                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 15, top: 20),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.07,
+                        width: MediaQuery.of(context).size.width * 0.62,
+                        child: SlideAction(
+                          borderRadius: 12,
+                          elevation: 0,
+                          submittedIcon: Icon(
+                            Icons.check,
+                            color: Colors.white,
+                          ),
+                          innerColor: Color(0xff6069FF),
+                          outerColor: Color(0xff6069FF),
+                          sliderButtonIcon: Icon(
+                            Icons.arrow_forward_outlined,
+                            color: Colors.white,
+                          ),
+                          text: "Complete Order".tr(),
+                          textStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          onSubmit: () async{
+                            setState(() {
+                              isCompleting =true;
+                            });
+                            await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                token: widget.token,
+                                id: widget.id,
+                                partnerId: widget.partnerId,
+                                mode: 'online')));
+                            setState(() {
+                              isCompleting =false;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+              : Container(
+            width: MediaQuery.sizeOf(context).width * 0.93,
+            child: Card(
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Customer Notified'.tr(),
+                        style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        widget.userName,
+                        style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(Icons.call, color: Color(0xff6069FF)),
+                          Icon(Icons.message, color: Color(0xff6069FF)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         )
-            : isAtDropLocation
-            ? Container(
-          width: MediaQuery.sizeOf(context).width * 0.93,
-          child: Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          timeToDrop ?? '',
-                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SvgPicture.asset('assets/person.svg'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          dropPointsDistance.isNotEmpty
-                              ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                              : 'Calculating...',
-                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(
-                    indent: 15,
-                    endIndent: 15,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      widget.userName,
-                      style: TextStyle(fontSize: 20, color: Color(0xff676565)),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 15, top: 20),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.07,
-                      width: MediaQuery.of(context).size.width * 0.62,
-                      child: SlideAction(
-                        borderRadius: 12,
-                        elevation: 0,
-                        submittedIcon: Icon(
-                          Icons.check,
-                          color: Colors.white,
-                        ),
-                        innerColor: Color(0xff6069FF),
-                        outerColor: Color(0xff6069FF),
-                        sliderButtonIcon: Icon(
-                          Icons.arrow_forward_outlined,
-                          color: Colors.white,
-                        ),
-                        text: "Complete Order",
-                        textStyle: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        onSubmit: () async{
-                          setState(() {
-                            isCompleting =true;
-                          });
-                          await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              token: widget.token,
-                              id: widget.id,
-                              partnerId: widget.partnerId,
-                              mode: 'online')));
-                          setState(() {
-                            isCompleting =false;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+      ),
+                ]
               ),
-            ),
+            ],
           ),
-        )
-            : Container(
-          width: MediaQuery.sizeOf(context).width * 0.93,
-          child: Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Customer Notified',
-                      style: TextStyle(fontSize: 24, color: Color(0xff676565)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      widget.userName,
-                      style: TextStyle(fontSize: 24, color: Color(0xff676565)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(Icons.call, color: Color(0xff6069FF)),
-                        Icon(Icons.message, color: Color(0xff6069FF)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      )
-    ),
-              ]
-            ),
-          ],
         ),
       ),
     );

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_forgotPassword.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
@@ -75,6 +77,146 @@ class DriverService{
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please try again...')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<void> driverForgotPassword(
+      BuildContext context, {
+        required String emailAddress,
+      }) async {
+    try{
+      final url = Uri.parse('${baseUrl}forgot-password');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context)=> DriverResetPassword(emailAddress: emailAddress),
+          ),
+        );
+      } else {
+        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to send OTP: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<void> driverForgotPasswordReset(
+      BuildContext context, {
+        required String otp,
+        required String newPassword,
+        required String confirmNewPassword,
+      }) async {
+    try{
+      final url = Uri.parse('${baseUrl}verify-otp-update-password');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'otp': otp,
+          'newPassword': newPassword,
+          'confirmNewPassword': confirmNewPassword,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context)=> DriverForgotPasswordSuccess(),
+          ),
+        );
+      } else {
+        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to Reset Pwd: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
+      );
+      print('Error: $e');
+    }
+  }
+
+  Future<void> driverForgotPasswordResendOTP(context,{
+    required String emailAddress,
+  }) async {
+    try{
+      final url = Uri.parse('${baseUrl}resend-otp');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'emailAddress': emailAddress,
+        }),
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print('Success');
+        Fluttertoast.showToast(
+          msg: 'OTP Send Successfully',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      } else {
+        final message = responseBody['message'];
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        print('Failed to register user: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    }on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An unexpected error occurred: $e')),
       );
       print('Error: $e');
     }
@@ -195,12 +337,10 @@ class DriverService{
       print('Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
-      // Check if the response body is empty
       if (response.body.isEmpty) {
         throw Exception('Empty response body');
       }
 
-      // Handle successful status code
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -212,12 +352,10 @@ class DriverService{
           throw Exception('Unexpected response format: $responseBody');
         }
       }
-      // Handle specific errors such as booking not found
       else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
         print('Booking not found');
         return null;
       }
-      // Handle service unavailable error
       else if (response.statusCode == 503) {
         print('Service unavailable. Please try again later.');
         throw Exception('Service is temporarily unavailable. Please try again later.');

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:ui';
@@ -11,6 +12,7 @@ import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'dart:ui' as ui;
 
 class DriverAddressNotification extends StatefulWidget {
   final String firstName;
@@ -84,20 +86,18 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
         isCalculating = true;
       });
 
-      // Get the current location using Geolocator
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       String currentLocation = '${position.latitude},${position.longitude}';
 
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
 
-      // Prepare the Google Distance Matrix API request URL
       String url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=$currentLocation&destinations=$pickupAddress&key=$apiKey';
 
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('API Response: $data');  // Log full response for debugging
+        print('API Response: $data');
         if (data['status'] == 'OK') {
           return _processDistanceMatrixResponse(data);
         } else {
@@ -120,7 +120,6 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
     if (data['status'] == 'OK') {
       var rows = data['rows'] as List;
       if (rows.isNotEmpty) {
-        // Current location to pickup
         var currentToPickupElement = rows[0]['elements'][0];
         String currentToPickupDistance = currentToPickupElement['distance']['text'];
         String currentToPickupDuration = currentToPickupElement['duration']['text'];
@@ -142,7 +141,6 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
   Future<void> _fetchBookingDetails() async {
     final bookingData = await driverService.fetchBookingDetails(widget.bookingId, widget.token);
 
-    // Debugging: Print the response
     print("Fetched Booking Data: $bookingData");
 
     setState(() {
@@ -159,22 +157,17 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
       setState(() {
         isLoading = true;
       });
-      // Fetch the booking request data using driverService
       final data = await driverService.driverRequest(context, operatorId: widget.id);
 
       if (data != null && data['bookingRequest'] != null) {
-        // Check if assignedOperator exists in the bookingRequest
         if (data['bookingRequest']['assignedOperator'] != null) {
-          // Fetch bookingId from assignedOperator if present
           final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
           print('Booking ID from assignedOperator: $assignedOperatorBookingId');
         } else {
-          // Otherwise, fetch bookingId directly from bookingRequest
           final bookingRequestBookingId = data['bookingRequest']['bookingId'];
           print('Booking ID from bookingRequest: $bookingRequestBookingId');
         }
 
-        // Set the fetched data to state
         setState(() {
           bookingRequestData = data;
           isLoading = false;
@@ -200,167 +193,170 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
               color: Colors.black.withOpacity(0.3),
             ),
           ),
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              scrolledUnderElevation: 0,
-              centerTitle: false,
-              backgroundColor: Color(0xffE6E5E3).withOpacity(0.1),
-              toolbarHeight: MediaQuery.of(context).size.height * 0.15,
-              leading: GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
-                    firstName: widget.firstName,
-                    lastName: widget.lastName,
-                    token: widget.token,
-                    id: widget.id,partnerId: widget.partnerId,mode: widget.mode,)));
-                },
-                child: const Icon(
-                  Icons.arrow_back_outlined,
-                  size: 30,
+          Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                scrolledUnderElevation: 0,
+                centerTitle: false,
+                backgroundColor: Color(0xffE6E5E3).withOpacity(0.1),
+                toolbarHeight: MediaQuery.of(context).size.height * 0.15,
+                leading: GestureDetector(
+                  onTap: () {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,partnerId: widget.partnerId,mode: widget.mode,)));
+                  },
+                  child: const Icon(
+                    Icons.arrow_back_outlined,
+                    size: 30,
+                  ),
                 ),
+                title: Text('Radar'.tr(), style: TextStyle(fontSize: 26)),
               ),
-              title: const Text('Radar', style: TextStyle(fontSize: 26)),
-            ),
-            body: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 25, right: 25),
-                  child: GestureDetector(
-                    onTap: (){
-                      cityName == ''
-                          ? commonWidgets.showToast('Please wait....')
-                          : Navigator.push(context, MaterialPageRoute(builder: (context)=> AcceptAddressOrder(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        token: widget.token,
-                        id: widget.id,
-                        partnerId: widget.partnerId,
-                        bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
-                        pickUp: cityName,
-                        address: address,
-                        quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
-                        userId: booking?['user'],
-                      )));
-                    },
-                    child: Card(
-                      color: Colors.white,
-                      elevation: 3.0, // Shadow for the notification card
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              body: isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 25, right: 25),
+                    child: GestureDetector(
+                      onTap: (){
+                        cityName == ''
+                            ? commonWidgets.showToast('Please wait....'.tr())
+                            : Navigator.push(context, MaterialPageRoute(builder: (context)=> AcceptAddressOrder(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          partnerId: widget.partnerId,
+                          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+                          pickUp: cityName,
+                          address: address,
+                          quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
+                          userId: booking?['user'],
+                        )));
+                      },
+                      child: Card(
+                        color: Colors.white,
+                        elevation: 3.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    SvgPicture.asset('assets/naqleeBorder.svg'),
+                                  ],
+                                ),
+                              ),
+                              Row(
                                 children: [
-                                  SvgPicture.asset('assets/naqleeBorder.svg'),
+                                  Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                        'SAR',
+                                        style: TextStyle(fontSize: 24),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                        (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
+                                        style: TextStyle(fontSize: 34),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            ),
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      'SAR',
-                                      style: TextStyle(fontSize: 24),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8, top: 8, bottom: 30),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        SvgPicture.asset(
+                                          'assets/direction.svg',
+                                          height: MediaQuery.of(context).size.height * 0.13,
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Text(
-                                      (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
-                                      style: TextStyle(fontSize: 34),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8, top: 8, bottom: 30),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Column(
-                                    children: [
-                                      SvgPicture.asset(
-                                        'assets/direction.svg',
-                                        height: MediaQuery.of(context).size.height * 0.13,
-                                      ),
-                                    ],
-                                  ),
 
-                                  isCalculating
-                                      ? Center(child: CircularProgressIndicator())
-                                      : Expanded(
-                                    child: SingleChildScrollView(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          crossAxisAlignment: CrossAxisAlignment.start, // To avoid stretching the text
-                                          children: [
-                                            Text(
-                                              '$currentToPickupDuration ($currentToPickupDistance) away',
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                            Text(
-                                              cityName,
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                            Text(
-                                              address,
-                                              style: TextStyle(fontSize: 20),
-                                            ),
-                                          ],
+                                    isCalculating
+                                        ? Center(child: CircularProgressIndicator())
+                                        : Expanded(
+                                      child: SingleChildScrollView(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '$currentToPickupDuration ($currentToPickupDistance) ${'away'.tr()}',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                              Text(
+                                                cityName,
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                              Text(
+                                                address,
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  )
-                                ],
-                              ),
-                            )
-                          ],
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 35),
-                  child: Text(
-                    'We’ll let you know when there\nIs a request',
-                    style: TextStyle(fontSize: 18,color: Colors.black),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 35),
-                    child: IconButton(
-                        onPressed: (){
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
-                            firstName: widget.firstName,
-                            lastName: widget.lastName,
-                            token: widget.token,
-                            id: widget.id,partnerId: widget.partnerId,mode: widget.mode,)));
-                        },
-                        icon: Icon(Icons.cancel)
-                    )
-                ),
-              ],
+                    child: Text(
+                      '${"We’ll let you know when there".tr()}\n${'Is a request'.tr()}',
+                      style: TextStyle(fontSize: 18,color: Colors.black),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Padding(
+                      padding: EdgeInsets.only(top: 35),
+                      child: IconButton(
+                          onPressed: (){
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,partnerId: widget.partnerId,mode: widget.mode,)));
+                          },
+                          icon: Icon(Icons.cancel)
+                      )
+                  ),
+                ],
+              ),
             ),
           ),
         ],

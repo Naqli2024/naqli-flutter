@@ -18,6 +18,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.d
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -170,21 +171,36 @@ class _CreateBookingState extends State<CreateBooking> {
           backgroundColor: Colors.white,
           child: ListView(
             children: <Widget>[
-              ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SvgPicture.asset('assets/naqlee-logo.svg',
-                        height: MediaQuery.of(context).size.height * 0.05),
-                    GestureDetector(
-                        onTap: (){
-                          Navigator.pop(context);
-                        },
-                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
-                  ],
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                    ),
+                  );
+                },
+                child: ListTile(
+                  leading: CircleAvatar(
+                    child: Icon(Icons.person,color: Colors.grey,size: 30),
+                  ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(widget.firstName +' '+ widget.lastName,
+                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                      Icon(Icons.edit,color: Colors.grey,size: 20),
+                    ],
+                  ),
+                  subtitle: Text(widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96),
+                    ),),
                 ),
               ),
-              const Divider(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Divider(),
+              ),
               ListTile(
                   leading: Icon(Icons.home,size: 30,color: Color(0xff707070)),
                   title: Padding(
@@ -668,9 +684,9 @@ class _CreateBookingState extends State<CreateBooking> {
 
   void _dismissSuggestions() {
     setState(() {
-      _pickUpSuggestions = []; // Clear pick-up suggestions
+      _pickUpSuggestions = [];
       for (var i = 0; i < _dropPointSuggestions.length; i++) {
-        _dropPointSuggestions[i] = []; // Clear all drop point suggestions
+        _dropPointSuggestions[i] = [];
       }
     });
   }
@@ -688,17 +704,14 @@ class _CreateBookingState extends State<CreateBooking> {
         desiredAccuracy: geo.LocationAccuracy.high,
       );
 
-      // Get the current location as LatLng
       LatLng currentLocation = LatLng(position.latitude, position.longitude);
 
-      // Update the map to center on current location
       if (mapController != null) {
         mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(currentLocation, 10.0),
         );
       }
 
-      // Add a marker at the current location
       setState(() {
         markers.clear();
         markers.add(
@@ -727,7 +740,6 @@ class _CreateBookingState extends State<CreateBooking> {
       desiredAccuracy: geo.LocationAccuracy.high,
     );
 
-    // Convert the coordinates into a human-readable address (Reverse Geocoding)
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
     String reverseGeocodeUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
@@ -740,14 +752,12 @@ class _CreateBookingState extends State<CreateBooking> {
       if (data != null && data['status'] == 'OK') {
         final formattedAddress = data['results'][0]['formatted_address'];
 
-        // Update the pickup controller with the current location address
         setState(() {
           pickUpController.text = formattedAddress;
           isLocating = false;
           _pickUpSuggestions = [];
         });
 
-        // Optionally, place a marker for the current location on the map
         setState(() {
           markers.add(
             Marker(
@@ -987,24 +997,20 @@ class _CreateBookingState extends State<CreateBooking> {
     try {
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
 
-      // Retrieve city name, address, and zip code
       String cityName = cityNameController.text.trim();
       String address = addressController.text.trim();
       String zipCode = zipCodeController.text.trim();
 
-      // Validate city name and address
       if (cityName.isEmpty || address.isEmpty) {
-        // Show an alert or a Snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
                 'Please enter both city name and address to locate the place.'),
           ),
         );
-        return; // Exit the function if either is missing
+        return;
       }
 
-      // Combine city name, address, and zip code
       String fullAddress = '$address, $cityName';
       if (zipCode.isNotEmpty) {
         fullAddress += ', $zipCode';
@@ -1077,7 +1083,6 @@ class _CreateBookingState extends State<CreateBooking> {
       print('Error fetching coordinates: $e');
     }
   }
-
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylinePoints = [];
@@ -1166,7 +1171,6 @@ class _CreateBookingState extends State<CreateBooking> {
   Future<void> _fetchSuggestions(String query, int index, bool isPickUp) async {
     if (query.isEmpty) {
       setState(() {
-        // Clear suggestions if the text field is empty
         if (isPickUp) {
           _pickUpSuggestions = [];
         } else {
@@ -1176,8 +1180,7 @@ class _CreateBookingState extends State<CreateBooking> {
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+    final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -1280,10 +1283,10 @@ class _CreateBookingState extends State<CreateBooking> {
                 typeName: '',
                 typeOfLoad: [],
                 typeImage: '',
-                scale: ''), // Default value
+                scale: ''),
           );
 
-      print('Selected Type: ${selectedType.typeOfLoad}'); // Debugging line
+      print('Selected Type: ${selectedType.typeOfLoad}');
 
       return selectedType.typeOfLoad;
     } catch (e) {
@@ -1372,7 +1375,6 @@ class _CreateBookingState extends State<CreateBooking> {
       if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
-        // Print debugging info
         print('name$selectedName');
         print('unitType${widget.selectedType}');
         print('typeName$selectedTypeName');
@@ -1502,8 +1504,7 @@ class _CreateBookingState extends State<CreateBooking> {
     if(widget.selectedType=='equipment') {
       if (cityNameController.text.isEmpty ||
           addressController.text.isEmpty) {
-        commonWidgets.showToast(
-            'Choose City name and Address'.tr());
+        commonWidgets.showToast('Choose City name and Address'.tr());
       }
       else {
         print('unitType${widget.selectedType}');
