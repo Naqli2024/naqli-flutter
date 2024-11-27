@@ -1,28 +1,24 @@
-// Place the buildscript block first
 buildscript {
-    ext.kotlin_version = '1.9.0'  // Ensure you use the correct Kotlin version
+    ext.kotlin_version = '1.9.0'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2' // Latest Android Gradle Plugin version
+        classpath 'com.android.tools.build:gradle:8.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-// plugins block comes after buildscript
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// Start the android block here
 android {
     namespace = "com.example.flutter_naqli"
-    compileSdk = 34  // Specify the compileSdkVersion here directly
+    compileSdk = 34
 
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +28,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"  // Use the correct syntax for the JVM target
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
@@ -41,7 +37,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        // API key from project properties
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
     }
 

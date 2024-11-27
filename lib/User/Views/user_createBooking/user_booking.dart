@@ -2569,6 +2569,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     onChanged: _onCheckboxChanged,
                     checkColor: Colors.white,
                     activeColor: const Color(0xff6A66D1),
+                    side: BorderSide(color: Colors.grey),
                   ),
                   Container(
                     alignment: Alignment.topLeft,
@@ -2777,6 +2778,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,
@@ -2979,6 +2981,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,
@@ -3181,6 +3184,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,

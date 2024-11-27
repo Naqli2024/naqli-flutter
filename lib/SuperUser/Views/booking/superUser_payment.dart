@@ -307,113 +307,118 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
             ),
           ),
         ),
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            isLoading
-                  ? Expanded(child: Center(child: CircularProgressIndicator(),))
-                  : bookings.isNotEmpty
-                    ? Flexible(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _bookingDetailsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error loading bookings.'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No Bookings found'));
-                  }
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (context, index) {
-                            final booking = snapshot.data![index];
-                            final bookingPartnerName = bookings[index];
-                            partnerId = booking['partner']??'N/A';
-                            bookingId = booking['_id']??'N/A';
-                            unit = booking['unitType']??'N/A';
-                            unitType = booking['_id']??'N/A';
-                            bookingStatus = booking['bookingStatus']??'N/A';
-                            bookingDate = booking['date']??'N/A';
-                            bookingTime = booking['time']??'N/A';
-                            fromTime = booking['fromTime']??'N/A';
-                            toTime = booking['toTime']??'N/A';
-                            print('partnerId''${partnerId}');
-                            return FutureBuilder<String>(
-                              future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
-                              builder: (context, snapshot) {
-                                // if (snapshot.connectionState == ConnectionState.waiting) {
-                                //   return Center(child: CircularProgressIndicator());
-                                // }
-                                if (snapshot.hasError) {
-                                  return Center(child: Text('Error Loading'));
-                                }
-                                if (snapshot.hasData) {
-                                  final partnerNames = snapshot.data ?? 'N/A';
-                                  return Container(
-                                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                                    child: Card(
-                                      color: Colors.white,
-                                      shadowColor: Colors.black,
-                                      elevation: 3.0,
-                                      child: ListTile(
-                                        title: Text('${'Booking id'.tr()}: ${booking['_id']??'N/A'}'),
-                                        subtitle: Row(
-                                          children: [
-                                            Text('${booking['date']??'N/A'}'),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text('${booking['time']??'N/A'}' == 'N/A' ? '${booking['fromTime']??'N/A'}'+'-'+'${booking['toTime']??'N/A'}' :'${booking['time']??'N/A'}'),
-                                            )
-                                          ],
-                                        ),
-                                        trailing: Container(
-                                          margin: const EdgeInsets.only(bottom: 20),
-                                          child: SizedBox(
-                                            height: MediaQuery.of(context).size.height * 0.05,
-                                            width: MediaQuery.of(context).size.width * 0.2,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xff6A66D1),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(30),
+        body: RefreshIndicator(
+          onRefresh: () async{
+            await _fetchAndSetBookingDetails();
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              isLoading
+                    ? Expanded(child: Center(child: CircularProgressIndicator(),))
+                    : bookings.isNotEmpty
+                      ? Flexible(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _bookingDetailsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error loading bookings.'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('No Bookings found'));
+                    }
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            itemBuilder: (context, index) {
+                              final booking = snapshot.data![index];
+                              final bookingPartnerName = bookings[index];
+                              partnerId = booking['partner']??'N/A';
+                              bookingId = booking['_id']??'N/A';
+                              unit = booking['unitType']??'N/A';
+                              unitType = booking['_id']??'N/A';
+                              bookingStatus = booking['bookingStatus']??'N/A';
+                              bookingDate = booking['date']??'N/A';
+                              bookingTime = booking['time']??'N/A';
+                              fromTime = booking['fromTime']??'N/A';
+                              toTime = booking['toTime']??'N/A';
+                              print('partnerId''${partnerId}');
+                              return FutureBuilder<String>(
+                                future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
+                                builder: (context, snapshot) {
+                                  // if (snapshot.connectionState == ConnectionState.waiting) {
+                                  //   return Center(child: CircularProgressIndicator());
+                                  // }
+                                  if (snapshot.hasError) {
+                                    return Center(child: Text('Error Loading'));
+                                  }
+                                  if (snapshot.hasData) {
+                                    final partnerNames = snapshot.data ?? 'N/A';
+                                    return Container(
+                                      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                                      child: Card(
+                                        color: Colors.white,
+                                        shadowColor: Colors.black,
+                                        elevation: 3.0,
+                                        child: ListTile(
+                                          title: Text('${'Booking id'.tr()}: ${booking['_id']??'N/A'}'),
+                                          subtitle: Row(
+                                            children: [
+                                              Text('${booking['date']??'N/A'}'),
+                                              Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text('${booking['time']??'N/A'}' == 'N/A' ? '${booking['fromTime']??'N/A'}'+'-'+'${booking['toTime']??'N/A'}' :'${booking['time']??'N/A'}'),
+                                              )
+                                            ],
+                                          ),
+                                          trailing: Container(
+                                            margin: const EdgeInsets.only(bottom: 20),
+                                            child: SizedBox(
+                                              height: MediaQuery.of(context).size.height * 0.05,
+                                              width: MediaQuery.of(context).size.width * 0.2,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(0xff6A66D1),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(30),
+                                                  ),
                                                 ),
-                                              ),
-                                              onPressed: () {
-                                                showBookingDialog(context,booking,bookingPartnerName: partnerNames);
-                                              },
-                                              child: Text(
-                                                'View'.tr(),
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.normal,
+                                                onPressed: () {
+                                                  showBookingDialog(context,booking,bookingPartnerName: partnerNames);
+                                                },
+                                                child: Text(
+                                                  'View'.tr(),
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.normal,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                }
-                                return Container();
-                              },
-                            );
+                                    );
+                                  }
+                                  return Container();
+                                },
+                              );
 
-                          },
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            )
-                    : Expanded(child: Center(child: Text('No Bookings Found'.tr())))
-          ],
+                      ],
+                    );
+                  },
+                ),
+              )
+                      : Expanded(child: Center(child: Text('No Bookings Found'.tr())))
+            ],
+          ),
         ),
         bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
           context: context,
@@ -680,24 +685,13 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
         );
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SuperUserPayment(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              token: widget.token,
-              id: widget.id,
-              email: widget.email,
-            ),
-          ),
-        );
+        commonWidgets.showToast("You're already on Payment");
         break;
       case 3:
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+            builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;

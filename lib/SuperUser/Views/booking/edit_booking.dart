@@ -654,6 +654,7 @@ class _EditBookingState extends State<EditBooking> {
                         },
                         checkColor: Colors.white,
                         activeColor: const Color(0xff6A66D1),
+                        side: BorderSide(color: Colors.grey),
                       ),
                       Container(
                         alignment: Alignment.topLeft,
@@ -817,7 +818,7 @@ class _EditBookingState extends State<EditBooking> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+            builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;

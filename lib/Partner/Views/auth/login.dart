@@ -89,8 +89,8 @@ class _LoginPageState extends State<LoginPage> {
           child: Directionality(
             textDirection: ui.TextDirection.ltr,
             child: Scaffold(
-                  backgroundColor: Colors.white,
-                  body: SingleChildScrollView(
+            backgroundColor: Colors.white,
+            body: SingleChildScrollView(
             child: Center(
               child: Column(
                 children: [
@@ -144,6 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius:
                           const BorderRadius.only(topRight: Radius.circular(95)),
                           child: Container(
+                            height: MediaQuery.sizeOf(context).height * 0.7,
                             color: Colors.white,
                             child: Column(
                               children: [

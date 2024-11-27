@@ -140,7 +140,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 },
@@ -391,7 +391,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                         if (touchedSectionIndex != null &&
                                             touchedSectionIndex! >= 0 &&
                                             touchedSectionIndex! < sectionLabels.length) {
-                                          tooltipMessage = '  ${touchedSectionIndex ==  0
+                                          tooltipMessage = '  ${touchedSectionIndex == 0
                                               ? halfPaidPaymentCount
                                               : touchedSectionIndex ==  1
                                               ? totalCompleted
@@ -407,19 +407,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                 ),
                                 sections: [
                                   PieChartSectionData(
-                                    value: halfPaidPaymentCount.toDouble(),
+                                    value: halfPaidPaymentCount > 0 ? halfPaidPaymentCount.toDouble() : 0.0001,
                                     color: Color(0xffC968FF),
                                     radius: 20,
                                     showTitle: false,
                                   ),
                                   PieChartSectionData(
-                                    value: totalCompleted.toDouble(),
+                                    value: totalCompleted > 0 ? totalCompleted.toDouble() : 0.0001,
                                     color: Color(0xff70CF97),
                                     radius: 30,
                                     showTitle: false,
                                   ),
                                   PieChartSectionData(
-                                    value: tripCompletedBookingsCount.toDouble(),
+                                    value: tripCompletedBookingsCount > 0 ? tripCompletedBookingsCount.toDouble() : 0.0001,
                                     color: Color(0xffED5A6B),
                                     radius: 40,
                                     showTitle: false,
@@ -930,15 +930,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
 
     switch (index) {
       case 0:
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    SuperUserHomePage(firstName: widget.firstName,
-                      lastName: widget.lastName,
-                      token: widget.token,
-                      id: widget.id,
-                      email: widget.email,)));
+        commonWidgets.showToast("You're already on Home");
         break;
       case 1:
         Navigator.push(
@@ -972,7 +964,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+            builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;

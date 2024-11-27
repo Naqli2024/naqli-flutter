@@ -525,6 +525,17 @@ class _ViewBookingState extends State<ViewBooking> {
                                                 child: Text('yes'.tr()),
                                                 onPressed: () async {
                                                   await _authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
+                                                  Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            BookingDetails(partnerName: widget.partnerName,
+                                                              partnerId: widget.partnerId,
+                                                              token: widget.token,
+                                                              quotePrice: '',
+                                                              paymentStatus: '',email:widget.email,)
+                                                    ),
+                                                  );
                                                 },
                                               ),
                                               TextButton(

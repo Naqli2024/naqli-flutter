@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -6,9 +7,11 @@ import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
+import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
@@ -38,6 +41,13 @@ class _SuperUsertypeState extends State<SuperUsertype> {
   Future<Map<String, dynamic>?>? booking;
   List<Map<String, dynamic>>? partnerData;
   String? partnerId;
+  final List<Map<String, String>> cardData = [
+    {'title': 'Vehicle', 'asset': 'assets/vehicle.svg'},
+    {'title': 'Bus', 'asset': 'assets/bus.png'},
+    {'title': 'Equipment', 'asset': 'assets/equipment.svg'},
+    {'title': 'Special', 'asset': 'assets/special.svg'},
+    {'title': 'Others', 'asset': 'assets/others.svg'},
+  ];
 
   @override
   void initState() {
@@ -66,7 +76,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 },
@@ -212,395 +222,198 @@ class _SuperUsertypeState extends State<SuperUsertype> {
             ],
           ),
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Container(
-                height: MediaQuery.sizeOf(context).height * 0.2,
-                width: MediaQuery.sizeOf(context).width,
-                decoration: const BoxDecoration(
-                  color: Color(0xff6A66D1),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20,left: 35,right: 35),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedType = 'vehicle';
-                            isFromUserType = 'isFromUserType';
-                          });
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SuperUserBooking(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: _selectedType,
-                                token: widget.token,
-                                id: widget.id,
-                                email: widget.email,
-                                isFromUserType: isFromUserType,
-                                accountType: widget.accountType,
-                              ),
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                CarouselSlider(
+                  options: CarouselOptions(
+                    enlargeCenterPage: true,
+                    autoPlay: true,
+                    aspectRatio: 21 / 9,
+                    autoPlayCurve: Curves.fastOutSlowIn,
+                    enableInfiniteScroll: true,
+                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
+                    viewportFraction: 1.2,
+                  ),
+                  items: [
+                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome2.svg',fit: BoxFit.fill)),
+                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome3.svg',fit: BoxFit.fill)),
+                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome4.svg',fit: BoxFit.fill)),
+                    Stack(
+                      children: [
+                        Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome.svg',fit: BoxFit.fill,)),
+                        Positioned(
+                          left: MediaQuery.sizeOf(context).width * 0.05,
+                          top: MediaQuery.sizeOf(context).height * 0.02,
+                          child: Text(
+                            'Need a Truck or Bus? \nBook with Confidence!',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            side: const BorderSide(color: Color(0xffACACAD), width: 1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SvgPicture.asset('assets/vehicle.svg'),
-                              const Divider(
-                                indent: 7,
-                                endIndent: 7,
-                                color: Color(0xffACACAD),
-                                thickness: 2,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 22),
-                                child: Text(
-                                  'Vehicle'.tr(),
-                                  textDirection: ui.TextDirection.ltr,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              )
-                            ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedType = 'bus';
-                            isFromUserType = 'isFromUserType';
-                          });
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SuperUserBooking(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: _selectedType,
-                                token: widget.token,
-                                id: widget.id,
-                                email: widget.email,
-                                isFromUserType : isFromUserType,
-                                accountType: widget.accountType,
-                              ),
+                    Stack(
+                      children: [
+                        Container(child: SvgPicture.asset('assets/userHome1.svg',fit: BoxFit.fill,)),
+                        Positioned(
+                          left: MediaQuery.sizeOf(context).width * 0.3,
+                          top: MediaQuery.sizeOf(context).height * 0.08,
+                          child: Text(
+                            'Drive Your Business Forward \nwith Seamless Vehicle Booking!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            side: const BorderSide(color: Color(0xffACACAD), width: 1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Image.asset('assets/bus.png'),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(top: 18),
-                                child: Divider(
-                                  indent: 7,
-                                  endIndent: 7,
-                                  color: Color(0xffACACAD),
-                                  thickness: 2,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 22),
-                                child: Text(
-                                  'Bus'.tr(),
-                                  textDirection: ui.TextDirection.ltr,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              )
-                            ],
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedType = 'equipment';
-                    isFromUserType = 'isFromUserType';
-                  });
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SuperUserBooking(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName,
-                        selectedType: _selectedType,
-                        token: widget.token,
-                        id: widget.id,
-                        email: widget.email,
-                        isFromUserType: isFromUserType,
-                        accountType: widget.accountType,
+                Expanded(
+                  child: Container(
+                    color: Colors.transparent,
+                    padding: EdgeInsets.fromLTRB(12, 5, 12,MediaQuery.sizeOf(context).height * 0.13,),
+                    child: GridView.builder(
+                      itemCount: cardData.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 20.0,
+                        mainAxisSpacing: 16.0,
+                        childAspectRatio: 2.8 / 3.2,
                       ),
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 15,left: 35,right: 35),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Expanded(
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            side: const BorderSide(color: Color(0xffACACAD), width: 1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SvgPicture.asset('assets/equipment.svg',height: MediaQuery.sizeOf(context).height * 0.12),
-                              const Divider(
-                                indent: 7,
-                                endIndent: 7,
-                                color: Color(0xffACACAD),
-                                thickness: 2,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 22),
-                                child: Text(
-                                  'Equipment'.tr(),
-                                  textDirection: ui.TextDirection.ltr,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: MediaQuery.sizeOf(context).width * 0.09),
-                      Expanded(
-                        child: GestureDetector(
+                      itemBuilder: (context, index) {
+                        final item = cardData[index];
+                        return GestureDetector(
                           onTap: () {
-                            setState(() {
-                              _selectedType = 'special';
-                              isFromUserType = 'isFromUserType';
-                            });
-                            Navigator.push(
+                            item['title'] != 'Others'
+                            ? Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SuperUserBooking(
                                   firstName: widget.firstName,
                                   lastName: widget.lastName,
-                                  selectedType: _selectedType,
+                                  selectedType: item['title']!.toLowerCase(),
                                   token: widget.token,
                                   id: widget.id,
                                   email: widget.email,
-                                  isFromUserType: isFromUserType,
+                                  isFromUserType: 'isFromUserType',
                                   accountType: widget.accountType,
                                 ),
+                              ),
+                            )
+                            : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SuperUserMessageScreen(
+                                      id: widget.id,
+                                      firstName: widget.firstName,
+                                      lastName: widget.lastName,
+                                      token: widget.token,
+                                      Image: 'assets/others.svg',
+                                      title: 'Others',
+                                      subTitle: 'Sorry,the others section is currently unavailable')
                               ),
                             );
                           },
                           child: Card(
+                            elevation: 3,
+                            color: Color(0xffF7F6FF),
                             shape: RoundedRectangleBorder(
-                              side: const BorderSide(color: Color(0xffACACAD), width: 1),
+                              side: const BorderSide(color: Color(0xffACACAD), width: 0.5),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                SvgPicture.asset('assets/special.svg',height: MediaQuery.sizeOf(context).height * 0.12),
+                                item['asset']!.endsWith('.svg')
+                                    ? SvgPicture.asset(
+                                  item['asset']!,
+                                  height: MediaQuery.sizeOf(context).height * 0.12,
+                                  placeholderBuilder: (context) =>
+                                  const CircularProgressIndicator(),
+                                )
+                                    : Image.asset(
+                                  item['asset']!,
+                                  height: MediaQuery.sizeOf(context).height * 0.12,
+                                  fit: BoxFit.contain,
+                                ),
+                                SizedBox(height: 7),
                                 const Divider(
                                   indent: 7,
                                   endIndent: 7,
                                   color: Color(0xffACACAD),
-                                  thickness: 2,
+                                  thickness: 0.8,
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(bottom: 22),
+                                  padding: const EdgeInsets.only(top: 15),
                                   child: Text(
-                                    'Special'.tr(),
+                                    item['title']!.tr(),
                                     textDirection: ui.TextDirection.ltr,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 16),
+                                    style: const TextStyle(fontSize: 16),
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 35, top: 15,bottom: MediaQuery.sizeOf(context).height * 0.12),
-                alignment: Alignment.bottomLeft,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedType = 'others';
-                      isFromUserType = 'isFromUserType';
-                    });
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SuperUserBooking(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          selectedType: _selectedType,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email,
-                          isFromUserType: isFromUserType,
-                          accountType: widget.accountType,
-                        ),
-                      ),
-                    );
-                  },
-                  child: SizedBox(
-                    width: MediaQuery.sizeOf(context).width * 0.36,
-                    // height: MediaQuery.sizeOf(context).height * 0.21,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        side: const BorderSide(color: Color(0xffACACAD), width: 1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            SvgPicture.asset('assets/others.svg'),
-                            const Divider(
-                              indent: 7,
-                              endIndent: 7,
-                              color: Color(0xffACACAD),
-                              thickness: 2,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: Text(
-                                'Others'.tr(),
-                                textDirection: ui.TextDirection.ltr,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: Container(
-          margin: EdgeInsets.only(left: 30,right: 0),
-          width: MediaQuery.sizeOf(context).width,
-          height: MediaQuery.sizeOf(context).height * 0.07,
-          child: FloatingActionButton(
-            backgroundColor: const Color(0xff6069FF),
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
-            ),
-            onPressed: (){
-              _showModalBottomSheet(context);
-            },child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Text('Get an estimate'.tr(),
-                    textDirection: ui.TextDirection.ltr,
-                    style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 17),),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 20),
-                  child: Icon(Icons.arrow_forward,color: Colors.white,),
-                )
               ],
             ),
-          ),
-          ),
+            Positioned(
+              bottom: 25,
+              left: 10,
+              right: 10,
+              child: Container(
+                width: MediaQuery.sizeOf(context).width,
+                height: MediaQuery.sizeOf(context).height * 0.08,
+                child: FloatingActionButton(
+                  backgroundColor: const Color(0xff6069FF),
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  onPressed: (){
+                    _showModalBottomSheet(context);
+                  },child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20),
+                        child: Text('Get an estimate'.tr(),
+                          textDirection: ui.TextDirection.ltr,
+                          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 17),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: Icon(Icons.arrow_forward,color: Colors.white,),
+                      )
+                    ],
+                  ),
+                ),
+                ),
+              ),)
+          ],
         ),
       ),
     );
   }
 
-  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-    final data = await getSavedBookingId();
-    String? bookingId = data['_id'];
-    final String? token = data['token'];
-
-    if (bookingId == null || token == null) {
-      print('No bookingId found, fetching pending booking details.');
-
-      if (widget.id != null && widget.token != null) {
-        bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
-
-        if (bookingId != null) {
-          // await saveBookingId(bookingId,widget.token);
-        } else {
-          print('No pending booking found, navigating to NewBooking.');
-          return null;
-        }
-      } else {
-        print('No userId or token available.');
-        return null;
-      }
-    }
-
-    if (bookingId != null && widget.token != null) {
-      return await userService.fetchBookingDetails(bookingId, widget.token);
-    } else {
-      print('Failed to fetch booking details due to missing bookingId or token.');
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NewBooking(
-            token: widget.token,
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            id: widget.id,
-            email: widget.email,
-          ),
-        ),
-      );
-      return null;
-    }
-  }
 
   void _showModalBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -704,7 +517,8 @@ class _SuperUsertypeState extends State<SuperUsertype> {
   Widget bottomCard(String imagePath, String title,String userType) {
     return GestureDetector(
       onTap: (){
-        Navigator.push(
+        userType != 'others'
+        ? Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SuperUserBooking(
@@ -716,6 +530,19 @@ class _SuperUsertypeState extends State<SuperUsertype> {
               email: widget.email,
               accountType: widget.accountType,
             ),
+          ),
+        )
+        : Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => SuperUserMessageScreen(
+                  id: widget.id,
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  Image: 'assets/others.svg',
+                  title: 'Others',
+                  subTitle: 'Sorry,the others section is currently unavailable')
           ),
         );
       },

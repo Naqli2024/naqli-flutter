@@ -128,34 +128,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  Future<void> handleDeleteBooking() async {
-    try {
-      await userService.deleteBooking(context, bookingId, widget.token);
-      isDeleting = false;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TriggerBooking(
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            token: widget.token,
-            id: widget.id,
-            email: widget.email,
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting booking: $e')),
-      );
-    } finally {
-      setState(() {
-        isDeleting = false;
-      });
-    }
-  }
-
-  void showConfirmationDialog() {
+  void showConfirmationDialog(Map<String, dynamic> booking) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -194,7 +167,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                         setState(() {
                           isDeleting = true;
                         });
-                        handleDeleteBooking();
+                        handleDeleteBooking(booking['_id']);
                       }
                     },
                   ),
@@ -211,6 +184,33 @@ class _TriggerBookingState extends State<TriggerBooking> {
         );
       },
     );
+  }
+
+  Future<void> handleDeleteBooking(String bookingIds) async {
+    try {
+      await userService.deleteBooking(context, bookingIds, widget.token);
+      isDeleting = false;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TriggerBooking(
+            firstName: widget.firstName,
+            lastName: widget.lastName,
+            token: widget.token,
+            id: widget.id,
+            email: widget.email,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting booking: $e')),
+      );
+    } finally {
+      setState(() {
+        isDeleting = false;
+      });
+    }
   }
 
   Future<Map<String, String>> fetchPartnerDetailsForBooking(
@@ -530,7 +530,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                     padding: const EdgeInsets.only(top: 20,bottom: 20),
                                                     child: GestureDetector(
                                                       onTap: () {
-                                                        showConfirmationDialog();
+                                                        showConfirmationDialog(booking);
                                                       },
                                                       child: Text(
                                                         'Cancel'.tr(),
@@ -675,7 +675,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+            builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;
@@ -1171,7 +1171,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
         </script>
       </head>
       <body>
-        <form action="https://naqli.onrender.com/api/payment-status/$checkOutId" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+        <form action="https://prod.naqlee.com:443/api/payment-status/$checkOutId" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
       </body>
     </html>
   ''';

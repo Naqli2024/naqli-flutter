@@ -40,13 +40,13 @@ class VehicleType {
 }
 
 class LoadType {
-  final String load; // Ensure this property matches what you're trying to display
+  final String load;
 
   LoadType({required this.load});
 
   factory LoadType.fromJson(Map<String, dynamic> json) {
     return LoadType(
-      load: json['load'], // Ensure this field exists in your JSON
+      load: json['load'],
     );
   }
 }
@@ -108,5 +108,28 @@ class EquipmentType {
       typeImage: json['typeImage'] ?? '',
       scale: json['scale'] ?? '',
     );
+  }
+}
+
+
+class UserDataModel{
+  final String firstName;
+  final String lastName;
+  final String emailAddress;
+  final String password;
+  final String confirmPassword;
+  final int contactNumber;
+  final String alternateNumber;
+  final String address1;
+  final String address2;
+  final String city;
+  final String accountType;
+  final String govtId;
+  final int idNumber;
+
+  UserDataModel({required this.firstName, required this.lastName, required this.emailAddress, required this.password, required this.confirmPassword, required this.contactNumber, required this.alternateNumber, required this.address1, required this.address2, required this.city, required this.accountType, required this.govtId, required this.idNumber});
+
+  factory UserDataModel.fromJson(Map<String,dynamic> json){
+    return UserDataModel(firstName: json['firstName']??'', lastName: json['lastName']??'', emailAddress: json['emailAddress']??'', password: json['password']??'', confirmPassword: json['confirmPassword']??'', contactNumber: json['contactNumber']??0, alternateNumber: json['alternateNumber']??'', address1: json['address1']??'', address2: json['address2']??'', city: json['city']??'', accountType: json['accountType']??'', govtId: json['govtId']??'', idNumber: json['idNumber']??0);
   }
 }

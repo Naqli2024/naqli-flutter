@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
@@ -99,8 +100,9 @@ class _SuccessScreenState extends State<SuccessScreen> {
               Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Text(widget.subTitle,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 25,fontWeight: FontWeight.w500)),
+                    fontSize: 24,fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -109,6 +111,105 @@ class _SuccessScreenState extends State<SuccessScreen> {
     );
   }
 }
+
+class SuperUserMessageScreen extends StatefulWidget {
+  final String? token;
+  final String? firstName;
+  final String? lastName;
+  final String? id;
+  final String? email;
+  final String title;
+  final String subTitle;
+  final Image;
+  const SuperUserMessageScreen({super.key, this.token, this.firstName, this.lastName, this.id, this.email, required this.title, required this.subTitle, this.Image});
+
+  @override
+  State<SuperUserMessageScreen> createState() => _SuperUserMessageScreenState();
+}
+
+class _SuperUserMessageScreenState extends State<SuperUserMessageScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          centerTitle: false,
+          backgroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SuperUsertype(
+                              firstName: widget.firstName??'',
+                              lastName: widget.lastName??'',
+                              token: widget.token??'',
+                              id: widget.id??'',
+                              email: widget.email??'',
+                            )));
+              },
+              child: Container(
+                margin: const EdgeInsets.only(right: 15,top: 15),
+                child: const Align(
+                  alignment: Alignment.topRight,
+                  child: CircleAvatar(
+                    backgroundColor: Color(0xffFFFFFF),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(top: MediaQuery.sizeOf(context).height * 0.15, bottom: 20),
+                    alignment: Alignment.bottomCenter,
+                    child: SvgPicture.asset(
+                      widget.Image,
+                      fit: BoxFit.contain,
+                      width: MediaQuery.of(context).size.width,
+                      height: 200,
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: Text(widget.title,
+                    style: TextStyle(
+                        fontSize: 26)),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 30),
+                child: Text(widget.subTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 24,fontWeight: FontWeight.w500)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 class VerifiedScreen extends StatefulWidget {
   final String? token;

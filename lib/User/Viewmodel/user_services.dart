@@ -23,7 +23,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
 class UserService{
-  static const String baseUrl = 'https://naqli.onrender.com/api/';
+  static const String baseUrl = 'https://prod.naqlee.com:443/api/';
 
   Future<void> userRegister(context,{
     required String firstName,
@@ -97,7 +97,7 @@ class UserService{
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -151,7 +151,7 @@ class UserService{
         print('Network error: No Internet connection');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred: $e')),
+          SnackBar(content: Text('An unexpected error occurred')),
         );
         print('Error: $e');
       }
@@ -192,7 +192,7 @@ class UserService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -237,7 +237,7 @@ class UserService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -286,7 +286,7 @@ class UserService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -332,7 +332,7 @@ class UserService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -432,7 +432,7 @@ class UserService{
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -455,7 +455,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -476,7 +476,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -497,7 +497,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -518,7 +518,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -539,7 +539,7 @@ class UserService{
         required String token,
       }) async {
     try{
-      final url = Uri.parse('https://naqli.onrender.com/api/bookings');
+      final url = Uri.parse('${baseUrl}bookings');
 
       final response = await http.post(
         url,
@@ -591,7 +591,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -656,7 +656,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -727,7 +727,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -794,7 +794,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -858,7 +858,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -894,7 +894,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -941,7 +941,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -974,12 +974,10 @@ class UserService{
       print('Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
 
-      // Check if the response body is empty
       if (response.body.isEmpty) {
         throw Exception('Empty response body');
       }
 
-      // Handle successful status code
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -991,12 +989,10 @@ class UserService{
           throw Exception('Unexpected response format: $responseBody');
         }
       }
-      // Handle specific errors such as booking not found
       else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
         print('Booking not found');
         return null;
       }
-      // Handle service unavailable error
       else if (response.statusCode == 503) {
         print('Service unavailable. Please try again later.');
         throw Exception('Service is temporarily unavailable. Please try again later.');
@@ -1011,47 +1007,9 @@ class UserService{
       throw Exception('Invalid response format or empty response body.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
-
-
-/*  Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
-    try{
-      final url = Uri.parse('${baseUrl}getBookingsByBookingId/$id');
-
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      };
-
-      print('Fetching from URL: ${url.toString()}');
-
-        final response = await http.get(url, headers: headers);
-
-        print('Status Code: ${response.statusCode}');
-        print('Response Body: ${response.body}');
-
-        if (response.statusCode == 200) {
-          final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-          if (responseBody.containsKey('data')) {
-            final Map<String, dynamic> bookingData = responseBody['data'];
-            print('Booking Data: $bookingData');
-            return bookingData;
-          } else {
-            throw Exception('Unexpected response format: $responseBody');
-          }
-        } else {
-          throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
-        }
-    } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
-    } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
-    }
-  }*/
 
   Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token,String bookingId) async {
     try {
@@ -1083,7 +1041,6 @@ class UserService{
 
           final partnerDetails = <Map<String, dynamic>>[];
 
-          // Iterate through operators
           for (var operator in operators) {
             if (operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty) {
               final operatorDetails = operator['operatorsDetail'][0] ?? {};
@@ -1092,7 +1049,6 @@ class UserService{
               final mode = operator['unitType'] ?? 'N/A';
               final fullName = '$firstName $lastName';
               final mobileNo = operatorDetails['mobileNo'] ?? 'N/A';
-              // Iterate through booking requests
               final bookingRequests = partnerData['bookingRequest'] ?? [];
               if (bookingRequests.isNotEmpty) {
                 for (var booking in bookingRequests) {
@@ -1104,8 +1060,6 @@ class UserService{
                   final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
 
                     print('Operator for Booking ID $bookingId: $assignOperatorName, Mobile: $assignOperatorMobileNo');
-
-                    // Add to partnerDetails list
                     partnerDetails.add({
                       'type': type,
                       'assignOperatorName': assignOperatorName,
@@ -1122,7 +1076,6 @@ class UserService{
                   }
                 }
               } else {
-                // No booking requests
                 partnerDetails.add({
                   'type': type,
                   'partnerId': partnerId,
@@ -1153,7 +1106,7 @@ class UserService{
       throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -1185,7 +1138,7 @@ class UserService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -1215,10 +1168,10 @@ class UserService{
       }
 
       var response = await request.send();
-      var responseBody = await response.stream.bytesToString(); // Local declaration
+      var responseBody = await response.stream.bytesToString();
 
       print('Response status: ${response.statusCode}');
-      print('Response body: $responseBody'); // Use the locally defined responseBody
+      print('Response body: $responseBody');
 
       if (response.statusCode == 201) {
         try {
@@ -1229,14 +1182,14 @@ class UserService{
           print('Success: $message');
         } catch (e) {
           print('Error parsing JSON: $e');
-          print('Received body: $responseBody'); // Use the locally defined responseBody
+          print('Received body: $responseBody');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
         );
         print('Failed to submit ticket: ${response.statusCode}');
-        print('Response body: $responseBody'); // Use the locally defined responseBody
+        print('Response body: $responseBody');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1244,7 +1197,7 @@ class UserService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -1285,7 +1238,7 @@ class UserService{
       throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -1326,5 +1279,29 @@ class UserService{
     }
   }
 
+  Future<UserDataModel> getUserData(String userId, String token) async{
+    try{
+      final response = await http.get(Uri.parse('${baseUrl}users/$userId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          });
+
+      if(response.statusCode == 200){
+        print('ResponseData: ${response.body}');
+        final responseBody = jsonDecode(response.body);
+        return UserDataModel.fromJson(jsonDecode(response.body));
+      }
+      else{
+        throw Exception('Failed to load user data for user ID $userId');
+      }
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred');
+    }
+  }
 
 }

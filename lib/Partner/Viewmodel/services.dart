@@ -18,7 +18,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
 class AuthService {
-  static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
+  static const String baseUrl = 'https://prod.naqlee.com:443/api/partner/';
   String globalPartnerId = '';
 
   Future<void> registerUser(context,{
@@ -73,7 +73,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -125,7 +125,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -172,7 +172,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -220,7 +220,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -271,7 +271,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -314,7 +314,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -388,7 +388,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -414,7 +414,7 @@ class AuthService {
         required String password,
         required String confirmPassword,
         required String mobileNo,
-        required DateTime dateOfBirth, // Updated to DateTime
+        required DateTime dateOfBirth,
         required String iqamaNo,
         required String panelInformation,
         required String partnerId,
@@ -450,7 +450,7 @@ class AuthService {
         lastName: lastName,
         email: email,
         mobileNo: mobileNo,
-        dateOfBirth: dateOfBirth.toIso8601String(), // Convert DateTime to ISO format
+        dateOfBirth: dateOfBirth.toIso8601String(),
         iqamaNo: iqamaNo,
         panelInformation: panelInformation,
         istimaraCard: istimaraCard,
@@ -480,7 +480,7 @@ class AuthService {
       request.fields['password'] = password;
       request.fields['confirmPassword'] = confirmPassword;
       request.fields['mobileNo'] = mobileNo;
-      request.fields['dateOfBirth'] = dateOfBirth.toIso8601String(); // Use ISO format for dateOfBirth
+      request.fields['dateOfBirth'] = dateOfBirth.toIso8601String();
       request.fields['iqamaNo'] = iqamaNo;
       request.fields['panelInformation'] = panelInformation;
 
@@ -545,7 +545,7 @@ class AuthService {
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -618,7 +618,7 @@ class AuthService {
 
   Future<List<Map<String, dynamic>>> fetchVehicleData() async {
     try{
-      final response = await http.get(Uri.parse('https://naqli.onrender.com/api/vehicles'));
+      final response = await http.get(Uri.parse('https://prod.naqlee.com:443/api/vehicles'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
@@ -630,13 +630,13 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchBusData() async {
     try{
-      final response = await http.get(Uri.parse('https://naqli.onrender.com/api/buses'));
+      final response = await http.get(Uri.parse('https://prod.naqlee.com:443/api/buses'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
@@ -648,13 +648,13 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchEquipmentData() async {
     try{
-      final response = await http.get(Uri.parse('https://naqli.onrender.com/api/equipments'));
+      final response = await http.get(Uri.parse('https://prod.naqlee.com:443/api/equipments'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
@@ -666,13 +666,13 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<List<Map<String, dynamic>>> fetchSpecialData() async {
     try{
-      final response = await http.get(Uri.parse('https://naqli.onrender.com/api/special-units'));
+      final response = await http.get(Uri.parse('https://prod.naqlee.com:443/api/special-units'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
@@ -684,7 +684,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -692,7 +692,7 @@ class AuthService {
   Future<List<Map<String, dynamic>>> getBookingData(String partnerId, String token) async {
     try {
       final response = await http.get(
-        Uri.parse('https://naqli.onrender.com/api/partner/$partnerId'),
+        Uri.parse('https://prod.naqlee.com:443/api/partner/$partnerId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -743,7 +743,7 @@ class AuthService {
       throw Exception('Please check your internet connection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -751,7 +751,7 @@ class AuthService {
     try{
       print('object$paymentStatus');
       final response = await http.get(
-        Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$bookingId'),
+        Uri.parse('https://prod.naqlee.com:443/api/getBookingsByBookingId/$bookingId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -773,15 +773,10 @@ class AuthService {
 
         print(responseBody);
 
-        // Access the 'type' list
         final List<dynamic> typeList = data['type'] as List<dynamic>;
-        // Access the 'dropPoints' list
         final List<dynamic> dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
-
-        // Safely extract typeOfLoad from the first item
         String typeOfLoad = 'N/A';
         String typeName = '';
-        // Safely access the first item in 'dropPoints'
         String firstDropPoint = 'No drop point available';
 
         if (dropPoints.isNotEmpty) {
@@ -837,14 +832,14 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<String?> getUserName(String userId, String token) async {
     try{
       final response = await http.get(
-        Uri.parse('https://naqli.onrender.com/api/users/$userId'),
+        Uri.parse('https://prod.naqlee.com:443/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -853,8 +848,6 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-
-        // Check if 'data' exists and contains 'firstName' and 'lastName'
         if (responseBody != null) {
           final firstName = responseBody['firstName'] ?? '';
           final lastName = responseBody['lastName'] ?? '';
@@ -883,7 +876,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -911,7 +904,6 @@ class AuthService {
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        // await requestPayment(context, additionalCharges: 0, reason: '', bookingId: bookingId, token: token);
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
@@ -931,7 +923,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -943,7 +935,7 @@ class AuthService {
         required String token,
       }) async {
     try {
-    final url = Uri.parse('https://naqli.onrender.com/api/bookings/$bookingId/additional-charges');
+    final url = Uri.parse('https://prod.naqlee.com:443/api/bookings/$bookingId/additional-charges');
 
       final response = await http.post(
         url,
@@ -960,9 +952,8 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('Response Data: $data'); // Print response data for debugging
+        print('Response Data: $data');
 
-        // Check if the response contains the booking object and remainingBalance
         if (data['booking'] != null && data['booking']['remainingBalance'] != null) {
           return data['booking']['remainingBalance'].toString();
         } else {
@@ -978,7 +969,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -997,20 +988,9 @@ class AuthService {
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print("Booking request deleted successfully.");
+        final message = responseBody['message'] ?? 'Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Deleted successfully')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  BookingDetails(partnerName: '',
-                    partnerId: partnerId,
-                    token: token,
-                    quotePrice: '',
-                    paymentStatus: '',email:'',)
-          ),
+          SnackBar(content: Text(message)),
         );
       } else if (response.statusCode == 401) {
         print("Authorization failed: ${response.body}");
@@ -1024,7 +1004,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -1043,20 +1023,9 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         print("Booking request deleted successfully.");
-        final message = responseBody['message'] ?? 'Send failed. Please try again.';
+        final message = responseBody['message'] ?? 'Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  BookingDetails(partnerName: '',
-                    partnerId: partnerId,
-                    token: token,
-                    quotePrice: '',
-                    paymentStatus: '',email: email,)
-          ),
         );
       } else if (response.statusCode == 401) {
         print("Authorization failed: ${response.body}");
@@ -1070,7 +1039,7 @@ class AuthService {
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -1080,7 +1049,7 @@ class AuthService {
     required File? pictureOfTheReport,
   }) async {
     try {
-      final url = Uri.parse('https://naqli.onrender.com/api/report/add-report');
+      final url = Uri.parse('https://prod.naqlee.com:443/api/report/add-report');
 
       var request = http.MultipartRequest('POST', url);
       request.fields['email'] = email;
@@ -1100,11 +1069,10 @@ class AuthService {
       }
 
       var response = await request.send();
-      var responseBody = await response.stream.bytesToString(); // Local declaration
+      var responseBody = await response.stream.bytesToString();
 
       print('Response status: ${response.statusCode}');
-      print('Response body: $responseBody'); // Use the locally defined responseBody
-
+      print('Response body: $responseBody');
       if (response.statusCode == 201) {
         try {
           final message = jsonDecode(responseBody)['message'];
@@ -1114,14 +1082,14 @@ class AuthService {
           print('Success: $message');
         } catch (e) {
           print('Error parsing JSON: $e');
-          print('Received body: $responseBody'); // Use the locally defined responseBody
+          print('Received body: $responseBody');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
         );
         print('Failed to submit ticket: ${response.statusCode}');
-        print('Response body: $responseBody'); // Use the locally defined responseBody
+        print('Response body: $responseBody');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1129,7 +1097,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }

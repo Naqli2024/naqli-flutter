@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 class DriverService{
-  static const String baseUrl = 'https://naqli.onrender.com/api/partner/';
+  static const String baseUrl = 'https://prod.naqlee.com:443/api/partner/';
 
   Future<void> driverLogin(
       BuildContext context, {
@@ -76,7 +76,7 @@ class DriverService{
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please try again...')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -121,7 +121,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -170,7 +170,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -216,7 +216,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -267,7 +267,7 @@ class DriverService{
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please try again...')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }
@@ -324,7 +324,7 @@ class DriverService{
 
   Future<Map<String, dynamic>?> fetchBookingDetails(String id, String token) async {
     try {
-      final url = Uri.parse('https://naqli.onrender.com/api/getBookingsByBookingId/$id');
+      final url = Uri.parse('https://prod.naqlee.com:443/api/getBookingsByBookingId/$id');
       final headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -370,14 +370,14 @@ class DriverService{
       throw Exception('Invalid response format or empty response body.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
   Future<String?> getUserName(String userId, String token) async {
     try{
       final response = await http.get(
-        Uri.parse('https://naqli.onrender.com/api/users/$userId'),
+        Uri.parse('https://prod.naqlee.com:443/api/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -386,8 +386,6 @@ class DriverService{
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-
-        // Check if 'data' exists and contains 'firstName' and 'lastName'
         if (responseBody != null) {
           final firstName = responseBody['firstName'] ?? '';
           final lastName = responseBody['lastName'] ?? '';
@@ -416,7 +414,7 @@ class DriverService{
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      throw Exception('An unexpected error occurred');
     }
   }
 
@@ -428,7 +426,7 @@ class DriverService{
         required String token,
       }) async {
     try {
-      final url = Uri.parse('https://naqli.onrender.com/api/bookings/update-booking-status');
+      final url = Uri.parse('https://prod.naqlee.com:443/api/bookings/update-booking-status');
       final response = await http.post(
         url,
         headers: {
@@ -466,7 +464,7 @@ class DriverService{
       print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please try again...')),
+        SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
     }

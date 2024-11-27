@@ -12,6 +12,7 @@ import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
+import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
@@ -171,7 +172,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                     ),
                   );
                 },
@@ -2423,6 +2424,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     onChanged: _onCheckboxChanged,
                     checkColor: Colors.white,
                     activeColor: const Color(0xff6A66D1),
+                    side: BorderSide(color: Colors.grey),
                   ),
                   Container(
                     alignment: Alignment.topLeft,
@@ -2631,6 +2633,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,
@@ -2833,6 +2836,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,
@@ -3035,6 +3039,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   onChanged: _onCheckboxChanged,
                   checkColor: Colors.white,
                   activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
                 ),
                 Container(
                   alignment: Alignment.topLeft,

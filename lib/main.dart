@@ -24,14 +24,15 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]).then((_) {
-    runApp(    EasyLocalization(
+    runApp(
+      EasyLocalization(
       supportedLocales: [
         Locale('en', 'US'),
         Locale('ar', 'SA'),
         Locale('hi', 'IN'),
       ],
       path: 'assets/translations',
-      fallbackLocale: Locale('en', 'US'),// Ensure this path is correct
+      fallbackLocale: Locale('en', 'US'),
       child: MyApp(),
     ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_termsAndConditions.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -288,7 +289,12 @@ class _UserRegisterState extends State<UserRegister> {
                                       style: const TextStyle(color: Color(0xff6A66D1), fontWeight: FontWeight.bold),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {
-
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => UserTermsAndConditions(),
+                                            ),
+                                          );
                                         },
                                     ),
                             ],

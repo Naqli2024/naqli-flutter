@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 
 class SuperUserServices {
 
-  static const String baseUrl = 'https://naqli.onrender.com/api/';
+  static const String baseUrl = 'https://prod.naqlee.com:443/api/';
 
   Future<Map<String, dynamic>> getBookingsCount(String userId, String token) async {
     final url = Uri.parse('${baseUrl}bookings/$userId');

@@ -122,6 +122,7 @@ class _DriverLoginState extends State<DriverLogin> {
                         ClipRRect(
                           borderRadius: const BorderRadius.only(topRight: Radius.circular(95)),
                           child: Container(
+                            height: MediaQuery.sizeOf(context).height * 0.7,
                             color: Colors.white,
                             child: Column(
                               children: [

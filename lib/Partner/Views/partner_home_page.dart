@@ -24,7 +24,18 @@ class PartnerHomePage extends StatefulWidget {
   State<PartnerHomePage> createState() => _PartnerHomePageState();
 }
 
-class _PartnerHomePageState extends State<PartnerHomePage> {
+class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(seconds: 15),
+      vsync: this,
+    )..repeat();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -196,37 +207,27 @@ class _PartnerHomePageState extends State<PartnerHomePage> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 20),
-                height: 220,
-                width: MediaQuery.sizeOf(context).width,
-                decoration: const BoxDecoration(
-                  color: Color(0xff6A66D1),
-                ),
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      child: Text(
-                        'Partner with Naqli'.tr(),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                        ),
-                      ),
+              Stack(
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        double scrollPosition = MediaQuery.sizeOf(context).width * _animationController.value;
+                        return Transform.translate(
+                          offset: Offset(-scrollPosition, 0),
+                          child: SvgPicture.asset(
+                            'assets/partnerHome.svg',
+                            height: MediaQuery.sizeOf(context).height * 0.25,
+                            width: 1242,
+                            fit: BoxFit.contain,
+                          ),
+                        );
+                      },
                     ),
-                    Container(
-                      margin: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        'Make money on your schedule'.tr(),
-                        style: TextStyle(color: Colors.white, fontSize: 20),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(25.0),

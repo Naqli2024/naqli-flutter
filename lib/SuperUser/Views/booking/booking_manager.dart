@@ -243,871 +243,628 @@ class _BookingManagerState extends State<BookingManager> {
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: commonWidgets.commonAppBar(
-          context,
-          User: widget.firstName +' '+ widget.lastName,
-          userId: widget.id,
-          showLeading: false,
-          showLanguage: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(150.0),
-            child: Column(
-              children: [
-                AppBar(
-                  scrolledUnderElevation: 0,
-                  toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-                  centerTitle: true,
-                  automaticallyImplyLeading: false,
-                  backgroundColor: const Color(0xff807BE5),
-                  title: Text(
-                        'Booking Manager'.tr(),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                  leading: IconButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => SuperUserHomePage(
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              token: widget.token,
-                              id: widget.id,
-                              email: widget.email
-                          ),
+          backgroundColor: Colors.white,
+          appBar: commonWidgets.commonAppBar(
+            context,
+            User: widget.firstName +' '+ widget.lastName,
+            userId: widget.id,
+            showLeading: false,
+            showLanguage: true,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(150.0),
+              child: Column(
+                children: [
+                  AppBar(
+                    scrolledUnderElevation: 0,
+                    toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+                    centerTitle: true,
+                    automaticallyImplyLeading: false,
+                    backgroundColor: const Color(0xff807BE5),
+                    title: Text(
+                          'Booking Manager'.tr(),
+                          style: TextStyle(color: Colors.white),
                         ),
-                      );
-                    },
-                    icon: CircleAvatar(
-                      backgroundColor: Color(0xffB7B3F1),
-                      child: const Icon(
-                        Icons.arrow_back_sharp,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    PopupMenuButton<String>(
-                      color: Colors.white,
-                      offset: const Offset(0, 55),
+                    leading: IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => SuperUserHomePage(
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                token: widget.token,
+                                id: widget.id,
+                                email: widget.email
+                            ),
+                          ),
+                        );
+                      },
                       icon: CircleAvatar(
                         backgroundColor: Color(0xffB7B3F1),
                         child: const Icon(
-                          Icons.more_vert_outlined,
+                          Icons.arrow_back_sharp,
                           color: Colors.white,
                         ),
                       ),
-                      itemBuilder: (BuildContext context) => [
-                        PopupMenuItem<String>(
-                          height: 30,
-                          child: Text('NewBooking'.tr()),
-                          onTap: (){
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => UserType(
-                                    firstName: widget.firstName,
-                                    lastName: widget.lastName,
-                                    token: widget.token,
-                                    id: widget.id,
-                                    email: widget.email
-                                ),
-                              ),
-                            );
-                          },
+                    ),
+                    actions: [
+                      PopupMenuButton<String>(
+                        color: Colors.white,
+                        offset: const Offset(0, 55),
+                        icon: CircleAvatar(
+                          backgroundColor: Color(0xffB7B3F1),
+                          child: const Icon(
+                            Icons.more_vert_outlined,
+                            color: Colors.white,
+                          ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                 Padding(
-              padding: EdgeInsets.fromLTRB(8, 20, 8, 10),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.035,
-                width: MediaQuery.of(context).size.width * 0.17,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: allSelected ? Color(0xff6269FE) : Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: Color(0xffBCBCBC)),
-                    ),
+                        itemBuilder: (BuildContext context) => [
+                          PopupMenuItem<String>(
+                            height: 30,
+                            child: Text('NewBooking'.tr()),
+                            onTap: (){
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => UserType(
+                                      firstName: widget.firstName,
+                                      lastName: widget.lastName,
+                                      token: widget.token,
+                                      id: widget.id,
+                                      email: widget.email
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    setState(() {
-                      if (allSelected) {
-                        _updateFilter('Hold');
-                        _currentFilter = 'Hold';
-                      } else {
-                        _updateFilter('All');
-                        _currentFilter = 'All';
-                      }
-
-                      allSelected = !allSelected;
-                      fetchBookingsAndPartnerNames(widget.id, widget.token);
-                    });
-                  },
-                  child: Text(
-                    'All'.tr(),
-                    style: TextStyle(
-                      color: allSelected ? Colors.white : Colors.black,
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                  Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                   Padding(
+                padding: EdgeInsets.fromLTRB(8, 20, 8, 10),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.035,
+                  width: MediaQuery.of(context).size.width * 0.17,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: allSelected ? Color(0xff6269FE) : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Color(0xffBCBCBC)),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
-                 Padding(
-              padding: EdgeInsets.fromLTRB(8, 20, 10, 10),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: PopupMenuButton<String>(
-                    color: Colors.white,
-                    offset: const Offset(0, 45),
-                    constraints: const BoxConstraints(
-                      minWidth: 150,
-                      maxWidth: 150,
-                    ),
-                    icon: Icon(Icons.filter_alt_rounded),
-                    onSelected: (value) {
+                    onPressed: () {
                       setState(() {
-                        _applyDateFilter(value);
+                        if (allSelected) {
+                          _updateFilter('Hold');
+                          _currentFilter = 'Hold';
+                        } else {
+                          _updateFilter('All');
+                          _currentFilter = 'All';
+                        }
+
+                        allSelected = !allSelected;
+                        fetchBookingsAndPartnerNames(widget.id, widget.token);
                       });
                     },
-                    itemBuilder: (BuildContext context) {
-                      return <PopupMenuEntry<String>>[
-                        PopupMenuItem(
-                          value: 'All',
-                          child: Directionality(
-                            textDirection: ui.TextDirection.ltr,
-                            child: Row(
-                              children: [
-                                Text('All'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                        PopupMenuDivider(height: 1),
-                        PopupMenuItem(
-                          value: 'Today',
-                          child: Directionality(
-                            textDirection: ui.TextDirection.ltr,
-                            child: Row(
-                              children: [
-                                Text('Today'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                        PopupMenuDivider(height: 1),
-                        PopupMenuItem(
-                          value: 'This Week',
-                          child: Directionality(
-                            textDirection: ui.TextDirection.ltr,
-                            child: Row(
-                              children: [
-                                Text('This Week'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                        PopupMenuDivider(height: 1),
-                        PopupMenuItem(
-                          value: 'This Month',
-                          child: Directionality(
-                            textDirection: ui.TextDirection.ltr,
-                            child: Row(
-                              children: [
-                                Text('This Month'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                        PopupMenuDivider(height: 1),
-                        PopupMenuItem(
-                          value: 'This Year',
-                          child: Directionality(
-                            textDirection: ui.TextDirection.ltr,
-                            child: Row(
-                              children: [
-                                Text('This Year'.tr()),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ];
-                    },
+                    child: Text(
+                      'All'.tr(),
+                      style: TextStyle(
+                        color: allSelected ? Colors.white : Colors.black,
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-              ],
-            ),
-          ),
-        ),
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Visibility(
-              visible: !allSelected,
-              replacement: Container(),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(8, 10, 8, 10),
+                   Padding(
+                padding: EdgeInsets.fromLTRB(8, 20, 10, 10),
                 child: Container(
                   decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 3,
+                        blurRadius: 8,
                         offset: const Offset(0, 1),
                       ),
                     ],
-                    color: Colors.white,
-                    border: Border.all(color: Color(0xff707070),width: 0.2),
-                    borderRadius: BorderRadius.circular(30),
                   ),
-                  height: MediaQuery.of(context).size.height * 0.063,
-                  width: MediaQuery.of(context).size.width,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            _updateFilter('Hold');
-                            // fetchBookingsAndPartnerNames(widget.id,widget.token);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _currentFilter == 'Hold' ? Color(0xff6269FE) : Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Hold'.tr(),
-                                style: TextStyle(
-                                  color: _currentFilter == 'Hold' ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: PopupMenuButton<String>(
+                      color: Colors.white,
+                      offset: const Offset(0, 45),
+                      constraints: const BoxConstraints(
+                        minWidth: 150,
+                        maxWidth: 150,
+                      ),
+                      icon: Icon(Icons.filter_alt_rounded),
+                      onSelected: (value) {
+                        setState(() {
+                          _applyDateFilter(value);
+                        });
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return <PopupMenuEntry<String>>[
+                          PopupMenuItem(
+                            value: 'All',
+                            child: Directionality(
+                              textDirection: ui.TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  Text('All'.tr()),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            _updateFilter('Running');
-                            // fetchBookingsAndPartnerNames(widget.id,widget.token);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _currentFilter == 'Running' ? Color(0xff6269FE) : Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Running'.tr(),
-                                style: TextStyle(
-                                  color: _currentFilter == 'Running' ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
+                          PopupMenuDivider(height: 1),
+                          PopupMenuItem(
+                            value: 'Today',
+                            child: Directionality(
+                              textDirection: ui.TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  Text('Today'.tr()),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            _updateFilter('Pending for Payment');
-                            // fetchBookingsAndPartnerNames(widget.id,widget.token);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _currentFilter == 'Pending for Payment' ? Color(0xff6269FE) : Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'PendingForPayment'.tr(),textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: _currentFilter == 'Pending for Payment' ? Colors.white : Colors.black,
-                                  fontSize: 14,
-                                ),
+                          PopupMenuDivider(height: 1),
+                          PopupMenuItem(
+                            value: 'This Week',
+                            child: Directionality(
+                              textDirection: ui.TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  Text('This Week'.tr()),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () async{
-                            _updateFilter('Completed');
-                            // fetchBookingsAndPartnerNames(widget.id,widget.token);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _currentFilter == 'Completed' ? Color(0xff6269FE) : Colors.white,
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Completed'.tr(),
-                                style: TextStyle(
-                                  color: _currentFilter == 'Completed' ? Colors.white : Colors.black,
-                                  fontSize: 16,
-                                ),
+                          PopupMenuDivider(height: 1),
+                          PopupMenuItem(
+                            value: 'This Month',
+                            child: Directionality(
+                              textDirection: ui.TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  Text('This Month'.tr()),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                    ],
+                          PopupMenuDivider(height: 1),
+                          PopupMenuItem(
+                            value: 'This Year',
+                            child: Directionality(
+                              textDirection: ui.TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  Text('This Year'.tr()),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ];
+                      },
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+                ],
+              ),
             ),
-            isLoading
-                ? Expanded(child: Center(child: CircularProgressIndicator(),))
-                : bookings.isNotEmpty
-                  ? Flexible(
-                    child: Column(
-                    children: [
-                      if (_noBookingsFound)
-                      Expanded(child: Center(child: Text('No Bookings Found'.tr()))),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          itemCount: _filteredBookings.length,
-                          itemBuilder: (context, index) {
-                            final booking = _filteredBookings[index];
-                            return FutureBuilder<String>(
-                              future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
-                              builder: (context, snapshot) {
-                                // if (snapshot.connectionState == ConnectionState.waiting) {
-                                //   return Center(child: CircularProgressIndicator());
-                                // }
+          ),
+          body: RefreshIndicator(
+              onRefresh: ()async{
+                await _fetchAndSetBookingDetails();
+              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Visibility(
+                  visible: !allSelected,
+                  replacement: Container(),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(8, 10, 8, 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 2,
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                        color: Colors.white,
+                        border: Border.all(color: Color(0xff707070),width: 0.2),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      height: MediaQuery.of(context).size.height * 0.063,
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                _updateFilter('Hold');
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _currentFilter == 'Hold' ? Color(0xff6269FE) : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Hold'.tr(),
+                                    style: TextStyle(
+                                      color: _currentFilter == 'Hold' ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                _updateFilter('Running');
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _currentFilter == 'Running' ? Color(0xff6269FE) : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Running'.tr(),
+                                    style: TextStyle(
+                                      color: _currentFilter == 'Running' ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                _updateFilter('Pending for Payment');
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _currentFilter == 'Pending for Payment' ? Color(0xff6269FE) : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'PendingForPayment'.tr(),textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: _currentFilter == 'Pending for Payment' ? Colors.white : Colors.black,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () async{
+                                _updateFilter('Completed');
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _currentFilter == 'Completed' ? Color(0xff6269FE) : Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Completed'.tr(),
+                                    style: TextStyle(
+                                      color: _currentFilter == 'Completed' ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                isLoading
+                    ? Expanded(child: Center(child: CircularProgressIndicator(),))
+                    : bookings.isNotEmpty
+                      ? Flexible(
+                        child: Column(
+                        children: [
+                          if (_noBookingsFound)
+                          Expanded(child: Center(child: Text('No Bookings Found'.tr()))),
+                          Expanded(
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              itemCount: _filteredBookings.length,
+                              itemBuilder: (context, index) {
+                                final booking = _filteredBookings[index];
+                                return FutureBuilder<String>(
+                                  future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
+                                  builder: (context, snapshot) {
+                                    // if (snapshot.connectionState == ConnectionState.waiting) {
+                                    //   return Center(child: CircularProgressIndicator());
+                                    // }
 
-                                if (snapshot.hasError) {
-                                  return Center(child: Text('Error Loading'));
-                                }
+                                    if (snapshot.hasError) {
+                                      return Center(child: Text('Error Loading'));
+                                    }
 
-                                if (snapshot.hasData) {
-                                  final partnerName = snapshot.data ?? 'N/A';
-                                  String paymentStatus = booking['paymentStatus']??'N/A';
-                                  String unitType = booking['unitType']??'N/A';
-                                  return Padding(
-                                    padding: const EdgeInsets.fromLTRB(25, 15, 25, 5),
-                                    child: Card(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15.0),
-                                      ),
-                                      color: Colors.white,
-                                      elevation: 5,
-                                      child: Column(
-                                        children: [
-                                          Column(
+                                    if (snapshot.hasData) {
+                                      final partnerName = snapshot.data ?? 'N/A';
+                                      String paymentStatus = booking['paymentStatus']??'N/A';
+                                      String unitType = booking['unitType']??'N/A';
+                                      return Padding(
+                                        padding: const EdgeInsets.fromLTRB(25, 15, 25, 5),
+                                        child: Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(15.0),
+                                          ),
+                                          color: Colors.white,
+                                          elevation: 5,
+                                          child: Column(
                                             children: [
-                                              Container(
-                                                width: MediaQuery.of(context).size.width,
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xff6269FE),
-                                                  borderRadius: BorderRadius.only(
-                                                      topLeft: Radius.circular(16),
-                                                      topRight: Radius.circular(16)
-                                                  ),
-                                                ),
-                                                child: Center(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(8.0),
-                                                    child: Text(
-                                                      '${'Booking id'.tr()}: ${booking['_id']}',
-                                                      style: TextStyle(fontSize: 17,color: Colors.white),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Stack(
+                                              Column(
                                                 children: [
-                                                  Positioned.fill(
-                                                    top: -1,
-                                                    bottom: 5,
-                                                    child: Container(
-                                                      color: Color(0xff6269FE),
-                                                    ),
-                                                  ),
                                                   Container(
+                                                    width: MediaQuery.of(context).size.width,
                                                     decoration: BoxDecoration(
-                                                      color: Colors.white,
+                                                      color: Color(0xff6269FE),
                                                       borderRadius: BorderRadius.only(
-                                                        topLeft: Radius.circular(30),
-                                                        topRight: Radius.circular(30),
+                                                          topLeft: Radius.circular(16),
+                                                          topRight: Radius.circular(16)
                                                       ),
                                                     ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(left: 15, top: 15),
-                                                      child: Row(
-                                                        children: [
-                                                          booking['paymentStatus'] == 'HalfPaid'
-                                                              ? SvgPicture.asset('assets/running.svg', height: 45)
-                                                              : booking['paymentStatus'] == 'NotPaid'
-                                                              ? SvgPicture.asset('assets/pending.svg', height: 45)
-                                                              : SvgPicture.asset('assets/completed.svg', height: 45),
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8.0),
-                                                            child: Text(
-                                                              booking['paymentStatus'] == 'Paid'
-                                                                  ? 'Completed'.tr()
-                                                                  : paymentStatus.tr(),
-                                                              style: TextStyle(fontSize: 17),
+                                                    child: Center(
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.all(8.0),
+                                                        child: Text(
+                                                          '${'Booking id'.tr()}: ${booking['_id']}',
+                                                          style: TextStyle(fontSize: 17,color: Colors.white),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Stack(
+                                                    children: [
+                                                      Positioned.fill(
+                                                        top: -1,
+                                                        bottom: 5,
+                                                        child: Container(
+                                                          color: Color(0xff6269FE),
+                                                        ),
+                                                      ),
+                                                      Container(
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius: BorderRadius.only(
+                                                            topLeft: Radius.circular(30),
+                                                            topRight: Radius.circular(30),
+                                                          ),
+                                                        ),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.only(left: 15, top: 15),
+                                                          child: Row(
+                                                            children: [
+                                                              booking['paymentStatus'] == 'HalfPaid'
+                                                                  ? SvgPicture.asset('assets/running.svg', height: 45)
+                                                                  : booking['paymentStatus'] == 'NotPaid'
+                                                                  ? SvgPicture.asset('assets/pending.svg', height: 45)
+                                                                  : SvgPicture.asset('assets/completed.svg', height: 45),
+                                                              Padding(
+                                                                padding: const EdgeInsets.all(8.0),
+                                                                child: Text(
+                                                                  booking['paymentStatus'] == 'Paid'
+                                                                      ? 'Completed'.tr()
+                                                                      : paymentStatus.tr(),
+                                                                  style: TextStyle(fontSize: 17),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Column(
+                                                          children: [
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 20,top: 15),
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      'Unit'.tr(),
+                                                                      style: TextStyle(fontSize: 16),
+                                                                    ),
+                                                                  ),
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      unitType.tr(),
+                                                                      style: TextStyle(fontSize: 16),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 20,top: 15),
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      'Vendor'.tr(),
+                                                                      style: TextStyle(fontSize: 16),
+                                                                    ),
+                                                                  ),
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      isLoading ? 'Loading...'.tr() :partnerName ?? 'Loading...',
+                                                                      style: TextStyle(fontSize: 16),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 20,top: 15),
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
+                                                                          ? 'PaymentStatus'.tr() : booking['remainingBalance'] == 0 ?'':'PendingPayment'.tr(),
+                                                                      style: TextStyle(fontSize: 16),
+                                                                    ),
+                                                                  ),
+                                                                  Expanded(
+                                                                      flex: 2,
+                                                                      child: booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
+                                                                          ? Text('Completed'.tr(), style: TextStyle(fontSize: 16,color: Colors.green))
+                                                                          : booking['remainingBalance'] == 0
+                                                                          ? SizedBox(height: 0,)
+                                                                          : Text('${booking['remainingBalance']??'N/A'} SAR',
+                                                                           style: TextStyle(fontSize: 16,color: Colors.red))
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: Column(
-                                                      children: [
-                                                        Padding(
-                                                          padding: const EdgeInsets.only(left: 20,top: 15),
-                                                          child: Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
+                                                          ? Container()
+                                                          : Expanded(
+                                                          flex: 0,
+                                                          child: Column(
                                                             children: [
-                                                              Expanded(
-                                                                flex: 2,
-                                                                child: Text(
-                                                                  'Unit'.tr(),
-                                                                  style: TextStyle(fontSize: 16),
-                                                                ),
+                                                              Padding(
+                                                                  padding: const EdgeInsets.all(8.0),
+                                                                  child: GestureDetector(
+                                                                      onTap: (){
+                                                                        showConfirmationDialog(booking);
+                                                                      },
+                                                                      child: SvgPicture.asset('assets/delete.svg'))
                                                               ),
-                                                              Expanded(
-                                                                flex: 2,
-                                                                child: Text(
-                                                                  unitType.tr(),
-                                                                  style: TextStyle(fontSize: 16),
-                                                                ),
+                                                              Padding(
+                                                                  padding: const EdgeInsets.all(8.0),
+                                                                  child: GestureDetector(
+                                                                      onTap: (){
+                                                                        Navigator.of(context).push(
+                                                                          MaterialPageRoute(
+                                                                            builder: (context) => EditBooking(
+                                                                              firstName: widget.firstName,
+                                                                              lastName: widget.lastName,
+                                                                              token: widget.token,
+                                                                              id: widget.id,
+                                                                              email: widget.email,
+                                                                              unitType: booking['unitType']??'',
+                                                                              pickUpPoint: booking['pickup']??'',
+                                                                              dropPoint: booking['dropPoints']??[],
+                                                                              mode: booking['name']??'',
+                                                                              modeClassification: booking['type']?.isNotEmpty ?? '' ? booking['type'][0]['typeName'] ?? 'N/A' : 'N/A'.tr(),
+                                                                              date: booking['date']??'',
+                                                                              additionalLabour: booking['additionalLabour']??'',
+                                                                              bookingId: booking['_id']??'',
+                                                                              cityName: booking['cityName']??'',
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                      child: SvgPicture.asset('assets/edit.svg'))
                                                               ),
                                                             ],
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding: const EdgeInsets.only(left: 20,top: 15),
-                                                          child: Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: [
-                                                              Expanded(
-                                                                flex: 2,
-                                                                child: Text(
-                                                                  'Vendor'.tr(),
-                                                                  style: TextStyle(fontSize: 16),
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                flex: 2,
-                                                                child: Text(
-                                                                  isLoading ? 'Loading...'.tr() :partnerName ?? 'Loading...',
-                                                                  style: TextStyle(fontSize: 16),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        Padding(
-                                                          padding: const EdgeInsets.only(left: 20,top: 15),
-                                                          child: Row(
-                                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                            children: [
-                                                              Expanded(
-                                                                flex: 2,
-                                                                child: Text(
-                                                                  booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                                      ? 'PaymentStatus'.tr() : booking['remainingBalance'] == 0 ?'':'PendingPayment'.tr(),
-                                                                  style: TextStyle(fontSize: 16),
-                                                                ),
-                                                              ),
-                                                              Expanded(
-                                                                  flex: 2,
-                                                                  child: booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                                      ? Text('Completed'.tr(), style: TextStyle(fontSize: 16,color: Colors.green))
-                                                                      : booking['remainingBalance'] == 0
-                                                                      ? SizedBox(height: 0,)
-                                                                      : Text('${booking['remainingBalance']??'N/A'} SAR',
-                                                                       style: TextStyle(fontSize: 16,color: Colors.red))
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                      ? Container()
-                                                      : Expanded(
-                                                      flex: 0,
-                                                      child: Column(
-                                                        children: [
-                                                          Padding(
-                                                              padding: const EdgeInsets.all(8.0),
-                                                              child: GestureDetector(
-                                                                  onTap: (){
-                                                                    showConfirmationDialog();
-                                                                  },
-                                                                  child: SvgPicture.asset('assets/delete.svg'))
-                                                          ),
-                                                          Padding(
-                                                              padding: const EdgeInsets.all(8.0),
-                                                              child: GestureDetector(
-                                                                  onTap: (){
-                                                                    Navigator.of(context).push(
-                                                                      MaterialPageRoute(
-                                                                        builder: (context) => EditBooking(
-                                                                          firstName: widget.firstName,
-                                                                          lastName: widget.lastName,
-                                                                          token: widget.token,
-                                                                          id: widget.id,
-                                                                          email: widget.email,
-                                                                          unitType: booking['unitType']??'',
-                                                                          pickUpPoint: booking['pickup']??'',
-                                                                          dropPoint: booking['dropPoints']??[],
-                                                                          mode: booking['name']??'',
-                                                                          modeClassification: booking['type']?.isNotEmpty ?? '' ? booking['type'][0]['typeName'] ?? 'N/A' : 'N/A'.tr(),
-                                                                          date: booking['date']??'',
-                                                                          additionalLabour: booking['additionalLabour']??'',
-                                                                          bookingId: booking['_id']??'',
-                                                                          cityName: booking['cityName']??'',
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                  child: SvgPicture.asset('assets/edit.svg'))
-                                                          ),
-                                                        ],
+                                                          )
                                                       )
-                                                  )
-                                                ],
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 20,bottom: 15),
-                                                child: SizedBox(
-                                                  height: MediaQuery.of(context).size.height * 0.045,
-                                                  width: MediaQuery.of(context).size.width * 0.65,
-                                                  child: ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: Colors.white,
-                                                      shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(15),
-                                                          side: BorderSide(color: Color(0xff6269FE),width: 0.5)
-                                                      ),
-                                                    ),
-                                                    onPressed: () {
-                                                      showBookingDialog(context,booking,bookingPartnerName: partnerName);
-                                                    },
-                                                    child: Text(
-                                                      'View Booking'.tr(),
-                                                      style: TextStyle(
-                                                        color: Color(0xff6269FE),
-                                                        fontSize: 17,
-                                                        fontWeight: FontWeight.normal,
+                                                    ],
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(top: 20,bottom: 15),
+                                                    child: SizedBox(
+                                                      height: MediaQuery.of(context).size.height * 0.045,
+                                                      width: MediaQuery.of(context).size.width * 0.65,
+                                                      child: ElevatedButton(
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: Colors.white,
+                                                          shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(15),
+                                                              side: BorderSide(color: Color(0xff6269FE),width: 0.5)
+                                                          ),
+                                                        ),
+                                                        onPressed: () {
+                                                          showBookingDialog(context,booking,bookingPartnerName: partnerName);
+                                                        },
+                                                        child: Text(
+                                                          'View Booking'.tr(),
+                                                          style: TextStyle(
+                                                            color: Color(0xff6269FE),
+                                                            fontSize: 17,
+                                                            fontWeight: FontWeight.normal,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }
-                                return Container();
+                                        ),
+                                      );
+                                    }
+                                    return Container();
+                                  },
+                                );
                               },
-                            );
-                          },
-                        ),
-
-                        /*ListView.builder(
-                          itemCount: _filteredBookings.length,
-                          itemBuilder: (context, index) {
-                            final booking = _filteredBookings[index];
-                            final bookingPartnerName = bookings[index];
-                            partnerId = booking['partner']??'N/A';
-                            bookingId = booking['_id']??'N/A';
-                            unit = booking['unitType']??'N/A';
-                            unitType = booking['_id']??'N/A';
-                            final partnerNames = bookingPartnerName['partnerName'] ?? 'Loading...';
-                            bookingStatus = booking['bookingStatus']??'N/A';
-                            bookingDate = booking['date']??'N/A';
-                            print('partnerId''${partnerId}');
-                            return Padding(
-                              padding: const EdgeInsets.fromLTRB(25, 15, 25, 5),
-                              child: Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
-                                color: Colors.white,
-                                elevation: 5,
-                                child: Column(
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Container(
-                                          width: MediaQuery.of(context).size.width,
-                                          decoration: BoxDecoration(
-                                            color: Color(0xff6269FE),
-                                            borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(16),
-                                                topRight: Radius.circular(16)
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(
-                                                'Booking Id: ${booking['_id']}',
-                                                style: TextStyle(fontSize: 17,color: Colors.white),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Stack(
-                                          children: [
-                                            Positioned.fill(
-                                              top: -1,
-                                              bottom: 5,
-                                              child: Container(
-                                                color: Color(0xff6269FE),
-                                              ),
-                                            ),
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(30),
-                                                  topRight: Radius.circular(30),
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(left: 15, top: 15),
-                                                child: Row(
-                                                  children: [
-                                                    booking['paymentStatus'] == 'HalfPaid'
-                                                    ? SvgPicture.asset('assets/running.svg', height: 45)
-                                                      : booking['paymentStatus'] == 'NotPaid'
-                                                    ? SvgPicture.asset('assets/pending.svg', height: 45)
-                                                    : SvgPicture.asset('assets/completed.svg', height: 45),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: Text(
-                                                        booking['paymentStatus'] == 'Paid'
-                                                        ? 'Completed'
-                                                        : '${booking['paymentStatus']??'N/A'}',
-                                                        style: TextStyle(fontSize: 17),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Column(
-                                                children: [
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 20,top: 15),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            'Unit',
-                                                            style: TextStyle(fontSize: 16),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            '${booking['unitType']??'N/A'}',
-                                                            style: TextStyle(fontSize: 16),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 20,top: 15),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            'Vendor',
-                                                            style: TextStyle(fontSize: 16),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            isLoading ? 'Loading...' :partnerNames ?? 'Loading...',
-                                                            style: TextStyle(fontSize: 16),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 20,top: 15),
-                                                    child: Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                                ? 'Payment Status' : 'Pending Payment',
-                                                            style: TextStyle(fontSize: 16),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                          ? Text('Completed',
-                                                            style: TextStyle(fontSize: 16,color: Colors.green))
-                                                          : Text('${booking['remainingBalance']??'N/A'} SAR',
-                                                            style: TextStyle(fontSize: 16,color: Colors.red))
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                            ? Container()
-                                            : Expanded(
-                                                flex: 0,
-                                                child: Column(
-                                                  children: [
-                                                    Padding(
-                                                        padding: const EdgeInsets.all(8.0),
-                                                        child: GestureDetector(
-                                                          onTap: (){
-                                                            showConfirmationDialog();
-                                                          },
-                                                            child: SvgPicture.asset('assets/delete.svg'))
-                                                    ),
-                                                    Padding(
-                                                        padding: const EdgeInsets.all(8.0),
-                                                        child: GestureDetector(
-                                                            onTap: (){
-                                                              Navigator.of(context).push(
-                                                                MaterialPageRoute(
-                                                                  builder: (context) => EditBooking(
-                                                                      firstName: widget.firstName,
-                                                                      lastName: widget.lastName,
-                                                                      token: widget.token,
-                                                                      id: widget.id,
-                                                                      email: widget.email,
-                                                                      unitType: booking['unitType']??'',
-                                                                      pickUpPoint: booking['pickup']??'',
-                                                                      dropPoint: booking['dropPoints']??[],
-                                                                      mode: booking['name']??'',
-                                                                      modeClassification: booking['type']?.isNotEmpty ?? '' ? booking['type'][0]['typeName'] ?? 'N/A' : 'N/A',
-                                                                      date: booking['date']??'',
-                                                                      additionalLabour: booking['additionalLabour']??'',
-                                                                      bookingId: booking['_id']??'',
-                                                                      cityName: booking['cityName']??'',
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            },
-                                                            child: SvgPicture.asset('assets/edit.svg'))
-                                                    ),
-                                                  ],
-                                                )
-                                            )
-                                          ],
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 20,bottom: 15),
-                                          child: SizedBox(
-                                            height: MediaQuery.of(context).size.height * 0.045,
-                                            width: MediaQuery.of(context).size.width * 0.65,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(15),
-                                                    side: BorderSide(color: Color(0xff6269FE),width: 0.5)
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                showBookingDialog(context,booking,bookingPartnerName: bookingPartnerName);
-                                              },
-                                              child: Text(
-                                                'View Booking',
-                                                style: TextStyle(
-                                                  color: Color(0xff6269FE),
-                                                  fontSize: 17,
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),*/
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
 
-            )
-                  : Expanded(child: Center(child: Text('No Bookings Found'.tr())))
-          ],
+                )
+                      : Expanded(child: Center(child: Text('No Bookings Found'.tr())))
+              ],
+            ),
+          ),
+          bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
+            context: context,
+            selectedIndex: _selectedIndex,
+            onTabTapped: _onTabTapped,
+          ),
         ),
-        bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
-          context: context,
-          selectedIndex: _selectedIndex,
-          onTabTapped: _onTabTapped,
-        ),
-      ),
     );
   }
 
@@ -1130,18 +887,7 @@ class _BookingManagerState extends State<BookingManager> {
                 )));
         break;
       case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BookingManager(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              token: widget.token,
-              id: widget.id,
-              email: widget.email,
-            ),
-          ),
-        );
+        commonWidgets.showToast("You're already on Booking Manager");
         break;
       case 2:
         Navigator.push(
@@ -1161,7 +907,7 @@ class _BookingManagerState extends State<BookingManager> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+            builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
           ),
         );
         break;
@@ -1311,7 +1057,7 @@ class _BookingManagerState extends State<BookingManager> {
     );
   }
 
-  void showConfirmationDialog() {
+  void showConfirmationDialog(Map<String, dynamic> booking) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1350,7 +1096,7 @@ class _BookingManagerState extends State<BookingManager> {
                         setState(() {
                           isDeleting = true;
                         });
-                        handleDeleteBooking();
+                        handleDeleteBooking(booking['_id']);
                       }
                     },
                   ),
@@ -1369,9 +1115,9 @@ class _BookingManagerState extends State<BookingManager> {
     );
   }
 
-  Future<void> handleDeleteBooking() async {
+  Future<void> handleDeleteBooking(String bookingIds) async {
     try {
-      await userService.deleteBooking(context, bookingId, widget.token);
+      await userService.deleteBooking(context, bookingIds, widget.token);
       isDeleting = false;
       Navigator.pushReplacement(
         context,

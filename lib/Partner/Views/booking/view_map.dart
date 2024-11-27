@@ -729,7 +729,7 @@ class _ViewMapState extends State<ViewMap> {
                                       isTerminating = true;
                                     });
                                     await _authService.terminateBooking(context,widget.partnerId,widget.bookingId,widget.token,widget.email);
-                                    Navigator.push(
+                                    Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>

@@ -14,8 +14,29 @@ import 'dart:ui' as ui;
 
 class CommonWidgets {
 
+  final ValueNotifier<List<Map<String, dynamic>>> _notificationsNotifier =
+  ValueNotifier<List<Map<String, dynamic>>>([]);
+
+  Future<void> _fetchNotifications(String? userId) async {
+    try {
+      final notifications = await userService.getNotifications(userId ?? '');
+      _notificationsNotifier.value = notifications;
+    } catch (e) {
+      _notificationsNotifier.value = [];
+    }
+  }
+
   AppBar commonAppBar(BuildContext context,
-      {String? User, PreferredSizeWidget? bottom, bool showLeading = true, String? userId, bool showLanguage = true,ui.TextDirection? textDirection}) {
+      {String? User,
+        PreferredSizeWidget? bottom,
+        bool showLeading = true,
+        String? userId,
+        bool showLanguage = true,
+        ui.TextDirection? textDirection}) {
+    if (_notificationsNotifier.value.isEmpty) {
+      _fetchNotifications(userId);
+    }
+
     return AppBar(
       scrolledUnderElevation: 0,
       elevation: 0,
@@ -23,195 +44,167 @@ class CommonWidgets {
       automaticallyImplyLeading: false,
       leading: showLeading
           ? Builder(
-        builder: (BuildContext context) =>
-            IconButton(
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              icon: const Icon(
-                Icons.menu,
-                color: Color(0xff5D5151),
-                size: 45,
-              ),
-            ),
+        builder: (BuildContext context) => IconButton(
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+          icon: const Icon(
+            Icons.menu,
+            color: Color(0xff5D5151),
+            size: 45,
+          ),
+        ),
       )
           : null,
       title: Padding(
         padding: const EdgeInsets.only(top: 10),
         child: SvgPicture.asset('assets/naqlee-logo.svg',
-            height: MediaQuery
-                .of(context)
-                .size
-                .height * 0.05),
+            height: MediaQuery.of(context).size.height * 0.05),
       ),
       actions: [
         Padding(
           padding: const EdgeInsets.only(top: 10),
           child: Row(
             children: [
-              showLanguage
-                  ? Directionality(
-                textDirection: ui.TextDirection.ltr,
-                child: PopupMenuButton<Locale>(
-                  color: Colors.white,
-                  offset: const Offset(0, 55),
-                  icon: Icon(Icons.language, color: Colors.blue),
-                  onSelected: (Locale locale) {
-                    context.setLocale(locale);
-                  },
-                  itemBuilder: (BuildContext context) {
-                    return <PopupMenuEntry<Locale>>[
-                      PopupMenuItem(
-                        value: Locale('en', 'US'),
-                        child: Text(
-                          'English'.tr(),
-                          textDirection: ui.TextDirection.ltr,
+              if (showLanguage)
+                Directionality(
+                  textDirection: ui.TextDirection.ltr,
+                  child: PopupMenuButton<Locale>(
+                    color: Colors.white,
+                    offset: const Offset(0, 55),
+                    icon: Icon(Icons.language, color: Colors.blue),
+                    onSelected: (Locale locale) {
+                      context.setLocale(locale);
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return <PopupMenuEntry<Locale>>[
+                        PopupMenuItem(
+                          value: Locale('en', 'US'),
+                          child: Directionality(
+                            textDirection: ui.TextDirection.ltr,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'English'.tr(),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: Locale('ar', 'SA'),
-                        child: Text(
-                          'Arabic'.tr(),
-                          textDirection: textDirection ??ui.TextDirection.rtl,
+                        PopupMenuItem(
+                          value: Locale('ar', 'SA'),
+                          child: Directionality(
+                            textDirection: ui.TextDirection.ltr,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Arabic'.tr(),
+                                  textDirection: textDirection ?? ui.TextDirection.rtl,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                      PopupMenuItem(
-                        value: Locale('hi', 'IN'),
-                        child: Text(
-                          'Hindi'.tr(),
-                          textDirection: ui.TextDirection.ltr,
+                        PopupMenuItem(
+                          value: Locale('hi', 'IN'),
+                          child: Directionality(
+                            textDirection: ui.TextDirection.ltr,
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Hindi'.tr(),
+                                  textDirection: ui.TextDirection.ltr,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ];
-                  },
+                      ];
+                    },
+                  ),
                 ),
-              )
-                  : Container(),
               Text(
                 User ?? 'user',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               Stack(
                 children: [
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: userService.getNotifications(userId ?? ''),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              left: 9, right: 9, top: 8, bottom: 9),
-                          child: const Icon(
-                            Icons.notifications,
-                            color: Color(0xff6A66D1),
-                            size: 30,
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        return const Icon(
-                          Icons.error,
-                          color: Colors.red,
+                  ValueListenableBuilder<List<Map<String, dynamic>>>(
+                    valueListenable: _notificationsNotifier,
+                    builder: (context, notifications, _) {
+                      return PopupMenuButton(
+                        color: Colors.white,
+                        icon: const Icon(
+                          Icons.notifications,
+                          color: Color(0xff6A66D1),
                           size: 30,
-                        );
-                      } else if (snapshot.hasData) {
-                        final notifications = snapshot.data!;
-                        print('Fetched notifications: $notifications');
-
-                        return PopupMenuButton(
-                          color: Colors.white,
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Color(0xff6A66D1),
-                            size: 30,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 350,
-                            maxWidth: 350,
-                          ),
-                          offset: const Offset(0, 55),
-                          itemBuilder: (context) {
-                            List<PopupMenuEntry<dynamic>> menuItems = [];
-
-                            for (int i = 0; i < notifications.length; i++) {
-                              final notification = notifications[i];
-
-                              menuItems.add(
-                                PopupMenuItem(
-                                  child: ListTile(
-                                    leading: const Icon(
-                                        Icons.message, color: Colors.blue),
-                                    title: Text(notification['messageTitle'] ??
-                                        'No Title'),
-                                    subtitle: Text(
-                                        notification['messageBody'] ??
-                                            'No Message'),
-                                    onTap: () {
-                                      Navigator.pop(context); // Close the menu
-                                    },
-                                  ),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 350,
+                          maxWidth: 350,
+                        ),
+                        offset: const Offset(0, 55),
+                        itemBuilder: (context) {
+                          if (notifications.isEmpty) {
+                            return [
+                              const PopupMenuItem(
+                                child: ListTile(
+                                  title: Text('No Notifications'),
+                                  leading: Icon(Icons.circle_notifications_sharp,
+                                      color: Colors.blue),
                                 ),
-                              );
-                              if (i < notifications.length - 1) {
-                                menuItems.add(const PopupMenuDivider());
-                              }
-                            }
-
-                            return menuItems;
-                          },
-                        );
-                      } else {
-                        return PopupMenuButton(
-                          icon: const Icon(
-                            Icons.notifications,
-                            color: Color(0xff6A66D1),
-                            size: 30,
-                          ),
-                          itemBuilder: (context) =>
-                          [
-                            const PopupMenuItem(
-                              child: ListTile(
-                                title: Text('No notifications'),
                               ),
-                            ),
-                          ],
-                        );
-                      }
+                            ];
+                          }
+                          return notifications.map((notification) {
+                            return PopupMenuItem(
+                              child: ListTile(
+                                leading: const Icon(Icons.message,
+                                    color: Colors.blue),
+                                title: Text(
+                                    notification['messageTitle'] ?? 'No Title'),
+                                subtitle: Text(
+                                    notification['messageBody'] ?? 'No Message'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
                     },
                   ),
-                  Positioned(
-                    right: 8,
-                    top: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: FutureBuilder<List<Map<String, dynamic>>>(
-                        future: userService.getNotifications(userId ?? ''),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox
-                                .shrink(); // Hide while loading
-                          } else if (snapshot.hasData) {
-                            return Text(
-                              '${snapshot.data?.length}',
+                  ValueListenableBuilder<List<Map<String, dynamic>>>(
+                    valueListenable: _notificationsNotifier,
+                    builder: (context, notifications, _) {
+                      if (notifications.isNotEmpty) {
+                        return Positioned(
+                          right: 8,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '${notifications.length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
                               ),
                               textAlign: TextAlign.center,
-                            );
-                          } else {
-                            return const SizedBox.shrink();
-                          }
-                        },
-                      ),
-                    ),
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
                 ],
               ),
