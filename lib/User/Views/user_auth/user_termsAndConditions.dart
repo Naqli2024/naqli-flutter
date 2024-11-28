@@ -403,7 +403,7 @@ class _UserTermsAndConditionsState extends State<UserTermsAndConditions> {
                     padding: EdgeInsets.fromLTRB(40, 8, 8, 0),
                     child: Align(
                       alignment: Alignment.topLeft,
-                      child: Text("e. To improve our services and to provide better and more personalized services.",
+                      child: Text("d. To improve our services and to provide better and more personalized services.",
                         textAlign: TextAlign.left,),
                     ),
                   ),
@@ -411,7 +411,7 @@ class _UserTermsAndConditionsState extends State<UserTermsAndConditions> {
                     padding: EdgeInsets.fromLTRB(40, 8, 8, 0),
                     child: Align(
                       alignment: Alignment.topLeft,
-                      child: Text("f. To ensure that our site content is presented in the most effective manner for you and the device you are using to access our site.",
+                      child: Text("e. To ensure that our site content is presented in the most effective manner for you and the device you are using to access our site.",
                         textAlign: TextAlign.left,),
                     ),
                   ),
@@ -419,18 +419,18 @@ class _UserTermsAndConditionsState extends State<UserTermsAndConditions> {
                     padding: EdgeInsets.fromLTRB(40, 8, 8, 0),
                     child: Align(
                       alignment: Alignment.topLeft,
-                      child: Text("g. To notify you of changes to our site.",
+                      child: Text("f. To notify you of changes to our site.",
                         textAlign: TextAlign.left,),
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(40, 8, 8, 0),
-                    child: Text("h. For any other reason we deem necessary to enhance your browsing experience on the site.",
+                    child: Text("g. For any other reason we deem necessary to enhance your browsing experience on the site.",
                       textAlign: TextAlign.left,),
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(40, 8, 8, 0),
-                    child: Text("i. To administer incentive programs and fulfill your requests for such incentives, and/or to allow you to participate in competitions and notify you if you win.",
+                    child: Text("h. To administer incentive programs and fulfill your requests for such incentives, and/or to allow you to participate in competitions and notify you if you win.",
                       textAlign: TextAlign.left,),
                   ),
                 ],

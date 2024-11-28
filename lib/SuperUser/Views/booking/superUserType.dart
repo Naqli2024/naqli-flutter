@@ -230,7 +230,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                   options: CarouselOptions(
                     enlargeCenterPage: true,
                     autoPlay: true,
-                    aspectRatio: 21 / 9,
+                    aspectRatio: 20 / 10,
                     autoPlayCurve: Curves.fastOutSlowIn,
                     enableInfiniteScroll: true,
                     autoPlayAnimationDuration: const Duration(milliseconds: 800),
@@ -240,24 +240,6 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                     Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome2.svg',fit: BoxFit.fill)),
                     Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome3.svg',fit: BoxFit.fill)),
                     Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome4.svg',fit: BoxFit.fill)),
-                    Stack(
-                      children: [
-                        Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome.svg',fit: BoxFit.fill,)),
-                        Positioned(
-                          left: MediaQuery.sizeOf(context).width * 0.05,
-                          top: MediaQuery.sizeOf(context).height * 0.02,
-                          child: Text(
-                            'Need a Truck or Bus? \nBook with Confidence!',
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                     Stack(
                       children: [
                         Container(child: SvgPicture.asset('assets/userHome1.svg',fit: BoxFit.fill,)),

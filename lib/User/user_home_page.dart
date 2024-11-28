@@ -235,24 +235,6 @@ class _UserHomePageState extends State<UserHomePage> {
                     Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome4.svg',fit: BoxFit.fill)),
                     Stack(
                       children: [
-                        Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome.svg',fit: BoxFit.fill,)),
-                        Positioned(
-                          left: MediaQuery.sizeOf(context).width * 0.05,
-                          top: MediaQuery.sizeOf(context).height * 0.02,
-                          child: Text(
-                            'Need a Truck or Bus? \nBook with Confidence!',
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Stack(
-                      children: [
                         Container(child: SvgPicture.asset('assets/userHome1.svg',fit: BoxFit.fill,)),
                         Positioned(
                           left: MediaQuery.sizeOf(context).width * 0.3,
@@ -308,7 +290,13 @@ class _UserHomePageState extends State<UserHomePage> {
                                   item['asset']!,
                                   height: MediaQuery.sizeOf(context).height * 0.12,
                                   placeholderBuilder: (context) =>
-                                  const CircularProgressIndicator(),
+                                      Container(
+                                        height: 15,
+                                        width: 15,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
                                 )
                                     : Image.asset(
                                   item['asset']!,
