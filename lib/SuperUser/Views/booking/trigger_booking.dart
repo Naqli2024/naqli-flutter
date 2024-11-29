@@ -1092,8 +1092,10 @@ class _TriggerBookingState extends State<TriggerBooking> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Pay using Other Card Types".tr(),
-                                  style: TextStyle(fontSize: 18)),
+                              Expanded(
+                                child: Text("Pay using Other Card Types".tr(),
+                                    style: TextStyle(fontSize: 18)),
+                              ),
                               SvgPicture.asset('assets/visa-mastercard.svg',
                                   height: 40, width: 20)
                             ],

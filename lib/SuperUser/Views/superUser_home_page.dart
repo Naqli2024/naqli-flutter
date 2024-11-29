@@ -788,7 +788,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                             child: Stack(
                               children: <Widget>[
                                 Container(
-                                  width: MediaQuery.sizeOf(context).width * 0.3,
                                   decoration: BoxDecoration(
                                     color: Color(0xffF6F6F6),
                                     borderRadius: const BorderRadius.all(Radius.circular(8)),

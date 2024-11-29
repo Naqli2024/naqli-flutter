@@ -41,6 +41,7 @@ class CommonWidgets {
       scrolledUnderElevation: 0,
       elevation: 0,
       backgroundColor: Colors.white,
+      centerTitle: false,
       automaticallyImplyLeading: false,
       leading: showLeading
           ? Builder(
