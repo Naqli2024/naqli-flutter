@@ -505,7 +505,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           'createBooking'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 21,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -1906,6 +1906,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         bus.image,
                                         width: 30,
                                         height: 40,
+                                        placeholderBuilder: (context)=>
+                                        Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     Divider(

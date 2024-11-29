@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>io.flutter.embedded_views_preview</key>
+    <true/>
+    <key>GMSApiKey</key>
+    <string>AIzaSyCWMr3-rDWx3ax_u2jP4lPffspdyA9Lyvw</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Allow access to your location to use maps.</string>
+
 </dict>
 </plist>
