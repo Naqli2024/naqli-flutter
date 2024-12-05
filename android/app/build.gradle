@@ -42,7 +42,7 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("../app/upload-keystore.jks")
+            storeFile file("D:/naqli-flutter/android/app/upload-keystore.jks")
             storePassword "naqli@123"
             keyAlias "upload"
             keyPassword "naqli@123"

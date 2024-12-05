@@ -63,8 +63,6 @@ class _UserProfileState extends State<UserProfile> {
       firstNameController.text = data.firstName;
       lastNameController.text = data.lastName;
       emailController.text = data.emailAddress;
-      passwordController.text = data.password;
-      confirmPasswordController.text = data.confirmPassword;
       contactNoController.text = data.contactNumber.toString();
       altNoController.text = data.alternateNumber;
       address1Controller.text = data.address1;

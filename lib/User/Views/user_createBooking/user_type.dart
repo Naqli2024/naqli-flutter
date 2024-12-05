@@ -90,8 +90,6 @@ class _UserTypeState extends State<UserType> {
     final String? token = data['token'];
 
     if (bookingId == null || token == null) {
-      print('No bookingId found, fetching pending booking details.');
-
       if (widget.id != null && widget.token != null) {
         bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
 

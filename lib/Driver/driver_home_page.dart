@@ -453,8 +453,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                                         color: Colors.black.withOpacity(0.3),
                                         spreadRadius: 2,
                                         blurRadius: 5,
-                                        offset: const Offset(
-                                            0, 5), // changes position of shadow
+                                        offset: const Offset(0, 5),
                                       ),
                                     ],
                                   ),
@@ -472,27 +471,27 @@ class _DriverHomePageState extends State<DriverHomePage>
                                     ),
                                   ),
                                 ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        spreadRadius: 2,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.white,
-                                    child: IconButton(
-                                        onPressed: () {
-
-                                        },
-                                        icon: Icon(Icons.search)),
-                                  ),
-                                ),
+                                // Container(
+                                //   decoration: BoxDecoration(
+                                //     shape: BoxShape.circle,
+                                //     boxShadow: [
+                                //       BoxShadow(
+                                //         color: Colors.black.withOpacity(0.3),
+                                //         spreadRadius: 2,
+                                //         blurRadius: 5,
+                                //         offset: const Offset(0, 5),
+                                //       ),
+                                //     ],
+                                //   ),
+                                //   child: CircleAvatar(
+                                //     backgroundColor: Colors.white,
+                                //     child: IconButton(
+                                //         onPressed: () {
+                                //
+                                //         },
+                                //         icon: Icon(Icons.search)),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ),
@@ -514,6 +513,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                               ),
                             ),
                             onPressed: () async {
+                              await _fetchBookingRequest();
                               await _fetchBookingDetails();
                               await _handleDriverRequest();
                               setState(() {

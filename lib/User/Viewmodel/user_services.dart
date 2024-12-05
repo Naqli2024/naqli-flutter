@@ -883,11 +883,11 @@ class UserService{
 
       if (response.statusCode == 200) {
         print('Payment update successful: ${response.body}');
-        return jsonDecode(response.body);  // return the decoded response
+        return jsonDecode(response.body);
       } else {
         print('Failed to update payment: ${response.statusCode}');
         print('Response body: ${response.body}');
-        return null; // Avoid returning null, handle error properly
+        return null;
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');

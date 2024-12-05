@@ -1217,7 +1217,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
       minX: selectedDuration == 'This Week' ? -1 : selectedDuration == 'All time' ? -0.7 : 0,
       maxX: selectedDuration == 'This Week' ? 7 : selectedDuration == 'All time' ? 3 : 13,
       minY: 0,
-      maxY: selectedDuration == 'All time' ? 15:6,
+      maxY: selectedDuration == 'All time' ? 20:15,
       lineBarsData: [
         LineChartBarData(
           show: selectedDuration == 'All time',
@@ -1334,7 +1334,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
       minX: selectedDuration == 'This Week' ? -1 : selectedDuration == 'All time' ? -0.7 : 0,
       maxX: selectedDuration == 'This Week' ? 7 : selectedDuration == 'All time' ? 3 : 13,
       minY: 0,
-      maxY: selectedDuration == 'All time' ? 15 : 6,
+      maxY: selectedDuration == 'All time' ? 20 : 15,
       lineBarsData: [
         LineChartBarData(
           spots: selectedDuration == 'All time'
@@ -1440,7 +1440,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
       minX: selectedDuration == 'This Week' ? -1 : selectedDuration == 'All time' ? -0.7 : 0,
       maxX: selectedDuration == 'This Week' ? 7 : selectedDuration == 'All time' ? 3 : 13,
       minY: 0,
-      maxY: selectedDuration == 'All time' ? 15 : 6,
+      maxY: selectedDuration == 'All time' ? 20 : 15,
       lineBarsData: [
         LineChartBarData(
           spots: selectedDuration == 'All time'
@@ -1633,7 +1633,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             minX: selectedDuration == 'This Week' ? -1 : selectedDuration == 'All time' ? -0.7 : 0,
             maxX: selectedDuration == 'This Week' ? 7 : selectedDuration == 'All time' ? 3 : 13,
             minY: 0,
-            maxY: selectedDuration == 'All time' ? 15 : 6,
+            maxY: selectedDuration == 'All time' ? 20 : 15,
             lineBarsData: [
               LineChartBarData(
                 spots: spots,
@@ -1694,7 +1694,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             minX: selectedDuration == 'This Week' ? -1 : selectedDuration == 'All time' ? -0.7 : 0,
             maxX: selectedDuration == 'This Week' ? 7 : selectedDuration == 'All time' ? 3 : 13,
             minY: 0,
-            maxY: selectedDuration == 'All time' ? 15 : 6,
+            maxY: selectedDuration == 'All time' ? 20 : 15,
             lineBarsData: [
               LineChartBarData(
                 spots: spots,

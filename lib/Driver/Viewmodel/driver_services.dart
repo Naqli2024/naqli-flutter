@@ -297,7 +297,7 @@ class DriverService{
         // ScaffoldMessenger.of(context).showSnackBar(
         //   SnackBar(content: Text(message)),
         // );
-        return responseBody; // Return the response body on success
+        return responseBody;
       } else {
         final message = responseBody['message'] ?? 'No Booking request found';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -305,20 +305,20 @@ class DriverService{
         );
         print('Failed to update: ${response.statusCode}');
         print('Response body: ${response.body}');
-        return null; // Return null for errors
+        return null;
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
       print('Network error: No Internet connection');
-      return null; // Return null on network error
+      return null;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please try again...')),
       );
       print('Error: $e');
-      return null; // Return null for other errors
+      return null;
     }
   }
 

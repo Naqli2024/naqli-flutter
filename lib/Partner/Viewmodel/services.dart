@@ -1010,8 +1010,7 @@ class AuthService {
 
   Future<void> terminateBooking(BuildContext context,String partnerId, String bookingId, String token,String email) async {
     try {
-      final url = Uri.parse(
-          '${baseUrl}$partnerId/booking-request/$bookingId');
+      final url = Uri.parse('${baseUrl}$partnerId/booking-request/$bookingId');
 
       final response = await http.delete(
         url,

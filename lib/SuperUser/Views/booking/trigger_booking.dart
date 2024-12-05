@@ -75,6 +75,9 @@ class _TriggerBookingState extends State<TriggerBooking> {
 
 
   Future initiatePayment(String paymentBrand,int amount) async {
+    setState(() {
+      loadingDialog(true);
+    });
     final result = await superUserServices.choosePayment(
       context,
       paymentBrand: paymentBrand,
@@ -87,7 +90,11 @@ class _TriggerBookingState extends State<TriggerBooking> {
         integrityId = result['integrity'];
       });
     }
+    setState(() {
+      Navigator.pop(context);
+    });
   }
+
 // resultCode=000.100.110
   Future<void> getPaymentStatus(String checkOutId) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId);
@@ -1000,6 +1007,42 @@ class _TriggerBookingState extends State<TriggerBooking> {
                     );
                   },
                 ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void loadingDialog(bool isProcessing){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Visibility(
+          visible: isProcessing,
+          child: Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              insetPadding: EdgeInsets.symmetric(horizontal: 90),
+              backgroundColor: Colors.white,
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 50),
+                      LoadingAnimationWidget.fourRotatingDots(
+                        color: Colors.blue,
+                        size: 80,
+                      ),
+                      SizedBox(height: 50)
+                    ],
+                  );
+                },
               ),
             ),
           ),

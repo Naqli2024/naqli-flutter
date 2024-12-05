@@ -291,8 +291,8 @@ class _UserHomePageState extends State<UserHomePage> {
                                   height: MediaQuery.sizeOf(context).height * 0.12,
                                   placeholderBuilder: (context) =>
                                       Container(
-                                        height: 15,
-                                        width: 15,
+                                        height: 20,
+                                        width: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                         ),

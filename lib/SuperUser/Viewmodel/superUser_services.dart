@@ -301,4 +301,60 @@ class SuperUserServices {
       }
   }
 
+  Future<void> editProfile(
+      String token,
+      String userId,
+      String firstName,
+      String lastName,
+      String emailAddress,
+      String password,
+      String confirmPassword,
+      String contactNumber,
+      String alternateNumber,
+      String address1,
+      String address2,
+      String city,
+      String govtId,
+      String idNumber) async {
+
+    final String url = '${baseUrl}edit-booking/$userId';
+    try {
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'emailAddress': emailAddress,
+          'password': password,
+          'confirmPassword': confirmPassword,
+          'contactNumber': contactNumber,
+          'alternateNumber': alternateNumber,
+          'address1': address1,
+          'address2': address2,
+          'city': city,
+          'govtId': govtId,
+          'idNumber': idNumber,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] as String?;
+        if (message != null) {
+          CommonWidgets().showToast(message);
+        }
+      } else {
+        print('Failed to update booking. Status code: ${response.statusCode}');
+        print('Response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
+
 }

@@ -1,6 +1,6 @@
 class Vehicle {
   final String name;
-  final List<VehicleType> types;  // Correcting to use List<VehicleType> only
+  final List<VehicleType> types;
 
   Vehicle({required this.name, required this.types});
 
