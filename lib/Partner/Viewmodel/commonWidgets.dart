@@ -128,6 +128,90 @@ class CommonWidgets {
                 User ?? 'user',
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
+              /*Stack(
+                children: [
+                  ValueListenableBuilder<List<Map<String, dynamic>>>(
+                    valueListenable: _notificationsNotifier,
+                    builder: (context, notifications, _) {
+                      return PopupMenuButton(
+                        color: Colors.white,
+                        icon: const Icon(
+                          Icons.notifications,
+                          color: Color(0xff6A66D1),
+                          size: 30,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 350,
+                          maxWidth: 350,
+                        ),
+                        offset: const Offset(0, 55),
+                        itemBuilder: (context) {
+                          if (notifications.isEmpty) {
+                            return [
+                              const PopupMenuItem(
+                                child: ListTile(
+                                  title: Text('No Notifications'),
+                                  leading: Icon(Icons.circle_notifications_sharp,
+                                      color: Colors.blue),
+                                ),
+                              ),
+                            ];
+                          }
+                          return notifications.map((notification) {
+                            return PopupMenuItem(
+                              child: ListTile(
+                                leading: const Icon(Icons.message, color: Colors.blue),
+                                title: Text(notification['messageTitle'] ?? 'No Title'),
+                                subtitle: Text(notification['messageBody'] ?? 'No Message'),
+                                onTap: () {
+                                  notification['seen'] = true;
+                                  _notificationsNotifier.value = List.from(notifications);
+
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
+                    },
+                  ),
+                  ValueListenableBuilder<List<Map<String, dynamic>>>(
+                    valueListenable: _notificationsNotifier,
+                    builder: (context, notifications, _) {
+                      // Count unseen notifications
+                      final unseenCount = notifications.where((n) => n['seen'] == false).length;
+
+                      if (unseenCount > 0) {
+                        return Positioned(
+                          right: 8,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '$unseenCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),*/
               Stack(
                 children: [
                   ValueListenableBuilder<List<Map<String, dynamic>>>(

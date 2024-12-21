@@ -131,18 +131,31 @@ class _OtpScreenState extends State<OtpScreen> {
                     MaterialPageRoute(builder: (context) => const PartnerHomePage(partnerName: '',mobileNo: '',password: '',token: '',partnerId: '',)),
                   );
                 },
-                child: Container(
-                  margin: const EdgeInsets.only(top: 0),
-                  child: const Align(
-                      alignment: Alignment.topRight,
+                child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      decoration: ShapeDecoration(
+                        color: Colors.white,
+                        shadows: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(60),
+                        ),
+                      ),
                       child: CircleAvatar(
                         backgroundColor: Color(0xffFFFFFF),
                         child: Icon(
                           Icons.clear,
                           color: Colors.black,
                         ),
-                      )),
-                ),
+                      ),
+                    )),
               ),
             ],
           ),

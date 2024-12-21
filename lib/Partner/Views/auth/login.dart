@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         isLoading = true;
       });
-      await _authService.loginUser(
+      await _authService.loginPartner(
         context,
         emailOrMobile: emailOrMobileController.text,
         password: passwordController.text,

@@ -21,14 +21,17 @@ class AuthService {
   static const String baseUrl = 'https://prod.naqlee.com:443/api/partner/';
   String globalPartnerId = '';
 
-  Future<void> registerUser(context,{
+  Future<void> registerPartner(context,{
     required String partnerName,
     required String mobileNo,
     required String email,
     required String password,
     required String role,
-    required String partnerId,
-    required String token,
+    required String region,
+    required String city,
+    required String bankName,
+    required String companyName,
+    required String ibanCode,
   }) async {
     try{
       final url = Uri.parse('${baseUrl}register');
@@ -37,7 +40,6 @@ class AuthService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'type': role,
@@ -45,6 +47,11 @@ class AuthService {
           'mobileNo': mobileNo,
           'email': email,
           'password': password,
+          'region': region,
+          'city': city,
+          'bankName': bankName,
+          'company': companyName,
+          'ibanNumber': ibanCode,
         }),
       );
       final responseBody = jsonDecode(response.body);
@@ -320,7 +327,7 @@ class AuthService {
     }
   }
 
-  Future<void> loginUser(
+  Future<void> loginPartner(
       BuildContext context, {
         required String emailOrMobile,
         required String mobileNo,

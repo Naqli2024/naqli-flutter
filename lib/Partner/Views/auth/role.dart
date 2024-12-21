@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_naqli/Partner/Views/auth/register.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 
@@ -137,9 +137,8 @@ class _RoleState extends State<Role> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Register(
+                      builder: (context) => RegisterStepOne(
                         selectedRole: selectedRole,
-                        partnerId: '',token: '',
                       ),
                     ),
                   );

@@ -234,7 +234,7 @@ class _ViewBookingState extends State<ViewBooking> {
                         partnerName: widget.partnerName,
                         userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
                         userId: widget.userId,
-                        mode: '${bookingDetails?['name'] ?? 'No name available'} ${bookingDetails?['typeName'] ?? ''}',
+                        mode: '${bookingDetails?['name'] ?? 'No name available'}'+' '+'${bookingDetails?['typeName'] ?? ''}',
                         bookingStatus: widget.bookingStatus,
                         pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
                         dropPoint: bookingDetails?['dropPoints'] ?? [],

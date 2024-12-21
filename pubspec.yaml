@@ -116,6 +116,7 @@ flutter:
     - assets/regular-trips.svg
     - assets/better-earning.svg
     - assets/Register.svg
+    - assets/register_stepTwo.svg
     - assets/joinUs.svg
     - assets/pickup_drop.svg
     - assets/otp_logo.svg

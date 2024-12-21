@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
-import 'package:flutter_naqli/Partner/Views/auth/register.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 

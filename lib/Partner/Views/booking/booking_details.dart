@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
-import 'package:flutter_naqli/Partner/Views/auth/register.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
@@ -299,7 +299,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                                 partnerName: widget.partnerName,
                                                 userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
                                                 userId: userId,
-                                                mode: name+ typeName,
+                                                mode: name+' '+typeName,
                                                 bookingStatus: bookingStatus,
                                                 pickupPoint: pickup,
                                                 dropPoint: dropPoints,
@@ -371,14 +371,14 @@ class _BookingDetailsState extends State<BookingDetails> {
   void _showLoadingDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           content: Row(
             children: [
               const CircularProgressIndicator(),
-              const SizedBox(width: 20), // Space between the indicator and text
-              const Text("Loading..."), // You can customize the loading message here
+              const SizedBox(width: 20),
+              const Text("Loading..."),
             ],
           ),
         );

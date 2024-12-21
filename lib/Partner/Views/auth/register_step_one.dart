@@ -1,49 +1,26 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Views/auth/register_step_two.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:ui' as ui;
 
-class Register extends StatefulWidget {
+class RegisterStepOne extends StatefulWidget {
   final String selectedRole;
-  final String partnerId;
-  final String token;
 
-  const Register({Key? key, required this.selectedRole, required this.partnerId, required this.token}) : super(key: key);
+  const RegisterStepOne({Key? key, required this.selectedRole}) : super(key: key);
 
   @override
-  State<Register> createState() => _RegisterState();
+  State<RegisterStepOne> createState() => _RegisterState();
 }
 
-class _RegisterState extends State<Register> {
+class _RegisterState extends State<RegisterStepOne> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
-  bool isLoading = false;
   bool isPasswordObscured = true;
-
-  Future<void> _submitForm() async {
-      setState(() {
-        isLoading = true;
-      });
-        await _authService.registerUser(
-          context,
-          partnerName: nameController.text,
-          mobileNo: mobileController.text,
-          email: emailController.text,
-          password: passwordController.text,
-          role: widget.selectedRole,
-          partnerId: widget.partnerId,
-          token: ''
-        );
-        setState(() {
-          isLoading = false;
-        });
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -101,9 +78,7 @@ class _RegisterState extends State<Register> {
             ],
           ),
         ),
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
+        body: SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
@@ -185,6 +160,7 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
                 Container(
+                  margin: EdgeInsets.only(bottom: 20),
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.07,
                     width: MediaQuery.of(context).size.width * 0.8,
@@ -197,15 +173,20 @@ class _RegisterState extends State<Register> {
                       ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          _submitForm();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegisterStepTwo(name: nameController.text,mobileNo: mobileController.text,password: passwordController.text,emailId: emailController.text, selectedRole: widget.selectedRole,),
+                            ),
+                          );
                         }
                       },
                       child: Text(
-                        'Register'.tr(),
+                        'Next'.tr(),
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
-                            fontWeight: FontWeight.normal),
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
