@@ -15,6 +15,7 @@ import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -176,6 +177,18 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                     ),
                   );
                 },
+              ),
+              ListTile(
+                  leading: Icon(Icons.account_balance_outlined,size: 35,),
+                  title: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserInvoice(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      ),
+                    );
+                  }
               ),
               ListTile(
                 leading: SvgPicture.asset('assets/report_logo.svg'),

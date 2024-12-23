@@ -20,6 +20,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'dart:ui' as ui;
@@ -1325,6 +1326,21 @@ class _ChooseVendorState extends State<ChooseVendor> {
                   padding: const EdgeInsets.only(left: 20, bottom: 10, top: 15),
                   child: Text('more_info_and_support'.tr(),
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                ),
+                ListTile(
+                    leading: Icon(Icons.account_balance_outlined,size: 35,),
+                    title: Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
+                    ),
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserInvoice(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                        ),
+                      );
+                    }
                 ),
                 ListTile(
                   leading: SvgPicture.asset('assets/report_logo.svg'),

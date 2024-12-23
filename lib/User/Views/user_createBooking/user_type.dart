@@ -14,6 +14,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
+import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -311,6 +312,21 @@ class _UserTypeState extends State<UserType> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,quotePrice: widget.quotePrice??'',email: widget.email,),
+                      ),
+                    );
+                  }
+              ),
+              ListTile(
+                  leading: Icon(Icons.account_balance_outlined,size: 35,),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
+                  ),
+                  onTap: (){
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserInvoice(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
                       ),
                     );
                   }
