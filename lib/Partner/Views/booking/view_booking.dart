@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
@@ -140,6 +141,7 @@ class _ViewBookingState extends State<ViewBooking> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -169,9 +171,10 @@ class _ViewBookingState extends State<ViewBooking> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -259,7 +262,9 @@ class _ViewBookingState extends State<ViewBooking> {
                   child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 40, 8, 0),
+                      padding: viewUtil.isTablet
+                          ? EdgeInsets.fromLTRB(20, 60, 20, 0)
+                          : EdgeInsets.fromLTRB(8, 40, 8, 0),
                       child: Card(
               elevation: 15,
               color: Colors.white,
@@ -272,8 +277,10 @@ class _ViewBookingState extends State<ViewBooking> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(flex:7,child: Text('Booked by'.tr())),
-                          Expanded(flex:2,child: Text('Booking id'.tr())),
+                          Expanded(flex:7,child: Text('Booked by'.tr(),
+                          style: TextStyle(fontSize: viewUtil.isTablet?22: 14),)),
+                          Expanded(flex:2,child: Text('Booking id'.tr(),
+                          style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
                         ],
                       ),
                     ),
@@ -283,8 +290,8 @@ class _ViewBookingState extends State<ViewBooking> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(flex:7,child: Text(firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',style: TextStyle(color: Color(0xffAD1C86)))),
-                          Text(widget.bookingId.toString(),style: const TextStyle(color: Color(0xffAD1C86))),
+                          Expanded(flex:7,child: Text(firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',style: TextStyle(color: Color(0xffAD1C86),fontSize: viewUtil.isTablet?22: 14))),
+                          Text(widget.bookingId.toString(),style: TextStyle(color: Color(0xffAD1C86),fontSize: viewUtil.isTablet?22: 14)),
                         ],
                       ),
                     ),
@@ -304,51 +311,57 @@ class _ViewBookingState extends State<ViewBooking> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('Mode'.tr())),
+                                Expanded(flex:6,child: Text('Mode'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
                                 Expanded(flex:2,child: Text('${bookingDetails?['name'] ?? 'N/A'}'.tr()+
-                                    ' ${bookingDetails?['typeName'] ?? ''}'.tr(),style: TextStyle(color: Color(0xff79797C)),)),
+                                    ' ${bookingDetails?['typeName'] ?? ''}'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14))),
                               ],
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('Load'.tr())),
-                                Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'N/A'.tr()}'.tr(),style: TextStyle(color: Color(0xff79797C)),)),
+                                Expanded(flex:6,child: Text('Load'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['typeOfLoad'] ?? 'N/A'.tr()}'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
                               ],
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('Date'.tr())),
-                                Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),)),
+                                Expanded(flex:6,child: Text('Date'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
                               ],
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('Time'.tr())),
+                                Expanded(flex:6,child: Text('Time'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
                                 bookingDetails?['time'] == null
                                 ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
-                                : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C)),))
+                                : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),))
                               ],
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('Additional Labour'.tr())),
-                                Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C)),)),
+                                Expanded(flex:6,child: Text('Additional Labour'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['additionalLabour'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
                               ],
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(flex:6,child: Text('valueOfProduct'.tr())),
-                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C)),)),
+                                Expanded(flex:6,child: Text('valueOfProduct'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
                               ],
                             ),
                           ],
@@ -360,7 +373,8 @@ class _ViewBookingState extends State<ViewBooking> {
                       padding: const EdgeInsets.only(left: 30),
                       child: Row(
                         children: [
-                          SvgPicture.asset('assets/pickup_drop.svg'),
+                          SvgPicture.asset('assets/pickup_drop.svg',
+                          height: viewUtil.isTablet ? 90 :70),
                           bookingDetails?['cityName'] != null
                           ? Expanded(
                             child: Column(
@@ -371,11 +385,11 @@ class _ViewBookingState extends State<ViewBooking> {
                                   child: Column(
                                     children: [
                                       Text('${bookingDetails?['cityName'] ?? 'No cityName available'}',textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 16),),
+                                        style: TextStyle(fontSize: viewUtil.isTablet?22: 17),),
                                       Text('${bookingDetails?['address'] ?? 'No address available'}',textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 16),),
+                                      style: TextStyle(fontSize: viewUtil.isTablet?22: 17),),
                                       Text('${bookingDetails?['zipCode'] ?? ''}',textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 16),),
+                                        style: TextStyle(fontSize: viewUtil.isTablet?22: 17),),
                                     ],
                                   ),
                                 ),
@@ -389,12 +403,12 @@ class _ViewBookingState extends State<ViewBooking> {
                                 Padding(
                                   padding: const EdgeInsets.only(bottom:35,left: 0),
                                   child: Text('${bookingDetails?['pickup'] ?? 'No pickup available'}',textAlign: TextAlign.left,
-                                    style: const TextStyle(fontSize: 20),),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 17)),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 0),
                                   child: Text('${bookingDetails?['dropPoints'] ?? 'No dropPoints available'}',textAlign: TextAlign.left,
-                                    style: const TextStyle(fontSize: 20),),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 17)),
                                 ),
                               ],
                             ),
@@ -474,8 +488,8 @@ class _ViewBookingState extends State<ViewBooking> {
                                     'Send Quote'.tr(),
                                     style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.normal),
+                                        fontSize: viewUtil.isTablet?22: 15,
+                                        fontWeight: FontWeight.w500),
                                   )),
                             ),
                           ),
@@ -515,14 +529,14 @@ class _ViewBookingState extends State<ViewBooking> {
                                                   padding: EdgeInsets.only(top: 30,bottom: 10),
                                                   child: Text(
                                                     'Are you sure you want to cancel?'.tr(),
-                                                    style: TextStyle(fontSize: 19),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 24 :19),
                                                   ),
                                                 ),
                                               ],
                                             ),
                                             actions: <Widget>[
                                               TextButton(
-                                                child: Text('yes'.tr()),
+                                                child: Text('yes'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15)),
                                                 onPressed: () async {
                                                   await _authService.deleteBookingRequest(context,widget.partnerId, widget.bookingId, widget.token);
                                                   Navigator.pushReplacement(
@@ -539,7 +553,7 @@ class _ViewBookingState extends State<ViewBooking> {
                                                 },
                                               ),
                                               TextButton(
-                                                child: Text('no'.tr()),
+                                                child: Text('no'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15)),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
@@ -554,8 +568,8 @@ class _ViewBookingState extends State<ViewBooking> {
                                     'Cancel Quote'.tr(),
                                     style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.normal),
+                                        fontSize: viewUtil.isTablet?22: 15,
+                                        fontWeight: FontWeight.w500),
                                   )),
                             ),
                           ),

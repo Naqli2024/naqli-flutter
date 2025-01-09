@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -63,6 +64,7 @@ class _BookingHistoryState extends State<BookingHistory> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -88,7 +90,7 @@ class _BookingHistoryState extends State<BookingHistory> {
                       padding: const EdgeInsets.only(right: 30),
                       child: Text(
                         'booking_history'.tr(),
-                        style: TextStyle(color: Colors.white, fontSize: 24),
+                        style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:24),
                       ),
                     ),
                   ],
@@ -101,9 +103,10 @@ class _BookingHistoryState extends State<BookingHistory> {
                           firstName: widget.firstName,
                           lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)));
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -123,22 +126,25 @@ class _BookingHistoryState extends State<BookingHistory> {
                   children: [
                     Padding(
                       padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.17),
-                      child: SvgPicture.asset('assets/history.svg'),
+                      child: SvgPicture.asset('assets/history.svg',
+                          height: viewUtil.isTablet
+                          ? MediaQuery.sizeOf(context).height * 0.15
+                          : MediaQuery.sizeOf(context).height * 0.12),
                     ),
                     Padding(
                       padding: EdgeInsets.only(top: 40, bottom: 20),
                       child: Text(
                         "No history available !!!".tr(),
-                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 27 :25, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Text(
                       "Let's book some vehicle and make your".tr(),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 22 :20, fontWeight: FontWeight.normal),
                     ),
                     Text(
                       "Booking history heavy".tr(),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 22 :20, fontWeight: FontWeight.normal),
                     ),
                   ],
                 ),
@@ -153,11 +159,13 @@ class _BookingHistoryState extends State<BookingHistory> {
                   String unit = booking['name'] ?? 'N/A'.tr();
                   String paymentStatus = booking['paymentStatus'] ?? 'N/A'.tr();
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(8,20,8,20),
+                    padding: viewUtil.isTablet
+                        ? EdgeInsets.fromLTRB(20,20,20,20)
+                        : EdgeInsets.fromLTRB(8,20,8,20),
                     child: Stack(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 20, 25, 10),
+                          padding: EdgeInsets.fromLTRB(25, 20, 25, 10),
                           child: Card(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15.0),
@@ -175,14 +183,14 @@ class _BookingHistoryState extends State<BookingHistory> {
                                         flex: 3,
                                         child: Text(
                                           'Unit'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           unitType.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                     ],
@@ -201,14 +209,14 @@ class _BookingHistoryState extends State<BookingHistory> {
                                         flex: 3,
                                         child: Text(
                                           'UnitType'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           unit.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                     ],
@@ -227,14 +235,14 @@ class _BookingHistoryState extends State<BookingHistory> {
                                         flex: 3,
                                         child: Text(
                                           'Date'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           booking['date'] ?? 'N/A'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                     ],
@@ -253,14 +261,14 @@ class _BookingHistoryState extends State<BookingHistory> {
                                         flex: 3,
                                         child: Text(
                                           'Booking id'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           booking['_id'] ?? 'N/A'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                     ],
@@ -279,14 +287,14 @@ class _BookingHistoryState extends State<BookingHistory> {
                                         flex: 3,
                                         child: Text(
                                           'PaymentStatus'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           paymentStatus.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                         ),
                                       ),
                                     ],
@@ -315,7 +323,7 @@ class _BookingHistoryState extends State<BookingHistory> {
                             alignment: Alignment.center,
                             child: SvgPicture.asset(
                               'assets/history_truck.svg',
-                              height: 60,
+                              height: viewUtil.isTablet ? 80 : 60,
                             ),
                           ),
                         ),

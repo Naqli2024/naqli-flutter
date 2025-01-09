@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
@@ -53,6 +56,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return MaterialApp(
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
@@ -69,7 +73,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff6A66D1)),
         useMaterial3: true,
         textTheme: Theme.of(context).textTheme.apply(
-          fontSizeFactor: 0.95,
+          fontSizeFactor: viewUtil.isTablet?1.3:0.95,
         ),
       ),
       home: Directionality(

@@ -3,12 +3,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_bookingHistory.dart';
 import 'package:flutter_naqli/User/Views/user_bookingDetails/user_payment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_pendingPayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
@@ -60,31 +62,6 @@ class _UserTypeState extends State<UserType> {
   }
 
 
-
-  // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-  //   try {
-  //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
-  //     return history;
-  //   } catch (e) {
-  //     print('Error fetching booking details: $e');
-  //     return null;
-  //   }
-  // }
-
-/*  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-    final data = await getSavedBookingId();
-    final String? bookingId = data['_id'];
-    final String? token = data['token'];
-
-    if (bookingId != null && token != null) {
-      print('Fetching details with bookingId=$bookingId and token=$token');
-      return await userService.fetchBookingDetails(bookingId, token);
-    } else {
-      print('No bookingId or token found in shared preferences.');
-      return null;
-    }
-  }*/
-
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
     String? bookingId = data['_id'];
@@ -126,10 +103,9 @@ class _UserTypeState extends State<UserType> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -287,9 +263,11 @@ class _UserTypeState extends State<UserType> {
               ),
               ListTile(
                   leading: SvgPicture.asset('assets/booking_history.svg',
-                      height: MediaQuery.of(context).size.height * 0.035),
+                      height: viewUtil.isTablet
+                      ? MediaQuery.of(context).size.height * 0.028
+                      : MediaQuery.of(context).size.height * 0.035),
                   title: Padding(
-                    padding: EdgeInsets.only(left: 10),
+                    padding: EdgeInsets.only(left: viewUtil.isTablet ?5:10),
                     child: Text('booking_history'.tr(),style: TextStyle(fontSize: 25),),
                   ),
                   onTap: (){
@@ -375,7 +353,9 @@ class _UserTypeState extends State<UserType> {
                   child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
-
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context)=>
+                          PaymentPage(checkoutId: '', integrity: '',)));
                 },
               ),
               ListTile(
@@ -396,21 +376,30 @@ class _UserTypeState extends State<UserType> {
                           ),
                           backgroundColor: Colors.white,
                           contentPadding: const EdgeInsets.all(20),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(top: 30,bottom: 10),
-                                child: Text(
-                                  'are_you_sure_you_want_to_logout'.tr(),
-                                  style: TextStyle(fontSize: 19),
+                          content: Container(
+                            width: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.width * 0.6
+                                : MediaQuery.of(context).size.width,
+                            height: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.height * 0.08
+                                : MediaQuery.of(context).size.height * 0.1,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                                  child: Text(
+                                    'are_you_sure_you_want_to_logout'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           actions: <Widget>[
                             TextButton(
-                              child: Text('yes'.tr()),
+                              child: Text('yes'.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
                               onPressed: () async {
                                 await clearUserData();
                                 Navigator.push(
@@ -420,7 +409,8 @@ class _UserTypeState extends State<UserType> {
                               },
                             ),
                             TextButton(
-                              child: Text('no'.tr()),
+                              child: Text('no'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -463,7 +453,7 @@ class _UserTypeState extends State<UserType> {
                             'Drive Your Business Forward \nwith Seamless Vehicle Booking!',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: viewUtil.isTablet ? 30 : 15,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -476,14 +466,16 @@ class _UserTypeState extends State<UserType> {
                 Expanded(
                   child: Container(
                     color: Colors.transparent,
-                    padding: EdgeInsets.fromLTRB(12, 5, 12,MediaQuery.sizeOf(context).height * 0.13,),
+                    padding: viewUtil.isTablet
+                        ? EdgeInsets.fromLTRB(20,20,20,MediaQuery.sizeOf(context).height * 0.13)
+                        : EdgeInsets.fromLTRB(12,5,12,MediaQuery.sizeOf(context).height * 0.13),
                     child: GridView.builder(
                       itemCount: cardData.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 20.0,
                         mainAxisSpacing: 16.0,
-                        childAspectRatio: 2.8 / 3.2,
+                        childAspectRatio: viewUtil.isTablet ? 3.5 / 3.2 : 2.8 / 3.2,
                       ),
                       itemBuilder: (context, index) {
                         final item = cardData[index];
@@ -535,19 +527,29 @@ class _UserTypeState extends State<UserType> {
                                   item['asset']!,
                                   height: MediaQuery.sizeOf(context).height * 0.12,
                                   placeholderBuilder: (context) =>
-                                  const CircularProgressIndicator(),
-                                )
-                                    : Image.asset(
-                                  item['asset']!,
-                                  height: MediaQuery.sizeOf(context).height * 0.12,
-                                  fit: BoxFit.contain,
-                                ),
+                                      Container(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ))
+                                    : Padding(
+                                      padding: EdgeInsets.only(bottom: viewUtil.isTablet?15:0),
+                                      child: Image.asset(
+                                             item['asset']!,
+                                        height: viewUtil.isTablet
+                                            ? MediaQuery.sizeOf(context).height * 0.1
+                                            : MediaQuery.sizeOf(context).height * 0.12,
+                                             fit: BoxFit.contain,
+                                      ),
+                                    ),
                                 SizedBox(height: 7),
-                                const Divider(
-                                  indent: 7,
-                                  endIndent: 7,
+                                Divider(
+                                  indent: viewUtil.isTablet ? 15 : 7,
+                                  endIndent: viewUtil.isTablet ? 15 : 7,
                                   color: Color(0xffACACAD),
-                                  thickness: 0.8,
+                                  thickness: viewUtil.isTablet ? 1.5 : 0.8,
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 15),
@@ -555,7 +557,7 @@ class _UserTypeState extends State<UserType> {
                                     item['title']!.tr(),
                                     textDirection: ui.TextDirection.ltr,
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 16),
+                                    style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 16),
                                   ),
                                 ),
                               ],
@@ -570,8 +572,8 @@ class _UserTypeState extends State<UserType> {
             ),
             Positioned(
               bottom: 25,
-              left: 10,
-              right: 10,
+              left: viewUtil.isTablet ? 20 : 10,
+              right: viewUtil.isTablet ? 20 : 10,
               child: Container(
                 width: MediaQuery.sizeOf(context).width,
                 height: MediaQuery.sizeOf(context).height * 0.08,
@@ -592,7 +594,10 @@ class _UserTypeState extends State<UserType> {
                         padding: const EdgeInsets.only(left: 20),
                         child: Text('Get an estimate'.tr(),
                           textDirection: ui.TextDirection.ltr,
-                          style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 17),),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: viewUtil.isTablet ? 25 : 17),),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(right: 20),
@@ -610,6 +615,7 @@ class _UserTypeState extends State<UserType> {
   }
 
   void _showModalBottomSheet(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -634,9 +640,11 @@ class _UserTypeState extends State<UserType> {
                         children: <Widget>[
                           Text(
                             'how_may_we_assist_you'.tr(),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 16, fontWeight: FontWeight.bold),
                           ),
-                          Text('please_select_service'.tr()),
+                          Text('please_select_service'.tr(),
+                              style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16)),
                           bottomCard('assets/vehicle.svg', 'Vehicle'.tr(),'vehicle'),
                           GestureDetector(
                             onTap: (){
@@ -671,11 +679,11 @@ class _UserTypeState extends State<UserType> {
                                   children: [
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Image.asset('assets/bus.png', width: 90, height: 70),
+                                      child: Image.asset('assets/bus.png', width: viewUtil.isTablet ? 130:100, height: viewUtil.isTablet ? 90:80),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.only(left: 50),
-                                      child: Text('Bus'.tr(), style: TextStyle(fontSize: 20)),
+                                      child: Text('Bus'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 17)),
                                     ),
                                   ],
                                 ),
@@ -709,6 +717,7 @@ class _UserTypeState extends State<UserType> {
   }
 
   Widget bottomCard(String imagePath, String title,String userType) {
+    ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
       onTap: (){
         userType != 'others'
@@ -756,11 +765,11 @@ class _UserTypeState extends State<UserType> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: SvgPicture.asset(imagePath, width: 90, height: 70),
+                child: SvgPicture.asset(imagePath, width: viewUtil.isTablet ? 130:90, height: viewUtil.isTablet ? 90:70),
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 50),
-                child: Text(title, style: TextStyle(fontSize: 20)),
+                child: Text(title, style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 17)),
               ),
             ],
           ),

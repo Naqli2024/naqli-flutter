@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/edit_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
@@ -240,6 +241,7 @@ class _BookingManagerState extends State<BookingManager> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -256,7 +258,7 @@ class _BookingManagerState extends State<BookingManager> {
                 children: [
                   AppBar(
                     scrolledUnderElevation: 0,
-                    toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+                    toolbarHeight: 80,
                     centerTitle: true,
                     automaticallyImplyLeading: false,
                     backgroundColor: const Color(0xff807BE5),
@@ -353,7 +355,7 @@ class _BookingManagerState extends State<BookingManager> {
                       'All'.tr(),
                       style: TextStyle(
                         color: allSelected ? Colors.white : Colors.black,
-                        fontSize: 14,
+                        fontSize: viewUtil.isTablet ?20:14,
                         fontWeight: FontWeight.normal,
                       ),
                     ),
@@ -508,7 +510,7 @@ class _BookingManagerState extends State<BookingManager> {
                                     'Hold'.tr(),
                                     style: TextStyle(
                                       color: _currentFilter == 'Hold' ? Colors.white : Colors.black,
-                                      fontSize: 16,
+                                      fontSize: viewUtil.isTablet ?22:16,
                                     ),
                                   ),
                                 ),
@@ -530,7 +532,7 @@ class _BookingManagerState extends State<BookingManager> {
                                     'Running'.tr(),
                                     style: TextStyle(
                                       color: _currentFilter == 'Running' ? Colors.white : Colors.black,
-                                      fontSize: 16,
+                                      fontSize: viewUtil.isTablet ?22:16,
                                     ),
                                   ),
                                 ),
@@ -552,7 +554,7 @@ class _BookingManagerState extends State<BookingManager> {
                                     'PendingForPayment'.tr(),textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: _currentFilter == 'Pending for Payment' ? Colors.white : Colors.black,
-                                      fontSize: 14,
+                                      fontSize: viewUtil.isTablet ?22:14,
                                     ),
                                   ),
                                 ),
@@ -574,7 +576,7 @@ class _BookingManagerState extends State<BookingManager> {
                                     'Completed'.tr(),
                                     style: TextStyle(
                                       color: _currentFilter == 'Completed' ? Colors.white : Colors.black,
-                                      fontSize: 16,
+                                      fontSize: viewUtil.isTablet ?22:16,
                                     ),
                                   ),
                                 ),
@@ -593,7 +595,7 @@ class _BookingManagerState extends State<BookingManager> {
                         child: Column(
                         children: [
                           if (_noBookingsFound)
-                          Expanded(child: Center(child: Text('No Bookings Found'.tr()))),
+                          Expanded(child: Center(child: Text('No Bookings Found'.tr(),style: TextStyle(fontSize:  viewUtil.isTablet ?22:16)))),
                           Expanded(
                             child: ListView.builder(
                               controller: _scrollController,
@@ -641,7 +643,7 @@ class _BookingManagerState extends State<BookingManager> {
                                                         padding: const EdgeInsets.all(8.0),
                                                         child: Text(
                                                           '${'Booking id'.tr()}: ${booking['_id']}',
-                                                          style: TextStyle(fontSize: 17,color: Colors.white),
+                                                          style: TextStyle(fontSize: viewUtil.isTablet ?22:17,color: Colors.white),
                                                         ),
                                                       ),
                                                     ),
@@ -678,7 +680,7 @@ class _BookingManagerState extends State<BookingManager> {
                                                                   booking['paymentStatus'] == 'Paid'
                                                                       ? 'Completed'.tr()
                                                                       : paymentStatus.tr(),
-                                                                  style: TextStyle(fontSize: 17),
+                                                                  style: TextStyle(fontSize: viewUtil.isTablet ?22:17),
                                                                 ),
                                                               ),
                                                             ],
@@ -702,14 +704,14 @@ class _BookingManagerState extends State<BookingManager> {
                                                                     flex: 2,
                                                                     child: Text(
                                                                       'Unit'.tr(),
-                                                                      style: TextStyle(fontSize: 16),
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
                                                                   Expanded(
                                                                     flex: 2,
                                                                     child: Text(
                                                                       unitType.tr(),
-                                                                      style: TextStyle(fontSize: 16),
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
                                                                 ],
@@ -724,14 +726,14 @@ class _BookingManagerState extends State<BookingManager> {
                                                                     flex: 2,
                                                                     child: Text(
                                                                       'Vendor'.tr(),
-                                                                      style: TextStyle(fontSize: 16),
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
                                                                   Expanded(
                                                                     flex: 2,
                                                                     child: Text(
                                                                       isLoading ? 'Loading...'.tr() :partnerName ?? 'Loading...',
-                                                                      style: TextStyle(fontSize: 16),
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
                                                                 ],
@@ -747,17 +749,17 @@ class _BookingManagerState extends State<BookingManager> {
                                                                     child: Text(
                                                                       booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
                                                                           ? 'PaymentStatus'.tr() : booking['remainingBalance'] == 0 ?'':'PendingPayment'.tr(),
-                                                                      style: TextStyle(fontSize: 16),
+                                                                      style: TextStyle(fontSize:  viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
                                                                   Expanded(
                                                                       flex: 2,
                                                                       child: booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
-                                                                          ? Text('Completed'.tr(), style: TextStyle(fontSize: 16,color: Colors.green))
+                                                                          ? Text('Completed'.tr(), style: TextStyle(fontSize:  viewUtil.isTablet ?22:16,color: Colors.green))
                                                                           : booking['remainingBalance'] == 0
                                                                           ? SizedBox(height: 0,)
                                                                           : Text('${booking['remainingBalance']??'N/A'} SAR',
-                                                                           style: TextStyle(fontSize: 16,color: Colors.red))
+                                                                           style: TextStyle(fontSize:  viewUtil.isTablet ?22:16,color: Colors.red))
                                                                   ),
                                                                 ],
                                                               ),
@@ -797,7 +799,7 @@ class _BookingManagerState extends State<BookingManager> {
                                                                               mode: booking['name']??'',
                                                                               modeClassification: booking['type']?.isNotEmpty ?? '' ? booking['type'][0]['typeName'] ?? 'N/A' : 'N/A'.tr(),
                                                                               date: booking['date']??'',
-                                                                              additionalLabour: booking['additionalLabour']??'',
+                                                                              additionalLabour: booking['additionalLabour']??0,
                                                                               bookingId: booking['_id']??'',
                                                                               cityName: booking['cityName']??'',
                                                                             ),
@@ -831,7 +833,7 @@ class _BookingManagerState extends State<BookingManager> {
                                                           'View Booking'.tr(),
                                                           style: TextStyle(
                                                             color: Color(0xff6269FE),
-                                                            fontSize: 17,
+                                                            fontSize: viewUtil.isTablet ?22:17,
                                                             fontWeight: FontWeight.normal,
                                                           ),
                                                         ),
@@ -855,7 +857,7 @@ class _BookingManagerState extends State<BookingManager> {
                       ),
 
                 )
-                      : Expanded(child: Center(child: Text('No Bookings Found'.tr())))
+                      : Expanded(child: Center(child: Text('No Bookings Found'.tr(),style: TextStyle(fontSize:  viewUtil.isTablet ?22:16))))
               ],
             ),
           ),
@@ -915,6 +917,7 @@ class _BookingManagerState extends State<BookingManager> {
   }
 
   void showBookingDialog(BuildContext context, Map<String, dynamic> booking,{String? bookingPartnerName}) {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -950,7 +953,7 @@ class _BookingManagerState extends State<BookingManager> {
                         child: Center(
                           child: Text(
                             '${'Booking id'.tr()}: ${booking['_id']}',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
+                            style: TextStyle(fontSize: viewUtil.isTablet ?23:18, color: Colors.white),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -964,8 +967,8 @@ class _BookingManagerState extends State<BookingManager> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Unit'.tr(), style: TextStyle(fontSize: 16)),
-                                  Text(unit.tr(), style: TextStyle(fontSize: 16)),
+                                  Text('Unit'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text(unit.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
                                 ],
                               ),
                             ),
@@ -975,8 +978,8 @@ class _BookingManagerState extends State<BookingManager> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('UnitType'.tr(), style: TextStyle(fontSize: 16)),
-                                  Text(unitType.tr(), style: TextStyle(fontSize: 16)),
+                                  Text('UnitType'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text(unitType.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
                                 ],
                               ),
                             ),
@@ -986,8 +989,8 @@ class _BookingManagerState extends State<BookingManager> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Vendor'.tr(), style: TextStyle(fontSize: 16)),
-                                  Text('${bookingPartnerName??'N/A'}', style: TextStyle(fontSize: 16)),
+                                  Text('Vendor'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text('${bookingPartnerName??'N/A'}', style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
                                 ],
                               ),
                             ),
@@ -997,15 +1000,15 @@ class _BookingManagerState extends State<BookingManager> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Booking Status'.tr(), style: TextStyle(fontSize: 16)),
-                                  Text(bookingStatus.tr(), style: TextStyle(fontSize: 16)),
+                                  Text('Booking Status'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text(bookingStatus.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
                                 ],
                               ),
                             ),
                             booking['paymentStatus'] == 'Completed' || booking['paymentStatus'] == 'Paid'
                             ? Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text('Completed'.tr(),style: TextStyle(color: Colors.green,fontSize: 20),),
+                              child: Text('Completed'.tr(),style: TextStyle(color: Colors.green,fontSize: viewUtil.isTablet ?24:18),),
                             )
                             : Padding(
                               padding: const EdgeInsets.only(top: 20,bottom: 20),
@@ -1024,8 +1027,8 @@ class _BookingManagerState extends State<BookingManager> {
                                     'PayNow'.tr(),
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.normal,
+                                      fontSize: viewUtil.isTablet ?22:17,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -1058,6 +1061,7 @@ class _BookingManagerState extends State<BookingManager> {
   }
 
   void showConfirmationDialog(Map<String, dynamic> booking) {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1078,7 +1082,7 @@ class _BookingManagerState extends State<BookingManager> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
-                        style: TextStyle(fontSize: 19),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 24 :17),
                       ),
                     ),
                     if (isDeleting)
@@ -1090,7 +1094,7 @@ class _BookingManagerState extends State<BookingManager> {
                 ),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('yes'.tr()),
+                    child: Text('yes'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15)),
                     onPressed: () {
                       if (!isDeleting) {
                         setState(() {
@@ -1101,7 +1105,7 @@ class _BookingManagerState extends State<BookingManager> {
                     },
                   ),
                   TextButton(
-                    child: Text('no'.tr()),
+                    child: Text('no'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15),),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },

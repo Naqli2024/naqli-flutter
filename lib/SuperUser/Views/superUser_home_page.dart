@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
@@ -29,8 +30,9 @@ class SuperUserHomePage extends StatefulWidget {
   final String token;
   final String id;
   final String email;
+  final String? image;
   final String? accountType;
-  const SuperUserHomePage({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.email, this.accountType});
+  const SuperUserHomePage({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.email, this.accountType, this.image});
 
   @override
   State<SuperUserHomePage> createState() => _SuperUserHomePageState();
@@ -94,6 +96,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     assert(dropdownItems.contains(selectedDuration), 'selectedDuration must be in dropdownItems');
     return Directionality(
       textDirection: ui.TextDirection.ltr,
@@ -109,7 +112,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
               scrolledUnderElevation: 0,
-              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+              toolbarHeight: 80,
               centerTitle: true,
               automaticallyImplyLeading: false,
               backgroundColor: const Color(0xff6A66D1),
@@ -168,7 +171,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
               ),
               ListTile(
                   leading: SvgPicture.asset('assets/booking_logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.035),
+                      height: viewUtil.isTablet
+                          ? MediaQuery.of(context).size.height * 0.028
+                          : MediaQuery.of(context).size.height * 0.035),
                   title: Padding(
                     padding: EdgeInsets.only(left: 5),
                     child: Text('Trigger Booking'.tr(),style: TextStyle(fontSize: 25),),
@@ -188,9 +193,12 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   }
               ),
               ListTile(
-                  leading: SvgPicture.asset('assets/booking_manager.svg'),
+                  leading: SvgPicture.asset('assets/booking_manager.svg',
+                      height: viewUtil.isTablet
+                          ? MediaQuery.of(context).size.height * 0.028
+                          : MediaQuery.of(context).size.height * 0.035),
                   title: Padding(
-                    padding: EdgeInsets.only(left: 10),
+                    padding: EdgeInsets.only(left: viewUtil.isTablet?5:10),
                     child: Text('Booking Manager'.tr(),style: TextStyle(fontSize: 25),),
                   ),
                   onTap: (){
@@ -208,9 +216,12 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   }
               ),
               ListTile(
-                leading: SvgPicture.asset('assets/payment.svg'),
+                leading: SvgPicture.asset('assets/payment.svg',
+                    height: viewUtil.isTablet
+                        ? MediaQuery.of(context).size.height * 0.028
+                        : MediaQuery.of(context).size.height * 0.035),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 10),
+                  padding: EdgeInsets.only(left: viewUtil.isTablet?5:10),
                   child: Text('Payments'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
@@ -228,8 +239,11 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 },
               ),
               ListTile(
-                  leading: Icon(Icons.account_balance_outlined,size: 35,),
-                  title: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
+                  leading: Icon(Icons.account_balance_outlined,size: viewUtil.isTablet?37:35,),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: viewUtil.isTablet?5:7),
+                    child: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
+                  ),
                   onTap: (){
                     Navigator.push(
                       context,
@@ -240,9 +254,12 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   }
               ),
               ListTile(
-                leading: SvgPicture.asset('assets/report_logo.svg'),
+                leading: SvgPicture.asset('assets/report_logo.svg',
+                    height: viewUtil.isTablet
+                        ? MediaQuery.of(context).size.height * 0.028
+                        : MediaQuery.of(context).size.height * 0.035),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 10),
+                  padding: EdgeInsets.only(left: viewUtil.isTablet?5:10),
                   child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
@@ -255,9 +272,12 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 },
               ),
               ListTile(
-                leading: SvgPicture.asset('assets/help_logo.svg'),
+                leading: SvgPicture.asset('assets/help_logo.svg',
+                    height: viewUtil.isTablet
+                        ? MediaQuery.of(context).size.height * 0.028
+                        : MediaQuery.of(context).size.height * 0.035),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 7),
+                  padding: EdgeInsets.only(left: viewUtil.isTablet?5:10),
                   child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
@@ -303,10 +323,11 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('$totalBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
+                            Text('$totalBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?30:26)),
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: Text('Total Bookings'.tr()),
+                              child: Text('Total Bookings'.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                             ),
                           ],
                         ),
@@ -324,10 +345,10 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('$completedBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30),),
+                            Text('$completedBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?30:26),),
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: Text('Completed'.tr()),
+                              child: Text('Completed'.tr(),style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                             ),
                           ],
                         ),
@@ -345,10 +366,10 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('$yetToStartBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 30)),
+                            Text('$yetToStartBookingsCount',style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?30:26)),
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: Text('Hold'.tr()),
+                              child: Text('Hold'.tr(),style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                             ),
                           ],
                         ),
@@ -361,7 +382,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 options: CarouselOptions(
                   enlargeCenterPage: true,
                   autoPlay: true,
-                  aspectRatio: 10 / 9,
+                  aspectRatio:  viewUtil.isTablet ? 13/9 : 10 / 9,
                   autoPlayCurve: Curves.fastOutSlowIn,
                   enableInfiniteScroll: true,
                   autoPlayAnimationDuration: const Duration(milliseconds: 800),
@@ -369,7 +390,9 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 ),
                 items:[
                   Container(
-                    padding: const EdgeInsets.fromLTRB(8,12,8,10),
+                    padding: viewUtil.isTablet
+                        ? EdgeInsets.fromLTRB(20,12,20,10)
+                        : EdgeInsets.fromLTRB(8,12,8,10),
                     child: Card(
                       color: Colors.white,
                       shadowColor: Colors.black,
@@ -392,7 +415,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                               PieChartData(
                                 startDegreeOffset: 250,
                                 sectionsSpace: 0,
-                                centerSpaceRadius: 100,
+                                centerSpaceRadius: viewUtil.isTablet ?150:100,
                                 pieTouchData: PieTouchData(
                                   touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
                                     setState(() {
@@ -422,19 +445,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                   PieChartSectionData(
                                     value: halfPaidPaymentCount > 0 ? halfPaidPaymentCount.toDouble() : 0.0001,
                                     color: Color(0xffC968FF),
-                                    radius: 20,
+                                    radius: viewUtil.isTablet ? 30: 20,
                                     showTitle: false,
                                   ),
                                   PieChartSectionData(
                                     value: totalCompleted > 0 ? totalCompleted.toDouble() : 0.0001,
                                     color: Color(0xff70CF97),
-                                    radius: 30,
+                                    radius: viewUtil.isTablet ?40 : 30,
                                     showTitle: false,
                                   ),
                                   PieChartSectionData(
                                     value: tripCompletedBookingsCount > 0 ? tripCompletedBookingsCount.toDouble() : 0.0001,
                                     color: Color(0xffED5A6B),
-                                    radius: 40,
+                                    radius: viewUtil.isTablet ? 50: 40,
                                     showTitle: false,
                                   ),
                                 ],
@@ -456,7 +479,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(8),
                                             ),
-                                            insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                                            insetPadding: EdgeInsets.symmetric(horizontal: viewUtil.isTablet ?40:10),
                                             backgroundColor: Colors.white,
                                             child: Container(
                                               width: MediaQuery.of(context).size.width,
@@ -479,7 +502,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                     PieChartData(
                                                                       startDegreeOffset: 250,
                                                                       sectionsSpace: 0,
-                                                                      centerSpaceRadius: 80,
+                                                                      centerSpaceRadius: viewUtil.isTablet ?140:80,
                                                                       pieTouchData: PieTouchData(
                                                                         touchCallback: (FlTouchEvent event, PieTouchResponse? response) {
                                                                           setState(() {
@@ -497,19 +520,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                         PieChartSectionData(
                                                                           value: halfPaidPaymentCount.toDouble(),
                                                                           color: Color(0xffC968FF),
-                                                                          radius: 20,
+                                                                          radius: viewUtil.isTablet ? 30: 20,
                                                                           showTitle: false,
                                                                         ),
                                                                         PieChartSectionData(
                                                                           value: totalCompleted.toDouble(),
                                                                           color: Color(0xff70CF97),
-                                                                          radius: 30,
+                                                                          radius: viewUtil.isTablet ? 40: 30,
                                                                           showTitle: false,
                                                                         ),
                                                                         PieChartSectionData(
                                                                           value: tripCompletedBookingsCount.toDouble(),
                                                                           color: Color(0xffED5A6B),
-                                                                          radius: 40,
+                                                                          radius: viewUtil.isTablet ? 50: 40,
                                                                           showTitle: false,
                                                                         ),
                                                                       ],
@@ -531,7 +554,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                                   ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed Successfully'.tr()}"
                                                                                   : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed'.tr()}",
                                                                               textAlign: TextAlign.center,
-                                                                              style: TextStyle(fontSize: 20),
+                                                                              style: TextStyle(fontSize: viewUtil.isTablet ? 25: 20),
                                                                             )
                                                                                 : Text('No Bookings Found'.tr()),
                                                                           ),
@@ -560,7 +583,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                           child: Text(
                                                                             'Completed'.tr(),
                                                                             style: TextStyle(
-                                                                              fontSize: 16,
+                                                                              fontSize: viewUtil.isTablet ?22:16,
                                                                               color: Color(0xff7F6AFF),
                                                                             ),
                                                                           ),
@@ -581,7 +604,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                           child: Text(
                                                                             'HalfPaid'.tr(),
                                                                             style: TextStyle(
-                                                                              fontSize: 16,
+                                                                              fontSize:  viewUtil.isTablet ?22:16,
                                                                               color: Color(0xff7F6AFF),
                                                                             ),
                                                                           ),
@@ -602,7 +625,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                                                           child: Text(
                                                                             'Pending'.tr(),
                                                                             style: TextStyle(
-                                                                              fontSize: 16,
+                                                                              fontSize:  viewUtil.isTablet ?22:16,
                                                                               color: Color(0xff7F6AFF),
                                                                             ),
                                                                           ),
@@ -638,7 +661,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                               ? "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed Successfully'.tr()}"
                                               : "${(totalCompleted / totalBookingsCount * 100).toInt()}%\n${'Completed'.tr()}",
                                                 textAlign: TextAlign.center,
-                                                style: TextStyle(fontSize: 20),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?25:20),
                                               )
                                             : Text('No Bookings Found'.tr()),
                                     ),
@@ -660,7 +683,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                   ),
                                   Text(
                                     tooltipMessage!,
-                                    style: TextStyle(color: Colors.black,fontSize: 15),
+                                    style: TextStyle(color: Colors.black,fontSize:  viewUtil.isTablet ?22:15),
                                   ),
                                 ],
                               ),
@@ -670,7 +693,10 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
+                    width: MediaQuery.sizeOf(context).width,
+                    padding: viewUtil.isTablet
+                      ? EdgeInsets.fromLTRB(20,12,20,10)
+                      : EdgeInsets.fromLTRB(8, 12, 8, 10),
                     child: Card(
                       color: Colors.white,
                       shadowColor: Colors.black,
@@ -682,7 +708,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                       child: Stack(
                         children: <Widget>[
                           AspectRatio(
-                            aspectRatio: 1.15,
+                            aspectRatio: viewUtil.isTablet?1.18:1.15,
                             child: Padding(
                               padding: EdgeInsets.only(
                                 right: 0,
@@ -735,7 +761,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                         child: Text(
                                           'Completed'.tr(),
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: viewUtil.isTablet?22:16,
                                             color: Color(0xff7F6AFF),
                                           ),
                                         ),
@@ -783,7 +809,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                                         child: Text(
                                           'Hold'.tr(),
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: viewUtil.isTablet?22:16,
                                             color: Color(0xff7F6AFF),
                                           ),
                                         ),
@@ -849,7 +875,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 ]
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: viewUtil.isTablet?EdgeInsets.all(15):EdgeInsets.all(8.0),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.07,
                   width: MediaQuery.of(context).size.width,
@@ -879,14 +905,14 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                       'NewBooking'.tr(),
                       style: TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.normal),
+                          fontSize: viewUtil.isTablet?27:20,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding:  viewUtil.isTablet?EdgeInsets.all(15):EdgeInsets.all(8.0),
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.07,
                   width: MediaQuery.of(context).size.width,
@@ -916,8 +942,8 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                       'Trigger Booking'.tr(),
                       style: TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.normal),
+                          fontSize: viewUtil.isTablet?27:20,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -1018,6 +1044,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   }
 
   void showLogoutDialog(){
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1029,21 +1056,30 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             ),
             backgroundColor: Colors.white,
             contentPadding: const EdgeInsets.all(20),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 30,bottom: 10),
-                  child: Text(
-                    'are_you_sure_you_want_to_logout'.tr(),
-                    style: TextStyle(fontSize: 19),
+            content: Container(
+              width: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.width * 0.6
+                  : MediaQuery.of(context).size.width,
+              height: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.height * 0.08
+                  : MediaQuery.of(context).size.height * 0.1,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 30,bottom: 10),
+                    child: Text(
+                      'are_you_sure_you_want_to_logout'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('yes'.tr()),
+                child: Text('yes'.tr(),
+                  style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
                 onPressed: () async {
                   await clearUserData();
                   Navigator.push(
@@ -1053,7 +1089,8 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                 },
               ),
               TextButton(
-                child: Text('no'.tr()),
+                child: Text('no'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -1154,7 +1191,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   LineChartData mainData(List<String> completedBookingDates, List<String> pendingBookingDates) {
     final totalCompletedCount = completedBookingDates.length;
     final totalPendingCount = pendingBookingDates.length;
-
+    ViewUtil viewUtil = ViewUtil(context);
     List<FlSpot> completedSpots;
     List<FlSpot> pendingSpots;
 
@@ -1205,19 +1242,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             getTitlesWidget: (value, _) {
               if (selectedDuration == 'All time') {
                 if (value >= 0 && value < allTimeTitles.length) {
-                  return Text(allTimeTitles[value.toInt()]);
+                  return Text(allTimeTitles[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else if (selectedDuration == 'This Week') {
                 if (value >= 0 && value < weekDays.length) {
-                  return Text(weekDays[value.toInt()]);
+                  return Text(weekDays[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else {
                 if (value < 0 || value > 12) return Text('');
-                return Text(months[value.toInt()]);
+                return Text(months[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
               }
             },
           ),
@@ -1318,6 +1355,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   }
 
   LineChartData pendingData(List<String> filteredDates) {
+    ViewUtil viewUtil = ViewUtil(context);
     final totalPendingCount = filteredDates.length;
     final spots = selectedDuration == 'This Week'
         ? generateWeeklySpots(filteredDates)
@@ -1396,19 +1434,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             getTitlesWidget: (value, _) {
               if (selectedDuration == 'All time') {
                 if (value >= 0 && value < allTimeTitles.length) {
-                  return Text(allTimeTitles[value.toInt()]);
+                  return Text(allTimeTitles[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else if (selectedDuration == 'This Week') {
                 if (value >= 0 && value < weekDays.length) {
-                  return Text(weekDays[value.toInt()]);
+                  return Text(weekDays[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else {
                 if (value < 1 || value > 12) return Text('');
-                return Text(months[value.toInt()]);
+                return Text(months[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
               }
             },
           ),
@@ -1418,7 +1456,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   }
 
   LineChartData completedData(List<String> filteredDates) {
-
+    ViewUtil viewUtil = ViewUtil(context);
     final totalCompletedCount = filteredDates.length;
     final spots = selectedDuration == 'This Week'
         ? generateWeeklySpots(filteredDates)
@@ -1501,19 +1539,19 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             getTitlesWidget: (value, _) {
               if (selectedDuration == 'All time') {
                 if (value >= 0 && value < allTimeTitles.length) {
-                  return Text(allTimeTitles[value.toInt()]);
+                  return Text(allTimeTitles[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else if (selectedDuration == 'This Week') {
                 if (value >= 0 && value < weekDays.length) {
-                  return Text(weekDays[value.toInt()]);
+                  return Text(weekDays[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                 } else {
                   return Text('');
                 }
               } else {
                 if (value < 1 || value > 12) return Text('');
-                return Text(months[value.toInt()]);
+                return Text(months[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
               }
             },
           ),
@@ -1548,6 +1586,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   }
 
   void updateChartData(String duration) {
+    ViewUtil viewUtil = ViewUtil(context);
     List<String> filteredDates = [];
 
     DateTime now = DateTime.now();
@@ -1670,13 +1709,13 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   getTitlesWidget: (value, _) {
                     if (selectedDuration == 'This Week') {
                       if (value >= 0 && value < weekDays.length) {
-                        return Text(weekDays[value.toInt()]);
+                        return Text(weekDays[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                       } else {
                         return Text('');
                       }
                     } else {
                       if (value < 0 || value > 12) return Text('');
-                      return Text(months[value.toInt()]);
+                      return Text(months[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                     }
                   },
                 ),
@@ -1731,13 +1770,13 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   getTitlesWidget: (value, _) {
                     if (selectedDuration == 'This Week') {
                       if (value >= 0 && value < weekDays.length) {
-                        return Text(weekDays[value.toInt()]);
+                        return Text(weekDays[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                       } else {
                         return Text('');
                       }
                     } else {
                       if (value < 0 || value > 12) return Text('');
-                      return Text(months[value.toInt()]);
+                      return Text(months[value.toInt()],style: TextStyle(fontSize: viewUtil.isTablet?20:14));
                     }
                   },
                 ),

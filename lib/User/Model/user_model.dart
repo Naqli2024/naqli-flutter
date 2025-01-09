@@ -133,3 +133,71 @@ class UserDataModel{
     return UserDataModel(firstName: json['firstName']??'', lastName: json['lastName']??'', emailAddress: json['emailAddress']??'', password: json['password']??'', confirmPassword: json['confirmPassword']??'', contactNumber: json['contactNumber']??0, alternateNumber: json['alternateNumber']??'', address1: json['address1']??'', address2: json['address2']??'', city: json['city']??'', accountType: json['accountType']??'', govtId: json['govtId']??'', idNumber: json['idNumber']??0);
   }
 }
+
+
+class UserInvoiceModel {
+  final bool success;
+  final String message;
+  final List<Invoice> invoices;
+
+  UserInvoiceModel({
+    required this.success,
+    required this.message,
+    required this.invoices,
+  });
+
+  factory UserInvoiceModel.fromJson(Map<String, dynamic> json) {
+    return UserInvoiceModel(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      invoices: (json['bookings'] as List<dynamic>?)
+          ?.map((invoice) => Invoice.fromJson(invoice))
+          .toList() ??
+          [],
+    );
+  }
+}
+
+class Invoice {
+  final String id;
+  final String name;
+  final String invoiceId;
+  final String user;
+  final String paymentType;
+  final String unitType;
+  final String pickup;
+  final List dropPoints;
+  final String city;
+  final String partnerId;
+  final int paymentAmount;
+
+  Invoice( {
+    required this.id,
+    required this.name,
+    required this.invoiceId,
+    required this.user,
+    required this.paymentType,
+    required this.unitType,
+    required this.pickup,
+    required this.dropPoints,
+    required this.city,
+    required this.partnerId,
+    required this.paymentAmount,
+  });
+
+  factory Invoice.fromJson(Map<String, dynamic> json) {
+    return Invoice(
+      id: json['_id'] ?? '',
+      name: json['name'] ?? '',
+      invoiceId: json['invoiceId'] ?? '',
+      user: json['user'] ?? '',
+      paymentType: json['paymentType'] ?? 'N/A',
+      unitType: json['unitType'] ?? '',
+      pickup: json['pickup'] ?? '',
+      dropPoints: json['dropPoints'] ?? [],
+      city: json['city'] ?? '',
+      partnerId: json['partner'] ?? '',
+      paymentAmount: json['paymentAmount'] ?? 0,
+    );
+  }
+}

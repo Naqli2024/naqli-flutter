@@ -75,7 +75,7 @@ class _OTPMobileNoState extends State<OTPMobileNo> {
                 padding: EdgeInsets.all(10),
                 child: Text('We will send you a 4 digit verification code '),
               ),
-              commonWidgets.buildTextField('', mobileNoController,labelText: 'Mobile no'),
+              commonWidgets.buildTextField('', mobileNoController,labelText: 'Mobile no',context: context),
               GestureDetector(
                 onTap: () {
                   Navigator.push(

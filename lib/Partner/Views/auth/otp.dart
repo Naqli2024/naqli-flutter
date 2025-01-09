@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
@@ -103,6 +104,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -122,7 +124,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     'assets/otp_logo.svg',
                     fit: BoxFit.contain,
                     width: MediaQuery.of(context).size.width,
-                    height: 200,
+                    height: viewUtil.isTablet?280:200,
                   )),
               GestureDetector(
                 onTap: () {
@@ -153,6 +155,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         child: Icon(
                           Icons.clear,
                           color: Colors.black,
+                          size: viewUtil.isTablet?26: 20,
                         ),
                       ),
                     )),
@@ -170,16 +173,17 @@ class _OtpScreenState extends State<OtpScreen> {
               children: [
                 Text('otp_verification'.tr(),
                     style: TextStyle(
-                        fontSize: 20,
+                        fontSize: viewUtil.isTablet?26:20,
                         color: Colors.black,
                         fontWeight: FontWeight.w500)),
                 Padding(
                   padding: EdgeInsets.all(15),
-                  child: Text('${'enter_otp'.tr()} ${widget.mobileNo}'),
+                  child: Text('${'enter_otp'.tr()} ${widget.mobileNo}',
+                    style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet?22: 15),),
                 ),
                 Text(
                   "$_formattedTime",
-                  style: TextStyle(fontSize: 16,color: Colors.blue),
+                  style: TextStyle(fontSize: viewUtil.isTablet?20: 16,color: Colors.blue),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -199,7 +203,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           ],
                         ),
                         child: SizedBox(
-                          width: 40,
+                          width: viewUtil.isTablet? 50: 40,
                           child: TextField(
                             controller: _otpControllers[index],
                             maxLength: 1,
@@ -208,6 +212,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             decoration: const InputDecoration(
                               counterText: '',
+                              border: InputBorder.none,
                             ),
                             onChanged: (value) {
                               if (value.length == 1 && index < 5) {
@@ -228,12 +233,13 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: RichText(
                     text: TextSpan(
                       text: "didn't_receive_otp".tr(),
-                      style: TextStyle(color: Colors.black, fontSize: 15),
+                      style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet?20:15),
                       children: <TextSpan>[
                         TextSpan(
                           text: 'resend'.tr(),
                           style: TextStyle(
                             color: Colors.blue,
+                              fontSize: viewUtil.isTablet?20:15
                           ),
                         ),
                       ],
@@ -258,8 +264,8 @@ class _OtpScreenState extends State<OtpScreen> {
                           'verify_continue'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold),
+                              fontSize: viewUtil.isTablet? 24:18,
+                              fontWeight: FontWeight.w500),
                         )),
                   ),
                 ),

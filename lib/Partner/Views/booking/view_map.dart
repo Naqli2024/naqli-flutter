@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
@@ -388,6 +389,7 @@ class _ViewMapState extends State<ViewMap> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -512,14 +514,14 @@ class _ViewMapState extends State<ViewMap> {
                                           'User name'.tr(),
                                           style: TextStyle(
                                               color: Color(0xff79797C),
-                                              fontSize: 16),
+                                              fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           widget.userName,
-                                          style: const TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                     ],
@@ -538,14 +540,14 @@ class _ViewMapState extends State<ViewMap> {
                                           'User id'.tr(),
                                           style: TextStyle(
                                               color: Color(0xff79797C),
-                                              fontSize: 16),
+                                              fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           widget.userId,
-                                          style: const TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                     ],
@@ -564,14 +566,14 @@ class _ViewMapState extends State<ViewMap> {
                                           'Mode'.tr(),
                                           style: TextStyle(
                                               color: Color(0xff79797C),
-                                              fontSize: 16),
+                                              fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           widget.mode.tr(),
-                                          style: const TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                     ],
@@ -590,14 +592,14 @@ class _ViewMapState extends State<ViewMap> {
                                           'Booking Status'.tr(),
                                           style: TextStyle(
                                               color: Color(0xff79797C),
-                                              fontSize: 16),
+                                              fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           bookingStatus.tr(),
-                                          style: const TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                     ],
@@ -616,14 +618,14 @@ class _ViewMapState extends State<ViewMap> {
                                           'PaymentStatus'.tr(),
                                           style: TextStyle(
                                               color: Color(0xff79797C),
-                                              fontSize: 16),
+                                              fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
                                           paymentStatus.tr(),
-                                          style: const TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                         ),
                                       ),
                                     ],
@@ -643,21 +645,21 @@ class _ViewMapState extends State<ViewMap> {
                           children: [
                             Text(
                               'Pending Amount'.tr(),
-                              style: TextStyle(fontSize: 17),
+                              style: TextStyle(fontSize: viewUtil.isTablet?22:17),
                             ),
                             Text(
                               remainingBalance != null
                                   ? '$remainingBalance SAR'
                                   : 'N/A',
                               style:
-                              TextStyle(color: Color(0xffAD1C86), fontSize: 17),
+                              TextStyle(color: Color(0xffAD1C86), fontSize: viewUtil.isTablet?22:17),
                             ),
                           ],
                         ),
                       ),
                       Text(
                         'Additional Charges'.tr(),
-                        style: TextStyle(fontSize: 17),
+                        style: TextStyle(fontSize: viewUtil.isTablet?22:17),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 70, right: 70),
@@ -668,7 +670,7 @@ class _ViewMapState extends State<ViewMap> {
                       ),
                       _buildTextField('Reason'.tr(), reasonController),
                       Visibility(
-                        visible: paymentStatus == 'Completed',
+                        visible: paymentStatus == 'Completed' || paymentStatus == 'Paid' ,
                         child: Padding(
                           padding: const EdgeInsets.only(top: 15,bottom: 15),
                           child: Row(
@@ -677,7 +679,7 @@ class _ViewMapState extends State<ViewMap> {
                               Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                               Padding(
                                 padding: const EdgeInsets.only(left: 8),
-                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Colors.green,fontSize: 20,fontWeight: FontWeight.w500),),
+                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Colors.green,fontSize: viewUtil.isTablet?26:20,fontWeight: FontWeight.w500),),
                               ),
                             ],
                           ),
@@ -707,8 +709,8 @@ class _ViewMapState extends State<ViewMap> {
                                     'Request Payment'.tr(),
                                     style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.normal),
+                                        fontSize: viewUtil.isTablet?22:15,
+                                        fontWeight: FontWeight.w500),
                                   )),
                             ),
                           ),
@@ -757,8 +759,8 @@ class _ViewMapState extends State<ViewMap> {
                                     'Terminate'.tr(),
                                     style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.normal),
+                                        fontSize: viewUtil.isTablet?22:15,
+                                        fontWeight: FontWeight.w500),
                                   )),
                             ),
                           ),

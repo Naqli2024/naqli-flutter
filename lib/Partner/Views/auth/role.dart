@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
@@ -31,6 +32,7 @@ class _RoleState extends State<Role> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -49,7 +51,9 @@ class _RoleState extends State<Role> {
                   'assets/joinUs.svg',
                   fit: BoxFit.fill,
                   width: MediaQuery.of(context).size.width,
-                  height: 300,
+                  height: viewUtil.isTablet
+                      ?MediaQuery.of(context).size.height * 0.35
+                      :MediaQuery.of(context).size.height * 0.3,
                 ),
               ),
               GestureDetector(
@@ -78,6 +82,7 @@ class _RoleState extends State<Role> {
                       child: Icon(
                         Icons.clear,
                         color: Colors.black,
+                        size: viewUtil.isTablet?26: 20,
                       ),
                     ),
                   ),
@@ -95,7 +100,7 @@ class _RoleState extends State<Role> {
               child: Text(
                 'Choose your role'.tr(),
                 style: TextStyle(
-                    fontSize: 35, color: Colors.black, fontWeight: FontWeight.w500),
+                    fontSize: viewUtil.isTablet?35:30, color: Colors.black, fontWeight: FontWeight.w500),
               ),
             ),
             Expanded(
@@ -106,7 +111,7 @@ class _RoleState extends State<Role> {
                 child: RadioListTile(
                   title: Text(
                     'Single Unit + Operator'.tr(),
-                    style: TextStyle(fontSize: 20,color: Color(0xff707070)),
+                    style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff707070)),
                   ),
                   value: 1,
                   groupValue: _selectedValue,
@@ -147,7 +152,7 @@ class _RoleState extends State<Role> {
                   'Next'.tr(),
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: viewUtil.isTablet?27:18,
                       fontWeight: FontWeight.w500),
                 )),
           ),

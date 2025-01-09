@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
@@ -281,7 +282,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
       int advanceOrPay,
       ) async {
     try {
-
+      ViewUtil viewUtil = ViewUtil(context);
       var paymentIntent = await createPaymentIntent(
         amount.toStringAsFixed(2),
         'INR',
@@ -328,13 +329,15 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(FontAwesomeIcons.multiply),
+                    icon: Icon(FontAwesomeIcons.multiply,size: viewUtil.isTablet? 30 :20),
                   ),
                 ],
               ),
               content: Container(
                 width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height * 0.25,
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.3
+                    : MediaQuery.of(context).size.height * 0.25,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -349,7 +352,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           child: Center(
                             child: Text(
                               'Thank you!'.tr(),
-                              style: TextStyle(fontSize: 30),
+                              style: TextStyle(fontSize:viewUtil.isTablet? 40 :30),
                             ),
                           ),
                         ),
@@ -359,14 +362,15 @@ class _ChooseVendorState extends State<ChooseVendor> {
                       padding: EdgeInsets.only(bottom: 10),
                       child: Text(
                         'Your booking is confirmed'.tr(),
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: viewUtil.isTablet? 30 :20, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Text(
                         '${'with advance payment of'.tr()} \n SAR ${amount.toStringAsFixed(2)}',
-                        style: TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: viewUtil.isTablet? 22 :16),
                       ),
                     ),
                   ],
@@ -376,7 +380,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
           },
         );
         await fetchPaymentData( partnerId,oldQuotePrice,quotePrice, paymentStatus, advanceOrPay,);
-        // Wait for 2 seconds before navigating
         await Future.delayed(const Duration(seconds: 2));
         Navigator.pushReplacement(
           context,
@@ -928,6 +931,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
   }
 
   void showConfirmationDialog() {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -948,7 +952,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
-                        style: TextStyle(fontSize: 19),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 22 :17),
                       ),
                     ),
                     if (isDeleting)
@@ -1033,6 +1037,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return WillPopScope(
       onWillPop: () async {
         stopFetching();
@@ -1276,9 +1281,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     }),
                 ListTile(
                     leading: SvgPicture.asset('assets/booking_history.svg',
-                        height: MediaQuery.of(context).size.height * 0.035),
+                        height: viewUtil.isTablet
+                            ? MediaQuery.of(context).size.height * 0.028
+                            : MediaQuery.of(context).size.height * 0.035),
                     title: Padding(
-                      padding: EdgeInsets.only(left: 10),
+                      padding: EdgeInsets.only(left: viewUtil.isTablet ?5:10),
                       child: Text(
                         'booking_history'.tr(),
                         style: TextStyle(fontSize: 25),
@@ -1412,43 +1419,55 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
-                        return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          backgroundColor: Colors.white,
-                          contentPadding: const EdgeInsets.all(20),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(top: 30, bottom: 10),
-                                child: Text(
-                                  'are_you_sure_you_want_to_logout'.tr(),
-                                  style: TextStyle(fontSize: 19),
-                                ),
+                        return Directionality(
+                          textDirection: ui.TextDirection.ltr,
+                          child: AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            backgroundColor: Colors.white,
+                            contentPadding: const EdgeInsets.all(20),
+                            content: Container(
+                              width: viewUtil.isTablet
+                                  ? MediaQuery.of(context).size.width * 0.6
+                                  : MediaQuery.of(context).size.width,
+                              height: viewUtil.isTablet
+                                  ? MediaQuery.of(context).size.height * 0.08
+                                  : MediaQuery.of(context).size.height * 0.1,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 30,bottom: 10),
+                                    child: Text(
+                                      'are_you_sure_you_want_to_logout'.tr(),
+                                      style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text('yes'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
+                                onPressed: () async {
+                                  await clearUserData();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => UserLogin()),
+                                  );
+                                },
+                              ),
+                              TextButton(
+                                child: Text('no'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
                               ),
                             ],
                           ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('yes'.tr()),
-                              onPressed: () async {
-                                await clearUserData();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => UserLogin()),
-                                );
-                              },
-                            ),
-                            TextButton(
-                              child: Text('no'.tr()),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
                         );
                       },
                     );
@@ -1495,7 +1514,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                   mapController = controller;
                                 },
                                 initialCameraPosition: const CameraPosition(
-                                  target: LatLng(0, 0), // Default position
+                                  target: LatLng(0, 0),
                                   zoom: 1,
                                 ),
                                 markers: markers,
@@ -1543,20 +1562,17 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                               children: [
                                                 Padding(
                                                   padding: const EdgeInsets.only(left: 15),
-                                                  child: SvgPicture.asset('assets/moving_truck.svg'),
+                                                  child: SvgPicture.asset('assets/moving_truck.svg',height: viewUtil.isTablet?50: 35),
                                                 ),
                                                 Padding(
                                                   padding: const EdgeInsets.all(8.0),
                                                   child: Container(
                                                       alignment: Alignment.center,
-                                                      // height: 50,
-                                                      width:
-                                                      MediaQuery.sizeOf(context).width *
-                                                          0.5,
+                                                      width: MediaQuery.sizeOf(context).width * 0.5,
                                                       child: Column(
                                                         children: [
-                                                          Text('Booking id'.tr()),
-                                                          Text(widget.bookingId),
+                                                          Text('Booking id'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                                          Text(widget.bookingId,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                                         ],
                                                       )),
                                                 ),
@@ -1578,15 +1594,17 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 bottom: 15,
                                 child: Container(
                                   width: MediaQuery.sizeOf(context).width,
-                                  padding: const EdgeInsets.only(left: 10, right: 10),
+                                  padding: viewUtil.isTablet
+                                      ? EdgeInsets.only(left: 30, right: 30)
+                                      : EdgeInsets.only(left: 10, right: 10),
                                   child: Container(
                                     decoration: ShapeDecoration(
                                       color: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
-                                        BorderRadius.circular(10.0), // Rounded corners
+                                        BorderRadius.circular(10.0),
                                         side: const BorderSide(
-                                          color: Color(0xffE0E0E0), // Border color
+                                          color: Color(0xffE0E0E0),
                                           width: 1, // Border width
                                         ),
                                       ),
@@ -1605,16 +1623,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                                   child: Text(
                                                     'Unit'.tr(),
                                                     style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: viewUtil.isTablet ? 22 : 16,
                                                         fontWeight: FontWeight.bold),
                                                   )),
                                               Expanded(
                                                   flex: 3,
                                                   child: widget.unit == 'null'
-                                                      ? Text('no_data'.tr())
+                                                      ? Text('no_data'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),)
                                                       : Text(
                                                     widget.unit.tr(),
-                                                    style: TextStyle(fontSize: 14),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),
                                                   )),
                                               Expanded(
                                                 flex: 3,
@@ -1631,16 +1649,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                                   child: Text(
                                                     'Load'.tr(),
                                                     style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: viewUtil.isTablet ? 22 : 16,
                                                         fontWeight: FontWeight.bold),
                                                   )),
                                               Expanded(
                                                   flex: 4,
                                                   child: widget.load == 'null'
-                                                      ? Text('No data')
+                                                      ? Text('No data',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),)
                                                       : Text(
                                                     widget.load.tr(),
-                                                    style: TextStyle(fontSize: 14),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),
                                                   )),
                                             ],
                                           ),
@@ -1653,16 +1671,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                                   child: Text(
                                                     'UnitType'.tr(),
                                                     style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: viewUtil.isTablet ? 22 : 16,
                                                         fontWeight: FontWeight.bold),
                                                   )),
                                               Expanded(
                                                   flex: 3,
                                                   child: widget.unitType == 'null'
-                                                      ? Text('no_data'.tr())
+                                                      ? Text('no_data'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),)
                                                       : Text(
                                                     widget.unitType.tr(),
-                                                    style: TextStyle(fontSize: 14),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 14),
                                                   )),
                                               Expanded(
                                                 flex: 3,
@@ -1679,16 +1697,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                                   child: Text(
                                                     'Size'.tr(),
                                                     style: TextStyle(
-                                                        fontSize: 16,
+                                                        fontSize: viewUtil.isTablet ? 22 : 16,
                                                         fontWeight: FontWeight.bold),
                                                   )),
                                               Expanded(
                                                   flex: 4,
                                                   child: widget.size == 'null'
-                                                      ? Text('no_data'.tr())
+                                                      ? Text('no_data'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),)
                                                       : Text(
                                                     widget.size.tr(),
-                                                    style: TextStyle(fontSize: 14),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 14),
                                                   )),
                                             ],
                                           ),
@@ -1705,7 +1723,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             padding: EdgeInsets.only(left: 30, top: 20, bottom: 15),
                             child: Text(
                               'Choose your Vendor'.tr(),
-                              style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 20, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -1714,7 +1732,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             if (isFetching) LinearProgressIndicator(),
                             vendors.isEmpty
                                 ? isStopped
-                                ? Center(child: Text('No vendors available'.tr()))
+                                ? Center(child: Text('No vendors available'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 14),))
                                 : Center(child: Text('Fetching vendors...'.tr()))
                                 : Container(
                               height: 200,
@@ -1738,7 +1756,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                             child: Text(
                                               '$partnerName',
                                               style: TextStyle(
-                                                fontSize: 17,
+                                                fontSize:  viewUtil.isTablet ? 22 : 17,
                                                 fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
                                               ),
                                             ),
@@ -1748,7 +1766,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                             child: Text(
                                               '$quotePrice SAR',
                                               style: TextStyle(
-                                                fontSize: 17,
+                                                fontSize:  viewUtil.isTablet ? 22 : 17,
                                                 fontWeight: selectedVendorId == index.toString() ? FontWeight.bold : FontWeight.normal,
                                               ),
                                             ),
@@ -1831,11 +1849,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               );
                             },
                             child: Text(
-                              '${'Pay Advance :'.tr()} \n $advanceAmount SAR',
+                              viewUtil.isTablet
+                              ?'${'Pay Advance :'.tr()} $advanceAmount SAR'
+                              :'${'Pay Advance :'.tr()} \n $advanceAmount SAR',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize:  viewUtil.isTablet ? 22 : 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1876,7 +1896,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               '${'Pay :'.tr()} $fullAmount SAR',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 16,
+                                fontSize:  viewUtil.isTablet ? 22 : 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

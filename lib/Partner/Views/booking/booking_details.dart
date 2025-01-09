@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_booking.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
@@ -34,10 +35,12 @@ class _BookingDetailsState extends State<BookingDetails> {
   String? firstName;
   String? lastName;
   String? payment;
+  String? paymentData;
   int? balance;
   String? bookingId;
   bool isLaunching = false;
   List<bool> loadingStates = [];
+  Map<String, dynamic>? bookingDetails;
 
   @override
   void initState() {
@@ -70,7 +73,7 @@ class _BookingDetailsState extends State<BookingDetails> {
 
           details['quotePrice'] = quotePrice;
           payment = details?['paymentStatus'];
-
+          print('STATUSS ${payment}');
           balance = details['remainingBalance'];
           print('Details retrieved: $details');
 
@@ -111,8 +114,38 @@ class _BookingDetailsState extends State<BookingDetails> {
     }
   }
 
+  Future<void> fetchPaymentType(String bookingId) async {
+    setState(() {
+      errorMessage = '';
+    });
+
+    try {
+      final details = await _authService.getBookingId(
+        bookingId,
+        widget.token,
+        '',
+        widget.quotePrice,
+      );
+
+      setState(() {
+        if (details != null && details.isNotEmpty) {
+          bookingDetails = details;
+          paymentData = bookingDetails?['paymentStatus'];
+          print(paymentData);
+        } else {
+          errorMessage = 'No booking details found for the selected ID.';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error fetching booking details: $e';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -142,9 +175,10 @@ class _BookingDetailsState extends State<BookingDetails> {
                 onPressed: () {
                   commonWidgets.logout(context);
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -268,8 +302,10 @@ class _BookingDetailsState extends State<BookingDetails> {
                                         loadingStates[index] = true;
                                       });
                                       await fetchUserName(userId);
-                                      await fetchBookingDetails();
-                                      if(payment == 'Pending' || payment == 'NotPaid'){
+                                      await fetchPaymentType(id??"");
+                                      // await fetchBookingDetails();
+                                      print('testt$paymentData');
+                                      if(paymentData == 'Pending' || paymentData == 'NotPaid'){
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -333,7 +369,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                       'View'.tr(),
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 12,
+                                        fontSize: viewUtil.isTablet ?18:12,
                                         fontWeight: FontWeight.normal,
                                       ),
                                     ),

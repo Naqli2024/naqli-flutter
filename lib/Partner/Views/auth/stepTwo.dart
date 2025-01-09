@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepThree.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
@@ -75,6 +76,7 @@ class _StepTwoState extends State<StepTwo> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -83,10 +85,13 @@ class _StepTwoState extends State<StepTwo> {
           context,
           User: widget.partnerName,
           bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(125.0),
+              preferredSize: viewUtil.isTablet
+                  ? Size.fromHeight(170.0)
+                  : Size.fromHeight(120.0),
               child: Column(
                 children: [
                   AppBar(
+                    toolbarHeight: viewUtil.isTablet?80:60,
                     scrolledUnderElevation: 0,
                     centerTitle: false,
                     automaticallyImplyLeading: false,
@@ -98,9 +103,10 @@ class _StepTwoState extends State<StepTwo> {
                         onPressed: (){
                           Navigator.pop(context);
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_sharp,
                           color: Colors.white,
+                          size: viewUtil.isTablet?27: 24,
                         )),
                   ),
                   Padding(
@@ -129,10 +135,10 @@ class _StepTwoState extends State<StepTwo> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
-                      child: commonWidgets.buildTextField('First Name'.tr(),firstNameController,focusNode: firstNameFocusNode),
+                      child: commonWidgets.buildTextField('First Name'.tr(),firstNameController,focusNode: firstNameFocusNode,context: context),
                     ),
-                    commonWidgets.buildTextField('Last Name'.tr(),lastNameController,focusNode: lastNameFocusNode),
-                    commonWidgets.buildTextField('Email ID'.tr(),emailIdController,focusNode: emailFocusNode),
+                    commonWidgets.buildTextField('Last Name'.tr(),lastNameController,focusNode: lastNameFocusNode,context: context),
+                    commonWidgets.buildTextField('Email ID'.tr(),emailIdController,focusNode: emailFocusNode,context: context),
                     commonWidgets.buildTextField(focusNode: passwordFocusNode,
                       'Password'.tr(),
                       passwordController,
@@ -146,7 +152,7 @@ class _StepTwoState extends State<StepTwo> {
                             isPasswordObscured = !isPasswordObscured;
                           });
                         },
-                      ),),
+                      ),context: context),
                     commonWidgets.buildTextField(focusNode: confirmPasswordFocusNode,
                       'Confirm Password'.tr(),
                       confirmPasswordController,
@@ -161,8 +167,8 @@ class _StepTwoState extends State<StepTwo> {
                             isConfirmPasswordObscured = !isConfirmPasswordObscured;
                           });
                         },
-                      ),),
-                    commonWidgets.buildTextField('Mobile No'.tr(),mobileNoController,focusNode: mobileNoFocusNode),
+                      ),context: context),
+                    commonWidgets.buildTextField('Mobile No'.tr(),mobileNoController,focusNode: mobileNoFocusNode,context: context),
                     Container(
                       margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                       alignment: Alignment.topLeft,
@@ -170,7 +176,7 @@ class _StepTwoState extends State<StepTwo> {
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           'Date of Birth'.tr(),
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
@@ -201,8 +207,8 @@ class _StepTwoState extends State<StepTwo> {
                         },
                       ),
                     ),
-                    commonWidgets.buildTextField('iqama No'.tr(),iqamaNoController,focusNode: iqamaNoFocusNode,),
-                    commonWidgets.buildTextField('Panel Information'.tr(),panelInfoController,focusNode: panelInfoFocusNode),
+                    commonWidgets.buildTextField('iqama No'.tr(),iqamaNoController,focusNode: iqamaNoFocusNode,context: context),
+                    commonWidgets.buildTextField('Panel Information'.tr(),panelInfoController,focusNode: panelInfoFocusNode,context: context),
                     Container(
                         margin: const EdgeInsets.fromLTRB(30, 0, 40, 0),
                         alignment: Alignment.topLeft,
@@ -210,8 +216,8 @@ class _StepTwoState extends State<StepTwo> {
                           padding: EdgeInsets.all(8.0),
                           child: Text(
                             'Driving License'.tr(),
-                            style: const TextStyle(
-                                fontSize: 20,
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet ?24 :20,
                                 fontWeight: FontWeight.w500
                             ),
                           ),
@@ -250,15 +256,16 @@ class _StepTwoState extends State<StepTwo> {
                                       child: Icon(
                                         Icons.file_upload_outlined,
                                         color: Colors.black,
+                                        size: viewUtil.isTablet?35:30,
                                       ),
                                     ),
                                     Expanded(
                                       flex: 5,
                                       child: Text(
                                         licenseUpload?licenseFile!.name:'Upload a file'.tr(),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 18,
+                                            fontSize: viewUtil.isTablet?24:18,
                                             fontWeight: FontWeight.normal),
                                       ),
                                     ),
@@ -274,7 +281,7 @@ class _StepTwoState extends State<StepTwo> {
                               'Please upload a file'.tr(),
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: 12,
+                                fontSize: viewUtil.isTablet?17:12,
                               ),
                             ),
                           ),
@@ -287,8 +294,8 @@ class _StepTwoState extends State<StepTwo> {
                           padding: EdgeInsets.all(8.0),
                           child: Text(
                             'national ID'.tr(),
-                            style: const TextStyle(
-                                fontSize: 20,
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet?24:20,
                                 fontWeight: FontWeight.w500
                             ),
                           ),
@@ -327,15 +334,16 @@ class _StepTwoState extends State<StepTwo> {
                                       child: Icon(
                                         Icons.file_upload_outlined,
                                         color: Colors.black,
+                                        size: viewUtil.isTablet?35:30,
                                       ),
                                     ),
                                     Expanded(
                                       flex: 5,
                                       child: Text(
                                         nationalIdUpload?nationalIdFile!.name:'Upload a file'.tr(),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 18,
+                                            fontSize: viewUtil.isTablet?24:18,
                                             fontWeight: FontWeight.normal),
                                       ),
                                     ),
@@ -351,7 +359,7 @@ class _StepTwoState extends State<StepTwo> {
                               'Please upload a file'.tr(),
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: 12,
+                                fontSize: viewUtil.isTablet?17:12,
                               ),
                             ),
                           ),
@@ -364,8 +372,8 @@ class _StepTwoState extends State<StepTwo> {
                           padding: EdgeInsets.all(8.0),
                           child: Text(
                             'Aramco Certificate'.tr(),
-                            style: const TextStyle(
-                                fontSize: 20,
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet?24:20,
                                 fontWeight: FontWeight.w500
                             ),
                           ),
@@ -404,15 +412,16 @@ class _StepTwoState extends State<StepTwo> {
                                       child: Icon(
                                         Icons.file_upload_outlined,
                                         color: Colors.black,
+                                        size: viewUtil.isTablet?35:30,
                                       ),
                                     ),
                                     Expanded(
                                       flex: 5,
                                       child: Text(
                                         aramcoUpload?aramcoFile!.name:'Upload a file'.tr(),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 18,
+                                            fontSize: viewUtil.isTablet?24:18,
                                             fontWeight: FontWeight.normal),
                                       ),
                                     ),
@@ -428,7 +437,7 @@ class _StepTwoState extends State<StepTwo> {
                               'Please upload a file'.tr(),
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: 12,
+                                fontSize: viewUtil.isTablet?17:12,
                               ),
                             ),
                           ),
@@ -484,7 +493,6 @@ class _StepTwoState extends State<StepTwo> {
                             }
                             else{
                               FocusScope.of(context).unfocus();
-
                               if (firstNameController.text.isEmpty) {
                                 _focusAndScroll(firstNameFocusNode);
                               } else if (lastNameController.text.isEmpty) {
@@ -510,7 +518,7 @@ class _StepTwoState extends State<StepTwo> {
                               'Next'.tr(),
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: viewUtil.isTablet?25:18,
                                   fontWeight: FontWeight.w500),
                             )),
                       ),
@@ -525,6 +533,7 @@ class _StepTwoState extends State<StepTwo> {
   }
 
   Widget _buildStep(int step) {
+    ViewUtil viewUtil = ViewUtil(context);
     bool isActive = step == _currentStep;
     return Container(
       decoration: BoxDecoration(
@@ -534,7 +543,7 @@ class _StepTwoState extends State<StepTwo> {
             width: 1),
       ),
       child: CircleAvatar(
-        radius: 20,
+        radius: viewUtil.isTablet?30: 20,
         backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
         child: Text(
           step.toString(),

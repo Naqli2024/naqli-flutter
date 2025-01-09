@@ -79,7 +79,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
                           fontSize: 20,
                         ),),
                     ),
-                    commonWidgets.buildTextField('Email'.tr(), emailController),
+                    commonWidgets.buildTextField('Email'.tr(), emailController,context: context),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SizedBox(
@@ -438,7 +438,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
                                 isNewPasswordObscured = !isNewPasswordObscured;
                               });
                             },
-                          ),
+                          ),context: context
                         ),
                         commonWidgets.buildTextField(
                           'Confirm Password'.tr(),
@@ -453,7 +453,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
                                 isConfirmPasswordObscured = !isConfirmPasswordObscured;
                               });
                             },
-                          ),
+                          ), context: context
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 15),

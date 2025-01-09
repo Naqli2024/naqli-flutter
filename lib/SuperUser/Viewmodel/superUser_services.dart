@@ -216,6 +216,7 @@ class SuperUserServices {
 
   Future<Map<String, String>?> choosePayment(
       BuildContext context, {
+        required String userId,
         required String paymentBrand,
         required int amount,
       }) async {
@@ -228,6 +229,7 @@ class SuperUserServices {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
+          'userId': userId,
           'paymentBrand': paymentBrand,
           'amount': amount,
         }),
@@ -268,12 +270,13 @@ class SuperUserServices {
     }
   }
 
-  Future<Map<String, String>?> getPaymentDetails(BuildContext context, String checkOutId) async {
+  Future<Map<String, String>?> getPaymentDetails(BuildContext context, String checkOutId,bool paymentType) async {
       try {
         final response = await http.get(
           Uri.parse('${baseUrl}payment-status/$checkOutId'),
           headers: {
             'Content-Type': 'application/json',
+            'paymentBrand':paymentType =='MADA'?'MADA':'OTHER'
           },
         );
         final responseBody = jsonDecode(response.body);

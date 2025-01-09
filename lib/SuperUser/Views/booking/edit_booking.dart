@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
@@ -308,6 +309,7 @@ class _EditBookingState extends State<EditBooking> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -322,7 +324,7 @@ class _EditBookingState extends State<EditBooking> {
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
               scrolledUnderElevation: 0,
-              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+              toolbarHeight: 80,
               centerTitle: true,
               automaticallyImplyLeading: false,
               backgroundColor: const Color(0xff807BE5),
@@ -373,7 +375,7 @@ class _EditBookingState extends State<EditBooking> {
                       alignment: Alignment.topLeft,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20,20,0,5,),
-                        child: Text('City'.tr()),
+                        child: Text('City'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14),),
                       ),
                     ),
                     Padding(
@@ -439,7 +441,7 @@ class _EditBookingState extends State<EditBooking> {
                       alignment: Alignment.topLeft,
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20,20,0,5,),
-                        child: Text('Pickup Point'.tr()),
+                        child: Text('Pickup Point'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14)),
                       ),
                     ),
                     Padding(
@@ -501,7 +503,7 @@ class _EditBookingState extends State<EditBooking> {
                       alignment: Alignment.topLeft,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                        child: Text('Drop Point'.tr()),
+                        child: Text('Drop Point'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14)),
                       ),
                     ),
                     ..._dropPointControllers.asMap().entries.map((entry) {
@@ -557,7 +559,7 @@ class _EditBookingState extends State<EditBooking> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                    child: Text('Mode'.tr()),
+                    child: Text('Mode'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14)),
                   ),
                 ),
                 Padding(
@@ -578,7 +580,7 @@ class _EditBookingState extends State<EditBooking> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                    child: Text('Mode Classification'.tr()),
+                    child: Text('Mode Classification'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14)),
                   ),
                 ),
                 Padding(
@@ -599,7 +601,7 @@ class _EditBookingState extends State<EditBooking> {
                   alignment: Alignment.topLeft,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 20,right: 20,bottom: 5,top: 20),
-                    child: Text('Date'.tr()),
+                    child: Text('Date'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14)),
                   ),
                 ),
                 GestureDetector(
@@ -620,7 +622,7 @@ class _EditBookingState extends State<EditBooking> {
                           icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
                         ),
                         Container(
-                          height: 50,
+                          height: viewUtil.isTablet ?60:50,
                           child: const VerticalDivider(
                             color: Colors.grey,
                             thickness: 1.2,
@@ -634,7 +636,7 @@ class _EditBookingState extends State<EditBooking> {
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
                                 DateFormat('yyyy-MM-dd').format(_selectedStartDate),
-                                style: TextStyle(fontSize: 16)),
+                                style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                           ),
                         ),
                       ],
@@ -661,7 +663,7 @@ class _EditBookingState extends State<EditBooking> {
                         child: Text(
                           'needAdditionalLabour'.tr(),
                           style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                          TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -748,8 +750,8 @@ class _EditBookingState extends State<EditBooking> {
                         'Save'.tr(),
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                          fontSize: viewUtil.isTablet ?24:17,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -847,6 +849,7 @@ class _EditBookingState extends State<EditBooking> {
   }
 
   Widget buildUnitRadioList(StateSetter setState) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Column(
       children: [
         Padding(
@@ -857,7 +860,7 @@ class _EditBookingState extends State<EditBooking> {
               Expanded(
                 child: RadioListTile(
                   dense: true,
-                  title: Text('Vehicle'.tr(), style: TextStyle(fontSize: 14,color: Colors.black)),
+                  title: Text('Vehicle'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?20:14,color: Colors.black)),
                   value: 1,
                   groupValue: selectedUnit,
                   onChanged: null,
@@ -866,7 +869,7 @@ class _EditBookingState extends State<EditBooking> {
               Expanded(
                 child: RadioListTile(
                   dense: true,
-                  title: Text('Bus'.tr(), style: TextStyle(fontSize: 14,color: Colors.black)),
+                  title: Text('Bus'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?20:14,color: Colors.black)),
                   value: 2,
                   groupValue: selectedUnit,
                   onChanged: null,
@@ -881,7 +884,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: Text('Equipment'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Equipment'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14,color: Colors.black)),
                 value: 3,
                 groupValue: selectedUnit,
                 onChanged: null,
@@ -890,7 +893,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: Text('Special'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Special'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14,color: Colors.black)),
                 value: 4,
                 groupValue: selectedUnit,
                 onChanged: null,
@@ -904,7 +907,7 @@ class _EditBookingState extends State<EditBooking> {
             Expanded(
               child: RadioListTile(
                 dense: true,
-                title: Text('Others'.tr(),style: TextStyle(fontSize: 14,color: Colors.black)),
+                title: Text('Others'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?20:14,color: Colors.black)),
                 value: 5,
                 groupValue: selectedUnit,
                 onChanged: null,

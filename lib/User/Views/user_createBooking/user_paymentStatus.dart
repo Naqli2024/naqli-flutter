@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_svg/svg.dart';
@@ -39,6 +40,7 @@ class _NewBookingState extends State<NewBooking> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -71,13 +73,14 @@ class _NewBookingState extends State<NewBooking> {
                 Padding(
                   padding: EdgeInsets.only(
                       top: MediaQuery.sizeOf(context).height * 0.17),
-                  child: SvgPicture.asset('assets/createBooking.svg'),
+                  child: SvgPicture.asset('assets/createBooking.svg',
+                      height: MediaQuery.sizeOf(context).height * 0.2),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 60, bottom: 30),
                   child: Text(
                     "${"Looks like you don't have any booking".tr()}\n${'yet. Start by creating your New booking'.tr()}",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 22 :16, fontWeight: FontWeight.w500),
                   ),
                 ),
                 Padding(
@@ -107,7 +110,7 @@ class _NewBookingState extends State<NewBooking> {
                         'createBooking'.tr(),
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 17,
+                          fontSize: viewUtil.isTablet ? 24 :17,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -543,6 +546,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -569,7 +573,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                           mapController = controller;
                         },
                         initialCameraPosition: const CameraPosition(
-                          target: LatLng(0, 0), // Default position
+                          target: LatLng(0, 0),
                           zoom: 1,
                         ),
                         markers: markers,
@@ -618,14 +622,11 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Container(
                                               alignment: Alignment.center,
-                                              // height: 50,
-                                              width:
-                                                  MediaQuery.sizeOf(context).width *
-                                                      0.55,
+                                              width: MediaQuery.sizeOf(context).width * 0.55,
                                               child: Column(
                                                 children: [
-                                                  Text('Booking id'.tr()),
-                                                  Text(widget.bookingId),
+                                                  Text('Booking id'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                                  Text(widget.bookingId,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                                 ],
                                               )),
                                         ),
@@ -660,16 +661,16 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                 Container(
                   margin: EdgeInsets.only(
                       top: MediaQuery.of(context).size.height * 0.03,
-                      left: 15,
-                      right: 15,
+                      left: viewUtil.isTablet?25 :15,
+                      right: viewUtil.isTablet?25 :15,
                       bottom: 10),
                   child: Card(
                     color: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       side: const BorderSide(
-                        color: Color(0xffE0E0E0), // Border color
-                        width: 1, // Border width
+                        color: Color(0xffE0E0E0),
+                        width: 1,
                       ),
                     ),
                     child: Padding(
@@ -714,7 +715,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                       Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                       Padding(
                         padding: const EdgeInsets.only(left: 0),
-                        child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                        child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet ? 25 : 20,fontWeight: FontWeight.w500),),
                       ),
                     ],
                   ),
@@ -726,29 +727,30 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
       ),
     );
   }
+  Widget _buildDetailRow(String label, String value) {
+    ViewUtil viewUtil = ViewUtil(context);
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(color: Color(0xff79797C), fontSize: viewUtil.isTablet ? 20 : 16),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-Widget _buildDetailRow(String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          flex: 3,
-          child: Text(
-            label,
-            style: TextStyle(color: Color(0xff79797C), fontSize: 16),
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Text(
-            value,
-            style: TextStyle(fontSize: 16),
-          ),
-        ),
-      ],
-    ),
-  );
-}

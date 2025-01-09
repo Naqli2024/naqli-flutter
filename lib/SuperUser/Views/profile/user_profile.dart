@@ -7,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
@@ -26,7 +27,8 @@ class UserProfile extends StatefulWidget {
   final String token;
   final String id;
   final String email;
-  const UserProfile({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.email});
+  final String? image;
+  const UserProfile({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.email, this.image});
 
   @override
   State<UserProfile> createState() => _UserProfileState();
@@ -48,6 +50,7 @@ class _UserProfileState extends State<UserProfile> {
   late TextEditingController cityController = TextEditingController();
   late TextEditingController accountTypeController = TextEditingController();
   late TextEditingController idNoController = TextEditingController();
+  bool isLoading = false;
   File? _profileImage;
   String? selectedId;
   final List<String> govtIdItems = ['iqama No'.tr(), 'national ID'.tr()];
@@ -93,6 +96,7 @@ class _UserProfileState extends State<UserProfile> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -118,7 +122,7 @@ class _UserProfileState extends State<UserProfile> {
                       padding: const EdgeInsets.only(right: 30),
                       child: Text(
                         'Edit Profile'.tr(),
-                        style: TextStyle(color: Colors.white, fontSize: 24),
+                        style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:24),
                       ),
                     ),
                   ],
@@ -137,9 +141,10 @@ class _UserProfileState extends State<UserProfile> {
                             email: widget.email,
                           )));
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -170,12 +175,12 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                               child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                maxRadius: 50,
+                                maxRadius: viewUtil.isTablet?60:50,
                                 backgroundImage: _profileImage != null
                                     ? FileImage(_profileImage!)
                                     : null,
                                 child: _profileImage == null
-                                    ? const Icon(Icons.person, color: Color(0xff6A66D1), size: 60)
+                                    ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet?70:60)
                                     : null,
                               ),
                             ),
@@ -191,48 +196,48 @@ class _UserProfileState extends State<UserProfile> {
                                   border: Border.all(color: Colors.grey),
                                 ),
                                 child: CircleAvatar(
-                                  maxRadius: 15,
+                                  maxRadius: viewUtil.isTablet?20:15,
                                   backgroundColor: Colors.white,
-                                  child: const Icon(Icons.edit, color: Colors.black, size: 16),
+                                  child: Icon(Icons.edit, color: Colors.black, size: viewUtil.isTablet?20: 16),
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      commonWidgets.buildTextField('First Name'.tr(), firstNameController),
-                      commonWidgets.buildTextField('Last Name'.tr(), lastNameController),
-                      commonWidgets.buildTextField('Email Address'.tr(), emailController),
+                      commonWidgets.buildTextField('First Name'.tr(), firstNameController,context: context),
+                      commonWidgets.buildTextField('Last Name'.tr(), lastNameController,context: context),
+                      commonWidgets.buildTextField('Email Address'.tr(), emailController,context: context),
                       commonWidgets.buildTextField('Password'.tr(), passwordController,obscureText: isPasswordObscured,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isPasswordObscured ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isPasswordObscured = !isPasswordObscured;
-                            });
-                          },
-                        ),),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isPasswordObscured = !isPasswordObscured;
+                              });
+                            },
+                          ),context: context),
                       commonWidgets.buildTextField('Confirm Password'.tr(), confirmPasswordController,obscureText: isConfirmPasswordObscured,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isConfirmPasswordObscured = !isConfirmPasswordObscured;
-                            });
-                          },
-                        ),),
-                      commonWidgets.buildTextField('Contact Number'.tr(), contactNoController),
-                      commonWidgets.buildTextField('Alternate Number'.tr(), altNoController),
-                      commonWidgets.buildTextField('Address 1'.tr(), address1Controller),
-                      commonWidgets.buildTextField('Address 2'.tr(), address2Controller),
-                      commonWidgets.buildTextField('City'.tr(), cityController),
-                      commonWidgets.buildTextField('AccountType'.tr(), accountTypeController,readOnly: true),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isConfirmPasswordObscured ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                isConfirmPasswordObscured = !isConfirmPasswordObscured;
+                              });
+                            },
+                          ),context: context),
+                      commonWidgets.buildTextField('Contact Number'.tr(), contactNoController,context: context),
+                      commonWidgets.buildTextField('Alternate Number'.tr(), altNoController,context: context),
+                      commonWidgets.buildTextField('Address 1'.tr(), address1Controller,context: context),
+                      commonWidgets.buildTextField('Address 2'.tr(), address2Controller,context: context),
+                      commonWidgets.buildTextField('City'.tr(), cityController,context: context),
+                      commonWidgets.buildTextField('AccountType'.tr(), accountTypeController,readOnly: true,context: context),
                       govtIdDropdownWidget(data.govtId),
-                      commonWidgets.buildTextField('Id Number'.tr(), idNoController,hintText: data.idNumber.toString()),
+                      commonWidgets.buildTextField('Id Number'.tr(), idNoController,hintText: data.idNumber.toString(),context: context),
                       Padding(
                         padding: const EdgeInsets.only(top: 20, bottom: 20),
                         child: SizedBox(
@@ -246,14 +251,36 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                             ),
                             onPressed: () async {
-
+                              setState(() {
+                                isLoading = true;
+                              });
+                              await userService.updateProfile(
+                                  widget.id,
+                                  widget.token,
+                                  _profileImage,
+                                  firstNameController.text,
+                                  lastNameController.text,
+                                  emailController.text,
+                                  passwordController.text,
+                                  confirmPasswordController.text,
+                                  contactNoController.text,
+                                  address1Controller.text,
+                                  address2Controller.text,
+                                  cityController.text,
+                                  accountTypeController.text,
+                                  selectedId??"",
+                                  idNoController.text
+                              );
+                              setState(() {
+                                isLoading = false;
+                              });
                             },
                             child: Text(
                               'Save'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
+                                fontSize: viewUtil.isTablet?25: 17,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -328,6 +355,7 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget govtIdDropdownWidget(String govtId) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -338,7 +366,7 @@ class _UserProfileState extends State<UserProfile> {
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
               'Govt ID'.tr(),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
             ),
           ),
           Padding(
@@ -346,7 +374,9 @@ class _UserProfileState extends State<UserProfile> {
             child: DropdownButtonFormField<String>(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedId,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                    vertical:viewUtil.isTablet ?20 :14,horizontal:12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -372,221 +402,6 @@ class _UserProfileState extends State<UserProfile> {
       ),
     );
   }
-
-/*  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: ui.TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: commonWidgets.commonAppBar(
-          context,
-          User: widget.firstName +' '+ widget.lastName,
-          userId: widget.id,
-          showLeading: false,
-          showLanguage: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(90.0),
-            child: AppBar(
-                scrolledUnderElevation: 0,
-                toolbarHeight: MediaQuery.of(context).size.height * 0.09,
-                centerTitle: true,
-                automaticallyImplyLeading: false,
-                backgroundColor: const Color(0xff6A66D1),
-                title: Text(
-                  'Profile'.tr(),
-                  style: TextStyle(color: Colors.white),
-                ),
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SuperUserHomePage(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      ),
-                    ),
-                  );
-                },
-                icon: CircleAvatar(
-                  backgroundColor: Color(0xffB7B3F1),
-                  child: const Icon(
-                    Icons.arrow_back_sharp,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  color: Colors.white,
-                  shadowColor: Colors.black,
-                  elevation: 5,
-                  child: ListTile(
-                    leading: CircleAvatar(
-
-                    ),
-                    title: Text(widget.firstName +' '+ widget.lastName),
-                    subtitle: Row(
-                      children: [
-                        Text('${'Id'.tr()}: ${ widget.id}',
-                          style: TextStyle(
-                            color: Color(0xff8E8D96),
-                          ),)
-                      ],
-                    ),
-                    trailing: IconButton(
-                        onPressed: (){},
-                        icon: Icon(Icons.edit))
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  elevation: 5,
-                  color: Colors.white,
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          const SizedBox(
-                            width: 32,
-                          ),
-                          Text(
-                            'Monthly Booking'.tr(),
-                            style: TextStyle(
-                              color: Color(0xff8E8D96),
-                              fontSize: 18,
-                            ),
-                          ),
-                          Text(
-                            '450',
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 32,
-                          ),
-                          Expanded(
-                            child: BarChart(
-                              randomData(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Recent Booking'.tr(),style: TextStyle(fontSize: 16)),
-                    Text('View All'.tr(),style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  color: Colors.white,
-                  shadowColor: Colors.black,
-                  elevation: 3.0,
-                  child: ListTile(
-                      leading: CircleAvatar(),
-                      title: Text('Vehicle'.tr()),
-                      subtitle: Row(
-                        children: [
-                          Text('12.02.2022',
-                            style: TextStyle(
-                              color: Color(0xff8E8D96),
-                            ),)
-                        ],
-                      ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xffF5F3FF),
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            '${'Vendor'.tr()} 2',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xff7F6AFF),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Card(
-                  color: Colors.white,
-                  shadowColor: Colors.black,
-                  elevation: 3.0,
-                  child: ListTile(
-                      leading: CircleAvatar(
-
-                      ),
-                      title: Text('Equipment'.tr()),
-                      subtitle: Row(
-                        children: [
-                          Text('12.02.2022',
-                            style: TextStyle(
-                            color: Color(0xff8E8D96),
-                          ),)
-                        ],
-                      ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xffE0FEEC),
-                          borderRadius: const BorderRadius.all(Radius.circular(8)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            '${'Vendor'.tr()} 3',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Color(0xff70CF97),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: commonWidgets.buildBottomNavigationBar(
-          context: context,
-          selectedIndex: _selectedIndex,
-          onTabTapped: _onTabTapped,
-        ),
-      ),
-    );
-  }*/
 
   BarChartGroupData makeGroupData(
       int x,

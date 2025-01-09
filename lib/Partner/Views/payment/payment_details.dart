@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
@@ -108,6 +109,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
   }
 
   void showBookingDialog(BuildContext context, Map<String, dynamic> booking) {
+    ViewUtil viewUtil = ViewUtil(context);
     String paymentStatus = booking?['paymentStatus'] ?? 'N/A';
     showDialog(
       context: context,
@@ -128,7 +130,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                   alignment: Alignment.topCenter,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 60, 0, 0),
+                      padding:  EdgeInsets.fromLTRB(0, 60, 0, 0),
                       child: Card(
                         elevation: 20,
                         color: Colors.white,
@@ -153,14 +155,14 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                                     child: Text(
                                       'Booking id'.tr(),
                                       style: TextStyle(
-                                          fontSize: 16),
+                                          fontSize: viewUtil.isTablet ?23:16),
                                     ),
                                   ),
                                   Expanded(
                                     flex: 2,
                                     child: Text(
                                       '${booking?['_id'] ?? 'No Booking Id'}',
-                                      style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ?23:16,color: Color(0xff79797C)),
                                     ),
                                   ),
                                 ],
@@ -176,14 +178,14 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                                     flex: 3,
                                     child: Text(
                                       'Date'.tr(),
-                                      style: TextStyle(fontSize: 16),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ?23:16),
                                     ),
                                   ),
                                   Expanded(
                                     flex: 2,
                                     child: Text(
                                       '${booking?['date'] ?? 'No Date'}',
-                                      style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ?23:16,color: Color(0xff79797C)),
                                     ),
                                   ),
                                 ],
@@ -209,7 +211,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                             borderRadius: BorderRadius.circular(30),
                         ),
                         padding: const EdgeInsets.all(8),
-                        child: Text('${booking?['paymentStatus'] ?? 'N/A'}'== 'Completed' ? 'Paid'.tr(): '${booking?['paymentStatus'] ?? 'N/A'}'.tr(),style: const TextStyle(fontSize: 19)),
+                        child: Text('${booking?['paymentStatus'] ?? 'N/A'}'== 'Completed' ? 'Paid'.tr(): '${booking?['paymentStatus'] ?? 'N/A'}'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ?23:19)),
                       ),
                     ),
                     Positioned(
@@ -233,14 +235,14 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                     '${booking?['paymentStatus'] ?? ''}'== 'Completed'
                         ? 'Total Paid'.tr()
                         : '${'Total'.tr()} ${paymentStatus.tr()}',
-                    style: const TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet ?23:19),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
                     '${booking?['paymentAmount'] ?? ''} SAR',
-                    style: const TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet ?23:19),
                   ),
                 ),
               ],
@@ -253,6 +255,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -262,7 +265,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           User: widget.partnerName,
             userId: widget.partnerId,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(160.0),
+            preferredSize: const Size.fromHeight(150.0),
             child: Column(
               children: [
                 AppBar(
@@ -283,9 +286,10 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_sharp,
                       color: Colors.white,
+                      size: viewUtil.isTablet?27: 24,
                     ),
                   ),
                 ),
@@ -306,7 +310,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                         'All'.tr(),
                         style: TextStyle(
                           color: _currentFilter == 'All' ? Colors.white : Color(0xffC2BFF2),
-                          fontSize: 15,
+                          fontSize: viewUtil.isTablet?22:15,
                         ),
                       ),
                     ),
@@ -321,7 +325,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                         'Completed'.tr(),
                         style: TextStyle(
                           color: _currentFilter == 'Completed' ? Colors.white : Color(0xffC2BFF2),
-                          fontSize: 15,
+                          fontSize: viewUtil.isTablet?22:15,
                         ),
                       ),
                     ),
@@ -336,7 +340,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                         'PendingPayment'.tr(),
                         style: TextStyle(
                           color: _currentFilter == 'Pending' ? Colors.white : Color(0xffC2BFF2),
-                          fontSize: 15,
+                          fontSize: viewUtil.isTablet?22:15,
                         ),
                       ),
                     ),
@@ -448,8 +452,8 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                                 'View'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal,
+                                  fontSize: viewUtil.isTablet ?18:12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -465,7 +469,10 @@ class _PaymentDetailsState extends State<PaymentDetails> {
                   ? 'No Payment Found'.tr()
                   : _currentFilter=='Completed'
                     ? '${'no'.tr()} ${'$_currentFilter'.tr()} ${'found'.tr()}'
-                    : 'No Pending Payment found'.tr()));
+                    : 'No Pending Payment found'.tr(),
+                style: TextStyle(
+                fontSize: viewUtil.isTablet ?22:16,
+              ),));
             }
           },
         ),

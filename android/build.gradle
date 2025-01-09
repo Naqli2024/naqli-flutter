@@ -28,7 +28,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.1.0'
 
         // Kotlin Gradle Plugin configuration
         ext.kotlin_version = '1.9.10' // Replace with the latest Kotlin version

@@ -7,6 +7,7 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/forgotPassword.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
@@ -72,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return isLoading
         ? Container(color: Colors.white,
           child: const Column(
@@ -152,12 +154,12 @@ class _LoginPageState extends State<LoginPage> {
                                   margin: const EdgeInsets.only(top: 25, bottom: 7),
                                   child: Text(
                                     'Partner Login'.tr(),
-                                    style: TextStyle(fontSize: 30),
+                                    style: TextStyle(fontSize: viewUtil.isTablet ?35 :28),
                                   ),
                                 ),
                                 Text(
                                   'Sign in to Continue'.tr(),
-                                  style: TextStyle(fontSize: 20),
+                                  style: TextStyle(fontSize: viewUtil.isTablet ?20 :16),
                                 ),
                                 Form(
                                   key: _formKey,
@@ -168,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                                         alignment: Alignment.topLeft,
                                         child: Text(
                                           'Mobile No/Email ID'.tr(),
-                                          style: TextStyle(fontSize: 20),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ?24 :20),
                                         ),
                                       ),
                                       Padding(
@@ -193,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
                                         alignment: Alignment.topLeft,
                                         child: Text(
                                           'Password'.tr(),
-                                          style: TextStyle(fontSize: 20),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ?24 :20),
                                         ),
                                       ),
                                       Padding(
@@ -241,14 +243,16 @@ class _LoginPageState extends State<LoginPage> {
                                     child: Text(
                                       'Forgot Password?'.tr(),
                                       style: TextStyle(
-                                          color: Color(0xff6A66D1), fontSize: 15),
+                                          color: Color(0xff6A66D1), fontSize: viewUtil.isTablet ?20 :15),
                                     ),
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
-                                    height: MediaQuery.of(context).size.height * 0.07,
+                                    height: viewUtil.isTablet
+                                        ? MediaQuery.of(context).size.height * 0.06
+                                        : MediaQuery.of(context).size.height * 0.057,
                                     width: MediaQuery.of(context).size.width * 0.5,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
@@ -264,7 +268,7 @@ class _LoginPageState extends State<LoginPage> {
                                         'Log in'.tr(),
                                         style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: 18,
+                                            fontSize: viewUtil.isTablet ?23 :18,
                                             fontWeight: FontWeight.normal),
                                       ),
                                     ),
@@ -293,6 +297,7 @@ class _LoginPageState extends State<LoginPage> {
                                       'Create Account'.tr(),
                                       style: TextStyle(
                                         color: Color(0xff6A66D1),
+                                        fontSize: viewUtil.isTablet ?20 :15,
                                       ),
                                     ),
                                   ),

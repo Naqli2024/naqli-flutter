@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
@@ -32,6 +33,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -58,14 +60,30 @@ class _SuccessScreenState extends State<SuccessScreen> {
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 15,top: 15),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    backgroundColor: Color(0xffFFFFFF),
-                    child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.black,
-                      size: 24,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: Color(0xffFFFFFF),
+                      child: Icon(
+                        Icons.close_rounded,
+                        color: Colors.black,
+                        size: viewUtil.isTablet?27:24,
+                      ),
                     ),
                   ),
                 ),
@@ -86,7 +104,9 @@ class _SuccessScreenState extends State<SuccessScreen> {
                       widget.Image,
                       fit: BoxFit.contain,
                       width: MediaQuery.of(context).size.width,
-                      height: 200,
+                      height: viewUtil.isTablet
+                            ? MediaQuery.sizeOf(context).height * 0.27
+                            : MediaQuery.sizeOf(context).height * 0.2
                     ),
                   ),
                 ],
@@ -95,14 +115,14 @@ class _SuccessScreenState extends State<SuccessScreen> {
                 padding: EdgeInsets.only(bottom: 20),
                 child: Text(widget.title,
                     style: TextStyle(
-                        fontSize: 26)),
+                        fontSize: viewUtil.isTablet?32:26)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Text(widget.subTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 24,fontWeight: FontWeight.w500)),
+                    fontSize: viewUtil.isTablet? 29:24,fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -130,6 +150,7 @@ class SuperUserMessageScreen extends StatefulWidget {
 class _SuperUserMessageScreenState extends State<SuperUserMessageScreen> {
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -156,14 +177,30 @@ class _SuperUserMessageScreenState extends State<SuperUserMessageScreen> {
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 15,top: 15),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    backgroundColor: Color(0xffFFFFFF),
-                    child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.black,
-                      size: 24,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: Color(0xffFFFFFF),
+                      child: Icon(
+                        Icons.close_rounded,
+                        color: Colors.black,
+                        size: viewUtil.isTablet?27:24,
+                      ),
                     ),
                   ),
                 ),
@@ -184,7 +221,9 @@ class _SuperUserMessageScreenState extends State<SuperUserMessageScreen> {
                       widget.Image,
                       fit: BoxFit.contain,
                       width: MediaQuery.of(context).size.width,
-                      height: 200,
+                        height: viewUtil.isTablet
+                            ? MediaQuery.sizeOf(context).height * 0.27
+                            : MediaQuery.sizeOf(context).height * 0.2
                     ),
                   ),
                 ],
@@ -193,14 +232,14 @@ class _SuperUserMessageScreenState extends State<SuperUserMessageScreen> {
                 padding: EdgeInsets.only(bottom: 20),
                 child: Text(widget.title,
                     style: TextStyle(
-                        fontSize: 26)),
+                        fontSize: viewUtil.isTablet?32:26)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 30),
                 child: Text(widget.subTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 24,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet? 27:20,fontWeight: FontWeight.w500)),
               ),
             ],
           ),
@@ -228,6 +267,7 @@ class VerifiedScreen extends StatefulWidget {
 class _VerifiedScreenState extends State<VerifiedScreen> {
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -248,14 +288,30 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 15,top: 15),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.topRight,
-                  child: CircleAvatar(
-                    backgroundColor: Color(0xffFFFFFF),
-                    child: Icon(
-                      Icons.close_rounded,
-                      color: Colors.black,
-                      size: 24,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      backgroundColor: const Color(0xffFFFFFF),
+                      child: Icon(
+                        Icons.close_rounded,
+                        color: Colors.black,
+                        size: viewUtil.isTablet?26:22,
+                      ),
                     ),
                   ),
                 ),
@@ -285,13 +341,13 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                 padding: EdgeInsets.only(top: 15),
                 child: Text(widget.title,
                     style: TextStyle(
-                        fontSize: 25,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet?30:25,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: Text(widget.subTitle,
                     style: TextStyle(
-                        fontSize: 17,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet? 26:17,fontWeight: FontWeight.w500)),
               ),
             ],
           ),

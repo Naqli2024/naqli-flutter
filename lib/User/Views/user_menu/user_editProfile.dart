@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
@@ -40,6 +41,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
   late Future<UserDataModel> userData;
   bool isPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -49,8 +51,6 @@ class _UserEditProfileState extends State<UserEditProfile> {
       firstNameController.text = data.firstName;
       lastNameController.text = data.lastName;
       emailController.text = data.emailAddress;
-      passwordController.text = data.password;
-      confirmPasswordController.text = data.confirmPassword;
       contactNoController.text = data.contactNumber.toString();
       altNoController.text = data.alternateNumber;
       address1Controller.text = data.address1;
@@ -81,6 +81,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -106,7 +107,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
                       padding: const EdgeInsets.only(right: 30),
                       child: Text(
                         'Edit Profile'.tr(),
-                        style: TextStyle(color: Colors.white, fontSize: 24),
+                        style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:24),
                       ),
                     ),
                   ],
@@ -116,9 +117,10 @@ class _UserEditProfileState extends State<UserEditProfile> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -149,12 +151,12 @@ class _UserEditProfileState extends State<UserEditProfile> {
                               ),
                               child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                maxRadius: 50,
+                                maxRadius: viewUtil.isTablet?60:50,
                                 backgroundImage: _profileImage != null
                                     ? FileImage(_profileImage!)
                                     : null,
                                 child: _profileImage == null
-                                    ? const Icon(Icons.person, color: Color(0xff6A66D1), size: 60)
+                                    ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet?70:60)
                                     : null,
                               ),
                             ),
@@ -170,18 +172,18 @@ class _UserEditProfileState extends State<UserEditProfile> {
                                   border: Border.all(color: Colors.grey),
                                 ),
                                 child: CircleAvatar(
-                                  maxRadius: 15,
+                                  maxRadius: viewUtil.isTablet?20:15,
                                   backgroundColor: Colors.white,
-                                  child: const Icon(Icons.edit, color: Colors.black, size: 16),
+                                  child: Icon(Icons.edit, color: Colors.black, size: viewUtil.isTablet?20: 16),
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      commonWidgets.buildTextField('First Name'.tr(), firstNameController),
-                      commonWidgets.buildTextField('Last Name'.tr(), lastNameController),
-                      commonWidgets.buildTextField('Email Address'.tr(), emailController),
+                      commonWidgets.buildTextField('First Name'.tr(), firstNameController,context: context),
+                      commonWidgets.buildTextField('Last Name'.tr(), lastNameController,context: context),
+                      commonWidgets.buildTextField('Email Address'.tr(), emailController,context: context),
                       commonWidgets.buildTextField('Password'.tr(), passwordController,obscureText: isPasswordObscured,
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -192,7 +194,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
                               isPasswordObscured = !isPasswordObscured;
                             });
                           },
-                        ),),
+                        ),context: context),
                       commonWidgets.buildTextField('Confirm Password'.tr(), confirmPasswordController,obscureText: isConfirmPasswordObscured,
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -203,15 +205,15 @@ class _UserEditProfileState extends State<UserEditProfile> {
                               isConfirmPasswordObscured = !isConfirmPasswordObscured;
                             });
                           },
-                        ),),
-                      commonWidgets.buildTextField('Contact Number'.tr(), contactNoController),
-                      commonWidgets.buildTextField('Alternate Number'.tr(), altNoController),
-                      commonWidgets.buildTextField('Address 1'.tr(), address1Controller),
-                      commonWidgets.buildTextField('Address 2'.tr(), address2Controller),
-                      commonWidgets.buildTextField('City'.tr(), cityController),
-                      commonWidgets.buildTextField('AccountType'.tr(), accountTypeController,readOnly: true),
+                        ),context: context),
+                      commonWidgets.buildTextField('Contact Number'.tr(), contactNoController,context: context),
+                      commonWidgets.buildTextField('Alternate Number'.tr(), altNoController,context: context),
+                      commonWidgets.buildTextField('Address 1'.tr(), address1Controller,context: context),
+                      commonWidgets.buildTextField('Address 2'.tr(), address2Controller,context: context),
+                      commonWidgets.buildTextField('City'.tr(), cityController,context: context),
+                      commonWidgets.buildTextField('AccountType'.tr(), accountTypeController,readOnly: true,context: context),
                       govtIdDropdownWidget(data.govtId),
-                      commonWidgets.buildTextField('Id Number'.tr(), idNoController,hintText: data.idNumber.toString()),
+                      commonWidgets.buildTextField('Id Number'.tr(), idNoController,hintText: data.idNumber.toString(),context: context),
                       Padding(
                         padding: const EdgeInsets.only(top: 20, bottom: 20),
                         child: SizedBox(
@@ -225,14 +227,36 @@ class _UserEditProfileState extends State<UserEditProfile> {
                               ),
                             ),
                             onPressed: () async {
-
+                              setState(() {
+                                isLoading = true;
+                              });
+                              await userService.updateProfile(
+                                  widget.id,
+                                  widget.token,
+                                  _profileImage,
+                                  firstNameController.text,
+                                  lastNameController.text,
+                                  emailController.text,
+                                  passwordController.text,
+                                  confirmPasswordController.text,
+                                  contactNoController.text,
+                                  address1Controller.text,
+                                  address2Controller.text,
+                                  cityController.text,
+                                  accountTypeController.text,
+                                  selectedId??"",
+                                  idNoController.text
+                              );
+                              setState(() {
+                                isLoading = false;
+                              });
                             },
                             child: Text(
                               'Save'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
+                                fontSize: viewUtil.isTablet?25: 17,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -250,6 +274,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
   }
 
   Widget govtIdDropdownWidget(String govtId) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -260,7 +285,7 @@ class _UserEditProfileState extends State<UserEditProfile> {
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
               'Govt ID'.tr(),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
             ),
           ),
           Padding(
@@ -268,7 +293,9 @@ class _UserEditProfileState extends State<UserEditProfile> {
             child: DropdownButtonFormField<String>(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedId,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                    vertical:viewUtil.isTablet ?20 :14,horizontal:12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),

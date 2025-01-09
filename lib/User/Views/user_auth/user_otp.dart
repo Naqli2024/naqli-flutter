@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
@@ -93,6 +94,7 @@ class _UserOTPState extends State<UserOTP> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -112,7 +114,7 @@ class _UserOTPState extends State<UserOTP> {
                     'assets/otp_logo.svg',
                     fit: BoxFit.contain,
                     width: MediaQuery.of(context).size.width,
-                    height: 200,
+                    height: viewUtil.isTablet?280:200,
                   )),
               GestureDetector(
                 onTap: () {
@@ -123,13 +125,30 @@ class _UserOTPState extends State<UserOTP> {
                 },
                 child: Container(
                   margin: const EdgeInsets.only(top: 0),
-                  child: const Align(
+                  child: Align(
                       alignment: Alignment.topRight,
-                      child: CircleAvatar(
-                        backgroundColor: Color(0xffFFFFFF),
-                        child: Icon(
-                          Icons.clear,
-                          color: Colors.black,
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          color: Colors.white,
+                          shadows: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              spreadRadius: 2,
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(60),
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          backgroundColor: Color(0xffFFFFFF),
+                          child: Icon(
+                            Icons.clear,
+                            color: Colors.black,
+                            size: viewUtil.isTablet?26: 20,
+                          ),
                         ),
                       )),
                 ),
@@ -148,20 +167,21 @@ class _UserOTPState extends State<UserOTP> {
               children: [
                 Text(
                   'otp_verification'.tr(),
-                  style: const TextStyle(
-                      fontSize: 20,
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet?26: 20,
                       color: Colors.black,
                       fontWeight: FontWeight.w500),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(15),
                   child: Text(
-                    '${'enter_otp'.tr()} ${widget.contactNumber}'
+                    '${'enter_otp'.tr()} ${widget.contactNumber}',
+                    style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet?20: 15),
                   ),
                 ),
                 Text(
                   "$_formattedTime",
-                  style: const TextStyle(fontSize: 16, color: Colors.blue),
+                  style: TextStyle(fontSize: viewUtil.isTablet?20: 16, color: Colors.blue),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -181,7 +201,7 @@ class _UserOTPState extends State<UserOTP> {
                           ],
                         ),
                         child: SizedBox(
-                          width: 40,
+                          width:viewUtil.isTablet? 50: 40,
                           child: TextField(
                             controller: _otpControllers[index],
                             maxLength: 1,
@@ -190,6 +210,7 @@ class _UserOTPState extends State<UserOTP> {
                             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             decoration: const InputDecoration(
                               counterText: '',
+                              border: InputBorder.none,
                             ),
                             onChanged: (value) {
                               if (value.length == 1 && index < 5) {
@@ -210,12 +231,13 @@ class _UserOTPState extends State<UserOTP> {
                   child: RichText(
                     text: TextSpan(
                       text: "didn't_receive_otp".tr(),
-                      style: const TextStyle(color: Colors.black, fontSize: 15),
+                      style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet?20: 15),
                       children: <TextSpan>[
                         TextSpan(
                           text: 'resend'.tr(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.blue,
+                              fontSize: viewUtil.isTablet?20: 15
                           ),
                         ),
                       ],
@@ -238,9 +260,9 @@ class _UserOTPState extends State<UserOTP> {
                         onPressed: validateOtp,
                         child: Text(
                           'verify_continue'.tr(),
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: viewUtil.isTablet? 22: 15,
                               fontWeight: FontWeight.bold),
                         )),
                   ),

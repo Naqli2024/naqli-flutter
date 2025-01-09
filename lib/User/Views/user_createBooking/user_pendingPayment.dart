@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
@@ -83,9 +84,6 @@ class _PendingPaymentState extends State<PendingPayment> {
     print(widget.bookingId);
     print(widget.quotePrice);
     print(widget.oldQuotePrice);
-    // widget.paymentStatus == 'HalfPaid'
-    // ? null
-    // :fetchPaymentData();
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
@@ -276,11 +274,9 @@ class _PendingPaymentState extends State<PendingPayment> {
 
       setState(() {
         print(response);
-        // remainingBalance = response['booking']['remainingBalance']?.toString() ?? '0';
         unit = response['booking']['name'] ?? ' ';
         bookingStatus = response['booking']['bookingStatus'] ?? '';
         paymentStatus = response['booking']['paymentStatus'] ?? '';
-        // remainingBalance = response['booking']['remainingBalance']?? 0;
         isLoading = false;
       });
     } catch (e) {
@@ -689,6 +685,7 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return WillPopScope(
       onWillPop: () async {
         Navigator.push(context, MaterialPageRoute(builder:  (context) => UserType(
@@ -759,7 +756,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.only(left: 15,right: 15),
-                                        child: SvgPicture.asset('assets/moving_truck.svg'),
+                                        child: SvgPicture.asset('assets/moving_truck.svg',height: viewUtil.isTablet?50: 35),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -769,8 +766,8 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             width: MediaQuery.sizeOf(context).width * 0.55,
                                             child: Column(
                                               children: [
-                                                Text('Booking id'.tr()),
-                                                Text(widget.bookingId),
+                                                Text('Booking id'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                                Text(widget.bookingId,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                               ],
                                             )
                                         ),
@@ -805,8 +802,8 @@ class _PendingPaymentState extends State<PendingPayment> {
                         Container(
                           margin: EdgeInsets.only(
                               top: MediaQuery.sizeOf(context).height * 0.25,
-                              left: 15,
-                              right: 15,
+                              left: viewUtil.isTablet?25 :15,
+                              right: viewUtil.isTablet?25 :15,
                               bottom: 10
                           ),
                           child: Container(
@@ -836,14 +833,14 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             'Vendor Name'.tr(),
                                             style: TextStyle(
                                                 color: Color(0xff79797C),
-                                                fontSize: 16),
+                                                fontSize:viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                         Expanded(
                                           flex: 2,
                                           child: Text(
                                             partnerData?[0]['partnerName'] ?? 'N/A'.tr(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                       ],
@@ -862,7 +859,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             'Operator Name'.tr(),
                                             style: TextStyle(
                                                 color: Color(0xff79797C),
-                                                fontSize: 16),
+                                                fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                         Expanded(
@@ -873,7 +870,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                                 ? (partnerData?[0]['operatorName'] ?? 'N/A'.tr())
                                                 : (partnerData?[0]['assignOperatorName'] ?? 'N/A'.tr()))
                                                 : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                       ],
@@ -892,7 +889,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             'Operator Mobile'.tr(),
                                             style: TextStyle(
                                                 color: Color(0xff79797C),
-                                                fontSize: 16),
+                                                fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                         Expanded(
@@ -903,7 +900,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                                 ? (partnerData?[0]['mobileNo'] ?? 'N/A'.tr())
                                                 : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'.tr()))
                                                 : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                       ],
@@ -922,14 +919,14 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             'Unit'.tr(),
                                             style: TextStyle(
                                                 color: Color(0xff79797C),
-                                                fontSize: 16),
+                                                fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                         Expanded(
                                           flex: 2,
                                           child: Text(
                                             widget.unit.tr(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                       ],
@@ -948,14 +945,14 @@ class _PendingPaymentState extends State<PendingPayment> {
                                             'Booking Status'.tr(),
                                             style: TextStyle(
                                                 color: Color(0xff79797C),
-                                                fontSize: 16),
+                                                fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                         Expanded(
                                           flex: 2,
                                           child: Text(
                                             widget.bookingStatus.tr(),
-                                            style: TextStyle(fontSize: 16),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                           ),
                                         ),
                                       ],
@@ -976,7 +973,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                 children: [
                                   Text(
                                     'Pending Amount'.tr(),
-                                    style: TextStyle(fontSize: 21,fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -988,7 +985,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                 children: [
                                   Text(
                                     '${advanceOrPay} SAR',
-                                    style: TextStyle(fontSize: 21,color: Color(0xff914F9D)),
+                                    style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,color: Color(0xff914F9D)),
                                   ),
                                 ],
                               ),
@@ -1018,8 +1015,8 @@ class _PendingPaymentState extends State<PendingPayment> {
                                       '${'Pay :'.tr()} ${advanceOrPay} SAR',
                                       style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.normal),
+                                          fontSize: viewUtil.isTablet ? 24 : 17,
+                                          fontWeight: FontWeight.w500),
                                     )),
                               ),
                             ),
@@ -1033,7 +1030,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                               Icon(Icons.check_sharp,color: Colors.green,size: 30,),
                               Padding(
                                 padding: const EdgeInsets.only(left: 8),
-                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: 20,fontWeight: FontWeight.w500),),
+                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet ? 25 : 20,fontWeight: FontWeight.w500),),
                               ),
                             ],
                           ),

@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepTwo.dart';
 import 'dart:ui' as ui;
 
@@ -151,6 +152,7 @@ class _StepOneState extends State<StepOne> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -159,10 +161,13 @@ class _StepOneState extends State<StepOne> {
           context,
           User: widget.partnerName,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(125.0),
+            preferredSize: viewUtil.isTablet
+                ? Size.fromHeight(170.0)
+                : Size.fromHeight(120.0),
             child: Column(
               children: [
                 AppBar(
+                  toolbarHeight: viewUtil.isTablet?80:60,
                   scrolledUnderElevation: 0,
                   centerTitle: false,
                   automaticallyImplyLeading: false,
@@ -175,9 +180,10 @@ class _StepOneState extends State<StepOne> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_sharp,
                       color: Colors.white,
+                      size: viewUtil.isTablet?27: 24,
                     ),
                   ),
                 ),
@@ -212,8 +218,8 @@ class _StepOneState extends State<StepOne> {
                     alignment: Alignment.topLeft,
                     child: Text(
                       'Select Unit'.tr(),
-                      style: const TextStyle(
-                          fontSize: 20,
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet?26:20,
                           fontWeight: FontWeight.w500
                       ),
                     ),
@@ -222,7 +228,7 @@ class _StepOneState extends State<StepOne> {
                   _buildUnitClassificationDropdown(),
                   _buildSubClassificationDropdown(),
                   _buildTextField('Plate Information'.tr(),plateInfoController),
-                  commonWidgets.buildTextField('Istimara No'.tr(),istimaraNoController),
+                  commonWidgets.buildTextField('Istimara No'.tr(),istimaraNoController,context: context),
                   _buildIstimaraFileUploadButton('Istimara Card'.tr()),
                   _buildVehicleFileUploadButton('Picture of Vehicle'.tr()),
                   Container(
@@ -278,7 +284,7 @@ class _StepOneState extends State<StepOne> {
                             'Next'.tr(),
                             style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: viewUtil.isTablet?25:18,
                                 fontWeight: FontWeight.w500),
                           )),
                     ),
@@ -293,6 +299,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildStep(int step) {
+    ViewUtil viewUtil = ViewUtil(context);
     bool isActive = step == _currentStep;
     return Container(
       decoration: BoxDecoration(
@@ -302,7 +309,7 @@ class _StepOneState extends State<StepOne> {
             width: 1),
       ),
       child: CircleAvatar(
-        radius: 20,
+        radius: viewUtil.isTablet?30: 20,
         backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
         child: Text(
           step.toString(),
@@ -422,6 +429,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildUnitClassificationDropdown() {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -432,8 +440,8 @@ class _StepOneState extends State<StepOne> {
             padding: EdgeInsets.all(8.0),
             child: Text(
               'Unit Classification'.tr(),
-              style: const TextStyle(
-                  fontSize: 20,
+              style: TextStyle(
+                  fontSize: viewUtil.isTablet?24:20,
                   fontWeight: FontWeight.w500
               ),
             ),
@@ -479,6 +487,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildSubClassificationDropdown() {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -489,8 +498,8 @@ class _StepOneState extends State<StepOne> {
             padding: EdgeInsets.all(8.0),
             child: Text(
               'Sub Classification'.tr(),
-              style: const TextStyle(
-                  fontSize: 20,
+              style: TextStyle(
+                  fontSize: viewUtil.isTablet?24:20,
                   fontWeight: FontWeight.w500
               ),
             ),
@@ -533,6 +542,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildTextField(String label,controller) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Column(
       children: [
         Container(
@@ -542,8 +552,8 @@ class _StepOneState extends State<StepOne> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: viewUtil.isTablet?24:20,
                   fontWeight: FontWeight.w500
               ),
             ),
@@ -572,6 +582,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildIstimaraFileUploadButton(String label) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -582,8 +593,8 @@ class _StepOneState extends State<StepOne> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: viewUtil.isTablet?24:20,
               ),
             ),
           ),
@@ -615,11 +626,12 @@ class _StepOneState extends State<StepOne> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  const Expanded(
+                  Expanded(
                     flex: 1,
                     child: Icon(
                       Icons.file_upload_outlined,
                       color: Colors.black,
+                      size: viewUtil.isTablet?35:30,
                     ),
                   ),
                   Expanded(
@@ -628,9 +640,9 @@ class _StepOneState extends State<StepOne> {
                       istimaraUpload
                           ? istimaraCardFile!.name
                           : 'Upload a file'.tr(),
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: Colors.black,
-                          fontSize: 18,
+                          fontSize: viewUtil.isTablet?24:18,
                           fontWeight: FontWeight.normal),
                     ),
                   ),
@@ -647,7 +659,7 @@ class _StepOneState extends State<StepOne> {
               'Please upload a file'.tr(),
               style: TextStyle(
                 color: Colors.red,
-                fontSize: 12,
+                fontSize: viewUtil.isTablet?17:12,
               ),
             ),
             ),
@@ -656,6 +668,7 @@ class _StepOneState extends State<StepOne> {
   }
 
   Widget _buildVehicleFileUploadButton(String label) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Column(
       children: [
         Container(
@@ -665,8 +678,8 @@ class _StepOneState extends State<StepOne> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 20,
+              style: TextStyle(
+                fontSize: viewUtil.isTablet?24:20,
               ),
             ),
           ),
@@ -698,20 +711,21 @@ class _StepOneState extends State<StepOne> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    const Expanded(
+                    Expanded(
                       flex: 1,
                       child: Icon(
                         Icons.file_upload_outlined,
                         color: Colors.black,
+                        size: viewUtil.isTablet?35:30,
                       ),
                     ),
                     Expanded(
                       flex: 5,
                       child: Text(
                         vehicleUpload?vehilePictureFile!.name:'Upload a file'.tr(),
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: Colors.black,
-                            fontSize: 18,
+                            fontSize: viewUtil.isTablet?24:18,
                             fontWeight: FontWeight.normal),
                       ),
                     ),
@@ -727,7 +741,7 @@ class _StepOneState extends State<StepOne> {
               'Please upload a file'.tr(),
               style: TextStyle(
                 color: Colors.red,
-                fontSize: 12,
+                fontSize: viewUtil.isTablet?17:12,
               ),
             ),
           ),

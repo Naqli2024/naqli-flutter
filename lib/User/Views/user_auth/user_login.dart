@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -62,6 +65,7 @@ class _UserLoginState extends State<UserLogin> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return WillPopScope(
         onWillPop: () async {
           Navigator.push(context, MaterialPageRoute(builder:  (context) => UserHomePage()));
@@ -137,14 +141,14 @@ class _UserLoginState extends State<UserLogin> {
                                           child: Text(
                                             'Login'.tr(),
                                             style: TextStyle(
-                                              fontSize: 28,
+                                              fontSize: viewUtil.isTablet ?35 :28,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
                                         Text(
                                           'Sign in to Continue'.tr(),
-                                          style: TextStyle(fontSize: 16),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ?20 :16),
                                         ),
                                         Form(
                                           key: _formKey,
@@ -156,7 +160,7 @@ class _UserLoginState extends State<UserLogin> {
                                                 child: Text(
                                                   'EMAIL ID'.tr(),
                                                   style: TextStyle(
-                                                    fontSize: 15,
+                                                    fontSize: viewUtil.isTablet ?20 :15,
                                                     color: Color(0xff707070),
                                                   ),
                                                 ),
@@ -186,7 +190,7 @@ class _UserLoginState extends State<UserLogin> {
                                                 child: Text(
                                                   'PASSWORD'.tr(),
                                                   style: TextStyle(
-                                                    fontSize: 15,
+                                                    fontSize: viewUtil.isTablet ?20 :15,
                                                     color: Color(0xff707070),
                                                   ),
                                                 ),
@@ -237,14 +241,16 @@ class _UserLoginState extends State<UserLogin> {
                                             child: Text(
                                               'Forgot Password?'.tr(),
                                               style: TextStyle(
-                                                  color: Color(0xff6A66D1), fontSize: 15),
+                                                  color: Color(0xff6A66D1), fontSize: viewUtil.isTablet ?20 :15),
                                             ),
                                           ),
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: SizedBox(
-                                            height: MediaQuery.of(context).size.height * 0.07,
+                                            height: viewUtil.isTablet
+                                              ? MediaQuery.of(context).size.height * 0.06
+                                              : MediaQuery.of(context).size.height * 0.07,
                                             width: MediaQuery.of(context).size.width * 0.5,
                                             child: ElevatedButton(
                                               style: ElevatedButton.styleFrom(
@@ -260,8 +266,8 @@ class _UserLoginState extends State<UserLogin> {
                                                 'Log in'.tr(),
                                                 style: TextStyle(
                                                   color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.normal,
+                                                  fontSize: viewUtil.isTablet ?23 :18,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
                                               ),
                                             ),
@@ -289,6 +295,7 @@ class _UserLoginState extends State<UserLogin> {
                                               'Create Account'.tr(),
                                               style: TextStyle(
                                                 color: Color(0xff6A66D1),
+                                                fontSize: viewUtil.isTablet ?20 :15,
                                               ),
                                             ),
                                           ),

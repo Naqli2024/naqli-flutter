@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/requestSupport.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -27,6 +28,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -58,7 +60,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
                               child: Text('We are available to assist you'.tr(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 25,
+                                  fontSize: viewUtil.isTablet? 30 : 25,
                                 ),),
                             ),
                             Padding(
@@ -66,7 +68,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
                               child: Text("To get assistance on your naqlee journey.Please click on the ticket form below if you have any question about billing or logistics.".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: viewUtil.isTablet? 22 :16,
                                 ),
                               ),
                             ),
@@ -100,8 +102,8 @@ class _SubmitTicketState extends State<SubmitTicket> {
                                     'Submit a ticket'.tr(),
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.normal,
+                                      fontSize: viewUtil.isTablet? 24 : 18,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ),
@@ -110,8 +112,9 @@ class _SubmitTicketState extends State<SubmitTicket> {
                             Padding(
                               padding: const EdgeInsets.only(top: 40,bottom: 5),
                               child: Text("${'You can reach us via email at'.tr()} naqlee45@gmail.com ${'if that would be more convenient for you.'.tr()} ${'In either case, we try to reply to every communication within 1 working day.'.tr()}".tr(),
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: viewUtil.isTablet? 22 : 16,
                                 ),
                               ),
                             ),
@@ -121,7 +124,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
                               child: Text("SUPPORT FAQS".tr(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 30,
+                                  fontSize: viewUtil.isTablet? 30 :25,
                                 ),),
                             ),
                             Padding(
@@ -130,14 +133,14 @@ class _SubmitTicketState extends State<SubmitTicket> {
                                 text: TextSpan(
                                   text: "Look no further if you are having trouble logging and navigating into our website or controlling your account information, don't worry our help".tr(),
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: viewUtil.isTablet? 22 : 16,
                                     color: Colors.black,
                                   ),
                                   children: [
                                     TextSpan(
                                       text: "Doc".tr(),
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: viewUtil.isTablet? 22 : 16,
                                         color: Colors.blue,
                                       ),
                                       recognizer: TapGestureRecognizer()..onTap = () {
@@ -148,7 +151,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
                                     TextSpan(
                                       text: "are available for you even when our employees are asleep.".tr(),
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: viewUtil.isTablet? 22 :16,
                                         color: Colors.black,
                                       ),
                                     ),

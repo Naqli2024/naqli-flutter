@@ -362,6 +362,7 @@ class UserService{
 
       if (response.statusCode == 200) {
         final userData = responseBody['data']['user'];
+        final userProfile = responseBody['data']['user']['userProfile'];
         final tokenData = responseBody['data'];
         if (userData != null) {
           final firstName = userData['firstName'] ?? '';
@@ -1260,6 +1261,8 @@ class UserService{
             return {
               'messageTitle': notification['messageTitle']?.toString() ?? 'No Title',
               'messageBody': notification['messageBody']?.toString() ?? 'No Message',
+              'notificationId': notification['notificationId']?.toString() ?? 'No Message',
+              'seen': notification['seen']?.toString() ?? 'No Message',
             };
           }).toList();
         } else {
@@ -1279,6 +1282,30 @@ class UserService{
     }
   }
 
+  Future<void> updateNotificationsAsSeen(List<String> notificationIds) async {
+    try {
+      for (var notificationId in notificationIds) {
+        final response = await http.put(
+          Uri.parse('https://prod.naqlee.com:443/api/admin/notifications/seen/$notificationId'),
+          body: json.encode({
+            'seen': true,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          print('Notification with ID $notificationId updated as seen');
+        } else {
+          print('Failed to update notification with ID $notificationId: ${response.body}');
+        }
+      }
+    } catch (e) {
+      print("Error updating notifications as seen: $e");
+    }
+  }
+
   Future<UserDataModel> getUserData(String userId, String token) async{
     try{
       final response = await http.get(Uri.parse('${baseUrl}users/$userId'),
@@ -1289,7 +1316,6 @@ class UserService{
 
       if(response.statusCode == 200){
         print('ResponseData: ${response.body}');
-        final responseBody = jsonDecode(response.body);
         return UserDataModel.fromJson(jsonDecode(response.body));
       }
       else{
@@ -1303,5 +1329,105 @@ class UserService{
       throw Exception('An unexpected error occurred');
     }
   }
+
+  Future<UserInvoiceModel> getUserInvoiceData(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}bookings-with-invoice'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final filteredBookings = (data['bookings'] as List<dynamic>)
+            .where((booking) => booking['user'] == userId)
+            .toList();
+        if (filteredBookings.isEmpty) {
+          return UserInvoiceModel(success: true, message: 'No data found for the given user.', invoices: []);
+        }
+
+        return UserInvoiceModel(
+          success: data['success'],
+          message: data['message'],
+          invoices: filteredBookings
+              .map((booking) => Invoice.fromJson(booking))
+              .toList(),
+        );
+      } else {
+        throw Exception('Failed to load user data for user ID $userId');
+      }
+    } on SocketException {
+      throw Exception('No Internet connection');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<void> updateProfile(
+      String userId,
+      String token,
+      File? profileImage,
+      String firstName,
+      String lastName,
+      String emailAddress,
+      String password,
+      String confirmPassword,
+      String contactNumber,
+      String address1,
+      String address2,
+      String city,
+      String accountType,
+      String govtId,
+      String idNumber) async {
+
+    final String url = 'https://prod.naqlee.com:443/api/users/edit-profile/$userId';
+
+    try {
+      // Create multipart request
+      var request = http.MultipartRequest('PUT', Uri.parse(url))
+        ..headers.addAll({
+          'Authorization': 'Bearer $token',
+        })
+        ..fields['firstName'] = firstName
+        ..fields['lastName'] = lastName
+        ..fields['emailAddress'] = emailAddress
+        ..fields['password'] = password
+        ..fields['confirmPassword'] = confirmPassword
+        ..fields['contactNumber'] = contactNumber
+        ..fields['address1'] = address1
+        ..fields['address2'] = address2
+        ..fields['city'] = city
+        ..fields['accountType'] = accountType
+        ..fields['govtId'] = govtId
+        ..fields['idNumber'] = idNumber;
+
+      if (profileImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'userProfile',
+          profileImage.path,
+        ));
+      }
+
+      // Send the request
+      var response = await request.send();
+
+      // Handle the response
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final message = jsonDecode(responseBody)['message'] as String?;
+        if (message != null) {
+          CommonWidgets().showToast(message);
+        }
+      } else {
+        print('Failed to update profile. Status code: ${response.statusCode}');
+        print('Response: ${await response.stream.bytesToString()}');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
 
 }

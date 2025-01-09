@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
@@ -13,17 +14,47 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 
 class CommonWidgets {
-
   final ValueNotifier<List<Map<String, dynamic>>> _notificationsNotifier =
   ValueNotifier<List<Map<String, dynamic>>>([]);
-
   Future<void> _fetchNotifications(String? userId) async {
     try {
       final notifications = await userService.getNotifications(userId ?? '');
-      _notificationsNotifier.value = notifications;
+      _notificationsNotifier.value = notifications.map((notification) {
+        return {
+          ...notification,
+          'seen': notification['seen'] == 'true' || notification['seen'] == true,
+        };
+      }).toList();
     } catch (e) {
       _notificationsNotifier.value = [];
     }
+  }
+
+  void _markAllAsSeen() async {
+    final unseenNotifications = _notificationsNotifier.value.where((notification) => notification['seen'] == false).toList();
+    final updatedNotifications = _notificationsNotifier.value.map((notification) {
+      if (unseenNotifications.contains(notification)) {
+        return {...notification, 'seen': true};
+      }
+      return notification;
+    }).toList();
+    _notificationsNotifier.value = updatedNotifications;
+    try {
+      final notificationIds = unseenNotifications
+          .map<String>((notification) => notification['notificationId'].toString())
+          .toList();
+      if (notificationIds.isNotEmpty) {
+        await userService.updateNotificationsAsSeen(notificationIds);
+      }
+    } catch (e) {
+      print("Error updating notifications: $e");
+    }
+  }
+
+  int _getUnseenCount() {
+    return _notificationsNotifier.value
+        .where((notification) => notification['seen'] == false)
+        .length;
   }
 
   AppBar commonAppBar(BuildContext context,
@@ -36,7 +67,7 @@ class CommonWidgets {
     if (_notificationsNotifier.value.isEmpty) {
       _fetchNotifications(userId);
     }
-
+    ViewUtil viewUtil = ViewUtil(context);
     return AppBar(
       scrolledUnderElevation: 0,
       elevation: 0,
@@ -49,10 +80,10 @@ class CommonWidgets {
           onPressed: () {
             Scaffold.of(context).openDrawer();
           },
-          icon: const Icon(
+          icon:  Icon(
             Icons.menu,
             color: Color(0xff5D5151),
-            size: 45,
+            size: viewUtil.isTablet ? 50 : 45,
           ),
         ),
       )
@@ -60,11 +91,11 @@ class CommonWidgets {
       title: Padding(
         padding: const EdgeInsets.only(top: 10),
         child: SvgPicture.asset('assets/naqlee-logo.svg',
-            height: MediaQuery.of(context).size.height * 0.05),
+          height: viewUtil.isTablet ? 45 : 40),
       ),
       actions: [
         Padding(
-          padding: const EdgeInsets.only(top: 10),
+          padding: EdgeInsets.only(top: viewUtil.isTablet ?0:10),
           child: Row(
             children: [
               if (showLanguage)
@@ -73,7 +104,7 @@ class CommonWidgets {
                   child: PopupMenuButton<Locale>(
                     color: Colors.white,
                     offset: const Offset(0, 55),
-                    icon: Icon(Icons.language, color: Colors.blue),
+                    icon: Icon(Icons.language, color: Colors.blue,size: viewUtil.isTablet ? 35 : 25),
                     onSelected: (Locale locale) {
                       context.setLocale(locale);
                     },
@@ -87,6 +118,7 @@ class CommonWidgets {
                               children: [
                                 Text(
                                   'English'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),
                                 ),
                               ],
                             ),
@@ -100,6 +132,7 @@ class CommonWidgets {
                               children: [
                                 Text(
                                   'Arabic'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),
                                   textDirection: textDirection ?? ui.TextDirection.rtl,
                                 ),
                               ],
@@ -114,6 +147,7 @@ class CommonWidgets {
                               children: [
                                 Text(
                                   'Hindi'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14),
                                   textDirection: ui.TextDirection.ltr,
                                 ),
                               ],
@@ -126,19 +160,20 @@ class CommonWidgets {
                 ),
               Text(
                 User ?? 'user',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet ? 20 : 14,),
               ),
-              /*Stack(
+              Stack(
                 children: [
                   ValueListenableBuilder<List<Map<String, dynamic>>>(
                     valueListenable: _notificationsNotifier,
                     builder: (context, notifications, _) {
                       return PopupMenuButton(
+                        onOpened: _markAllAsSeen,
                         color: Colors.white,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.notifications,
                           color: Color(0xff6A66D1),
-                          size: 30,
+                            size: viewUtil.isTablet ? 35 : 25
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 350,
@@ -151,8 +186,7 @@ class CommonWidgets {
                               const PopupMenuItem(
                                 child: ListTile(
                                   title: Text('No Notifications'),
-                                  leading: Icon(Icons.circle_notifications_sharp,
-                                      color: Colors.blue),
+                                  leading: Icon(Icons.circle_notifications_sharp, color: Colors.blue),
                                 ),
                               ),
                             ];
@@ -164,10 +198,7 @@ class CommonWidgets {
                                 title: Text(notification['messageTitle'] ?? 'No Title'),
                                 subtitle: Text(notification['messageBody'] ?? 'No Message'),
                                 onTap: () {
-                                  notification['seen'] = true;
-                                  _notificationsNotifier.value = List.from(notifications);
-
-                                  Navigator.pop(context);
+                                  Navigator.pop(context); // Close the menu
                                 },
                               ),
                             );
@@ -176,12 +207,14 @@ class CommonWidgets {
                       );
                     },
                   ),
+
+                  // Unseen Notifications Badge
                   ValueListenableBuilder<List<Map<String, dynamic>>>(
                     valueListenable: _notificationsNotifier,
                     builder: (context, notifications, _) {
-                      // Count unseen notifications
-                      final unseenCount = notifications.where((n) => n['seen'] == false).length;
+                      final unseenCount = _getUnseenCount();  // Get the count of unseen notifications
 
+                      // Check if there are unseen notifications
                       if (unseenCount > 0) {
                         return Positioned(
                           right: 8,
@@ -197,7 +230,7 @@ class CommonWidgets {
                               minHeight: 16,
                             ),
                             child: Text(
-                              '$unseenCount',
+                              '$unseenCount',  // Display the unseen notification count
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -207,87 +240,8 @@ class CommonWidgets {
                           ),
                         );
                       }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ],
-              ),*/
-              Stack(
-                children: [
-                  ValueListenableBuilder<List<Map<String, dynamic>>>(
-                    valueListenable: _notificationsNotifier,
-                    builder: (context, notifications, _) {
-                      return PopupMenuButton(
-                        color: Colors.white,
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Color(0xff6A66D1),
-                          size: 30,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 350,
-                          maxWidth: 350,
-                        ),
-                        offset: const Offset(0, 55),
-                        itemBuilder: (context) {
-                          if (notifications.isEmpty) {
-                            return [
-                              const PopupMenuItem(
-                                child: ListTile(
-                                  title: Text('No Notifications'),
-                                  leading: Icon(Icons.circle_notifications_sharp,
-                                      color: Colors.blue),
-                                ),
-                              ),
-                            ];
-                          }
-                          return notifications.map((notification) {
-                            return PopupMenuItem(
-                              child: ListTile(
-                                leading: const Icon(Icons.message,
-                                    color: Colors.blue),
-                                title: Text(
-                                    notification['messageTitle'] ?? 'No Title'),
-                                subtitle: Text(
-                                    notification['messageBody'] ?? 'No Message'),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            );
-                          }).toList();
-                        },
-                      );
-                    },
-                  ),
-                  ValueListenableBuilder<List<Map<String, dynamic>>>(
-                    valueListenable: _notificationsNotifier,
-                    builder: (context, notifications, _) {
-                      if (notifications.isNotEmpty) {
-                        return Positioned(
-                          right: 8,
-                          top: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '${notifications.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        );
-                      }
+
+                      // No badge if no unseen notifications
                       return const SizedBox.shrink();
                     },
                   ),
@@ -401,6 +355,7 @@ class CommonWidgets {
   }
 
   void logout(BuildContext context) async {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -419,14 +374,15 @@ class CommonWidgets {
                   padding: EdgeInsets.only(top: 30, bottom: 10),
                   child: Text(
                     'are_you_sure_you_want_to_logout'.tr(),
-                    style: TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                   ),
                 ),
               ],
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('yes'.tr()),
+                child: Text('yes'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                 onPressed: () async {
                   await clearPartnerData();
                   Navigator.push(
@@ -444,7 +400,8 @@ class CommonWidgets {
                 },
               ),
               TextButton(
-                child: Text('no'.tr()),
+                child: Text('no'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -472,6 +429,7 @@ class CommonWidgets {
     required BuildContext context,
     required String bookingId,
   }) {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -489,41 +447,51 @@ class CommonWidgets {
                   child: SvgPicture.asset(
                     'assets/generated_logo.svg',
                     width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height * 0.1,
+                    height: viewUtil.isTablet
+                        ? MediaQuery.of(context).size.height * 0.2
+                        : MediaQuery.of(context).size.height * 0.13,
                   ),
                 ),
               ),
               Positioned(
-                top: -14,
-                right: -13,
+                top: viewUtil.isTablet?-10:-14,
+                right: viewUtil.isTablet?-10:-13,
                 child: IconButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.cancel),
+                  icon: Icon(Icons.cancel,size: viewUtil.isTablet? 30 :20),
                 ),
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 10),
-                child: Text(
-                  'Booking Generated'.tr(),
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+          content: Container(
+            width: viewUtil.isTablet
+              ? MediaQuery.of(context).size.width * 0.6
+              : MediaQuery.of(context).size.width * 0.5,
+            height: viewUtil.isTablet
+                ? MediaQuery.of(context).size.height * 0.08
+                : MediaQuery.of(context).size.height * 0.1,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                  child: Text(
+                    'Booking Generated'.tr(),
+                    style: TextStyle(
+                        fontSize: viewUtil.isTablet? 25 :20, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  '${'Booking id'.tr()} $bookingId',
-                  style: const TextStyle(fontSize: 14),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    '${'Booking id'.tr()} $bookingId',
+                    style: TextStyle(fontSize: viewUtil.isTablet? 20 :14),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -539,8 +507,9 @@ class CommonWidgets {
         bool readOnly = false,
         FontWeight fontWeight = FontWeight.w500,
         Widget? suffixIcon,
-        TextEditingController? passwordController,
+        TextEditingController? passwordController, required BuildContext context,
       }) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Column(
       children: [
         Container(
@@ -550,7 +519,7 @@ class CommonWidgets {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               label,
-              style: TextStyle(fontSize: 20, fontWeight: fontWeight),
+              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: fontWeight),
             ),
           ),
         ),
@@ -565,8 +534,8 @@ class CommonWidgets {
             decoration: InputDecoration(
               hintText: hintText ?? '',
               labelText: labelText ?? '',
-              labelStyle: const TextStyle(color: Color(0xffCCCCCC)),
-              hintStyle: const TextStyle(color: Color(0xffCCCCCC)),
+              labelStyle: TextStyle(color: const Color(0xffCCCCCC),fontSize: viewUtil.isTablet ?24 :15,),
+              hintStyle: TextStyle(color: Color(0xffCCCCCC)),
               border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
@@ -617,6 +586,7 @@ class CommonWidgets {
     required int selectedIndex,
     required Function(int) onTabTapped,
   }) {
+    ViewUtil viewUtil = ViewUtil(context);
     return BottomAppBar(
       height: MediaQuery.sizeOf(context).height * 0.1,
       color: Colors.white,
@@ -625,10 +595,10 @@ class CommonWidgets {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildTabItem(0, 'assets/home.svg', 25, 'Home'.tr(), selectedIndex, onTabTapped),
-          _buildTabItem(1, 'assets/booking_manager.svg', 26, 'Booking Manager'.tr(), selectedIndex, onTabTapped),
-          _buildTabItem(2, 'assets/payment.svg', 26, 'payment'.tr(), selectedIndex, onTabTapped),
-          _buildTabItem(3, 'assets/profile.svg', 26, 'Profile'.tr(), selectedIndex, onTabTapped),
+          _buildTabItem(0, 'assets/home.svg', viewUtil.isTablet ?30:25, 'Home'.tr(), selectedIndex, onTabTapped,context),
+          _buildTabItem(1, 'assets/booking_manager.svg', viewUtil.isTablet ?30:26, 'Booking Manager'.tr(), selectedIndex, onTabTapped,context),
+          _buildTabItem(2, 'assets/payment.svg', viewUtil.isTablet ?30:26, 'payment'.tr(), selectedIndex, onTabTapped,context),
+          _buildTabItem(3, 'assets/profile.svg', viewUtil.isTablet ?30:26, 'Profile'.tr(), selectedIndex, onTabTapped,context),
         ],
       ),
     );
@@ -641,7 +611,9 @@ class CommonWidgets {
       String label,
       int selectedIndex,
       Function(int) onTabTapped,
+      BuildContext context,
       ) {
+    ViewUtil viewUtil = ViewUtil(context);
     final isSelected = selectedIndex == index;
     return GestureDetector(
       onTap: () => onTabTapped(index),
@@ -659,6 +631,7 @@ class CommonWidgets {
               label,
               style: TextStyle(
                 color: isSelected ? Color(0xff7F6AFF) :null,
+                fontSize: viewUtil.isTablet ?23:14
               )
             ),
           ),

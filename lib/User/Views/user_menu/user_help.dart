@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+
 class UserHelp extends StatefulWidget {
   final String ?firstName;
   final String ?lastName;
@@ -28,6 +30,7 @@ class _UserHelpState extends State<UserHelp> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -39,7 +42,7 @@ class _UserHelpState extends State<UserHelp> {
           userId: widget.id,
           showLanguage: true,
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.1),
+            preferredSize: Size.fromHeight(90),
             child: Column(
               children: [
                 AppBar(
@@ -52,7 +55,7 @@ class _UserHelpState extends State<UserHelp> {
                       padding: EdgeInsets.only(right: 25),
                       child: Text(
                         'FAQ'.tr(),
-                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 25),
+                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?27:25),
                       ),
                     ),
                   ),
@@ -94,6 +97,7 @@ class _UserHelpState extends State<UserHelp> {
   }
 
   Widget buildFAQItem(int index,String question,String answer) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Padding(
       padding: index==9? EdgeInsets.only(bottom: 50):EdgeInsets.only(bottom: 0),
       child: Column(
@@ -116,7 +120,7 @@ class _UserHelpState extends State<UserHelp> {
                       flex: 12,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: 16),),
+                        child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: viewUtil.isTablet ? 22:16),),
                       ),
                     ),
                     Expanded(
@@ -128,6 +132,7 @@ class _UserHelpState extends State<UserHelp> {
                           isVisibleList[index]
                               ? Icons.keyboard_arrow_up_outlined
                               : Icons.keyboard_arrow_down_outlined,
+                          size: viewUtil.isTablet ? 30:20,
                         ),
                       ),
                     ),
@@ -144,7 +149,7 @@ class _UserHelpState extends State<UserHelp> {
                 color: isVisibleList[index]?Color(0xffF6F6FF):Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(answer,style: TextStyle(fontSize: 15),),
+                  child: Text(answer,style: TextStyle(fontSize:  viewUtil.isTablet ? 20 :15),),
                 ),
               ),
             ),

@@ -53,5 +53,7 @@
     <string>Allow access to your location to use maps.</string>
     <key>NSDocumentsFolderUsageDescription</key>
     <string>This app requires access to documents folder for printing.</string>
+    <key>FLTEnableImpeller</key>
+    <false />
 </dict>
 </plist>

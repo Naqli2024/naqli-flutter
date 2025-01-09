@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/role.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerHelp.dart';
@@ -38,11 +39,15 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          toolbarHeight: viewUtil.isTablet
+            ? MediaQuery.of(context).size.height * 0.05
+            : MediaQuery.of(context).size.height * 0.07,
           scrolledUnderElevation: 0,
           centerTitle: false,
           backgroundColor: Colors.white,
@@ -54,10 +59,10 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.menu,
                   color: Color(0xff5D5151),
-                  size: 45,
+                  size: viewUtil.isTablet ? 50 : 45,
                 ),
               ),
             ),
@@ -72,11 +77,11 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
               );
             },
             child: Container(
-                margin: const EdgeInsets.only(top: 20),
+                margin: EdgeInsets.only(top: viewUtil.isTablet ? 15 : 20),
                 child: SvgPicture.asset(
                   'assets/naqlee-logo.svg',
                   fit: BoxFit.fitWidth,
-                  height: 40,
+                  height: viewUtil.isTablet ? 45 : 40,
                 )),
           ),
           actions: [
@@ -85,7 +90,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
               child: PopupMenuButton<Locale>(
                 color: Colors.white,
                 offset: const Offset(0, 55),
-                icon: Icon(Icons.language, color: Colors.blue),
+                icon: Icon(Icons.language, color: Colors.blue,size: viewUtil.isTablet ? 35 : 25),
                 onSelected: (Locale locale) {
                   context.setLocale(locale);
                 },
@@ -219,7 +224,9 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                           offset: Offset(-scrollPosition, 0),
                           child: SvgPicture.asset(
                             'assets/partnerHome.svg',
-                            height: MediaQuery.sizeOf(context).height * 0.25,
+                            height: viewUtil.isTablet
+                                ? MediaQuery.sizeOf(context).height * 0.35
+                                : MediaQuery.sizeOf(context).height * 0.25,
                             width: 1242,
                             fit: BoxFit.contain,
                           ),
@@ -247,7 +254,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                           'Sign up now'.tr(),
                           style: TextStyle(
                             color: Color(0xff140303),
-                            fontSize: 30,
+                            fontSize: viewUtil.isTablet?35:30,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -285,7 +292,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                           'Log in'.tr(),
                           style: TextStyle(
                               color: Color(0xff140303),
-                              fontSize: 30,
+                              fontSize: viewUtil.isTablet?35:30,
                               fontWeight: FontWeight.w500),
                         ),
                         Icon(
@@ -312,7 +319,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                       'Driving with naqli'.tr(),
                       style: TextStyle(
                           color: Color(0xff5D5151),
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet?35:30,
                           fontWeight: FontWeight.w500),
                     )),
               ),
@@ -324,7 +331,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                       options: CarouselOptions(
                         enlargeCenterPage: true,
                         autoPlay: true,
-                        aspectRatio: 14 / 9,
+                        aspectRatio: viewUtil.isTablet?20 / 9:14 / 9,
                         autoPlayCurve: Curves.fastOutSlowIn,
                         enableInfiniteScroll: true,
                         autoPlayAnimationDuration:
@@ -337,14 +344,14 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                             children: [
                               Container(
                                   alignment: Alignment.topLeft,
-                                  child: SvgPicture.asset('assets/regular-trips.svg',height: 30,)),
+                                  child: SvgPicture.asset('assets/regular-trips.svg',height: viewUtil.isTablet?35:30)),
                               Container(
                                   alignment: Alignment.centerLeft,
                                   padding: const EdgeInsets.only(top: 20),
                                   child: Text(
                                     'Regular Trips'.tr(),
                                     style: TextStyle(
-                                        fontSize: 25, color: Colors.black),
+                                        fontSize: viewUtil.isTablet?30:25, color: Colors.black),
                                   )),
                               Container(
                                   alignment: Alignment.centerLeft,
@@ -353,7 +360,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                                     'With our growing presence across multiple cities, we always have our hands full! This means you will never run out of trips.'.tr(),
                                     style: TextStyle(
                                       color: Color(0xff5D5151),
-                                      fontSize: 20,
+                                      fontSize: viewUtil.isTablet?25:20,
                                     ),
                                   )),
                             ],
@@ -364,14 +371,14 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                             children: [
                               Container(
                                   alignment: Alignment.centerLeft,
-                                  child: SvgPicture.asset('assets/better-earning.svg',height: 30,)),
+                                  child: SvgPicture.asset('assets/better-earning.svg',height: viewUtil.isTablet?35:30,)),
                               Container(
                                   alignment: Alignment.centerLeft,
                                   padding: const EdgeInsets.only(top: 20),
                                   child: Text(
                                     'Better Earning'.tr(),
                                     style: TextStyle(
-                                      fontSize: 25,
+                                      fontSize: viewUtil.isTablet?30:25,
                                     ),
                                   )),
                               Container(
@@ -381,7 +388,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                                     'Earn money by partnering with The best regular trips and efficient service and grow your earnings!'.tr(),
                                     style: TextStyle(
                                       color: Color(0xff5D5151),
-                                      fontSize: 20,
+                                      fontSize: viewUtil.isTablet?25:20,
                                     ),
                                   )),
                             ],
@@ -392,14 +399,14 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                             children: [
                               Container(
                                   alignment: Alignment.centerLeft,
-                                  child: SvgPicture.asset('assets/onTime-payment.svg',height: 30,)),
+                                  child: SvgPicture.asset('assets/onTime-payment.svg',height: viewUtil.isTablet?35:30,)),
                               Container(
                                   alignment: Alignment.centerLeft,
                                   padding: EdgeInsets.only(top: 20),
                                   child: Text(
                                     'On-Time Payments'.tr(),
                                     style: TextStyle(
-                                      fontSize: 25,
+                                      fontSize: viewUtil.isTablet?30:25,
                                     ),
                                   )),
                               Container(
@@ -409,7 +416,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                                     'Be assured to receive all payments on time & get the best in class support.'.tr(),
                                     style: TextStyle(
                                       color: Color(0xff5D5151),
-                                      fontSize: 20,
+                                      fontSize: viewUtil.isTablet?25:20,
                                     ),
                                   )),
                             ],

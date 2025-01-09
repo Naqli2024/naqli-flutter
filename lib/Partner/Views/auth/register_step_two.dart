@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class RegisterStepTwo extends StatefulWidget {
@@ -51,6 +52,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return isLoading
         ? Center(child: CircularProgressIndicator())
         : Scaffold(
@@ -98,6 +100,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
                       child: Icon(
                         Icons.clear,
                         color: Colors.black,
+                        size: viewUtil.isTablet?26: 20,
                       ),
                     ),
                   )),
@@ -187,8 +190,8 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
                       'Register'.tr(),
                       style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
+                          fontSize: viewUtil.isTablet?27:18,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -201,6 +204,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
   }
 }
 
+
 Widget _buildTextField({
   required BuildContext context,
   required TextEditingController controller,
@@ -209,6 +213,7 @@ Widget _buildTextField({
   TextCapitalization textCapitalization = TextCapitalization.none,
   String? Function(String?)? validator,
 }) {
+  ViewUtil viewUtil = ViewUtil(context);
   return Padding(
     padding: const EdgeInsets.fromLTRB(40, 10, 40, 15),
     child: Column(
@@ -216,7 +221,7 @@ Widget _buildTextField({
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 20,color: Color(0xff828080)),
+          style: TextStyle(fontSize: viewUtil.isTablet ?24 :20,color: Color(0xff828080)),
         ),
         const SizedBox(height: 10),
         TextFormField(

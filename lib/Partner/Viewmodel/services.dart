@@ -710,6 +710,9 @@ class AuthService {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
        print('dataaa$partnerData');
+       final partnerName = partnerData['partnerName'];
+       final mobileNo = partnerData['mobileNo'];
+       final email = partnerData['email'];
         if (partnerData['bookingRequest'] != null) {
           final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
           final bookingIds = <Map<String, dynamic>>[];
@@ -731,6 +734,9 @@ class AuthService {
               'bookingId': bookingId,
               'paymentStatus': paymentStatus,
               'quotePrice': quotePrice,
+              'mobileNo': mobileNo,
+              'name': partnerName,
+              'email': email,
             });
           }
           return bookingIds;
@@ -1106,6 +1112,59 @@ class AuthService {
         SnackBar(content: Text('An unexpected error occurred')),
       );
       print('Error: $e');
+    }
+  }
+
+  Future<void> updatePartnerProfile(
+      String partnerId,
+      String token,
+      File? profileImage,
+      String name,
+      String mobileNo,
+      String emailAddress,
+      String password,
+      String confirmPassword,
+      ) async {
+    final String url = 'https://prod.naqlee.com:443/api/partner/edit-partner/$partnerId';
+    try {
+      var request = http.MultipartRequest('PUT', Uri.parse(url));
+
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.fields['partnerName'] = name;
+      request.fields['email'] = emailAddress;
+      request.fields['password'] = password;
+      request.fields['confirmPassword'] = confirmPassword;
+      request.fields['mobileNo'] = mobileNo;
+
+      if (profileImage != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'partnerProfile',
+            profileImage.path,
+          ),
+        );
+      }
+
+      // Send the request
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        print('Profile updated successfully');
+        final responseBody = await response.stream.bytesToString();
+        final jsonResponse = jsonDecode(responseBody);
+        final message = jsonResponse['message'] as String?;
+        if (message != null) {
+          // Assuming you have a CommonWidgets().showToast function for displaying messages
+          CommonWidgets().showToast(message);
+        }
+      } else {
+        print('Failed to update profile. Status code: ${response.statusCode}');
+        final responseBody = await response.stream.bytesToString();
+        print('Response: $responseBody');
+      }
+    } catch (e) {
+      print('Error occurred: $e');
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -35,6 +36,7 @@ class _RequestSupportState extends State<RequestSupport> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -73,7 +75,7 @@ class _RequestSupportState extends State<RequestSupport> {
                       child: Text('Request Support'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet? 30 :25,
                         ),),
                     ),
                   ],
@@ -84,14 +86,14 @@ class _RequestSupportState extends State<RequestSupport> {
                     text: TextSpan(
                       text: "Feel free to contact us through our email, if you have any more questions".tr(),
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: viewUtil.isTablet? 22 :17,
                         color: Colors.black, // Set the text color
                       ),
                       children: [
                         TextSpan(
                           text: "naqlee45@gmail.com",
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: viewUtil.isTablet? 22 :17,
                             color: Colors.blue,
                           ),
                           recognizer: TapGestureRecognizer()..onTap = () {
@@ -113,7 +115,7 @@ class _RequestSupportState extends State<RequestSupport> {
                     child: Text('Enter your Email address'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        fontSize: 25,
+                        fontSize: viewUtil.isTablet?25:23,
                       ),),
                   ),
                 ),
@@ -136,7 +138,7 @@ class _RequestSupportState extends State<RequestSupport> {
                     child: Text('Description'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        fontSize: 25,
+                        fontSize: viewUtil.isTablet?25:23,
                       ),),
                   ),
                 ),
@@ -161,7 +163,7 @@ class _RequestSupportState extends State<RequestSupport> {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Please be specific so that we can address it as soon as possible',
-                      hintStyle: TextStyle(fontSize: 17,color: Colors.grey),
+                      hintStyle: TextStyle(fontSize: viewUtil.isTablet? 22 :17,color: Colors.grey),
                       contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
                     ),
                   ),
@@ -172,8 +174,8 @@ class _RequestSupportState extends State<RequestSupport> {
                     padding: const EdgeInsets.only(top: 40,bottom: 10),
                     child: Text('Supporting documentation(Optional)'.tr(),
                       style: TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 23,
+                        fontWeight: FontWeight.w500,
+                        fontSize: viewUtil.isTablet?25:23,
                       ),),
                   ),
                 ),
@@ -218,9 +220,9 @@ class _RequestSupportState extends State<RequestSupport> {
                                     ? documentFile!.path.split('/').last
                                     : 'Upload a Document'.tr(),
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: Colors.black,
-                                    fontSize: 18,
+                                    fontSize: viewUtil.isTablet? 22 :18,
                                     fontWeight: FontWeight.normal),
                               ),
                             ),
@@ -291,7 +293,9 @@ class _RequestSupportState extends State<RequestSupport> {
                                                 child: SvgPicture.asset(
                                                   'assets/ticketSuccess.svg',
                                                   width: MediaQuery.of(context).size.width,
-                                                  height: MediaQuery.of(context).size.height * 0.15,
+                                                  height: viewUtil.isTablet
+                                                      ? MediaQuery.of(context).size.height * 0.2
+                                                      : MediaQuery.of(context).size.height * 0.15,
                                                 ),
                                               ),
                                               Positioned(
@@ -301,7 +305,7 @@ class _RequestSupportState extends State<RequestSupport> {
                                                   onPressed: () {
                                                     Navigator.pop(context);
                                                   },
-                                                  icon: const Icon(FontAwesomeIcons.multiply),
+                                                  icon: Icon(FontAwesomeIcons.multiply,size: viewUtil.isTablet? 30 :20),
                                                 ),
                                               ),
                                             ],
@@ -310,7 +314,7 @@ class _RequestSupportState extends State<RequestSupport> {
                                             padding: const EdgeInsets.only(top: 20, bottom: 20),
                                             child: Text(
                                               'Thank you!'.tr(),
-                                              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold,color: Colors.green),
+                                              style: TextStyle(fontSize: viewUtil.isTablet ? 30:25, fontWeight: FontWeight.bold,color: Colors.green),
                                             ),
                                           ),
                                           Padding(
@@ -318,7 +322,7 @@ class _RequestSupportState extends State<RequestSupport> {
                                             child: Text(
                                               'Your ticket has been submitted Successfully'.tr(),
                                               textAlign: TextAlign.center,
-                                              style: const TextStyle(fontSize: 20,fontWeight: FontWeight.w500),
+                                              style: TextStyle(fontSize: viewUtil.isTablet ? 25:20,fontWeight: FontWeight.w500),
                                             ),
                                           ),
                                         ],
@@ -337,8 +341,8 @@ class _RequestSupportState extends State<RequestSupport> {
                         'Submit'.tr(),
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.normal,
+                          fontSize: viewUtil.isTablet? 24 : 18,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),

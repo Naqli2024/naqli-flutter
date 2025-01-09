@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
@@ -80,6 +81,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     });
     final result = await superUserServices.choosePayment(
       context,
+      userId: widget.id,
       paymentBrand: paymentBrand,
       amount: amount,
     );
@@ -96,13 +98,13 @@ class _TriggerBookingState extends State<TriggerBooking> {
   }
 
 // resultCode=000.100.110
-  Future<void> getPaymentStatus(String checkOutId) async {
-    final result = await superUserServices.getPaymentDetails(context, checkOutId);
-
+  Future<void> getPaymentStatus(String checkOutId,bool isMadaTapped) async {
+    final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
+    print('Processed');
     if (result != null) {
       setState(() {
         resultCode = int.tryParse(result['code'] ?? '');
-
+        print(resultCode);
         showPaymentSuccessDialog();
       });
     } else {
@@ -136,6 +138,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
   }
 
   void showConfirmationDialog(Map<String, dynamic> booking) {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -156,7 +159,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
-                        style: TextStyle(fontSize: 19),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 24 :19),
                       ),
                     ),
                     if (isDeleting)
@@ -168,7 +171,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                 ),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('yes'.tr()),
+                    child: Text('yes'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15)),
                     onPressed: () {
                       if (!isDeleting) {
                         setState(() {
@@ -179,7 +182,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                     },
                   ),
                   TextButton(
-                    child: Text('no'.tr()),
+                    child: Text('no'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :15)),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -252,6 +255,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -266,7 +270,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
               scrolledUnderElevation: 0,
-              toolbarHeight: MediaQuery.of(context).size.height * 0.09,
+              toolbarHeight: 80,
               centerTitle: true,
               automaticallyImplyLeading: false,
               backgroundColor: const Color(0xff6A66D1),
@@ -343,7 +347,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   allSelected ? 'Deselect All'.tr() : 'Select All'.tr(),
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 14,
+                                    fontSize: viewUtil.isTablet ? 20 :14,
                                     fontWeight: FontWeight.normal,
                                   ),
                                 ),
@@ -359,7 +363,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                 child: Text(
                                   'No Bookings Found'.tr(),
                                   style: TextStyle(
-                                      fontSize: 18),
+                                      fontSize:  viewUtil.isTablet ? 20 :18),
                                 ),
                               ),
                             )
@@ -376,6 +380,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   subClassification = booking['type']?.isNotEmpty ?? ''
                                           ? booking['type'][0]['typeName'] ?? 'N/A'.tr()
                                           : 'N/A';
+                                  print(bookingId);
                                   print(unitType);
                                   print(unitClassification);
                                   print(subClassification);
@@ -410,13 +415,13 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                     padding: const EdgeInsets.all(8.0),
                                                     child: Text(
                                                       '${booking['unitType']}'.tr(),
-                                                      style: TextStyle(fontSize: 16),
+                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                     ),
                                                   ),
                                                   Padding(padding: const EdgeInsets.all(8.0),
                                                     child: Text(
                                                       '${'Booking id'.tr()}: $bookingId',
-                                                      style: TextStyle(color: Color(0xff914F9D), fontSize: 14),
+                                                      style: TextStyle(color: Color(0xff914F9D), fontSize: viewUtil.isTablet ?22:14),
                                                     ),
                                                   ),
                                                   FutureBuilder<List<Map<String, dynamic>>?>(
@@ -437,7 +442,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                                         return Center(
                                                           child: Padding(padding: const EdgeInsets.only(top: 22, bottom: 22),
-                                                            child: Text ('No vendors available'.tr()),
+                                                            child: Text ('No vendors available'.tr(),
+                                                              style: TextStyle(fontSize: viewUtil.isTablet ?22:14),),
                                                           ),
                                                         );
                                                       }
@@ -470,7 +476,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                                     child: Text(
                                                                       vendor['partnerName'] ?? 'N/A',
                                                                       style: TextStyle(
-                                                                        fontSize: 17,
+                                                                        fontSize: viewUtil.isTablet ?22:17,
                                                                         fontWeight: FontWeight.normal,
                                                                       ),
                                                                     ),
@@ -479,7 +485,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                                     flex: 4,
                                                                     child: Text(
                                                                       '${vendor['quotePrice'] ?? 'N/A'} SAR',
-                                                                      style: TextStyle(fontSize: 17,
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:17,
                                                                         fontWeight: FontWeight.normal,
                                                                       ),
                                                                     ),
@@ -525,9 +531,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                           'PayNow'.tr(),
                                                           style: TextStyle(
                                                             color: Colors.white,
-                                                            fontSize: 17,
-                                                            fontWeight:
-                                                                FontWeight.normal,
+                                                            fontSize: viewUtil.isTablet ?22:17,
+                                                            fontWeight: FontWeight.w500,
                                                           ),
                                                         ),
                                                       ),
@@ -541,7 +546,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                       },
                                                       child: Text(
                                                         'Cancel'.tr(),
-                                                        style: TextStyle(color: Colors.red, fontSize: 17),
+                                                        style: TextStyle(color: Colors.red, fontSize: viewUtil.isTablet ?22:17),
                                                       ),
                                                     ),
                                                   ),
@@ -706,6 +711,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        ViewUtil viewUtil = ViewUtil(context);
         return Directionality(
           textDirection: ui.TextDirection.ltr,
           child: Dialog(
@@ -729,14 +735,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
                                 '${booking['unitType']}'.tr(),
-                                style: TextStyle(fontSize: 18),
+                                style: TextStyle(fontSize: viewUtil.isTablet ?24 : 18),
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
                                 '${'Booking id'.tr()}: ${booking['_id']}',
-                                style: TextStyle(fontSize: 14),
+                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 14),
                               ),
                             ),
                             SizedBox(height: 10),
@@ -767,15 +773,15 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                               flex: 3,
                                               child: Text(
                                                 'Name'.tr(),
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                             Expanded(
                                               flex: 2,
                                               child: Text(
                                                 partnerName ?? '',
-                                                style: const TextStyle(
-                                                    fontSize: 16),
+                                                style: TextStyle(
+                                                    fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                           ],
@@ -792,14 +798,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                               flex: 3,
                                               child: Text(
                                                 'Mobile No'.tr(),
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                             Expanded(
                                               flex: 2,
                                               child: Text(
                                                 mobileNo ?? '',
-                                                style: const TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                           ],
@@ -816,14 +822,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                               flex: 3,
                                               child: Text(
                                                 'UnitType'.tr(),
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                             Expanded(
                                               flex: 2,
                                               child: Text(
                                                 '${booking['unitType'] ?? 'N/A'}'.tr(),
-                                                style: const TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                           ],
@@ -843,14 +849,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                   flex: 3,
                                                   child: Text(
                                                     'City'.tr(),
-                                                    style: TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
                                                     '${booking['cityName'] ?? 'N/A'}',
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                               ],
@@ -870,14 +876,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                   flex: 3,
                                                   child: Text(
                                                     'From'.tr(),
-                                                    style: TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
                                                     '${booking['pickup'] ?? 'N/A'}',
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                               ],
@@ -894,14 +900,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                   flex: 3,
                                                   child: Text(
                                                     'To'.tr(),
-                                                    style: TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
                                                     (booking['dropPoints'] as List).join(', '),
-                                                    style: const TextStyle(fontSize: 16),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
                                               ],
@@ -919,14 +925,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                               flex: 3,
                                               child: Text(
                                                 'Additional Labour'.tr(),
-                                                style: TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                             Expanded(
                                               flex: 2,
                                               child: Text(
                                                 '${booking['additionalLabour'] ?? 'N/A'}',
-                                                style: const TextStyle(fontSize: 16),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                               ),
                                             ),
                                           ],
@@ -956,7 +962,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 17,
+                                    fontSize: viewUtil.isTablet ?22 : 17,
                                     fontWeight:
                                     FontWeight.w500,
                                   ),
@@ -982,7 +988,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 17,
+                                    fontSize: viewUtil.isTablet ?22 : 17,
                                     fontWeight:
                                     FontWeight.w500,
                                   ),
@@ -1248,7 +1254,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                   JavascriptChannel(
                     name: 'payButtonClicked',
                     onMessageReceived: (JavascriptMessage message) async {
-                      await getPaymentStatus(checkOutId);
+                      await getPaymentStatus(checkOutId,isMADATapped);
                     },
                   ),
                 },

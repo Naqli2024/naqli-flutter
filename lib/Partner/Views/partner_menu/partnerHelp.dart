@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+
 class PartnerHelp extends StatefulWidget {
   final String partnerName;
   final String token;
@@ -27,6 +29,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -38,7 +41,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
           userId: widget.partnerId,
           showLanguage: true,
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.1),
+            preferredSize: Size.fromHeight(90),
             child: Column(
               children: [
                 AppBar(
@@ -51,7 +54,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
                       padding: EdgeInsets.only(right: 25),
                       child: Text(
                         'FAQ'.tr(),
-                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 25),
+                        style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?27:25),
                       ),
                     ),
                   ),
@@ -96,6 +99,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
   }
 
   Widget buildFAQItem(int index,String question,String answer) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Padding(
       padding: index==12? EdgeInsets.only(bottom: 50):EdgeInsets.only(bottom: 0),
       child: Column(
@@ -118,7 +122,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
                       flex: 12,
                       child: Padding(
                         padding: EdgeInsets.all(8.0),
-                        child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: 16),),
+                        child: Text(question,style: TextStyle(color: Color(0xff6269FE),fontSize: viewUtil.isTablet ? 22:16),),
                       ),
                     ),
                     Expanded(
@@ -130,6 +134,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
                           isVisibleList[index]
                               ? Icons.keyboard_arrow_up_outlined
                               : Icons.keyboard_arrow_down_outlined,
+                          size: viewUtil.isTablet ? 30:20,
                         ),
                       ),
                     ),
@@ -146,7 +151,7 @@ class _PartnerHelpState extends State<PartnerHelp> {
                 color: isVisibleList[index]?Color(0xffF6F6FF):Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(answer,style: TextStyle(fontSize: 15),),
+                  child: Text(answer,style: TextStyle(fontSize: viewUtil.isTablet ? 20 :15),),
                 ),
               ),
             ),

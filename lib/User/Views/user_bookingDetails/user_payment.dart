@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -180,6 +181,7 @@ class _PaymentState extends State<Payment> {
   }
 
   void showBookingDialog(BuildContext context, Map<String, dynamic> booking) {
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -220,57 +222,62 @@ class _PaymentState extends State<Payment> {
                             ),
                           ),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Booking id'.tr(),
-                                      style: TextStyle(
-                                          fontSize: 16),
+                        child: Container(
+                          width: viewUtil.isTablet
+                              ? MediaQuery.of(context).size.width * 0.6
+                              : MediaQuery.of(context).size.width,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Booking id'.tr(),
+                                        style: TextStyle(
+                                            fontSize: viewUtil.isTablet ? 22 : 16),
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      '${booking?['_id'] ?? 'N/A'}',
-                                      style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        '${booking?['_id'] ?? 'N/A'}',
+                                        style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16,color: Color(0xff79797C)),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const Divider(),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Text(
-                                      'Date'.tr(),
-                                      style: TextStyle(fontSize: 16),
+                              const Divider(),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Date'.tr(),
+                                        style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16),
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      '${booking?['date'] ?? ''}',
-                                      style: const TextStyle(fontSize: 16,color: Color(0xff79797C)),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        '${booking?['date'] ?? ''}',
+                                        style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16,color: Color(0xff79797C)),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -290,7 +297,7 @@ class _PaymentState extends State<Payment> {
                           borderRadius: BorderRadius.circular(30),
                         ),
                         padding: const EdgeInsets.all(8),
-                        child: Text('${booking?['paymentStatus'] ?? 'N/A'.tr()}' == 'Completed' ? 'Paid'.tr(): paymentStatus.tr(),style: const TextStyle(fontSize: 19)),
+                        child: Text('${booking?['paymentStatus'] ?? 'N/A'.tr()}' == 'Completed' ? 'Paid'.tr(): paymentStatus.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 19)),
                       ),
                     ),
                     Positioned(
@@ -313,21 +320,21 @@ class _PaymentState extends State<Payment> {
                   padding: const EdgeInsets.only(top: 30,bottom: 10),
                   child: Text(
                     '${booking?['paymentStatus'] ?? ''}'== 'Completed' ? 'Total Paid'.tr(): '${'Total'.tr()} ${paymentStatus.tr()}',
-                    style: const TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 19),
                   ),
                 )
                     : Padding(
                   padding: const EdgeInsets.only(top: 30,bottom: 10),
                   child: Text(
                     'Pending Amount'.tr(),
-                    style: const TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 19),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
                     '${booking['paymentStatus'] ?? ''}'== 'Completed' ? '${booking['paymentAmount'] ?? 'No Amount'} SAR':'${booking['remainingBalance'] ?? 'No Amount'} SAR',
-                    style: const TextStyle(fontSize: 19),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 19),
                   ),
                 ),
                 booking?['paymentStatus'] == 'Pending' || booking?['paymentStatus'] == 'HalfPaid'
@@ -357,9 +364,8 @@ class _PaymentState extends State<Payment> {
                           '${'Pay :'.tr()} ${booking['remainingBalance']??''} SAR',
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight
-                                  .normal),
+                              fontSize: viewUtil.isTablet ? 22 :17,
+                              fontWeight: FontWeight.w500),
                         )),
                   ),
                 )
@@ -396,6 +402,7 @@ class _PaymentState extends State<Payment> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -421,7 +428,7 @@ class _PaymentState extends State<Payment> {
                       padding: const EdgeInsets.only(right: 30),
                       child: Text(
                         'payment'.tr(),
-                        style: TextStyle(color: Colors.white, fontSize: 24),
+                        style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:24),
                       ),
                     ),
                   ],
@@ -434,9 +441,10 @@ class _PaymentState extends State<Payment> {
                         firstName: widget.firstName,
                         lastName: widget.lastName, token: widget.token, id: widget.id,quotePrice: widget.quotePrice,email: widget.email,)));
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -461,20 +469,23 @@ class _PaymentState extends State<Payment> {
                   children: [
                     Padding(
                       padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.17),
-                      child: SvgPicture.asset('assets/noPayment.svg'),
+                      child: SvgPicture.asset('assets/noPayment.svg',
+                          height: viewUtil.isTablet
+                              ? MediaQuery.sizeOf(context).height * 0.22
+                              : MediaQuery.sizeOf(context).height * 0.2),
                     ),
                     Padding(
                       padding: EdgeInsets.only(top: 40, bottom: 0),
                       child: Text(
                         "No Payment information Available".tr(),
-                        style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 27 : 20, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 20, bottom: 0),
                       child: Text(
                         "It looks like you don't have any recent payment details available at the moment. Please check back later.".tr(),
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 22 :16, fontWeight: FontWeight.w500),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -492,7 +503,12 @@ class _PaymentState extends State<Payment> {
                   final toTime = booking?['toTime'] ?? 'N/A';
                   final time = booking?['time'] ?? 'N/A';
                   return Container(
-                    margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    height: viewUtil.isTablet
+                        ? MediaQuery.of(context).size.height * 0.08
+                        : MediaQuery.of(context).size.height * 0.11,
+                    margin: viewUtil.isTablet
+                      ? EdgeInsets.fromLTRB(40, 20, 40, 0)
+                      : EdgeInsets.fromLTRB(20, 20, 20, 0),
                     child: Material(
                       color: Colors.white,
                       shape: RoundedRectangleBorder(
@@ -505,43 +521,50 @@ class _PaymentState extends State<Payment> {
                       shadowColor: Colors.black,
                       elevation: 3.0,
                       child: Container(
-                        child: ListTile(
-                          title: Text('${'Booking id'.tr()}: ${booking['_id'].toString()}'),
-                          subtitle: Row(
-                            children: [
-                              Text('${booking['date']}'),
-                              time == 'N/A'
-                                  ? Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('$fromTime - $toTime'),
-                              )
-                                  :Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('$time'),
-                              ),
-                            ],
-                          ),
-                          trailing: Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.05,
-                              width: MediaQuery.of(context).size.width * 0.23,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xff6A66D1),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
+                        padding: viewUtil.isTablet
+                            ? EdgeInsets.all(8)
+                            : EdgeInsets.all(2),
+                        child: Container(
+                          child: ListTile(
+                            title: Text('${'Booking id'.tr()}: ${booking['_id'].toString()}'),
+                            subtitle: Row(
+                              children: [
+                                Text('${booking['date']}'),
+                                time == 'N/A'
+                                    ? Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('$fromTime - $toTime'),
+                                )
+                                    :Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('$time'),
                                 ),
-                                onPressed: () {
-                                  showBookingDialog(context, booking);
-                                },
-                                child: Text(
-                                  booking['paymentStatus'] == 'Pending' || booking['paymentStatus'] == 'HalfPaid' ? 'Pay Bal'.tr() : 'View'.tr(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.normal,
+                              ],
+                            ),
+                            trailing: Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+                              child: SizedBox(
+                                height: MediaQuery.of(context).size.height * 0.05,
+                                width: viewUtil.isTablet
+                                  ? MediaQuery.of(context).size.width * 0.2
+                                  : MediaQuery.of(context).size.width * 0.23,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff6A66D1),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    showBookingDialog(context, booking);
+                                  },
+                                  child: Text(
+                                    booking['paymentStatus'] == 'Pending' || booking['paymentStatus'] == 'HalfPaid' ? 'Pay Bal'.tr() : 'View'.tr(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: viewUtil.isTablet ? 20 : 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),

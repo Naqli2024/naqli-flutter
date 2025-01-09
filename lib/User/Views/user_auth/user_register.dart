@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_termsAndConditions.dart';
@@ -120,6 +121,7 @@ class _UserRegisterState extends State<UserRegister> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -130,14 +132,14 @@ class _UserRegisterState extends State<UserRegister> {
           title: SvgPicture.asset(
             'assets/naqlee-logo.svg',
             fit: BoxFit.fitWidth,
-            height: 40,
+            height: viewUtil.isTablet ? 45 : 40,
           ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
             child: AppBar(
               scrolledUnderElevation: 0,
               centerTitle: false,
-              toolbarHeight: 80,
+              toolbarHeight: viewUtil.isTablet ? 85 : 80,
               automaticallyImplyLeading: false,
               backgroundColor: const Color(0xff6A66D1),
               title: Center(
@@ -145,7 +147,7 @@ class _UserRegisterState extends State<UserRegister> {
                   padding: const EdgeInsets.only(right: 40),
                   child: Text(
                     'Create your account'.tr(),
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white,fontSize: viewUtil.isTablet ?24 :20),
                   ),
                 ),
               ),
@@ -173,10 +175,10 @@ class _UserRegisterState extends State<UserRegister> {
               children: [
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: commonWidgets.buildTextField('First Name'.tr(), firstNameController,focusNode: firstNameFocusNode),
+                child: commonWidgets.buildTextField('First Name'.tr(), firstNameController,focusNode: firstNameFocusNode,context: context),
               ),
-              commonWidgets.buildTextField('Last Name'.tr(), lastNameController,focusNode: lastNameFocusNode),
-              commonWidgets.buildTextField('Email Address'.tr(), emailController,focusNode: emailFocusNode),
+              commonWidgets.buildTextField('Last Name'.tr(), lastNameController,focusNode: lastNameFocusNode,context: context),
+              commonWidgets.buildTextField('Email Address'.tr(), emailController,focusNode: emailFocusNode,context: context),
                 commonWidgets.buildTextField(
                   'Password'.tr(),
                   passwordController,focusNode: passwordFocusNode,
@@ -190,7 +192,7 @@ class _UserRegisterState extends State<UserRegister> {
                         isPasswordObscured = !isPasswordObscured;
                       });
                     },
-                  ),),
+                  ),context: context),
               commonWidgets.buildTextField(
                 'Confirm Password'.tr(),
                 confirmPasswordController,focusNode: confirmPasswordFocusNode,
@@ -205,8 +207,8 @@ class _UserRegisterState extends State<UserRegister> {
                     isConfirmPasswordObscured = !isConfirmPasswordObscured;
                   });
                 },
-              ),),
-              commonWidgets.buildTextField('Contact Number'.tr(), contactNoController,focusNode: contactNoFocusNode),
+              ),context: context),
+              commonWidgets.buildTextField('Contact Number'.tr(), contactNoController,focusNode: contactNoFocusNode,context: context),
                 Container(
                   margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                   alignment: Alignment.topLeft,
@@ -214,7 +216,7 @@ class _UserRegisterState extends State<UserRegister> {
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
                       'Alternate Number'.tr(),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -231,7 +233,7 @@ class _UserRegisterState extends State<UserRegister> {
                     ),
                   ),
                 ),
-              commonWidgets.buildTextField('Address 1'.tr(), address1Controller,focusNode: address1FocusNode),
+              commonWidgets.buildTextField('Address 1'.tr(), address1Controller,focusNode: address1FocusNode,context: context),
                 Container(
                   margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
                   alignment: Alignment.topLeft,
@@ -239,7 +241,7 @@ class _UserRegisterState extends State<UserRegister> {
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
                       'Address 2'.tr(),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -257,52 +259,45 @@ class _UserRegisterState extends State<UserRegister> {
                     ),
                   ),
                 ),
-              commonWidgets.buildTextField('City'.tr(), cityController,focusNode: cityFocusNode),
+              commonWidgets.buildTextField('City'.tr(), cityController,focusNode: cityFocusNode,context: context),
               accountDropdownWidget(),
               govtIdDropdownWidget(),
-                commonWidgets.buildTextField('Id Number'.tr(), idNoController,focusNode: idNoFocusNode),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(
-                    left: MediaQuery.of(context).size.width * 0.15,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Checkbox(
-                        value: _isChecked,
-                        onChanged: _onCheckboxChanged,
-                        checkColor: Colors.white,
-                        activeColor: Color(0xff6A66D1),
-                        shape: CircleBorder(),
+                commonWidgets.buildTextField('Id Number'.tr(), idNoController,focusNode: idNoFocusNode,context: context),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Checkbox(
+                      value: _isChecked,
+                      onChanged: _onCheckboxChanged,
+                      checkColor: Colors.white,
+                      activeColor: Color(0xff6A66D1),
+                      shape: CircleBorder(),
+                    ),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                        TextSpan(
+                                  text: 'Agree with'.tr(),
+                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet ?20 :15,),
+                                ),
+                                TextSpan(
+                                  text: ' Terms & Conditions'.tr(),
+                                  style: TextStyle(color: Color(0xff6A66D1), fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet ?20 :15,),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => UserTermsAndConditions(),
+                                        ),
+                                      );
+                                    },
+                                ),
+                        ],
                       ),
-                      Expanded(
-                        child: RichText(
-                          text: TextSpan(
-                            children: [
-                            TextSpan(
-                                      text: 'Agree with'.tr(),
-                                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                    ),
-                                    TextSpan(
-                                      text: ' Terms & Conditions'.tr(),
-                                      style: const TextStyle(color: Color(0xff6A66D1), fontWeight: FontWeight.bold),
-                                      recognizer: TapGestureRecognizer()
-                                        ..onTap = () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => UserTermsAndConditions(),
-                                            ),
-                                          );
-                                        },
-                                    ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Container(
                   padding: const EdgeInsets.only(bottom: 20),
@@ -321,7 +316,7 @@ class _UserRegisterState extends State<UserRegister> {
                         'Create Account'.tr(),
                         style: TextStyle(
                             color: Colors.white,
-                            fontSize: 17,
+                            fontSize: viewUtil.isTablet ?20 :17,
                             fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -334,11 +329,11 @@ class _UserRegisterState extends State<UserRegister> {
                       children: [
                         TextSpan(
                           text: 'Already have an account?'.tr(),
-                          style: const TextStyle(color: Colors.black),
+                          style: TextStyle(color: Colors.black,fontSize: viewUtil.isTablet ?20 :15,),
                         ),
                         TextSpan(
                           text: 'Sign in'.tr(),
-                          style: const TextStyle(color: Color(0xff6A66D1)),
+                          style: TextStyle(color: Color(0xff6A66D1),fontSize: viewUtil.isTablet ?20 :15,),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
                               Navigator.push(
@@ -362,6 +357,7 @@ class _UserRegisterState extends State<UserRegister> {
   }
 
   Widget accountDropdownWidget() {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -372,7 +368,7 @@ class _UserRegisterState extends State<UserRegister> {
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
               'Account type'.tr(),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
             ),
           ),
           Padding(
@@ -380,7 +376,9 @@ class _UserRegisterState extends State<UserRegister> {
             child: DropdownButtonFormField<String>(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedAccount,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                    vertical:viewUtil.isTablet ?20 :14, horizontal:12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -390,8 +388,14 @@ class _UserRegisterState extends State<UserRegister> {
                   selectedAccount = newValue;
                 });
               },
-              hint: Text('Account type'.tr()),
-              icon: const Icon(Icons.keyboard_arrow_down, size: 25),
+              hint: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text('Account type'.tr()),
+              ),
+              icon: Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Icon(Icons.keyboard_arrow_down, size: 25),
+              ),
               items: accountItems.map((account) {
                 return DropdownMenuItem<String>(
                   value: account,
@@ -408,6 +412,7 @@ class _UserRegisterState extends State<UserRegister> {
   }
 
   Widget govtIdDropdownWidget() {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(30, 0, 30, 20),
       alignment: Alignment.topLeft,
@@ -418,7 +423,7 @@ class _UserRegisterState extends State<UserRegister> {
             padding: EdgeInsets.only(left: 10, bottom: 10),
             child: Text(
               'Govt ID'.tr(),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.w500),
             ),
           ),
           Padding(
@@ -426,7 +431,9 @@ class _UserRegisterState extends State<UserRegister> {
             child: DropdownButtonFormField<String>(
               borderRadius: BorderRadius.all(Radius.circular(10)),
               value: selectedId,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                    vertical:viewUtil.isTablet ?20 :14,horizontal:12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -436,8 +443,14 @@ class _UserRegisterState extends State<UserRegister> {
                   selectedId = newValue;
                 });
               },
-              hint: Text('Govt ID'.tr()),
-              icon: const Icon(Icons.keyboard_arrow_down, size: 25),
+              hint: Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Text('Govt ID'.tr()),
+              ),
+              icon:  Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Icon(Icons.keyboard_arrow_down, size: 25),
+              ),
               items: govtIdItems.map((id) {
                 return DropdownMenuItem<String>(
                   value: id,

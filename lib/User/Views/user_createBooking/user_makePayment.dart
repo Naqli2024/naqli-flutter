@@ -94,7 +94,7 @@ class _PaymentPageState extends State<PaymentPage> {
         padding: const EdgeInsets.only(top: 40),
         child: WebView(
           initialUrl: Uri.dataFromString(html,
-                  mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
+              mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
               .toString(),
           javascriptMode: JavascriptMode.unrestricted,
           onWebViewCreated: (WebViewController webViewController) {
@@ -103,6 +103,35 @@ class _PaymentPageState extends State<PaymentPage> {
           },
         ),
       ),
+    );
+  }
+}
+
+
+class PaymentSuccessScreen extends StatelessWidget {
+  const PaymentSuccessScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Payment',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => PaymentSuccess(),
+        '/payment-success': (context) => PaymentSuccess(),
+      },
+    );
+  }
+}
+
+class PaymentSuccess extends StatelessWidget {
+  const PaymentSuccess({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Payment Success')),
+      body: Center(child: Text('Success')),
     );
   }
 }

@@ -6,6 +6,8 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+
 class StepThree extends StatefulWidget {
   final String partnerName;
   final String partnerId;
@@ -127,6 +129,7 @@ class _StepThreeState extends State<StepThree> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -135,10 +138,13 @@ class _StepThreeState extends State<StepThree> {
           context,
           User: widget.partnerName,
           bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(125.0),
+              preferredSize: viewUtil.isTablet
+                  ? Size.fromHeight(170.0)
+                  : Size.fromHeight(120.0),
               child: Column(
                 children: [
                   AppBar(
+                    toolbarHeight: viewUtil.isTablet?80:60,
                     scrolledUnderElevation: 0,
                     centerTitle: false,
                     automaticallyImplyLeading: false,
@@ -150,9 +156,10 @@ class _StepThreeState extends State<StepThree> {
                         onPressed: (){
                           Navigator.pop(context);
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_sharp,
                           color: Colors.white,
+                          size: viewUtil.isTablet?27: 24,
                         )),
                   ),
                   Padding(
@@ -183,7 +190,7 @@ class _StepThreeState extends State<StepThree> {
                   child: Text(
                     'Partner Name'.tr(),
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: viewUtil.isTablet?24:20,
                       fontWeight: FontWeight.w500
                     ),
                   )),
@@ -211,14 +218,14 @@ class _StepThreeState extends State<StepThree> {
 
         bottomNavigationBar: BottomAppBar(
           color: Colors.white,
-          height: MediaQuery.of(context).size.height * 0.11,
+          height: MediaQuery.of(context).size.height * 0.1,
           child: Container(
             margin: const EdgeInsets.fromLTRB(60, 0, 60, 20),
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff6269FE),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(viewUtil.isTablet?40:30),
                   ),
                 ),
                 onPressed: () {
@@ -228,7 +235,7 @@ class _StepThreeState extends State<StepThree> {
                   'Submit'.tr(),
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: viewUtil.isTablet?25:18,
                       fontWeight: FontWeight.w500),
                 )),
           ),
@@ -238,6 +245,7 @@ class _StepThreeState extends State<StepThree> {
   }
 
   Widget _buildStep(int step) {
+    ViewUtil viewUtil = ViewUtil(context);
     bool isActive = step == _currentStep;
     return Container(
       decoration: BoxDecoration(
@@ -247,7 +255,7 @@ class _StepThreeState extends State<StepThree> {
             width: 1),
       ),
       child: CircleAvatar(
-        radius: 20,
+        radius: viewUtil.isTablet?30: 20,
         backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
         child: Text(
           step.toString(),

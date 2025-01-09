@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/booking_manager.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
@@ -111,6 +112,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -138,13 +140,13 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           ?'createBooking'.tr()
                           :'Get an estimate'.tr(),
                       textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.white, fontSize: 24),
+                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?27: 22),
                     ),
                     Text(
                       widget.isFromUserType != null
                           ?'${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
                           :'${'step'.tr()} $_currentStep ${'of 3'.tr()}',
-                      style: const TextStyle(color: Colors.white, fontSize: 17),
+                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?22: 17),
                     ),
                   ],
                 ),
@@ -156,9 +158,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         firstName: widget.firstName,
                         lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
+                  size: viewUtil.isTablet?27: 24,
                 ),
               ),
             ),
@@ -215,7 +218,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
               ListTile(
                   leading: SvgPicture.asset('assets/booking_logo.svg',
-                      height: MediaQuery.of(context).size.height * 0.035),
+                      height: viewUtil.isTablet
+                          ? MediaQuery.of(context).size.height * 0.028
+                          : MediaQuery.of(context).size.height * 0.035),
                   title: Padding(
                     padding: EdgeInsets.only(left: 5),
                     child: Text('Trigger Booking'.tr(),style: TextStyle(fontSize: 25),),
@@ -383,7 +388,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         'back'.tr(),
                         style: TextStyle(
                             color: Color(0xff6269FE),
-                            fontSize: 21,
+                            fontSize: viewUtil.isTablet ?26:18,
                             fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -490,8 +495,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           'next'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold),
+                              fontSize: viewUtil.isTablet ?26:18,
+                              fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
@@ -518,7 +523,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           'createBooking'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: viewUtil.isTablet?26: 18,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -533,6 +538,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   void showLogoutDialog(){
+    ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -544,21 +550,30 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             ),
             backgroundColor: Colors.white,
             contentPadding: const EdgeInsets.all(20),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 30,bottom: 10),
-                  child: Text(
-                    'are_you_sure_you_want_to_logout'.tr(),
-                    style: TextStyle(fontSize: 19),
+            content: Container(
+              width: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.width * 0.6
+                  : MediaQuery.of(context).size.width,
+              height: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.height * 0.08
+                  : MediaQuery.of(context).size.height * 0.1,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 30,bottom: 10),
+                    child: Text(
+                      'are_you_sure_you_want_to_logout'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('yes'.tr()),
+                child: Text('yes'.tr(),
+                  style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
                 onPressed: () async {
                   await clearUserData();
                   Navigator.push(
@@ -568,7 +583,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 },
               ),
               TextButton(
-                child: Text('no'.tr()),
+                child: Text('no'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -1547,6 +1563,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   Widget _buildStep(int step) {
     bool isActive = step == _currentStep;
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -1555,7 +1572,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             width: 1),
       ),
       child: CircleAvatar(
-        radius: 20,
+        radius: viewUtil.isTablet?30: 20,
         backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
         child: Text(
           step.toString(),
@@ -1648,6 +1665,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget vehicleContent() {
+    ViewUtil viewUtil = ViewUtil(context);
     return FutureBuilder<List<Vehicle>>(
       future: _futureVehicles,
       builder: (context, snapshot) {
@@ -1667,7 +1685,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_vehicle_units'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -1689,14 +1707,15 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset('assets/delivery-truck.svg'),
+                              child: SvgPicture.asset('assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet?50: 35),
                             ),
                             Expanded(
                               flex: 6,
                               child: Text(
                                 vehicle.name.tr(),
-                                style: const TextStyle(
-                                    fontSize: 15.0,
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet?20: 15,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -1704,7 +1723,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               flex: 1,
                               child: Container(
                                 height:
-                                MediaQuery.of(context).size.height * 0.05,
+                                MediaQuery.of(context).size.height * 0.06,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -1720,8 +1739,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                   child: PopupMenuButton<String>(
                                     elevation: 5,
                                     constraints: BoxConstraints(
-                                      minWidth:350,
-                                      maxWidth:350,
+                                      minWidth:viewUtil.isTablet
+                                          ?MediaQuery.sizeOf(context).width * 0.92: 350,
+                                      maxWidth:viewUtil.isTablet
+                                          ?MediaQuery.sizeOf(context).width * 0.92: 350,
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
@@ -1773,8 +1794,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                         } else {
                                                           return SvgPicture.asset(
                                                             type.typeImage,
-                                                            width: 40,
-                                                            height: 30,
+                                                            width: viewUtil.isTablet?50: 40,
+                                                            height: viewUtil.isTablet?40: 30,
                                                           );
                                                         }
                                                       },
@@ -1787,9 +1808,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(type.typeName.tr(),
-                                                            style: const TextStyle(fontSize: 16.0)),
+                                                            style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
                                                         Text(type.scale,
-                                                            style: const TextStyle(fontSize: 14.0)),
+                                                            style: TextStyle(fontSize: viewUtil.isTablet?20: 14)),
                                                       ],
                                                     ),
                                                   ),
@@ -1816,11 +1837,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   : vehicle.types?.isNotEmpty == true
                                                   ? vehicle.types!.first.typeName
                                                   : 'no_data'.tr(),
-                                              style: const TextStyle(fontSize: 16.0),
+                                              style: TextStyle(fontSize: viewUtil.isTablet?20: 16),
                                             ),
                                           ),
                                           const SizedBox(width: 10),
-                                          const Icon(Icons.arrow_drop_down),
+                                          Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?25: 20),
                                         ],
                                       ),
                                     ),
@@ -1843,6 +1864,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget busContent() {
+    ViewUtil viewUtil = ViewUtil(context);
     return FutureBuilder<List<Buses>>(
       future: _futureBuses,
       builder: (context, snapshot) {
@@ -1862,17 +1884,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_bus_units'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Two columns
-                    crossAxisSpacing: 0, // Space between columns
-                    mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio:
-                    1, // Aspect ratio for card width and height
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 0,
+                    mainAxisSpacing: 0,
+                    childAspectRatio: 1,
                   ),
                   itemCount: buses.length,
                   itemBuilder: (context, index) {
@@ -1913,30 +1934,30 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 child: Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(
-                                          top: 45, bottom: 10),
+                                      padding: viewUtil.isTablet
+                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
+                                          :EdgeInsets.only(top: 45, bottom: 10),
                                       child: SvgPicture.asset(
                                         bus.image,
-                                        width: 30,
-                                        height: 40,
-                                        placeholderBuilder: (context)=>
-                                        Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
+                                        width: viewUtil.isTablet?50:30,
+                                        height: viewUtil.isTablet?70:40,
                                       ),
                                     ),
+                                    SizedBox(height: 7),
                                     Divider(
-                                      indent: 7,
-                                      endIndent: 7,
+                                      indent: viewUtil.isTablet ? 15 : 7,
+                                      endIndent: viewUtil.isTablet ? 15 : 7,
                                       color: Color(0xffACACAD),
                                       thickness: 1,
                                     ),
-                                    Text(
-                                      bus.name,
-                                      textAlign:
-                                      TextAlign.center, // Center the text
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 15),
+                                      child: Text(
+                                        bus.name,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize: viewUtil.isTablet?20: 15),
+                                      ),
                                     )
                                   ],
                                 ),
@@ -1957,6 +1978,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget equipmentContent() {
+    ViewUtil viewUtil = ViewUtil(context);
     return FutureBuilder<List<Equipment>>(
       future: _futureEquipment,
       builder: (context, snapshot) {
@@ -1976,7 +1998,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_equipments_units'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -1997,23 +2019,23 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset('assets/delivery-truck.svg'),
+                              child: SvgPicture.asset('assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet?50: 35),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               flex: 3,
                               child: Text(
                                 equipments.name.tr(),
-                                style: const TextStyle(
-                                    fontSize: 16.0,
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet?20: 15,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                             Expanded(
                               flex: 1,
                               child: Container(
-                                height:
-                                MediaQuery.of(context).size.height * 0.05,
+                                height: MediaQuery.of(context).size.height * 0.06,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -2026,8 +2048,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 width: double.infinity,
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
-                                  constraints:
-                                  BoxConstraints.tightFor(width: 350),
+                                  constraints: BoxConstraints(
+                                    minWidth:viewUtil.isTablet
+                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
+                                    maxWidth:viewUtil.isTablet
+                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -2071,8 +2097,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                       } else {
                                                         return SvgPicture.asset(
                                                           type.typeImage,
-                                                          width: 40,
-                                                          height: 30,
+                                                          width: viewUtil.isTablet?50: 40,
+                                                          height: viewUtil.isTablet?40: 30,
                                                         );
                                                       }
                                                     },
@@ -2082,7 +2108,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 Expanded(
                                                   flex: 3,
                                                   child: Text(type.typeName.tr(),
-                                                      style: const TextStyle(fontSize: 16.0)),
+                                                      style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
                                                 ),
                                               ],
                                             ),
@@ -2109,12 +2135,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 : equipments.types?.isNotEmpty == true
                                                 ? equipments.types!.first.typeName
                                                 : 'no_data'.tr(),
-                                            style:
-                                            const TextStyle(fontSize: 16.0),
+                                            style: TextStyle(fontSize: viewUtil.isTablet?20: 16),
                                           ),
                                         ),
                                         const SizedBox(width: 10),
-                                        const Icon(Icons.arrow_drop_down),
+                                        Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?25: 20),
                                       ],
                                     ),
                                   ),
@@ -2136,6 +2161,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget specialContent() {
+    ViewUtil viewUtil = ViewUtil(context);
     return FutureBuilder<List<Special>>(
       future: _futureSpecial,
       builder: (context, snapshot) {
@@ -2155,7 +2181,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_special_others_units'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -2203,22 +2229,27 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 child: Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(top: 45, bottom: 10),
+                                      padding: viewUtil.isTablet
+                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
+                                          :EdgeInsets.only(top: 45, bottom: 10),
                                       child: SvgPicture.asset(
                                         specials.image,
-                                        width: 30,
-                                        height: 40,
+                                        width: viewUtil.isTablet?50:30,
+                                        height: viewUtil.isTablet?70:40,
                                       ),
                                     ),
+                                    SizedBox(height: 7),
                                     Divider(
-                                      indent: 7,
-                                      endIndent: 7,
+                                      indent: viewUtil.isTablet ? 15 : 7,
+                                      endIndent: viewUtil.isTablet ? 15 : 7,
                                       color: Color(0xffACACAD),
                                       thickness: 1,
                                     ),
                                     Text(
                                       specials.name.tr(),
-                                      textAlign: TextAlign.center, // Center the text
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: viewUtil.isTablet?20: 15),
                                     )
                                   ],
                                 ),
@@ -2265,6 +2296,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       String typeImage,
       String scale,
       ) {
+    ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Directionality(
@@ -2279,7 +2311,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Time'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -2298,10 +2330,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   children: [
                     IconButton(
                       onPressed: () => _selectTime(context),
-                      icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),),
+                      icon: Icon(FontAwesomeIcons.clock,color: const Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                     ),
                     Container(
-                      height: 50,
+                      height: viewUtil.isTablet ?60:50,
                       child: const VerticalDivider(
                         color: Colors.grey,
                         thickness: 1.2,
@@ -2313,7 +2345,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16),),
+                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16),),
                       ),
                     ),
                   ],
@@ -2327,7 +2359,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Date'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -2346,10 +2378,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   children: [
                     IconButton(
                       onPressed: () => _selectDate(context),
-                      icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                      icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                     ),
                     Container(
-                      height: 50,
+                      height: viewUtil.isTablet ?60:50,
                       child: const VerticalDivider(
                         color: Colors.grey,
                         thickness: 1.2,
@@ -2361,7 +2393,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                        child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                       ),
                     ),
                   ],
@@ -2375,7 +2407,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'valueOfProduct'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -2413,7 +2445,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'loadType'.tr(),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -2452,7 +2484,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       child: Text(
                         'needAdditionalLabour'.tr(),
                         style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
@@ -2504,6 +2536,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserBusStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
@@ -2516,7 +2549,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'Time'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2535,10 +2568,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectTime(context),
-                    icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                   ),
                   Container(
-                    height: 50,
+                    height: viewUtil.isTablet ?60:50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
@@ -2550,7 +2583,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                     ),
                   ),
                 ],
@@ -2564,7 +2597,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'Date'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2583,10 +2616,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectDate(context),
-                    icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                   ),
                   Container(
-                    height: 50,
+                    height: viewUtil.isTablet ?60:50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
@@ -2598,7 +2631,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                     ),
                   ),
                 ],
@@ -2612,7 +2645,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'valueOfProduct'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2661,7 +2694,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     child: Text(
                       'needAdditionalLabour'.tr(),
                       style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2712,6 +2745,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserEquipmentStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
@@ -2724,7 +2758,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'fromTime'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2739,10 +2773,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -2754,7 +2788,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -2767,7 +2801,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'toTime'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2782,10 +2816,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectToTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -2797,7 +2831,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: 16)),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -2810,7 +2844,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'startingDate'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2825,10 +2859,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -2840,7 +2874,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                    child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -2864,7 +2898,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     child: Text(
                       'needAdditionalLabour'.tr(),
                       style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2915,6 +2949,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserSpecialStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
       child: Column(
@@ -2927,7 +2962,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'fromTime'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2942,10 +2977,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -2957,7 +2992,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: 16)),
+                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -2970,7 +3005,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'toTime'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -2985,10 +3020,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectToTime(context),
-                  icon: const Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -3000,7 +3035,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: 16)),
+                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -3013,7 +3048,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'startingDate'.tr(),
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -3028,10 +3063,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               children: [
                 IconButton(
                   onPressed: () => _selectDate(context),
-                  icon: const Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC)),
+                  icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                 ),
                 Container(
-                  height: 50,
+                  height: viewUtil.isTablet ?60:50,
                   child: const VerticalDivider(
                     color: Colors.grey,
                     thickness: 1.2,
@@ -3043,7 +3078,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate',style: TextStyle(fontSize: 16)),
+                    child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                   ),
                 ),
               ],
@@ -3067,7 +3102,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     child: Text(
                       'needAdditionalLabour'.tr(),
                       style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -3128,6 +3163,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       String selectedLoad,
       String additionalLabour,
       ) {
+    ViewUtil viewUtil = ViewUtil(context);
     return  GestureDetector(
       onTap: () {
         setState(() {
@@ -3139,7 +3175,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           child: Stack(
             children: [
               Container(
-                height: MediaQuery.of(context).size.height * 0.6,
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.9
+                    : MediaQuery.of(context).size.height * 0.6,
                 child: GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController = controller;
@@ -3161,7 +3199,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 top: 15,
                 child: Container(
                   width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.only(left: 30, right: 30),
+                  padding:  viewUtil.isTablet
+                      ?EdgeInsets.only(left: 45, right: 45)
+                      :EdgeInsets.only(left: 30, right: 30),
                   child: Column(
                     children: [
                       Card(
@@ -3179,26 +3219,29 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 ),
                                 Expanded(
                                   child: Container(
-                                    height: 40,
+                                    height: viewUtil.isTablet?60:40,
+                                    padding: viewUtil.isTablet
+                                        ?EdgeInsets.only(right: 8,top: 10)
+                                        :EdgeInsets.only(right: 3,top: 0),
                                     child: TextFormField(
                                       textCapitalization: TextCapitalization.sentences,
                                       onChanged: (value) => _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
-                                        suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8,top: 5),
-                                          child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
-                                            child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
-                                                  await locateCurrentPosition();
-                                                },
-                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
-                                          ),
+                                        suffixIcon: Tooltip(
+                                          message: 'Locate Current Location'.tr(),
+                                          child: IconButton(
+                                              onPressed: ()async{
+                                                FocusScope.of(context).unfocus();
+                                                await locateCurrentPosition();
+                                              },
+                                              icon: Padding(
+                                                padding: const EdgeInsets.only(top: 7),
+                                                child: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),),
+                                              )),
                                         ),
                                         hintText: 'Pick Up'.tr(),
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3215,7 +3258,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                   itemCount: _pickUpSuggestions.length + 1,
                                   itemBuilder: (context, index) {
                                     if (index == 0) {
-
                                       return ListTile(
                                         title: Row(
                                           children: [
@@ -3266,7 +3308,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                       ),
                                       Expanded(
                                         child: Container(
-                                          height: 43,
+                                          height: viewUtil.isTablet?60:43,
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextFormField(
                                             textCapitalization: TextCapitalization.sentences,
@@ -3275,11 +3317,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                             decoration: InputDecoration(
                                               isDense: true,
                                               hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
                                               border: InputBorder.none,
                                               suffixIcon: i == _dropPointControllers.length - 1
                                                   ? Padding(
-                                                padding: const EdgeInsets.only(right: 15),
+                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.end,
                                                   mainAxisSize: MainAxisSize.min,
@@ -3287,12 +3329,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                     if (_dropPointControllers.length > 1)
                                                       GestureDetector(
                                                         onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
                                                       ),
                                                     if (_dropPointControllers.length == 1)
                                                       GestureDetector(
                                                         onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp),
+                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
                                                       ),
                                                   ],
                                                 ),
@@ -3349,8 +3391,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal,
+                                fontSize: viewUtil.isTablet?23:16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -3368,6 +3410,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserBusStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -3379,7 +3422,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           child: Stack(
             children: [
               Container(
-                height: MediaQuery.of(context).size.height * 0.6,
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.9
+                    : MediaQuery.of(context).size.height * 0.6,
                 child: GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController = controller;
@@ -3419,26 +3464,29 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 ),
                                 Expanded(
                                   child: Container(
-                                    height: 40,
+                                    height: viewUtil.isTablet?60:40,
+                                    padding: viewUtil.isTablet
+                                        ?EdgeInsets.only(right: 8,top: 10)
+                                        :EdgeInsets.only(right: 3,top: 0),
                                     child: TextFormField(
                                       textCapitalization: TextCapitalization.sentences,
                                       onChanged: (value) => _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
-                                        suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8,top: 5),
-                                          child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                        suffixIcon: Tooltip(
+                                          message: 'Locate Current Location'.tr(),
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 7),
                                             child: IconButton(
                                                 onPressed: ()async{
                                                   FocusScope.of(context).unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
                                         hintText: 'Pick Up'.tr(),
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3452,10 +3500,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 height: 200,
                                 width: MediaQuery.of(context).size.width * 0.9,
                                 child: ListView.builder(
-                                  itemCount: _pickUpSuggestions.length + 1,  // +1 to include the "Current Location"
+                                  itemCount: _pickUpSuggestions.length + 1,
                                   itemBuilder: (context, index) {
                                     if (index == 0) {
-                                      // Show "Current Location" as the first suggestion
                                       return ListTile(
                                         title: Row(
                                           children: [
@@ -3478,9 +3525,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         },
                                       );
                                     } else {
-                                      // Show other suggestions from the list
                                       return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),  // Adjust index for suggestions
+                                        title: Text(_pickUpSuggestions[index - 1]),
                                         onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
                                       );
                                     }
@@ -3507,7 +3553,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                       ),
                                       Expanded(
                                         child: Container(
-                                          height: 43,
+                                          height: viewUtil.isTablet?60:43,
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextFormField(
                                             textCapitalization: TextCapitalization.sentences,
@@ -3516,11 +3562,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                             decoration: InputDecoration(
                                               isDense: true,
                                               hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
                                               border: InputBorder.none,
                                               suffixIcon: i == _dropPointControllers.length - 1
                                                   ? Padding(
-                                                padding: const EdgeInsets.only(right: 15),
+                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.end,
                                                   mainAxisSize: MainAxisSize.min,
@@ -3528,12 +3574,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                     if (_dropPointControllers.length > 1)
                                                       GestureDetector(
                                                         onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red),
+                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
                                                       ),
                                                     if (_dropPointControllers.length == 1)
                                                       GestureDetector(
                                                         onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp),
+                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
                                                       ),
                                                   ],
                                                 ),
@@ -3590,8 +3636,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.normal,
+                                fontSize: viewUtil.isTablet?23:16,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -3617,6 +3663,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserEquipmentStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
       onTap: (){
         _dismissAddressSuggestions();
@@ -3627,7 +3674,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             children: [
               Container(
                 width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
+                padding:  viewUtil.isTablet
+                    ?EdgeInsets.only(left: 45, right: 45)
+                    :EdgeInsets.only(left: 30, right: 30),
                 child: Column(
                   children: [
                     Card(
@@ -3647,10 +3696,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               children: [
                                 Padding(
                                     padding: const EdgeInsets.fromLTRB(10,8,15,5),
-                                    child: SvgPicture.asset('assets/search.svg')),
+                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
                                 Expanded(
                                   child: Container(
-                                    height: 30,
+                                    height: viewUtil.isTablet?40:30,
                                     child: TextFormField(
                                       textCapitalization: TextCapitalization.sentences,
                                       controller: cityNameController,
@@ -3666,11 +3715,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   FocusScope.of(context).unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
                                         hintText: 'enterCityName'.tr(),
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3723,11 +3772,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             children: [
                               Padding(
                                   padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg')),
+                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(bottom: 5),
-                                  height: 33,
+                                  height: viewUtil.isTablet?40:33,
                                   child: TextFormField(
                                     textCapitalization: TextCapitalization.sentences,
                                     controller: addressController,
@@ -3735,7 +3784,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                     decoration: InputDecoration(
                                       isDense: true,
                                       hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
@@ -3782,8 +3831,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
+                              fontSize: viewUtil.isTablet?23:16,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -3793,7 +3842,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 ),
               ),
               Container(
-                height: MediaQuery.of(context).size.height * 0.4,
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.7
+                    : MediaQuery.of(context).size.height * 0.45,
                 child: GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController = controller;
@@ -3820,6 +3871,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Widget UserSpecialStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
       onTap: (){
         _dismissAddressSuggestions();
@@ -3830,7 +3882,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             children: [
               Container(
                 width: MediaQuery.of(context).size.width,
-                padding: const EdgeInsets.only(left: 15, right: 15,top: 5),
+                padding: viewUtil.isTablet
+                    ?EdgeInsets.only(left: 45, right: 45)
+                    :EdgeInsets.only(left: 30, right: 30),
                 child: Column(
                   children: [
                     Card(
@@ -3842,18 +3896,18 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         ),
                       ),
                       color: Colors.white,
-                      child: Column(
+                      child:Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               children: [
                                 Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,8),
-                                    child: SvgPicture.asset('assets/search.svg')),
+                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
+                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
                                 Expanded(
                                   child: Container(
-                                    height: 30,
+                                    height: viewUtil.isTablet?40:30,
                                     child: TextFormField(
                                       textCapitalization: TextCapitalization.sentences,
                                       controller: cityNameController,
@@ -3869,11 +3923,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   FocusScope.of(context).unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: 20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
                                           ),
                                         ),
                                         hintText: 'enterCityName'.tr(),
-                                        hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3926,11 +3980,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             children: [
                               Padding(
                                   padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg')),
+                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(bottom: 5),
-                                  height: 33,
+                                  height: viewUtil.isTablet?40:33,
                                   child: TextFormField(
                                     textCapitalization: TextCapitalization.sentences,
                                     controller: addressController,
@@ -3938,7 +3992,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                     decoration: InputDecoration(
                                       isDense: true,
                                       hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: const TextStyle(color: Color(0xff707070), fontSize: 15),
+                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
@@ -3985,8 +4039,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
+                              fontSize: viewUtil.isTablet?23:16,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -3996,7 +4050,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 ),
               ),
               Container(
-                height: MediaQuery.of(context).size.height * 0.4,
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.7
+                    : MediaQuery.of(context).size.height * 0.45,
                 child: GoogleMap(
                   onMapCreated: (GoogleMapController controller) {
                     mapController = controller;
@@ -4073,6 +4129,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return FutureBuilder<List<LoadType>>(
       future: _loadTypesFuture,
       builder: (context, snapshot) {
@@ -4082,12 +4139,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
           List<LoadType> loadItems = snapshot.data ?? [];
-
-          // Ensure loadItems is not empty and contains valid LoadType objects
-          print('Load Items: $loadItems'); // Debugging line
-
           return Container(
-            padding: const EdgeInsets.only(top: 15, bottom: 15, left: 10),
+            padding: EdgeInsets.symmetric(vertical: viewUtil.isTablet?17:14,horizontal: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8.0),
@@ -4098,7 +4151,9 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
               },
               elevation: 5,
               color: Colors.white,
-              constraints: BoxConstraints.tightFor(width: 350),
+              constraints: BoxConstraints.tightFor(
+                  width: viewUtil.isTablet
+                      ?MediaQuery.sizeOf(context).width * 0.92 :350),
               offset: const Offset(0, -280),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -4107,9 +4162,9 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                     (widget.selectedLoad?.isNotEmpty ?? false)
                         ? widget.selectedLoad!
                         : 'loadType'.tr(),
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: viewUtil.isTablet ?20:16),
                   ),
-                  const Icon(Icons.arrow_drop_down,size: 26),
+                  Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?30: 26),
                 ],
               ),
               itemBuilder: (BuildContext context) {
@@ -4121,7 +4176,7 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                       child: Row(
                         children: [
                           Text(load.load.tr(),
-                              style: const TextStyle(fontSize: 16.0)),
+                              style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                         ],
                       ),
                     ),

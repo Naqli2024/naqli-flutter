@@ -68,12 +68,12 @@ dependencies:
   flutter_inappwebview: ^6.0.0
   pdf: ^3.10.1
   printing: ^5.10.1
+  app_links: ^6.3.3
+
 
   flutter_localizations:
     sdk: flutter
   easy_localization: ^3.0.7
-
-
 
 
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/Partner/Views/auth/register_step_one.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -33,6 +34,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -47,7 +49,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
             child: SvgPicture.asset(
               'assets/naqlee-logo.svg',
               fit: BoxFit.fitWidth,
-              height: 40,
+              height: viewUtil.isTablet ? 45 : 40,
             ),
           ),
         ),
@@ -72,7 +74,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       child: Text('Forgot Password?'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Padding(
@@ -80,10 +82,10 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       child: Text("We'll send you reset instruction".tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 20,
+                          fontSize: viewUtil.isTablet ? 22 : 17,
                         ),),
                     ),
-                    commonWidgets.buildTextField('Email'.tr(), emailController),
+                    commonWidgets.buildTextField('Email'.tr(), emailController,context: context),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SizedBox(
@@ -115,8 +117,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             'Reset Password'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
+                              fontSize: viewUtil.isTablet ? 22 : 18,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -138,7 +140,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                             Text("Back to login".tr(),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
-                                fontSize: 20,
+                                fontSize: viewUtil.isTablet ? 26 : 20,
                               ),),
                           ],
                         ),
@@ -178,6 +180,7 @@ class _ResetPasswordState extends State<ResetPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -192,7 +195,7 @@ class _ResetPasswordState extends State<ResetPassword> {
               child: SvgPicture.asset(
                 'assets/naqlee-logo.svg',
                 fit: BoxFit.fitWidth,
-                height: 40,
+                height: viewUtil.isTablet ? 45 : 40,
               ),
             ),
           ),
@@ -217,7 +220,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                       child: Text('Enter your verification code'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Column(
@@ -243,7 +246,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                                     border: Border.all(color: Colors.grey)
                                 ),
                                 child: SizedBox(
-                                  width: 40,
+                                  width: viewUtil.isTablet ?50 :40,
                                   child: TextField(
                                     controller: otpControllers[index],
                                     maxLength: 1,
@@ -300,8 +303,8 @@ class _ResetPasswordState extends State<ResetPassword> {
                                 'Continue'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.normal,
+                                  fontSize: viewUtil.isTablet ? 22 : 18,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -313,11 +316,11 @@ class _ResetPasswordState extends State<ResetPassword> {
                             children: [
                               TextSpan(
                                 text: 'Didn’t receive the email?'.tr(),
-                                style: const TextStyle(color: Colors.black,fontSize: 16),
+                                style: TextStyle(color: Colors.black,fontSize: viewUtil.isTablet ?20 :16),
                               ),
                               TextSpan(
                                 text: 'Click to resend'.tr(),
-                                style: const TextStyle(color: Color(0xff6A66D1),fontSize: 16,decoration: TextDecoration.underline,),
+                                style: TextStyle(color: Color(0xff6A66D1),fontSize: viewUtil.isTablet ?20 :16,decoration: TextDecoration.underline,),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async{
                                     for (var controller in otpControllers) {
@@ -347,7 +350,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                                 Text("Back to login".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 20,
+                                    fontSize: viewUtil.isTablet ? 26 : 20,
                                   ),),
                               ],
                             ),
@@ -386,6 +389,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -400,7 +404,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
               child: SvgPicture.asset(
                 'assets/naqlee-logo.svg',
                 fit: BoxFit.fitWidth,
-                height: 40,
+                height: viewUtil.isTablet ? 45 : 40,
               ),
             ),
           ),
@@ -425,7 +429,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                       child: Text('Set new password'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Column(
@@ -444,7 +448,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                                 isNewPasswordObscured = !isNewPasswordObscured;
                               });
                             },
-                          ),
+                          ),context: context
                         ),
                         commonWidgets.buildTextField(
                           'Confirm Password'.tr(),
@@ -459,7 +463,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                                 isConfirmPasswordObscured = !isConfirmPasswordObscured;
                               });
                             },
-                          ),
+                          ),context: context
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 15),
@@ -493,7 +497,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                                 'Reset Password'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
+                                  fontSize: viewUtil.isTablet ? 22 : 18,
                                   fontWeight: FontWeight.normal,
                                 ),
                               ),
@@ -517,7 +521,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                                 Text("Back to login".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 20,
+                                    fontSize: viewUtil.isTablet ? 26 : 20,
                                   ),),
                               ],
                             ),
@@ -546,6 +550,7 @@ class ForgotPasswordSuccess extends StatefulWidget {
 class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -559,7 +564,7 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
             child: SvgPicture.asset(
               'assets/naqlee-logo.svg',
               fit: BoxFit.fitWidth,
-              height: 40,
+              height: viewUtil.isTablet ? 45 : 40,
             ),
           ),
         ),
@@ -578,13 +583,13 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
                 padding: EdgeInsets.only(bottom: 20,top: 40),
                 child: Text('Your password has been reset'.tr(),
                     style: TextStyle(
-                        fontSize: 26)),
+                        fontSize: viewUtil.isTablet ?26:23)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 0),
                 child: Text('Successfully'.tr(),
                     style: TextStyle(
-                        fontSize: 25,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet ?25:23,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 40),
@@ -609,8 +614,8 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
                       'Continue'.tr(),
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.normal,
+                        fontSize: viewUtil.isTablet ? 22 : 18,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
