@@ -12,6 +12,7 @@ import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notification.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -311,9 +312,9 @@ class _DriverHomePageState extends State<DriverHomePage>
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -362,23 +363,32 @@ class _DriverHomePageState extends State<DriverHomePage>
                           ),
                           backgroundColor: Colors.white,
                           contentPadding: const EdgeInsets.all(20),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(top: 30,bottom: 10),
-                                child: Text(
-                                  'are_you_sure_you_want_to_logout'.tr(),
-                                  style: TextStyle(fontSize: 19),
+                          content: Container(
+                            width: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.width * 0.6
+                                : MediaQuery.of(context).size.width,
+                            height: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.height * 0.08
+                                : MediaQuery.of(context).size.height * 0.1,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                                  child: Text(
+                                    'are_you_sure_you_want_to_logout'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           actions: <Widget>[
                             TextButton(
-                              child: Text('yes'.tr()),
+                              child: Text('yes'.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
                               onPressed: () async {
-                                await clearDriverData();
+                                await clearUserData();
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => DriverLogin()),
@@ -386,7 +396,8 @@ class _DriverHomePageState extends State<DriverHomePage>
                               },
                             ),
                             TextButton(
-                              child: Text('no'.tr()),
+                              child: Text('no'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -503,7 +514,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                         margin: const EdgeInsets.only(top: 30, bottom: 20),
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 0.07,
-                          width: MediaQuery.of(context).size.width * 0.45,
+                          width: viewUtil.isTablet
+                              ? MediaQuery.of(context).size.width * 0.37
+                              : MediaQuery.of(context).size.width * 0.45,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
@@ -525,11 +538,11 @@ class _DriverHomePageState extends State<DriverHomePage>
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                SvgPicture.asset('assets/carOffline.svg', height: 35),
+                                SvgPicture.asset('assets/carOffline.svg', height: viewUtil.isTablet ?40:35),
                                 Text(
                                   'Offline'.tr(),
                                   style:
-                                  TextStyle(fontSize: 23, color: Colors.black),
+                                  TextStyle(fontSize: viewUtil.isTablet ?26 :23, color: Colors.black),
                                 ),
                               ],
                             ),
@@ -541,7 +554,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                         margin: const EdgeInsets.only(top: 30, bottom: 20),
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 0.07,
-                          width: MediaQuery.of(context).size.width * 0.45,
+                          width: viewUtil.isTablet
+                              ? MediaQuery.of(context).size.width * 0.37
+                              : MediaQuery.of(context).size.width * 0.45,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xff6069FF),
@@ -563,9 +578,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                                 Text(
                                   'Online'.tr(),
                                   style:
-                                  TextStyle(fontSize: 23, color: Colors.black),
+                                  TextStyle(fontSize: viewUtil.isTablet ?26 :23, color: Colors.black),
                                 ),
-                                SvgPicture.asset('assets/carOnline.svg', height: 35),
+                                SvgPicture.asset('assets/carOnline.svg', height: viewUtil.isTablet ?40:35),
                               ],
                             ),
                           ),

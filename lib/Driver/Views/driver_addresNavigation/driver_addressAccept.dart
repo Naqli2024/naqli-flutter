@@ -10,6 +10,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -264,6 +265,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -310,6 +312,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -320,12 +323,14 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                 ],
                               ),
                               child: CircleAvatar(
+                                radius: viewUtil.isTablet ? 30 : 20,
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: (){
                                       Navigator.pop(context);
                                     },
-                                    icon: Icon(FontAwesomeIcons.multiply)),
+                                    icon: Icon(FontAwesomeIcons.multiply,
+                                        size: viewUtil.isTablet?30:20)),
                               ),
                             ),
                           ],
@@ -345,7 +350,10 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.only(top: 15),
-                                  child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',height: 35,)),
+                                  child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',
+                                      height: viewUtil.isTablet
+                                          ?MediaQuery.of(context).size.height * 0.05
+                                          :MediaQuery.of(context).size.height * 0.04)),
                                 ),
                                 Row(
                                   children: [
@@ -355,7 +363,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                     ),
                                     Align(
                                         alignment: Alignment.center,
-                                        child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: 35 ),)),
+                                        child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: viewUtil.isTablet?35:30),)),
                                   ],
                                 ),
                                 isLoading
@@ -363,7 +371,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                     : Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 8,top: 15,bottom: 20),
+                                      padding: EdgeInsets.only(left: viewUtil.isTablet?20:8,top: 15,bottom: 20),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
@@ -378,14 +386,14 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.start,
                                                 children: [
-                                                  Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                  Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   Padding(
                                                     padding: const EdgeInsets.only(right: 45),
-                                                    child: Text(widget.pickUp,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                    child: Text(widget.pickUp,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   ),
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 20),
-                                                    child: Text(widget.address,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                    child: Text(widget.address,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   ),
                                                 ],
                                               ),
@@ -424,7 +432,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                               'Accept'.tr(),
                                               style: TextStyle(
                                                   color: Colors.white,
-                                                  fontSize: 18,
+                                                  fontSize: viewUtil.isTablet?26:18,
                                                   fontWeight: FontWeight.w500),
                                             )),
                                       ),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -39,7 +40,7 @@ class AddressCompleteOrder extends StatefulWidget {
   State<AddressCompleteOrder> createState() => _AddressCompleteOrderState();
 }
 
-class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
+class _AddressCompleteOrderState extends State<AddressCompleteOrder> with SingleTickerProviderStateMixin{
   final CommonWidgets commonWidgets = CommonWidgets();
   final DriverService driverService = DriverService();
   GoogleMapController? mapController;
@@ -80,6 +81,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
   bool hasNavigated = false;
   Timer? _locationCheckTimer;
   bool completeOrder = true;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   @override
   void initState() {
@@ -90,6 +93,13 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
     loadCustomArrowIcon();
     _initLocationListener();
     _startLocationUpdates();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: -5, end: 5).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   void _startLocationUpdates() {
@@ -661,6 +671,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -707,6 +718,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -717,6 +729,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                 ],
                               ),
                               child: CircleAvatar(
+                                radius: viewUtil.isTablet ? 30 : 20,
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: (){
@@ -728,7 +741,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                           partnerId: widget.partnerId,
                                           mode: 'online')));
                                     },
-                                    icon: Icon(FontAwesomeIcons.multiply)),
+                                    icon: Icon(FontAwesomeIcons.multiply,
+                                        size: viewUtil.isTablet?30:20)),
                               ),
                             ),
                           ],
@@ -767,7 +781,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                                 ? currentPlace
                                                 : 'Fetching Current Location.....'.tr(),
                                                 textAlign: TextAlign.start,
-                                                style: TextStyle(fontSize: 16,color: Color(0xff676565))),
+                                                style: TextStyle(fontSize: viewUtil.isTablet?24:16,color: Color(0xff676565))),
                                           ],
                                         ),
                                       ),
@@ -799,7 +813,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
                                           timeToPickup ?? '',
-                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                                         ),
                                       ),
                                       Padding(
@@ -812,7 +826,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                           pickUpDistance!=0
                                               ? '${pickUpDistance.toStringAsFixed(2)} km'
                                               : 'Calculating...'.tr(),
-                                          style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                                         ),
                                       ),
                                     ],
@@ -825,7 +839,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
                                       widget.userName,
-                                      style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                                     ),
                                   ),
                                   Container(
@@ -839,17 +853,27 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> {
                                         submittedIcon: Icon(
                                           Icons.check,
                                           color: Colors.white,
+                                          size: viewUtil.isTablet?30:26,
                                         ),
                                         innerColor: Color(0xff6069FF),
                                         outerColor: Color(0xff6069FF),
-                                        sliderButtonIcon: Icon(
-                                          Icons.arrow_forward_outlined,
-                                          color: Colors.white,
+                                        sliderButtonIcon: AnimatedBuilder(
+                                          animation: _animation,
+                                          builder: (context, child) {
+                                            return Transform.translate(
+                                              offset: Offset(_animation.value, 0), // Horizontal movement
+                                              child: Icon(
+                                                Icons.arrow_forward_outlined,
+                                                color: Colors.white,
+                                                size: viewUtil.isTablet?30:26,
+                                              ),
+                                            );
+                                          },
                                         ),
                                         text: "Complete Order".tr(),
                                         textStyle: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: viewUtil.isTablet?26:18,
                                           fontWeight: FontWeight.w500,
                                         ),
                                         onSubmit: () async{

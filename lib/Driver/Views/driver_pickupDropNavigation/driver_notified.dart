@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -41,7 +42,7 @@ class CustomerNotified extends StatefulWidget {
   State<CustomerNotified> createState() => _CustomerNotifiedState();
 }
 
-class _CustomerNotifiedState extends State<CustomerNotified> {
+class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerProviderStateMixin{
   final CommonWidgets commonWidgets = CommonWidgets();
   final DriverService driverService = DriverService();
   GoogleMapController? mapController;
@@ -82,6 +83,9 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
   bool hasNavigated = false;
   Timer? _locationCheckTimer;
   bool completeOrder = true;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +94,13 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
     startLocationUpdatesForDropPoints();
     loadCustomArrowIcon();
     _startLocationUpdates();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: -5, end: 5).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   void _startLocationUpdates() {
@@ -540,6 +551,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -587,6 +599,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -597,6 +610,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                 ],
                               ),
                               child: CircleAvatar(
+                                radius: viewUtil.isTablet ? 30 : 20,
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: (){
@@ -608,7 +622,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                           partnerId: widget.partnerId,
                                           mode: 'online')));
                                     },
-                                    icon: Icon(FontAwesomeIcons.multiply)),
+                                    icon: Icon(FontAwesomeIcons.multiply,
+                                        size: viewUtil.isTablet?30:20)),
                               ),
                             ),
                           ],
@@ -620,7 +635,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       ? Container(
                       margin: EdgeInsets.only(left: 20),
                       width: MediaQuery.sizeOf(context).width * 0.92,
-                      // height: MediaQuery.sizeOf(context).height * 0.13,
                       child: Card(
                         color: Colors.white,
                         child: Column(
@@ -634,7 +648,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                     padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
                                     child: Column(
                                       children: [
-                                        Icon(Icons.location_on,color: Color(0xff6069FF),size: 30,),
+                                        Icon(Icons.location_on,color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                                       ],
                                     ),
                                   ),
@@ -644,7 +658,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: 16,color: Color(0xff676565))),
+                                          Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: viewUtil.isTablet?26:16,color: Color(0xff676565))),
                                         ],
                                       ),
                                     ),
@@ -677,7 +691,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                           SvgPicture.asset('assets/upArrow.svg'),
                                           Text(
                                             '$feet',
-                                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16, color: Color(0xff676565)),
                                           ),
                                         ],
                                       ),
@@ -686,9 +700,11 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(nearbyPlaces[currentIndex]['name'] ?? 'Xxxxxxxxx'),
-                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
-                                          Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
+                                          Text(nearbyPlaces[currentIndex]['name'] ?? '',
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
+                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                                         ],
                                       ),
                                     ),
@@ -699,29 +715,53 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                               indent: 15,
                               endIndent: 15,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: Color(0xff6069FF),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Color(0xff6069FF),
+                                        size: viewUtil.isTablet?30:20
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    children: [
-                                      Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
-                                    ],
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      children: [
+                                        Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         )
-                            : Center(child: CircularProgressIndicator()),
+                            : Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text('Fetching nearby Location...',
+                                    style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     )
                   ),
@@ -756,12 +796,12 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                 ),
               ),
               child: CircleAvatar(
-                minRadius: 45,
+                minRadius: viewUtil.isTablet?55:40,
                 maxRadius: double.maxFinite,
                 backgroundColor: Color(0xff6069FF),
                 child: Text(
                   'Move'.tr(),
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+                  style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:20),
                 ),
               ),
             ),
@@ -788,7 +828,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
                             timeToDrop == null ?'Calculating...'.tr() :timeToDrop ?? '',
-                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                           ),
                         ),
                         Padding(
@@ -801,7 +841,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                             dropPointsDistance.isNotEmpty
                                 ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
                                 : 'Calculating...'.tr(),
-                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                           ),
                         ),
                       ],
@@ -811,8 +851,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.call, color: Color(0xff6069FF)),
-                          Icon(Icons.message, color: Color(0xff6069FF)),
+                          Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                          Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                         ],
                       ),
                     ),
@@ -820,7 +860,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       padding: const EdgeInsets.only(bottom: 20),
                       child: Text(
                         'Dropping of Product'.tr(),
-                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                        style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                       ),
                     ),
                   ],
@@ -844,7 +884,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
                             timeToDrop ?? '',
-                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                           ),
                         ),
                         Padding(
@@ -857,7 +897,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                             dropPointsDistance.isNotEmpty
                                 ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
                                 : 'Calculating...'.tr(),
-                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                           ),
                         ),
                       ],
@@ -870,7 +910,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         widget.userName,
-                        style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                        style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                       ),
                     ),
                     Container(
@@ -884,17 +924,27 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                           submittedIcon: Icon(
                             Icons.check,
                             color: Colors.white,
+                            size: viewUtil.isTablet?30:26,
                           ),
                           innerColor: Color(0xff6069FF),
                           outerColor: Color(0xff6069FF),
-                          sliderButtonIcon: Icon(
-                            Icons.arrow_forward_outlined,
-                            color: Colors.white,
+                          sliderButtonIcon: AnimatedBuilder(
+                            animation: _animation,
+                            builder: (context, child) {
+                              return Transform.translate(
+                                offset: Offset(_animation.value, 0), // Horizontal movement
+                                child: Icon(
+                                  Icons.arrow_forward_outlined,
+                                  color: Colors.white,
+                                  size: viewUtil.isTablet?30:26,
+                                ),
+                              );
+                            },
                           ),
                           text: "Complete Order".tr(),
                           textStyle: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: viewUtil.isTablet?26:18,
                             fontWeight: FontWeight.w500,
                           ),
                           onSubmit: () async{
@@ -934,14 +984,14 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         'Customer Notified'.tr(),
-                        style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                        style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         widget.userName,
-                        style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                        style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
                       ),
                     ),
                     Padding(
@@ -949,8 +999,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.call, color: Color(0xff6069FF)),
-                          Icon(Icons.message, color: Color(0xff6069FF)),
+                          Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                          Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                         ],
                       ),
                     ),

@@ -53,7 +53,8 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
   bool isMADATapped = false;
   String? checkOutId;
   String? integrityId;
-  int? resultCode;
+  String? resultCode;
+  String? paymentStatus;
 
   @override
   void initState() {
@@ -637,7 +638,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                           ),
                           onPressed: () async {
                             Navigator.pop(context);
-                            showSelectPaymentDialog(booking['remainingBalance']);
+                            showSelectPaymentDialog(booking['remainingBalance'],booking['partner']??'',booking['_id']??'');
                           },
                           child: Text(
                             '${'Pay :'.tr()} ${booking['remainingBalance']} SAR',
@@ -715,7 +716,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     }
   }
 
-  void showSelectPaymentDialog(int amount) {
+  void showSelectPaymentDialog(int amount,String partnerId,String bookingId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -757,7 +758,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                             Navigator.pop(context);
                           });
                           await initiatePayment('MADA', amount);
-                          showPaymentDialog(checkOutId??'', integrityId??'', true);
+                          showPaymentDialog(checkOutId??'', integrityId??'', true,amount,partnerId,bookingId);
                         },
                         child: Container(
                           color: isMADATapped
@@ -789,7 +790,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                             Navigator.pop(context);
                           });
                           await initiatePayment('OTHER', amount);
-                          showPaymentDialog(checkOutId??'', integrityId??'', false);
+                          showPaymentDialog(checkOutId??'', integrityId??'', false,amount,partnerId,bookingId);
                         },
                         child: Container(
                           color: isOtherCardTapped
@@ -823,7 +824,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 
   Future initiatePayment(String paymentBrand,int amount) async {
     setState(() {
-      loadingDialog(true);
+      commonWidgets.loadingDialog(context, true);
     });
     final result = await superUserServices.choosePayment(
       context,
@@ -846,14 +847,16 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     });
   }
 
-  Future<void> getPaymentStatus(String checkOutId,bool isMadaTapped) async {
+  Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
     print('Processed');
-    if (result != null) {
+    print(isMadaTapped);
+
+    if (result != null && result['code'] != null) {
       setState(() {
-        resultCode = int.tryParse(result['code'] ?? '');
+        resultCode = result['code'] ?? '';
+        paymentStatus = result['description'] ?? '';
         print(resultCode);
-        showPaymentSuccessDialog();
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -862,43 +865,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     }
   }
 
-  void loadingDialog(bool isProcessing){
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Visibility(
-          visible: isProcessing,
-          child: Directionality(
-            textDirection: ui.TextDirection.ltr,
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              insetPadding: EdgeInsets.symmetric(horizontal: 90),
-              backgroundColor: Colors.white,
-              child: StatefulBuilder(
-                builder: (BuildContext context, StateSetter setState) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: 50),
-                      LoadingAnimationWidget.fourRotatingDots(
-                        color: Colors.blue,
-                        size: 80,
-                      ),
-                      SizedBox(height: 50)
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       print('Error: checkOutId or integrity is empty');
       return;
@@ -924,19 +891,15 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 
         .container {
             text-align: center;
-            background-color: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Loading spinner styles */
         .loading-spinner {
-            border: 8px solid #f3f3f3;
+            border: 8px solid #BCBCBC;
             border-top: 8px solid #4caf50;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
@@ -953,27 +916,22 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 </head>
 <body>
     <div class="container">
-        <h1>Processing Payment...</h1>
+        <h1>Processing...</h1>
         <div class="loading-spinner"></div>
+        <p>Please wait... Loading your payment results.</p>
     </div>
 
     <script>
-        function showLoadingAndNavigate() {
-            // Show the loading spinner
-            setTimeout(() => {
-                // Send a postMessage to the Flutter app after 5 seconds
-                window.parent.postMessage('NavigateToFlutter', '*');
-                console.log('Message sent to Flutter: NavigateToFlutter');
-            }, 5000); // 5000ms = 5 seconds
-        }
-
-        // Call the function on page load
-        window.onload = showLoadingAndNavigate;
+        setTimeout(() => {
+            console.log("Posting message: NavigateToFlutter");
+            window.parent.postMessage("NavigateToFlutter", "*");
+            if (window.NavigateToFlutter) {
+                window.NavigateToFlutter.postMessage('NavigateToFlutter');
+            }
+        }, 5000);
     </script>
 </body>
 </html>
-
-
   ''';
 
     final String visaHtml = '''
@@ -1026,19 +984,17 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     </style>
 
     <script>
-      // HyperPay payment options
-      // window['wpwlOptions'] = {
-      //   onAfterSubmit: function () {
-      //     console.log("Payment submitted successfully!");
-      //
-      //     // Send message to Flutter
-      //     if (window.NavigateToFlutter) {
-      //       window.NavigateToFlutter.postMessage('PaymentSubmitted');
-      //     } else {
-      //       alert('Payment submitted successfully!');
-      //     }
-      //   }
-      // };
+       window['wpwlOptions'] = {
+      billingAddress: {},
+      mandatoryBillingFields: {
+        country: true,
+        state: true,
+        city: true,
+        postcode: true,
+        street1: true,
+        street2: false,
+      },
+    };
 
       // Function to load the HyperPay payment widget script
       function loadPaymentScript(checkoutId, integrity) {
@@ -1062,8 +1018,6 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
   </body>
 </html>
 ''';
-
-
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
 
@@ -1093,15 +1047,43 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                     name: 'NavigateToFlutter',
                     onMessageReceived: (JavascriptMessage message) async {
                       await getPaymentStatus(checkOutId,isMADATapped);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => SuperUserPayment(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email,
-                        ),),
-                      );
+                      resultCode == "000.100.110"
+                      ? Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
+                          onContinuePressed:() async {
+                            await userService.updatePayment(
+                              widget.token,
+                              amount,
+                              'Completed',
+                              partnerID,
+                              bookingId,
+                              amount*2,
+                              0,
+                            );
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (context) => SuperUserPayment(
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                token: widget.token,
+                                id: widget.id,
+                                email: widget.email,
+                              ),),
+                            );
+                          },)))
+                        : Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                            paymentStatus: paymentStatus??'',
+                            onRetryPressed:() {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => SuperUserPayment(
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  token: widget.token,
+                                  id: widget.id,
+                                  email: widget.email,
+                                ),),
+                              );
+                            },)));
                     },
                   ),
                 },
@@ -1115,112 +1097,4 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
       },
     );
   }
-
-  void showPaymentSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 20),
-          backgroundColor: Colors.white,
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            padding: const EdgeInsets.all(0),
-            child: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Payment Status',
-                        style: TextStyle(
-                            fontSize: 28, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    resultCode != "000.100.110"
-                        ? Column(
-                      children: [
-                        Center(
-                          child:  LoadingAnimationWidget.fourRotatingDots(
-                            color: Colors.blue,
-                            size: 60,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text('Please wait!!\nYour payment is in process..Do not close the page',textAlign: TextAlign.center,style: TextStyle(fontSize: 17)),
-                        ),
-                      ],
-                    )
-                        : Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            width: MediaQuery.sizeOf(context).width,
-                            color: Color(0xffE6FFE5),
-                            padding: const EdgeInsets.only(top: 12, bottom: 12),
-                            child: Text('Payment Successful!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.green)),
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                              'You wil be redirected to dashboard by clicking this..',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 15)),
-                        ),
-                        SizedBox(height: 5),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.057,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  LoadingAnimationWidget.staggeredDotsWave(
-                                    color: Colors.green,
-                                    size: 200,
-                                  );
-                                },
-                                child: Text(
-                                  'Go to Dashboard',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 23),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
 }

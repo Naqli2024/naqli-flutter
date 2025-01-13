@@ -168,10 +168,10 @@ class _UserTypeState extends State<UserType> {
                             builder: (context) => ChooseVendor(
                               id: widget.id,
                               bookingId: bookingData['_id'] ?? '',
-                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : 'N/A'.tr(),
+                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : ''.tr(),
                               unitType: bookingData['unitType'] ?? '',
-                              unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? 'N/A' : 'N/A',
-                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : 'N/A'.tr(),
+                              unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
+                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : ''.tr(),
                               unit: bookingData['name'] ?? '',
                               pickup: bookingData['pickup'] ?? '',
                               dropPoints: bookingData['dropPoints'] ?? [],
@@ -353,9 +353,7 @@ class _UserTypeState extends State<UserType> {
                   child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
                 ),
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=>
-                          PaymentPage(checkoutId: '', integrity: '',)));
+
                 },
               ),
               ListTile(

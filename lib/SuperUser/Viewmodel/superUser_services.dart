@@ -241,11 +241,7 @@ class SuperUserServices {
       if (response.statusCode == 200) {
         final checkOutId = responseBody['id'];
         final integrityId = responseBody['integrity'];
-        final message = responseBody['message'] ?? 'Payment processed successfully.';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
         if (checkOutId != null && integrityId != null) {
           return {
             'id': checkOutId,
@@ -270,39 +266,50 @@ class SuperUserServices {
     }
   }
 
-  Future<Map<String, String>?> getPaymentDetails(BuildContext context, String checkOutId,bool paymentType) async {
-      try {
-        final response = await http.get(
-          Uri.parse('${baseUrl}payment-status/$checkOutId'),
-          headers: {
-            'Content-Type': 'application/json',
-            'paymentBrand':paymentType =='MADA'?'MADA':'OTHER'
+  Future<Map<String, String>?> getPaymentDetails(BuildContext context, String checkOutId, bool paymentType) async {
+    try {
+      String paymentBrand = paymentType ? 'MADA' : 'OTHER';
+      final response = await http.get(
+        Uri.parse('$baseUrl/payment-status/$checkOutId').replace(
+          queryParameters: {
+            'paymentBrand': paymentBrand,
           },
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final responseBody = jsonDecode(response.body);
+      print('Payment Response Body: $responseBody');
+
+      if (response.statusCode == 200) {
+        String resultCode = responseBody['result']['code'] ?? 'Unknown';
+        String description = responseBody['result']['description'] ?? 'Unknown';
+        print('Result Code: $resultCode');
+
+        return {
+          'code': resultCode,
+          'description': description,
+        };
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
         );
-        final responseBody = jsonDecode(response.body);
-        print('Payment Response Body: $responseBody');
-        if (response.statusCode == 200) {
-          final message = responseBody['message'] ?? 'Payment processed successfully.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-        }  else {
-          final message = responseBody['message'] ?? 'Please try again.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-          print('Failed to create booking: ${response.statusCode}');
-          print('Response body: ${response.body}');
-        }
-        return null;
-      }on SocketException {
-        CommonWidgets().showToast('No Internet connection');
-        throw Exception('Please check your internet \nconnection and try again.');
-      } catch (e) {
-        print('An error occurred: $e');
-        throw Exception('An unexpected error occurred: $e');
+        print('Failed to create booking: ${response.statusCode}');
+        print('Response body: ${response.body}');
       }
+      return null;
+    } on SocketException {
+      CommonWidgets().showToast('No Internet connection');
+      throw Exception('Please check your internet \nconnection and try again.');
+    } catch (e) {
+      print('An error occurred: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
   }
+
 
   Future<void> editProfile(
       String token,

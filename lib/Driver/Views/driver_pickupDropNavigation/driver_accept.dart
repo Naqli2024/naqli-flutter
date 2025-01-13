@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_interaction.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -323,6 +324,7 @@ class _OrderAcceptState extends State<OrderAccept> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -369,6 +371,7 @@ class _OrderAcceptState extends State<OrderAccept> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -379,12 +382,14 @@ class _OrderAcceptState extends State<OrderAccept> {
                                 ],
                               ),
                               child: CircleAvatar(
+                                radius: viewUtil.isTablet ? 30 : 20,
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: (){
                                       Navigator.pop(context);
                                     },
-                                    icon: Icon(FontAwesomeIcons.multiply)),
+                                    icon: Icon(FontAwesomeIcons.multiply,
+                                        size: viewUtil.isTablet?30:20)),
                               ),
                             ),
                           ],
@@ -404,7 +409,10 @@ class _OrderAcceptState extends State<OrderAccept> {
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.only(top: 15),
-                                    child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',height: 35,)),
+                                    child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',
+                                        height: viewUtil.isTablet
+                                            ?MediaQuery.of(context).size.height * 0.05
+                                            :MediaQuery.of(context).size.height * 0.04)),
                                   ),
                                   Row(
                                     children: [
@@ -414,7 +422,7 @@ class _OrderAcceptState extends State<OrderAccept> {
                                       ),
                                       Align(
                                           alignment: Alignment.center,
-                                          child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: 35 ),)),
+                                          child: Text('SAR ${widget.quotePrice}',style: TextStyle(fontSize: viewUtil.isTablet?35:30 ),)),
                                     ],
                                   ),
                                   isLoading
@@ -422,7 +430,7 @@ class _OrderAcceptState extends State<OrderAccept> {
                                       : Column(
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.only(left: 8,top: 8,bottom: 20),
+                                        padding: EdgeInsets.only(left: viewUtil.isTablet?20:8,top: 8,bottom: 20),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
@@ -437,10 +445,10 @@ class _OrderAcceptState extends State<OrderAccept> {
                                                 child: Column(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   children: [
-                                                    Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                    Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                     Padding(
                                                       padding: const EdgeInsets.only(bottom: 20),
-                                                      child: Text(widget.pickUp,style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                      child: Text(widget.pickUp,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                     ),
                                                     if (dropPointsDistance != null && dropPointsDistance!.isNotEmpty) ...[
                                                       ...dropPointsDistance!.map((distance) {
@@ -448,14 +456,14 @@ class _OrderAcceptState extends State<OrderAccept> {
                                                           padding: EdgeInsets.only(top: 20),
                                                           child: Text(
                                                             '${timeToDrop} (${distance.toStringAsFixed(2)}km) ${'left'.tr()}',
-                                                            style: TextStyle(fontSize: 20,color: Color(0xff676565)),
+                                                            style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),
                                                           ),
                                                         );
                                                       }).toList(),
                                                     ] else ...[
                                                       Text('', style: TextStyle(fontSize: 20)),
                                                     ],
-                                                    Text( widget.dropPoints.join(', '), style: TextStyle(fontSize: 20,color: Color(0xff676565)),),
+                                                    Text( widget.dropPoints.join(', '), style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   ],
                                                 ),
                                               ),
@@ -494,7 +502,7 @@ class _OrderAcceptState extends State<OrderAccept> {
                                                 'Accept'.tr(),
                                                 style: TextStyle(
                                                     color: Colors.white,
-                                                    fontSize: 18,
+                                                    fontSize: viewUtil.isTablet?26:18,
                                                     fontWeight: FontWeight.w500),
                                               )),
                                         ),

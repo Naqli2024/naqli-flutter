@@ -30,11 +30,7 @@ class DriverService{
       );
 
       final responseBody = jsonDecode(response.body);
-
-      print('Full Response Body: $responseBody');
-
       if (response.statusCode == 200) {
-        print('Login successful');
         final message = responseBody['message'] ?? 'Login Failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
@@ -50,7 +46,6 @@ class DriverService{
           final token = tokenData['token'] ?? '';
           final operatorId = driverData['_id'] ?? '';
           final partnerId = tokenData['associatedPartnerId'] ?? '';
-          print(driverData);
           await driverMode(context, partnerId: partnerId, operatorId: operatorId, mode: mode);
           Navigator.push(context, MaterialPageRoute(builder: (context)=> DriverHomePage(
             firstName: firstName,
@@ -59,26 +54,25 @@ class DriverService{
             id: operatorId,partnerId: partnerId,mode: mode,)));
           await saveDriverData(firstName, lastName, token, operatorId,partnerId,mode);
         } else {
-          print('Driver data is null');
+          final message = responseBody['message'] ?? 'Login failed. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
         }
       } else {
         final message = responseBody['message'] ?? 'Login failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to login driver: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -100,7 +94,6 @@ class DriverService{
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -112,8 +105,6 @@ class DriverService{
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to send OTP: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +114,6 @@ class DriverService{
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -149,7 +139,6 @@ class DriverService{
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -161,8 +150,6 @@ class DriverService{
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to Reset Pwd: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -172,7 +159,6 @@ class DriverService{
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -192,7 +178,6 @@ class DriverService{
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         Fluttertoast.showToast(
           msg: 'OTP Send Successfully',
           toastLength: Toast.LENGTH_LONG,
@@ -207,8 +192,6 @@ class DriverService{
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to register user: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -218,7 +201,6 @@ class DriverService{
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -243,9 +225,6 @@ class DriverService{
       );
 
       final responseBody = jsonDecode(response.body);
-
-      print('Full Response Body: $responseBody');
-
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Failed';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -257,19 +236,15 @@ class DriverService{
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to update: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -290,34 +265,25 @@ class DriverService{
       );
 
       final responseBody = jsonDecode(response.body);
-      print('Full Response Body: $responseBody');
 
       if (response.statusCode == 200) {
-        // final message = responseBody['message'] ?? 'Request successful';
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(message)),
-        // );
         return responseBody;
       } else {
         final message = responseBody['message'] ?? 'No Booking request found';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to update: ${response.statusCode}');
-        print('Response body: ${response.body}');
         return null;
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
       return null;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please try again...')),
       );
-      print('Error: $e');
       return null;
     }
   }
@@ -329,35 +295,22 @@ class DriverService{
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       };
-
-      print('Fetching from URL: ${url.toString()}');
-
       final response = await http.get(url, headers: headers);
-
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.body.isEmpty) {
-        throw Exception('Empty response body');
-      }
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
 
         if (responseBody.containsKey('data')) {
           final Map<String, dynamic> bookingData = responseBody['data'];
-          print('Booking Data: $bookingData');
           return bookingData;
         } else {
           throw Exception('Unexpected response format: $responseBody');
         }
       }
       else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
-        print('Booking not found');
         return null;
       }
       else if (response.statusCode == 503) {
-        print('Service unavailable. Please try again later.');
         throw Exception('Service is temporarily unavailable. Please try again later.');
       } else {
         throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
@@ -366,10 +319,8 @@ class DriverService{
       CommonWidgets().showToast('No Internet connection');
       throw Exception('Please check your internet connection and try again.');
     } on FormatException {
-      print('An error occurred: Invalid JSON format or empty response body.');
       throw Exception('Invalid response format or empty response body.');
     } catch (e) {
-      print('An error occurred: $e');
       throw Exception('An unexpected error occurred');
     }
   }
@@ -391,29 +342,22 @@ class DriverService{
           final lastName = responseBody['lastName'] ?? '';
 
           if (firstName.isNotEmpty && lastName.isNotEmpty) {
-            print('token: $token');
-            print('User name: $firstName $lastName');
             return '$firstName $lastName';
           } else {
-            print("First name or last name is not available.");
             return null;
           }
         } else {
-          print("Response body does not contain user data.");
           return null;
         }
       } else if (response.statusCode == 401) {
-        print("Authorization failed for user ID $userId: ${response.body}");
         throw Exception('Authorization failed');
       } else {
-        print('Failed to load user data: ${response.statusCode} ${response.body}');
         throw Exception('Failed to load user data for user ID $userId');
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('An error occurred: $e');
       throw Exception('An unexpected error occurred');
     }
   }
@@ -438,11 +382,7 @@ class DriverService{
           "status": status,
         }),
       );
-        print(status);
       final responseBody = jsonDecode(response.body);
-
-      print('Full Response Body: $responseBody');
-
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Failed';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -454,19 +394,15 @@ class DriverService{
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to update: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 

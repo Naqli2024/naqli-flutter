@@ -55,7 +55,7 @@ class _NewBookingState extends State<NewBooking> {
           physics: AlwaysScrollableScrollPhysics(),
           child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -72,9 +72,9 @@ class _NewBookingState extends State<NewBooking> {
                 ),
                 Padding(
                   padding: EdgeInsets.only(
-                      top: MediaQuery.sizeOf(context).height * 0.17),
+                      top: MediaQuery.sizeOf(context).height * 0.1),
                   child: SvgPicture.asset('assets/createBooking.svg',
-                      height: MediaQuery.sizeOf(context).height * 0.2),
+                      height: MediaQuery.sizeOf(context).height * 0.23),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 60, bottom: 30),

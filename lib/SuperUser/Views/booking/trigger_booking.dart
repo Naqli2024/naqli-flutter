@@ -58,60 +58,21 @@ class _TriggerBookingState extends State<TriggerBooking> {
   bool isMADATapped = false;
   bool isPayAdvance = false;
   String? selectedPartnerName;
-  String? selectedOldQuotePrice;
-  int? selectedQuotePrice;
+  int? selectedOldQuotePrice;
   Map<String, String?> selectedVendors = {};
   Map<String, int?> selectedQuotePrices = {};
+  Map<String, int?> selectedOldQuotePrices = {};
   int _selectedIndex = 4;
   String? checkOutId;
   String? integrityId;
-  int? resultCode;
+  String? resultCode;
+  String? paymentStatus;
 
   @override
   void initState() {
     super.initState();
     fetchBookingsData();
     fetchVendors();
-  }
-
-
-  Future initiatePayment(String paymentBrand,int amount) async {
-    setState(() {
-      loadingDialog(true);
-    });
-    final result = await superUserServices.choosePayment(
-      context,
-      userId: widget.id,
-      paymentBrand: paymentBrand,
-      amount: amount,
-    );
-      print('paymentBrand$paymentBrand');
-    if (result != null) {
-      setState(() {
-        checkOutId = result['id'];
-        integrityId = result['integrity'];
-      });
-    }
-    setState(() {
-      Navigator.pop(context);
-    });
-  }
-
-// resultCode=000.100.110
-  Future<void> getPaymentStatus(String checkOutId,bool isMadaTapped) async {
-    final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    if (result != null) {
-      setState(() {
-        resultCode = int.tryParse(result['code'] ?? '');
-        print(resultCode);
-        showPaymentSuccessDialog();
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve payment status.')),
-      );
-    }
   }
 
   Future<void> fetchBookingsData() async {
@@ -378,8 +339,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   unitType = booking['unitType'];
                                   unitClassification = booking['name'];
                                   subClassification = booking['type']?.isNotEmpty ?? ''
-                                          ? booking['type'][0]['typeName'] ?? 'N/A'.tr()
-                                          : 'N/A';
+                                          ? booking['type'][0]['typeName'] ?? ''.tr()
+                                          : '';
                                   print(bookingId);
                                   print(unitType);
                                   print(unitClassification);
@@ -455,9 +416,9 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                         itemCount: vendors.length,
                                                         itemBuilder: (context, index) {
                                                           final vendor = vendors[index];
-                                                          final partnerId = vendor['partnerId']?.toString() ?? 'No partnerId';
+                                                          final partnerId = vendor['partnerId']?.toString() ?? '';
                                                           final quotePrice = vendor['quotePrice']?.toString() ?? '0';
-
+                                                          final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? '0';
                                                           return Padding(
                                                             padding: const EdgeInsets.only(left: 20),
                                                             child: RadioListTile(
@@ -474,7 +435,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                                   Expanded(
                                                                     flex: 4,
                                                                     child: Text(
-                                                                      vendor['partnerName'] ?? 'N/A',
+                                                                      vendor['partnerName'] ?? '',
                                                                       style: TextStyle(
                                                                         fontSize: viewUtil.isTablet ?22:17,
                                                                         fontWeight: FontWeight.normal,
@@ -484,7 +445,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                                   Expanded(
                                                                     flex: 4,
                                                                     child: Text(
-                                                                      '${vendor['quotePrice'] ?? 'N/A'} SAR',
+                                                                      '${vendor['quotePrice'] ?? 0} SAR',
                                                                       style: TextStyle(fontSize: viewUtil.isTablet ?22:17,
                                                                         fontWeight: FontWeight.normal,
                                                                       ),
@@ -496,10 +457,15 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                               groupValue: selectedVendors[booking['_id'] ?? ''],
                                                               onChanged: (String? value) {
                                                                 if (value != null) {
-                                                                  _onRadioButtonSelected(booking['_id'] ?? "", value);
+                                                                  _onRadioButtonSelected(
+                                                                      booking['_id'] ?? "",
+                                                                      value,
+                                                                      selectedOldQuotePrices[booking['_id']],
+                                                                  );
                                                                 }
                                                                 setState(() {
                                                                   selectedQuotePrices[booking['_id']] = int.tryParse(quotePrice);
+                                                                  selectedOldQuotePrices[booking['_id']] = int.tryParse(oldQuotePrice);
                                                                 });
                                                               },
                                                             ),
@@ -521,9 +487,11 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                         ),
                                                         onPressed: selectedVendors[booking['_id'] ?? ""] != null
                                                             ? () {
+                                                                int oldQuotePrice = selectedOldQuotePrices[booking['_id']] ?? 0;
                                                                 openPayOrAdvanceDialog(selectedVendors[booking['_id'] ?? ""] ?? "",
                                                                   widget.token,
                                                                   booking,
+                                                                  oldQuotePrice,
                                                                 );
                                                               }
                                                             : null,
@@ -694,20 +662,23 @@ class _TriggerBookingState extends State<TriggerBooking> {
     }
   }
 
-  void _onRadioButtonSelected(String bookingId, String partnerId) {
+  void _onRadioButtonSelected(String bookingId, String partnerId,int? oldQuotePrice) {
     setState(() {
       selectedVendors[bookingId] = partnerId;
+      if (oldQuotePrice != null) {
+        selectedOldQuotePrices[bookingId] = oldQuotePrice;
+      }
     });
   }
 
-  Future<void> openPayOrAdvanceDialog(String partnerId, String token, Map<String, dynamic> booking) async {Map<String, String> partnerDetails =
+  Future<void> openPayOrAdvanceDialog(String partnerId, String token, Map<String, dynamic> booking,int oldQuotePrice) async {Map<String, String> partnerDetails =
         await fetchPartnerDetailsForBooking(partnerId, token);
     String partnerName = partnerDetails['partnerName'] ?? 'N/A';
     String mobileNo = partnerDetails['mobileNo'] ?? 'N/A';
-    showPayOrPayAdvanceDialog(booking, partnerName: partnerName, mobileNo: mobileNo);
+    showPayOrPayAdvanceDialog(booking,oldQuotePrice,partnerId, partnerName: partnerName, mobileNo: mobileNo);
   }
 
-  void showPayOrPayAdvanceDialog(Map<String, dynamic> booking, {String? partnerName, String? mobileNo}) {
+  void showPayOrPayAdvanceDialog(Map<String, dynamic> booking,int oldQuotePrice,String partnerId, {String? partnerName, String? mobileNo}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -836,41 +807,14 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                         ),
                                       ),
                                       Divider(thickness: 0.4),
-                                      booking['pickup'] == null && booking['dropPoints'] == null
+                                      booking['pickup'] != null && booking['dropPoints'] != null
                                       ? Column(
                                         children: [
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Row(
                                               mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Expanded(
-                                                  flex: 3,
-                                                  child: Text(
-                                                    'City'.tr(),
-                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Text(
-                                                    '${booking['cityName'] ?? 'N/A'}',
-                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                      : Column(
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
+                                              MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Expanded(
                                                   flex: 3,
@@ -906,7 +850,34 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
-                                                    (booking['dropPoints'] as List).join(', '),
+                                                    (booking['dropPoints']??'N/A' as List).join(', '),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                      : Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'City'.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    '${booking['cityName'] ?? 'N/A'}',
                                                     style: TextStyle(fontSize: viewUtil.isTablet ?22 : 16),
                                                   ),
                                                 ),
@@ -955,7 +926,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(context);
-                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]! ~/ 2);
+                                  isPayAdvance =true;
+                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]! ~/ 2,partnerId,oldQuotePrice,booking['_id']);
                                 },
                                 child: Text(
                                   '${'Pay Advance :'.tr()} ${selectedQuotePrices[booking['_id']]! ~/ 2} SAR',
@@ -981,7 +953,9 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(context);
-                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]??0);
+                                  isPayAdvance =false;
+                                  print((selectedQuotePrices[booking['_id']] ?? 0) * 2);
+                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]??0,partnerId,oldQuotePrice,booking['_id']);
                                 },
                                 child: Text(
                                   '${'Pay :'.tr()} ${selectedQuotePrices[booking['_id']] ?? 0} SAR',
@@ -1021,43 +995,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  void loadingDialog(bool isProcessing){
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Visibility(
-          visible: isProcessing,
-          child: Directionality(
-            textDirection: ui.TextDirection.ltr,
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              insetPadding: EdgeInsets.symmetric(horizontal: 90),
-              backgroundColor: Colors.white,
-              child: StatefulBuilder(
-                builder: (BuildContext context, StateSetter setState) {
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(height: 50),
-                      LoadingAnimationWidget.fourRotatingDots(
-                        color: Colors.blue,
-                        size: 80,
-                      ),
-                      SizedBox(height: 50)
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void showSelectPaymentDialog(int amount) {
+  void showSelectPaymentDialog(int amount,String partnerId,int oldQuotePrice,String bookingId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1099,7 +1037,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                             Navigator.pop(context);
                           });
                           await initiatePayment('MADA', amount);
-                          showPaymentDialog(checkOutId??'', integrityId??'', true);
+                          showPaymentDialog(checkOutId??'', integrityId??'', true,amount,partnerId,oldQuotePrice,bookingId);
                         },
                         child: Container(
                           color: isMADATapped
@@ -1131,7 +1069,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                             Navigator.pop(context);
                           });
                           await initiatePayment('OTHER', amount);
-                          showPaymentDialog(checkOutId??'', integrityId??'', false);
+                          showPaymentDialog(checkOutId??'', integrityId??'', false,amount,partnerId,oldQuotePrice,bookingId);
                         },
                         child: Container(
                           color: isOtherCardTapped
@@ -1163,69 +1101,138 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped) {
+  Future initiatePayment(String paymentBrand,int amount) async {
+    setState(() {
+      commonWidgets.loadingDialog(context, true);
+    });
+    final result = await superUserServices.choosePayment(
+      context,
+      userId: widget.id,
+      paymentBrand: paymentBrand,
+      amount: amount,
+    );
+    print('paymentBrand$paymentBrand');
+    print('amount$amount');
+    if (result != null) {
+      setState(() {
+        checkOutId = result['id'];
+        integrityId = result['integrity'];
+        print('checkOutId$checkOutId');
+        print('integrityId$integrityId');
+      });
+    }
+    setState(() {
+      Navigator.pop(context);
+    });
+  }
+
+  Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
+    final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
+    print('Processed');
+    print(isMadaTapped);
+
+    if (result != null && result['code'] != null) {
+      setState(() {
+        resultCode = result['code'] ?? '';
+        paymentStatus = result['description'] ?? '';
+        print(resultCode);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve payment status.')),
+      );
+    }
+  }
+
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,int oldQuotePrice,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       print('Error: checkOutId or integrity is empty');
       return;
     }
-
     final String visaHtml = '''
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-          }
-          .paymentWidgets {
-            width: 50%;
-            max-width: 100px;
-            box-sizing: border-box;
-          }
-        </style>
-        <script>
-          function loadPaymentScript(checkoutId, integrity) {
-            const script = document.createElement('script');
-            script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
-            script.crossOrigin = 'anonymous';
-            script.integrity = integrity;
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyperPay Payment Integration</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .paymentWidgets {
+        width: 50%;
+        max-width: 100px;
+        box-sizing: border-box;
+      }
+      .paymentWidgets button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .paymentWidgets button:hover {
+        background-color: #45a049;
+      }
+      #submitButton {
+        display: none;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      #submitButton:active {
+        background-color: #45a049;
+      }
+    </style>
 
-            script.onload = () => {
-              console.log('Payment widget script loaded');
-              const paymentForm = document.querySelector('.paymentWidgets');
-              if (paymentForm) {
-                paymentForm.addEventListener('submit', (event) => {
-                  event.preventDefault();
-                  console.log('Payment form submitted');
-                  if (window.flutter_inappwebview) {
-                    console.log('Calling Flutter handler...');
-                    window.flutter_inappwebview.callHandler('payButtonClicked', checkoutId);
-                  } else {
-                    console.log('Flutter handler not available');
-                  }
-                });
-              } else {
-                console.log('Payment form not found');
-              }
-            };
-            document.body.appendChild(script);
-          }
-          document.addEventListener("DOMContentLoaded", function() {
-            loadPaymentScript("${checkOutId}", "${integrity}");
-          });
-        </script>
-      </head>
-      <body>
-        <form action="https://prod.naqlee.com:443/api/payment-status/$checkOutId" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
-      </body>
-    </html>
-  ''';
+    <script>
+       window['wpwlOptions'] = {
+      billingAddress: {},
+      mandatoryBillingFields: {
+        country: true,
+        state: true,
+        city: true,
+        postcode: true,
+        street1: true,
+        street2: false,
+      },
+    };
+
+      // Function to load the HyperPay payment widget script
+      function loadPaymentScript(checkoutId, integrity) {
+        const script = document.createElement('script');
+        script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+        script.crossOrigin = 'anonymous';
+        script.integrity = integrity;
+        script.onload = () => {
+          console.log('Payment widget script loaded'); 
+        };
+        document.body.appendChild(script);
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        loadPaymentScript("${checkOutId}", "${integrity}");
+      });
+    </script>
+  </head>
+
+  <body>
+    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+  </body>
+</html>
+''';
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
 
@@ -1247,14 +1254,65 @@ class _TriggerBookingState extends State<TriggerBooking> {
                 initialUrl: Uri.dataFromString(
                     isMADATapped ? madaHtml : visaHtml,
                     mimeType: 'text/html',
-                    encoding: Encoding.getByName('utf-8'))
-                    .toString(),
+                    encoding: Encoding.getByName('utf-8')
+                ).toString(),
                 javascriptMode: JavascriptMode.unrestricted,
                 javascriptChannels: {
                   JavascriptChannel(
-                    name: 'payButtonClicked',
+                    name: 'NavigateToFlutter',
                     onMessageReceived: (JavascriptMessage message) async {
                       await getPaymentStatus(checkOutId,isMADATapped);
+                      resultCode == "000.100.110"
+                          ? Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
+                            onContinuePressed:() async {
+                              isPayAdvance == true
+                              ? await userService.updatePayment(
+                                  widget.token,
+                                  amount,
+                                  'HalfPaid',
+                                  partnerID,
+                                  bookingId,
+                                  amount*2,
+                                  oldQuotePrice,
+                                )
+                              : await userService.updatePayment(
+                                  widget.token,
+                                  amount,
+                                  'Paid',
+                                  partnerID,
+                                  bookingId,
+                                  amount,
+                                  oldQuotePrice,
+                                );
+                              print(isPayAdvance);
+                              print(bookingId);
+                              print(partnerID);
+                              print(amount*2);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => TriggerBooking(
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  token: widget.token,
+                                  id: widget.id,
+                                  email: widget.email,
+                                ),),
+                              );
+                            },)))
+                          : Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                            paymentStatus: paymentStatus??'',
+                            onRetryPressed:() {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => TriggerBooking(
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  token: widget.token,
+                                  id: widget.id,
+                                  email: widget.email,
+                                ),),
+                              );
+                            },)));
                     },
                   ),
                 },
@@ -1269,110 +1327,5 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  void showPaymentSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 20),
-          backgroundColor: Colors.white,
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            padding: const EdgeInsets.all(0),
-            child: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Payment Status',
-                        style: TextStyle(
-                            fontSize: 28, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    resultCode != "000.100.110"
-                    ? Column(
-                      children: [
-                        Center(
-                          child:  LoadingAnimationWidget.fourRotatingDots(
-                            color: Colors.blue,
-                            size: 60,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text('Please wait!!\nYour payment is in process..Do not close the page',textAlign: TextAlign.center,style: TextStyle(fontSize: 17)),
-                        ),
-                      ],
-                    )
-                   : Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            width: MediaQuery.sizeOf(context).width,
-                            color: Color(0xffE6FFE5),
-                            padding: const EdgeInsets.only(top: 12, bottom: 12),
-                            child: Text('Payment Successful!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 20, color: Colors.green)),
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                              'You wil be redirected to dashboard by clicking this..',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 15)),
-                        ),
-                        SizedBox(height: 5),
-                        Container(
-                          margin: const EdgeInsets.only(top: 10),
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.057,
-                            width: MediaQuery.of(context).size.width * 0.4,
-                            child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  LoadingAnimationWidget.staggeredDotsWave(
-                                    color: Colors.green,
-                                    size: 200,
-                                  );
-                                },
-                                child: Text(
-                                  'Go to Dashboard',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal),
-                                )),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 23),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
+
 }

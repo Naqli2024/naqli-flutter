@@ -822,7 +822,7 @@ class UserService{
           'subClassification': subClassification,
         }),
       );
-
+      print('$bookingId $unitType $unitClassification $subClassification');
       final responseBody = jsonDecode(response.body);
 
       print('Full Response Body: $responseBody');
@@ -864,7 +864,7 @@ class UserService{
   }
 
 
-  Future<dynamic> updatePayment(String token,int amount, String status, String partnerId,String bookingId, String totalAmount,String oldQuotePrice) async {
+  Future<dynamic> updatePayment(String token,int amount, String status, String partnerId,String bookingId, int totalAmount,int oldQuotePrice) async {
     final url = Uri.parse('${baseUrl}bookings/$bookingId/payment');
     try {
       final response = await http.put(

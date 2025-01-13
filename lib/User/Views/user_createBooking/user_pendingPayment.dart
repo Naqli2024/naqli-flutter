@@ -7,8 +7,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -19,6 +21,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
+
+import 'package:webview_flutter/webview_flutter.dart';
 
 class PendingPayment extends StatefulWidget {
   final String bookingId;
@@ -55,6 +59,7 @@ class PendingPayment extends StatefulWidget {
 class _PendingPaymentState extends State<PendingPayment> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
+  final SuperUserServices superUserServices = SuperUserServices();
   String vendorName = 'Vendor name';
   String unit = 'unit';
   String operatorName = 'Operator Name';
@@ -72,8 +77,14 @@ class _PendingPaymentState extends State<PendingPayment> {
   LatLng? pickupLatLng;
   LatLng? dropLatLng;
   final List<LatLng> _dropLatLngs = [];
-  String zeroQuotePrice = '0';
+  int zeroQuotePrice = 0;
   Future<Map<String, dynamic>?>? booking;
+  bool isOtherCardTapped = false;
+  bool isMADATapped = false;
+  String? checkOutId;
+  String? integrityId;
+  String? resultCode;
+  String? paymentResult;
 
   @override
   void initState() {
@@ -148,8 +159,8 @@ class _PendingPaymentState extends State<PendingPayment> {
         'Completed',
         partnerId,
         bookingId,
-        zeroQuotePrice.toString(),
-        zeroQuotePrice.toString(),
+        zeroQuotePrice,
+        zeroQuotePrice,
       );
 
       Navigator.push(
@@ -247,43 +258,6 @@ class _PendingPaymentState extends State<PendingPayment> {
       return intAmount.toString();
     } catch (e) {
       throw Exception('Invalid amount format: $amount');
-    }
-  }
-
-
-  Future<void> fetchPaymentData() async {
-    try {
-
-      final response = await userService.updatePayment(
-        widget.token,
-        widget.advanceOrPay,
-        widget.paymentStatus,
-        widget.partnerId,
-        widget.bookingId,
-        widget.quotePrice,
-        widget.oldQuotePrice,
-      );
-
-      if (response == null || !response.containsKey('success') || response['success'] == false) {
-        print('Error in response: ${response?['message'] ?? 'Unknown error'}');
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-
-      setState(() {
-        print(response);
-        unit = response['booking']['name'] ?? ' ';
-        bookingStatus = response['booking']['bookingStatus'] ?? '';
-        paymentStatus = response['booking']['paymentStatus'] ?? '';
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Error fetching payment data: $e');
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 
@@ -984,7 +958,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
                                   Text(
-                                    '${advanceOrPay} SAR',
+                                    '${widget.advanceOrPay} SAR',
                                     style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,color: Color(0xff914F9D)),
                                   ),
                                 ],
@@ -1003,16 +977,10 @@ class _PendingPaymentState extends State<PendingPayment> {
                                       ),
                                     ),
                                     onPressed: (){
-                                      initiateStripePayment(
-                                          context,
-                                          'Completed',
-                                          widget.bookingId,
-                                          widget.advanceOrPay,
-                                          widget.partnerId
-                                      );
+                                      showSelectPaymentDialog(widget.advanceOrPay,widget.partnerId,widget.bookingId);
                                     },
                                     child: Text(
-                                      '${'Pay :'.tr()} ${advanceOrPay} SAR',
+                                      '${'Pay :'.tr()} ${widget.advanceOrPay} SAR',
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontSize: viewUtil.isTablet ? 24 : 17,
@@ -1047,4 +1015,398 @@ class _PendingPaymentState extends State<PendingPayment> {
       ),
     );
   }
+
+  void showSelectPaymentDialog(int amount,String partnerId,String bookingId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            insetPadding: EdgeInsets.symmetric(horizontal: 25),
+            backgroundColor: Colors.white,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.all(0),
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                            onPressed: () {
+                              isOtherCardTapped = false;
+                              isMADATapped = false;
+                              Navigator.pop(context);
+                            },
+                            icon: Icon(
+                              Icons.cancel,
+                              color: Colors.grey,
+                            )),
+                      ),
+                      SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            isMADATapped = true;
+                            isOtherCardTapped = false;
+                            Navigator.pop(context);
+                          });
+                          await initiatePayment('MADA', amount);
+                          showPaymentDialog(checkOutId??'', integrityId??'', true,amount,partnerId,bookingId);
+                        },
+                        child: Container(
+                          color: isMADATapped
+                              ? Color(0xffD4D4D4)
+                              : Colors.transparent,
+                          padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Pay using MADA".tr(),
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              SvgPicture.asset(
+                                'assets/Mada_Logo.svg',
+                                height: 25,
+                                width: 20,
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            isMADATapped = false;
+                            isOtherCardTapped = true;
+                            Navigator.pop(context);
+                          });
+                          await initiatePayment('OTHER', amount);
+                          showPaymentDialog(checkOutId??'', integrityId??'', false,amount,partnerId,bookingId);
+                        },
+                        child: Container(
+                          color: isOtherCardTapped
+                              ? Color(0xffD4D4D4)
+                              : Colors.transparent,
+                          padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text("Pay using Other Card Types".tr(),
+                                    style: TextStyle(fontSize: 18)),
+                              ),
+                              SvgPicture.asset('assets/visa-mastercard.svg',
+                                  height: 40, width: 20)
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 30)
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future initiatePayment(String paymentBrand,int amount) async {
+    setState(() {
+      commonWidgets.loadingDialog(context, true);
+    });
+    final result = await superUserServices.choosePayment(
+      context,
+      userId: widget.id,
+      paymentBrand: paymentBrand,
+      amount: amount,
+    );
+    print('paymentBrand$paymentBrand');
+    print('amount$amount');
+    if (result != null) {
+      setState(() {
+        checkOutId = result['id'];
+        integrityId = result['integrity'];
+        print('checkOutId$checkOutId');
+        print('integrityId$integrityId');
+      });
+    }
+    setState(() {
+      Navigator.pop(context);
+    });
+  }
+
+  Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
+    final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
+    print('Processed');
+    print(isMadaTapped);
+
+    if (result != null && result['code'] != null) {
+      setState(() {
+        resultCode = result['code'] ?? '';
+        paymentResult = result['description'] ?? '';
+        print(resultCode);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve payment status.')),
+      );
+    }
+  }
+
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
+    if (checkOutId.isEmpty || integrity.isEmpty) {
+      print('Error: checkOutId or integrity is empty');
+      return;
+    }
+
+    final String visaHtml = '''
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>HyperPay Payment Integration</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                }
+                .paymentWidgets {
+                  width: 50%;
+                  max-width: 100px;
+                  box-sizing: border-box;
+                }
+                .paymentWidgets button {
+                  background-color: #4CAF50;
+                  color: white;
+                  border: none;
+                  padding: 10px 20px;
+                  font-size: 16px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                }
+                .paymentWidgets button:hover {
+                  background-color: #45a049;
+                }
+                #submitButton {
+                  display: none;
+                  margin-top: 20px;
+                  padding: 10px 20px;
+                  font-size: 16px;
+                  background-color: #4CAF50;
+                  color: white;
+                  border: none;
+                  cursor: pointer;
+                  border-radius: 5px;
+                }
+                #submitButton:active {
+                  background-color: #45a049;
+                }
+              </style>
+          
+              <script>
+                 window['wpwlOptions'] = {
+                billingAddress: {},
+                mandatoryBillingFields: {
+                  country: true,
+                  state: true,
+                  city: true,
+                  postcode: true,
+                  street1: true,
+                  street2: false,
+                },
+              };
+          
+                // Function to load the HyperPay payment widget script
+                function loadPaymentScript(checkoutId, integrity) {
+                  const script = document.createElement('script');
+                  script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+                  script.crossOrigin = 'anonymous';
+                  script.integrity = integrity;
+                  script.onload = () => {
+                    console.log('Payment widget script loaded'); 
+                  };
+                  document.body.appendChild(script);
+                }
+                document.addEventListener("DOMContentLoaded", function () {
+                  loadPaymentScript("${checkOutId}", "${integrity}");
+                });
+              </script>
+            </head>
+          
+            <body>
+              <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+            </body>
+          </html>
+          ''';
+
+    final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 10),
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.42,
+              child: WebView(
+                backgroundColor: Colors.transparent,
+                initialUrl: Uri.dataFromString(
+                    isMADATapped ? madaHtml : visaHtml,
+                    mimeType: 'text/html',
+                    encoding: Encoding.getByName('utf-8')
+                ).toString(),
+                javascriptMode: JavascriptMode.unrestricted,
+                javascriptChannels: {
+                  JavascriptChannel(
+                    name: 'NavigateToFlutter',
+                    onMessageReceived: (JavascriptMessage message) async {
+                      await getPaymentStatus(checkOutId, isMADATapped);
+                      if (resultCode == "000.100.110") {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PaymentSuccessScreen(
+                              onContinuePressed: () async {
+                                await userService.updatePayment(
+                                  widget.token,
+                                  amount,
+                                  'Completed',
+                                  partnerID,
+                                  bookingId,
+                                  amount * 2,
+                                  0,
+                                );
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => PaymentCompleted(
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    token: widget.token,
+                                    id: widget.id,
+                                    selectedType: widget.selectedType,
+                                    unit: widget.unit,
+                                    load: widget.load,
+                                    bookingId: widget.bookingId,
+                                    unitType: widget.unitType,
+                                    dropPoints: widget.dropPoints,
+                                    pickup: widget.pickup,
+                                    cityName: widget.cityName,
+                                    address: widget.address,
+                                    zipCode: widget.zipCode,
+                                    unitTypeName: widget.unitTypeName,
+                                    partnerId: widget.partnerId,
+                                    size: widget.size,
+                                    bookingStatus: widget.bookingStatus,
+                                    email: widget.email,
+                                  ),),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                        Future.delayed(Duration(seconds: 3), () async {
+                          await userService.updatePayment(
+                            widget.token,
+                            amount,
+                            'Completed',
+                            partnerID,
+                            bookingId,
+                            amount * 2,
+                            0,
+                          );
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => PaymentCompleted(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,
+                              selectedType: widget.selectedType,
+                              unit: widget.unit,
+                              load: widget.load,
+                              bookingId: widget.bookingId,
+                              unitType: widget.unitType,
+                              dropPoints: widget.dropPoints,
+                              pickup: widget.pickup,
+                              cityName: widget.cityName,
+                              address: widget.address,
+                              zipCode: widget.zipCode,
+                              unitTypeName: widget.unitTypeName,
+                              partnerId: widget.partnerId,
+                              size: widget.size,
+                              bookingStatus: widget.bookingStatus,
+                              email: widget.email,
+                            ),),
+                          );
+                        });
+                      }
+                      else {
+                        Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                              paymentStatus: paymentResult??'',
+                              onRetryPressed:() {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => PendingPayment(
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    selectedType: widget.selectedType,
+                                    token: widget.token,
+                                    unit: widget.unit,
+                                    load: widget.load,
+                                    size: widget.size,
+                                    bookingId: widget.bookingId,
+                                    unitType: widget.unitType,
+                                    dropPoints: widget.dropPoints,
+                                    pickup: widget.pickup,
+                                    cityName: widget.cityName,
+                                    address: widget.address,
+                                    zipCode: widget.zipCode,
+                                    unitTypeName: widget.unitTypeName,
+                                    id: widget.id,
+                                    partnerName: widget.partnerName,
+                                    partnerId: partnerID,
+                                    oldQuotePrice: widget.oldQuotePrice,
+                                    paymentStatus: widget.paymentStatus,
+                                    quotePrice: amount.toString(),
+                                    advanceOrPay: widget.advanceOrPay,
+                                    bookingStatus: bookingStatus??'',
+                                    email: widget.email,
+                                  ),),
+                                );
+                              },)));
+                      }
+                    },
+                  ),
+                },
+                onWebViewCreated: (WebViewController webViewController) {
+                  webViewController.clearCache();
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
 }

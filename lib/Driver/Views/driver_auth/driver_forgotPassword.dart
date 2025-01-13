@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 
@@ -29,6 +30,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -43,7 +45,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
             child: SvgPicture.asset(
               'assets/naqlee-logo.svg',
               fit: BoxFit.fitWidth,
-              height: 40,
+              height: viewUtil.isTablet ? 45 : 40,
             ),
           ),
         ),
@@ -68,7 +70,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
                       child: Text('Forgot Password?'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Padding(
@@ -76,7 +78,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
                       child: Text("We'll send you reset instruction".tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 20,
+                          fontSize: viewUtil.isTablet ? 22 : 17,
                         ),),
                     ),
                     commonWidgets.buildTextField('Email'.tr(), emailController,context: context),
@@ -110,8 +112,8 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
                             'Reset Password'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.normal,
+                              fontSize: viewUtil.isTablet ? 26 : 18,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -133,7 +135,7 @@ class _DriverForgotPasswordState extends State<DriverForgotPassword> {
                             Text("Back to login".tr(),
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
-                                fontSize: 20,
+                                fontSize: viewUtil.isTablet ? 26 : 20,
                               ),),
                           ],
                         ),
@@ -172,6 +174,7 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -186,7 +189,7 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
               child: SvgPicture.asset(
                 'assets/naqlee-logo.svg',
                 fit: BoxFit.fitWidth,
-                height: 40,
+                height: viewUtil.isTablet ? 45 : 40,
               ),
             ),
           ),
@@ -211,7 +214,7 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
                       child: Text('Enter your verification code'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Column(
@@ -237,7 +240,7 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
                                     border: Border.all(color: Colors.grey)
                                 ),
                                 child: SizedBox(
-                                  width: 40,
+                                  width: viewUtil.isTablet ?50 :40,
                                   child: TextField(
                                     controller: otpControllers[index],
                                     maxLength: 1,
@@ -294,8 +297,8 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
                                 'Continue'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.normal,
+                                  fontSize: viewUtil.isTablet ? 26 : 18,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -307,11 +310,11 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
                             children: [
                               TextSpan(
                                 text: 'Didn’t receive the email?'.tr(),
-                                style: const TextStyle(color: Colors.black,fontSize: 16),
+                                style: TextStyle(color: Colors.black,fontSize:viewUtil.isTablet ?20 :16),
                               ),
                               TextSpan(
                                 text: 'Click to resend'.tr(),
-                                style: const TextStyle(color: Color(0xff6A66D1),fontSize: 16,decoration: TextDecoration.underline,),
+                                style: TextStyle(color: Color(0xff6A66D1),fontSize: viewUtil.isTablet ?20 :16,decoration: TextDecoration.underline,),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async{
                                     for (var controller in otpControllers) {
@@ -341,7 +344,7 @@ class _DriverResetPasswordState extends State<DriverResetPassword> {
                                 Text("Back to login".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 20,
+                                    fontSize: viewUtil.isTablet ? 26 : 20,
                                   ),),
                               ],
                             ),
@@ -380,6 +383,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -394,7 +398,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
               child: SvgPicture.asset(
                 'assets/naqlee-logo.svg',
                 fit: BoxFit.fitWidth,
-                height: 40,
+                height: viewUtil.isTablet ? 45 : 40,
               ),
             ),
           ),
@@ -419,7 +423,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
                       child: Text('Set new password'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 30,
+                          fontSize: viewUtil.isTablet ? 30 : 25,
                         ),),
                     ),
                     Column(
@@ -488,8 +492,8 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
                                 'Reset Password'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.normal,
+                                  fontSize: viewUtil.isTablet ? 26 : 18,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
@@ -512,7 +516,7 @@ class _DriverSetNewPasswordState extends State<DriverSetNewPassword> {
                                 Text("Back to login".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 20,
+                                    fontSize: viewUtil.isTablet ? 26 : 20,
                                   ),),
                               ],
                             ),
@@ -541,6 +545,7 @@ class DriverForgotPasswordSuccess extends StatefulWidget {
 class _DriverForgotPasswordSuccessState extends State<DriverForgotPasswordSuccess> {
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -555,7 +560,7 @@ class _DriverForgotPasswordSuccessState extends State<DriverForgotPasswordSucces
             child: SvgPicture.asset(
               'assets/naqlee-logo.svg',
               fit: BoxFit.fitWidth,
-              height: 40,
+              height: viewUtil.isTablet ? 45 : 40,
             ),
           ),
         ),
@@ -574,13 +579,13 @@ class _DriverForgotPasswordSuccessState extends State<DriverForgotPasswordSucces
                 padding: EdgeInsets.only(bottom: 20,top: 40),
                 child: Text('Your password has been reset'.tr(),
                     style: TextStyle(
-                        fontSize: 26)),
+                        fontSize: viewUtil.isTablet ?28:23,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 0),
                 child: Text('Successfully'.tr(),
                     style: TextStyle(
-                        fontSize: 25,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet ?29:23,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 40),
@@ -604,8 +609,8 @@ class _DriverForgotPasswordSuccessState extends State<DriverForgotPasswordSucces
                       'Continue'.tr(),
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.normal,
+                        fontSize: viewUtil.isTablet ? 26 : 18,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),

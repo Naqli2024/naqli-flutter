@@ -12,6 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notified.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -743,6 +744,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -750,7 +752,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
         appBar: commonWidgets.commonAppBar(
             context,
             showLeading: false,
-          User: widget.firstName +' '+ widget.lastName,
+            User: widget.firstName +' '+ widget.lastName,
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -789,6 +791,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                           children: [
                             Container(
                               decoration: BoxDecoration(
+                                shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -799,12 +802,14 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                 ],
                               ),
                               child: CircleAvatar(
+                                radius: viewUtil.isTablet ? 30 : 20,
                                 backgroundColor: Colors.white,
                                 child: IconButton(
                                     onPressed: (){
                                       Navigator.pop(context);
                                     },
-                                    icon: Icon(FontAwesomeIcons.multiply)),
+                                    icon: Icon(FontAwesomeIcons.multiply,
+                                        size: viewUtil.isTablet?30:20)),
                               ),
                             ),
                           ],
@@ -812,8 +817,10 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       )),
                   Positioned(
                     top: MediaQuery.sizeOf(context).height * 0.1,
+                    left: viewUtil.isTablet
+                        ? MediaQuery.sizeOf(context).height * 0.027
+                        : MediaQuery.sizeOf(context).height * 0.017,
                     child: Container(
-                      margin: EdgeInsets.only(left: 20),
                       width: MediaQuery.sizeOf(context).width * 0.92,
                       child: Card(
                         color: Colors.white,
@@ -833,7 +840,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                           SvgPicture.asset('assets/upArrow.svg'),
                                           Text(
                                             feet == null?'0 ft':'$feet',
-                                            style: TextStyle(fontSize: 20, color: Color(0xff676565)),
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16, color: Color(0xff676565)),
                                           ),
                                         ],
                                       ),
@@ -842,9 +849,11 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(nearbyPlaces[currentIndex]['name'] ?? ''),
-                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
-                                          Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center),
+                                          Text(nearbyPlaces[currentIndex]['name'] ?? '',
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16),),
+                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center,
+                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                                         ],
                                       ),
                                     ),
@@ -855,29 +864,53 @@ class _DriverInteractionState extends State<DriverInteraction> {
                               indent: 15,
                               endIndent: 15,
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: Color(0xff6069FF),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Color(0xff6069FF),
+                                      size: viewUtil.isTablet?30:20
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    children: [
-                                      Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center),
-                                    ],
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      children: [
+                                        Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         )
-                            : Center(child: CircularProgressIndicator()),
+                            : Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text('Fetching nearby Location...',
+                                    style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -911,13 +944,13 @@ class _DriverInteractionState extends State<DriverInteraction> {
                             ),
                           ),
                           child: CircleAvatar(
-                              minRadius: 45,
+                              minRadius: viewUtil.isTablet?55:40,
                               maxRadius: double.maxFinite,
                               backgroundColor: Color(0xff6069FF),
                               child: Text(
                                 'Move'.tr(),
                                 style:
-                                TextStyle(color: Colors.white, fontSize: 20),
+                                TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:20),
                               )),
                         ),
                       ),
@@ -939,44 +972,42 @@ class _DriverInteractionState extends State<DriverInteraction> {
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
                                 children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width * 0.18),
-                                    child: SvgPicture.asset('assets/person.svg'),
-                                  ),
-                                  Container(
-                                    alignment: Alignment.center,
+                                  SvgPicture.asset('assets/person.svg'),
+                                  Spacer(),
+                                  Expanded(
                                     child: Text(
                                       firstName != null
                                           ? '$firstName'
                                           : '' + '${lastName != null ? '$lastName' : ''}',
-                                      style: TextStyle(fontSize: 24, color: Color(0xff676565)),
+                                      style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
                                     ),
                                   ),
+                                  Spacer(),
                                 ],
                               ),
                             ),
                             // Show updated distance and time
                             Text(
                                 timeToPickup ==null ?'Calculating...'.tr():'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
-                              style: TextStyle(fontSize: 17, color: Color(0xff676565)),
+                              style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565)),
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 20),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  Icon(Icons.call, color: Color(0xff6069FF)),
+                                  Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                                   Padding(
                                     padding: const EdgeInsets.only(right: 8),
-                                    child: Text('Call'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
+                                    child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
                                   ),
-                                  Icon(Icons.message, color: Color(0xff6069FF)),
+                                  Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                                   Padding(
                                     padding: const EdgeInsets.only(right: 8),
-                                    child: Text('Message'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
+                                    child: Text('Message'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
                                   ),
-                                  Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF)),
-                                  Text('Cancel'.tr(), style: TextStyle(fontSize: 17, color: Color(0xff676565))),
+                                  Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                                  Text('Cancel'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
                                 ],
                               ),
                             ),

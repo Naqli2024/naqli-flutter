@@ -13,6 +13,7 @@ import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepThree.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
@@ -57,8 +58,6 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final partnerId = responseBody['data']['partner']['_id'];
-        print('Success');
-        print(partnerId);
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -70,19 +69,15 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to register user: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -109,7 +104,6 @@ class AuthService {
         );
         final responseBody = jsonDecode(response.body);
         if (response.statusCode == 200) {
-          print('Success');
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -121,20 +115,16 @@ class AuthService {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
           );
-          print('Failed to register user: ${response.statusCode}');
-          print('Response body: ${response.body}');
         }
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -159,7 +149,6 @@ class AuthService {
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         final message = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
@@ -169,19 +158,15 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to register user: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -205,7 +190,6 @@ class AuthService {
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -217,19 +201,15 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to send OTP: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -256,7 +236,6 @@ class AuthService {
 
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print('Success');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -268,19 +247,15 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to Reset Pwd: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -305,25 +280,20 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Success');
       } else {
         final message = responseBody['message'];
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to register user: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -366,13 +336,10 @@ class AuthService {
                   builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',email: email,)
               ),
             );
-            print('Login successful');
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login successful')),
             );
             await getBookingData(partnerId,token);
-            print(userData);
-            print(token);
             await savePartnerData(partnerId, token, partnerName,email);
           }
         else{
@@ -385,19 +352,15 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to login user: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -446,30 +409,6 @@ class AuthService {
       var iqamaNo = stepThreeInstance.iqamaNo;
       var panelInformation = stepThreeInstance.panelInformation;
 
-      logRequestData(
-        partnerName: controller.text,
-        unitType: unitType,
-        unitClassification: unitClassification,
-        subClassification: subClassification,
-        plateInformation: plateInformation,
-        istimaraNo: istimaraNo,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        mobileNo: mobileNo,
-        dateOfBirth: dateOfBirth.toIso8601String(),
-        iqamaNo: iqamaNo,
-        panelInformation: panelInformation,
-        istimaraCard: istimaraCard,
-        aramcoLicense: aramcoLicense,
-        drivingLicense: drivingLicense,
-        nationalID: nationalID,
-        pictureOfVehicle: pictureOfVehicle,
-        partnerId: partnerId,
-        password: password,
-        confirmPassword: confirmPassword
-      );
-
       final url = Uri.parse('${baseUrl}add-operator');
 
       var request = http.MultipartRequest('POST', url);
@@ -511,12 +450,8 @@ class AuthService {
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       var parsedResponse = jsonDecode(responseBody);
-      print('Response Status Code: ${response.statusCode}');
-      print('Response Body: $responseBody');
-      print('partnerId');
       if (response.statusCode == 201) {
         globalPartnerId = partnerId;
-        print('Upload successful');
         Fluttertoast.showToast(
           msg: 'Operator added Successfully'.tr(),
           toastLength: Toast.LENGTH_LONG,
@@ -534,7 +469,6 @@ class AuthService {
         );
       } else {
         var message = parsedResponse['message'] ?? 'Operation failed. Please try again.';
-        print('Failed to login user: ${response.statusCode}');
         Fluttertoast.showToast(
           msg: message,
           toastLength: Toast.LENGTH_LONG,
@@ -549,65 +483,12 @@ class AuthService {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Network error. Please check your connection and try again.')),
       );
-      print('Network error: No Internet connection');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
-
-
-
-
-  void logRequestData({
-    required String partnerName,
-    required String unitType,
-    required String unitClassification,
-    required String subClassification,
-    required String plateInformation,
-    required String istimaraNo,
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String password,
-    required String confirmPassword,
-    required String mobileNo,
-    required String dateOfBirth,
-    required String iqamaNo,
-    required String panelInformation,
-    required PlatformFile? istimaraCard,
-    required PlatformFile? pictureOfVehicle,
-    required PlatformFile? drivingLicense,
-    required PlatformFile? nationalID,
-    required PlatformFile? aramcoLicense,
-    required String partnerId,
-  }) {
-    print('Sending data:');
-    print('partnerName: $partnerName');
-    print('unitType: $unitType');
-    print('unitClassification: $unitClassification');
-    print('subClassification: $subClassification');
-    print('plateInformation: $plateInformation');
-    print('istimaraNo: $istimaraNo');
-    print('firstName: $firstName');
-    print('lastName: $lastName');
-    print('email: $email');
-    print('password:: $password');
-    print('confirmPassword: $confirmPassword');
-    print('mobileNo: $mobileNo');
-    print('dateOfBirth: $dateOfBirth');
-    print('iqamaNo: $iqamaNo');
-    print('panelInformation: $panelInformation');
-    print('istimaraCard: ${istimaraCard?.path ?? 'No file'}');
-    print('pictureOfVehicle: ${pictureOfVehicle?.path ?? 'No file'}');
-    print('drivingLicense: ${drivingLicense?.path ?? 'No file'}');
-    print('nationalID: ${nationalID?.path ?? 'No file'}');
-    print('aramcoLicense: ${aramcoLicense?.path ?? 'No file'}');
-    print('partnerId: $partnerId');
-  }
-
 
   Future<List<int>> streamToBytes(Stream<List<int>> stream) async {
     final completer = Completer<List<int>>();
@@ -630,14 +511,16 @@ class AuthService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
-        throw Exception('Failed to load vehicle data');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return [];
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return [];
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return [];
     }
   }
 
@@ -648,14 +531,16 @@ class AuthService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
-        throw Exception('Failed to load bus data');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return [];
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return [];
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return [];
     }
   }
 
@@ -666,14 +551,16 @@ class AuthService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
-        throw Exception('Failed to load equipment data');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return [];
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return [];
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return [];
     }
   }
 
@@ -684,14 +571,16 @@ class AuthService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => item as Map<String, dynamic>).toList();
       } else {
-        throw Exception('Failed to load special data');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return [];
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return [];
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return [];
     }
   }
 
@@ -709,7 +598,6 @@ class AuthService {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
-       print('dataaa$partnerData');
        final partnerName = partnerData['partnerName'];
        final mobileNo = partnerData['mobileNo'];
        final email = partnerData['email'];
@@ -725,11 +613,6 @@ class AuthService {
                 : booking['quotePrice'].toString();
 
             final paymentStatus = booking['paymentStatus']?.toString() ?? '';
-
-            print('Booking ID: $bookingId');
-            print('Payment Status: $paymentStatus');
-            print('Quote Price: $quotePrice');
-
             bookingIds.add({
               'bookingId': bookingId,
               'paymentStatus': paymentStatus,
@@ -741,28 +624,23 @@ class AuthService {
           }
           return bookingIds;
         } else {
-          print("No booking requests found for this partner.");
           return [];
         }
       } else if (response.statusCode == 401) {
-        print("Authorization failed: ${response.body}");
         return [];
       } else {
-        print('Failed to load booking data: ${response.statusCode} ${response.body}');
-        throw Exception('Failed to load booking data');
+        return [];
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet connection and try again.');
+      return [];
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return [];
     }
   }
 
   Future<Map<String, dynamic>> getBookingId(String bookingId, String token, String paymentStatus, String quotePrice) async {
     try{
-      print('object$paymentStatus');
       final response = await http.get(
         Uri.parse('https://prod.naqlee.com:443/api/getBookingsByBookingId/$bookingId'),
         headers: {
@@ -773,19 +651,13 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-
-        // Ensure 'data' is a map
         final Map<String, dynamic> data = responseBody['data'] as Map<String, dynamic>;
 
         if (data.isEmpty) {
-          throw Exception('No data found for booking ID $bookingId');
+          final responseBody = jsonDecode(response.body);
+          final message = responseBody['message']??'Please try again';
+          commonWidgets.showToast(message);
         }
-
-        final partnerId = data['_id'] ?? '';
-
-
-        print(responseBody);
-
         final List<dynamic> typeList = data['type'] as List<dynamic>;
         final List<dynamic> dropPoints = data['dropPoints'] as List<dynamic>? ?? [];
         String typeOfLoad = 'N/A';
@@ -803,13 +675,6 @@ class AuthService {
         final bookingStatus = data['bookingStatus'] ?? 'Unknown';
         final userId = data['user'] ?? '';
         await getUserName(userId, token);
-
-        print('userId: $userId');
-        print('paymentStatus: $paymentStatus');
-        print('quotePrice: $quotePrice');
-        print('token: $token');
-        print('bookingStatus: $bookingStatus');
-
         return {
           '_id': data['_id'],
           'date': data['date'],
@@ -834,18 +699,17 @@ class AuthService {
            'toTime' : data['toTime'],
         };
 
-      } else if (response.statusCode == 401) {
-        print("Authorization failed for booking ID $bookingId: ${response.body}");
-        throw Exception('Authorization failed');
       } else {
-        throw Exception('Failed to load booking data for booking ID $bookingId');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return {};
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return {};
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return {};
     }
   }
 
@@ -866,30 +730,27 @@ class AuthService {
           final lastName = responseBody['lastName'] ?? '';
 
           if (firstName.isNotEmpty && lastName.isNotEmpty) {
-            print('token: $token');
-            print('User name: $firstName $lastName');
             return '$firstName $lastName';
           } else {
-            print("First name or last name is not available.");
             return null;
           }
         } else {
-          print("Response body does not contain user data.");
+          final responseBody = jsonDecode(response.body);
+          final message = responseBody['message']??'Please try again';
+          commonWidgets.showToast(message);
           return null;
         }
-      } else if (response.statusCode == 401) {
-        print("Authorization failed for user ID $userId: ${response.body}");
-        throw Exception('Authorization failed');
       } else {
-        print('Failed to load user data: ${response.statusCode} ${response.body}');
-        throw Exception('Failed to load user data for user ID $userId');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message']??'Please try again';
+        commonWidgets.showToast(message);
+        return null;
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return null;
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      return null;
     }
   }
 
@@ -921,22 +782,16 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-
-        print('token: $token');
       } else {
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to Send price: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
     }on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      commonWidgets.showToast('Something went wrong,Please try again');
     }
   }
 
@@ -961,28 +816,22 @@ class AuthService {
           'reason': reason,
         }),
       );
-
-      final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('Response Data: $data');
-
         if (data['booking'] != null && data['booking']['remainingBalance'] != null) {
           return data['booking']['remainingBalance'].toString();
         } else {
-          print('Remaining balance not found in response');
           return null;
         }
       } else {
-        print('Failed to update payment, status code: ${response.statusCode}');
         return null;
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return null;
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      commonWidgets.showToast('Something went wrong,Please try again');
+      return null;
     }
   }
 
@@ -1005,19 +854,13 @@ class AuthService {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-      } else if (response.statusCode == 401) {
-        print("Authorization failed: ${response.body}");
-        throw Exception('Authorization failed');
       } else {
-        print("Failed to delete booking request: ${response.body}");
-        throw Exception('Failed to delete booking request');
+        commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      commonWidgets.showToast('Something went wrong,Please try again');
     }
   }
 
@@ -1034,24 +877,17 @@ class AuthService {
       );
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        print("Booking request deleted successfully.");
         final message = responseBody['message'] ?? 'Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-      } else if (response.statusCode == 401) {
-        print("Authorization failed: ${response.body}");
-        throw Exception('Authorization failed');
-      } else {
-        print("Failed to delete booking request: ${response.body}");
-        throw Exception('Failed to delete booking request');
+      }  else {
+        commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred');
+      commonWidgets.showToast('Something went wrong,Please try again');
     }
   }
 
@@ -1082,26 +918,19 @@ class AuthService {
 
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: $responseBody');
       if (response.statusCode == 201) {
         try {
           final message = jsonDecode(responseBody)['message'];
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
           );
-          print('Success: $message');
         } catch (e) {
-          print('Error parsing JSON: $e');
-          print('Received body: $responseBody');
+          commonWidgets.showToast('Something went wrong,Please try again');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
         );
-        print('Failed to submit ticket: ${response.statusCode}');
-        print('Response body: $responseBody');
       }
     } on SocketException {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1111,7 +940,6 @@ class AuthService {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An unexpected error occurred')),
       );
-      print('Error: $e');
     }
   }
 
@@ -1146,25 +974,20 @@ class AuthService {
         );
       }
 
-      // Send the request
       var response = await request.send();
-
       if (response.statusCode == 200) {
-        print('Profile updated successfully');
         final responseBody = await response.stream.bytesToString();
         final jsonResponse = jsonDecode(responseBody);
         final message = jsonResponse['message'] as String?;
         if (message != null) {
-          // Assuming you have a CommonWidgets().showToast function for displaying messages
           CommonWidgets().showToast(message);
         }
       } else {
-        print('Failed to update profile. Status code: ${response.statusCode}');
         final responseBody = await response.stream.bytesToString();
-        print('Response: $responseBody');
+        commonWidgets.showToast('Something went wrong. Please try again');
       }
     } catch (e) {
-      print('Error occurred: $e');
+      commonWidgets.showToast('Something went wrong. Please try again');
     }
   }
 

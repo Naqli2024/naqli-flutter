@@ -112,7 +112,7 @@ class _UserForgotPasswordState extends State<UserForgotPassword> {
                             'Reset Password'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet ? 22 : 18,
+                              fontSize: viewUtil.isTablet ? 26 : 18,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -297,7 +297,7 @@ class _UserResetPasswordState extends State<UserResetPassword> {
                                 'Continue'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: viewUtil.isTablet ? 22 : 18,
+                                  fontSize: viewUtil.isTablet ? 26 : 18,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -492,7 +492,7 @@ class _UserSetNewPasswordState extends State<UserSetNewPassword> {
                                 'Reset Password'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: viewUtil.isTablet ? 22 : 18,
+                                  fontSize: viewUtil.isTablet ? 26 : 18,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -579,13 +579,13 @@ class _UserForgotPasswordSuccessState extends State<UserForgotPasswordSuccess> {
                 padding: EdgeInsets.only(bottom: 20,top: 40),
                 child: Text('Your password has been reset'.tr(),
                     style: TextStyle(
-                        fontSize: viewUtil.isTablet ?26:23,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet ?28:23,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 0),
                 child: Text('Successfully'.tr(),
                     style: TextStyle(
-                        fontSize: viewUtil.isTablet ?25:23,fontWeight: FontWeight.w500)),
+                        fontSize: viewUtil.isTablet ?29:23,fontWeight: FontWeight.w500)),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 40),
@@ -610,7 +610,7 @@ class _UserForgotPasswordSuccessState extends State<UserForgotPasswordSuccess> {
                       'Continue'.tr(),
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: viewUtil.isTablet ? 22 : 18,
+                        fontSize: viewUtil.isTablet ? 26 : 18,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
@@ -34,6 +35,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:webview_flutter/webview_flutter.dart';
 
 class ChooseVendor extends StatefulWidget {
   final String bookingId;
@@ -80,6 +82,7 @@ class ChooseVendor extends StatefulWidget {
 class _ChooseVendorState extends State<ChooseVendor> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final UserService userService = UserService();
+  final SuperUserServices superUserServices = SuperUserServices();
   int selectedVendor = 0;
   bool isVendorSelected = false;
   GoogleMapController? mapController;
@@ -98,8 +101,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
   Timer? timer;
   Map<String, dynamic>? paymentIntent;
   bool isTimeout = false;
-  double fullPayAmount = 0.0;
-  double advancePayAmount = 0.0;
+  int fullPayAmount = 0;
+  int advancePayAmount = 0;
   Future<Map<String, dynamic>?>? booking;
   Timer? _refreshTimer;
   Timer? _fetchTimer;
@@ -107,9 +110,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
   bool isPayAdvance = false;
   String? selectedPartnerName;
   String? selectedPartnerId;
-  String? selectedOldQuotePrice;
-  String? selectedQuotePrice;
-  String? paymentStatus;
+  int? selectedOldQuotePrice;
+  int? selectedQuotePrice;
+  String? updatedPaymentStatus;
   String? bookingStatus;
   Timer? _cycleTimer;
   Timer? _timeoutTimer;
@@ -117,7 +120,12 @@ class _ChooseVendorState extends State<ChooseVendor> {
   String zeroQuotePrice = '0';
   bool isSwipeEnabled = false;
   String currentPlace = '';
-
+  String? checkOutId;
+  String? integrityId;
+  String? resultCode;
+  String? paymentResult;
+  bool isOtherCardTapped = false;
+  bool isMADATapped = false;
 
   @override
   void initState() {
@@ -230,21 +238,22 @@ class _ChooseVendorState extends State<ChooseVendor> {
   }
 
   Future<void> fetchPaymentData(
-      String partnerId,
-      String oldQuotePrice,
-      String quotePrice,
+      int amount,
       String paymentStatus,
-      int advanceOrPay,) async {
+      String partnerId,
+      String bookingId,
+      int oldQuotePrice) async {
     try {
 
       final response = await userService.updatePayment(
           widget.token,
-          advanceOrPay,
+          amount,
           paymentStatus,
           partnerId,
-          widget.bookingId,
-          quotePrice,
-          oldQuotePrice);
+          bookingId,
+          amount*2,
+          oldQuotePrice,
+        );
 
       if (response == null || !response.containsKey('success') || response['success'] == false) {
         print('Error in response: ${response?['message'] ?? 'Unknown error'}');
@@ -257,7 +266,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
       setState(() {
         print(response);
         bookingStatus = response['booking']['bookingStatus'] ?? '';
-        paymentStatus = response['booking']['paymentStatus'] ?? '';
+        updatedPaymentStatus = response['booking']['paymentStatus'] ?? '';
         isLoading = false;
       });
     } catch (e) {
@@ -270,7 +279,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
 
 
 
-  Future<void> initiateStripePayment(
+  /*Future<void> initiateStripePayment(
       BuildContext context,
       double amount,
       bool isPayAdvance,
@@ -498,7 +507,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     } catch (e) {
       throw Exception('Invalid amount format: $amount');
     }
-  }
+  }*/
 
   Future<void> fetchCoordinates() async {
     try {
@@ -830,34 +839,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
     );
   }
 
-  // Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-  //   try {
-  //     final history = await userService.fetchBookingDetails(widget.id, widget.token);
-  //     return history;
-  //   } catch (e) {
-  //     print('Error fetching booking details: $e');
-  //     return null;
-  //   }
-  // }
-
-
-/*
-  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-    final data = await getSavedBookingId();
-    final String? bookingId = data['_id'];
-    final String? token = data['token'];
-
-    if (bookingId != null && token != null) {
-      print('Fetching details with bookingId=$bookingId and token=$token');
-      return await userService.fetchBookingDetails(bookingId, token);
-    } else {
-      print('No bookingId or token found in shared preferences.');
-      return null;
-    }
-  }
-*/
-
-
   Future<Map<String, dynamic>?> _fetchBookingDetails() async {
     final data = await getSavedBookingId();
     String? bookingId = data['_id'];
@@ -900,7 +881,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       return null;
     }
   }
-
 
   Future<void> handleDeleteBooking() async {
     try {
@@ -1740,12 +1720,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 itemCount: vendors.length,
                                 itemBuilder: (context, index) {
                                   final vendor = vendors[index];
-                                  final partnerId = vendor['partnerId']?.toString() ?? 'No partnerId';
-                                  final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? 'No oldQuotePrice';
-                                  final partnerName = vendor['partnerName']?.toString() ?? 'No Name';
-                                  final quotePriceStr = vendor['quotePrice']?.toString() ?? '0';
-                                  final quotePrice = double.tryParse(quotePriceStr) ?? 0;
-                                  paymentStatus = vendor?['paymentStatus'];
+                                  final partnerId = vendor['partnerId']?.toString() ?? '';
+                                  final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? '';
+                                  final partnerName = vendor['partnerName']?.toString() ?? '';
+                                  final quotePrice = vendor['quotePrice']?.toString() ?? '0';
                                   return Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: RadioListTile<String>(
@@ -1780,18 +1758,18 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                         setState(() {
                                           selectedPartnerName = partnerName;
                                           selectedPartnerId = partnerId;
-                                          selectedQuotePrice = quotePrice.toStringAsFixed(2);
-                                          selectedOldQuotePrice = oldQuotePrice;
+                                          selectedQuotePrice = int.tryParse(quotePrice);
+                                          selectedOldQuotePrice = int.tryParse(oldQuotePrice);
                                           selectedVendorId = value;
-                                          fullAmount = quotePrice.round();
-                                          advanceAmount = (quotePrice / 2).round();
+                                          fullAmount = int.tryParse(quotePrice)!;
+                                          advanceAmount = (int.tryParse(quotePrice) ?? 0) ~/ 2;
                                           try {
-                                            fullPayAmount = fullAmount.toDouble();
-                                            advancePayAmount = advanceAmount.toDouble();
+                                            fullPayAmount = fullAmount;
+                                            advancePayAmount = advanceAmount;
                                           } catch (e) {
                                             print('Error parsing amount: $e');
-                                            fullPayAmount = 0.0;
-                                            advancePayAmount = 0.0;
+                                            fullPayAmount = 0;
+                                            advancePayAmount = 0;
                                           }
                                           stopFetching();
                                         });
@@ -1836,17 +1814,79 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
                                 ? null
                                 : () {
-                              initiateStripePayment(
-                                context,
-                                advancePayAmount,
-                                true,
-                                selectedPartnerName!,
-                                selectedPartnerId!,
-                                selectedOldQuotePrice!,
-                                selectedQuotePrice!,
-                                  "HalfPaid",
-                                advanceAmount
+                              isPayAdvance =true;
+                              print(isPayAdvance);
+                              showSelectPaymentDialog(
+                                  selectedQuotePrice!,
+                                  selectedPartnerId!,
+                                  selectedOldQuotePrice!,
+                                  widget.bookingId,
+                                  selectedPartnerName!,
+                                  advanceAmount
                               );
+                              // showDialog(
+                              //   context: context,
+                              //   builder: (BuildContext context) {
+                              //     ViewUtil viewUtil = ViewUtil(context);
+                              //     return Directionality(
+                              //       textDirection: ui.TextDirection.ltr,
+                              //       child: Dialog(
+                              //         shape: RoundedRectangleBorder(
+                              //           borderRadius: BorderRadius.circular(8),
+                              //         ),
+                              //         insetPadding: EdgeInsets.symmetric(horizontal: 15),
+                              //         backgroundColor: Colors.white,
+                              //         child: SingleChildScrollView(
+                              //           child: Container(
+                              //             width: MediaQuery.of(context).size.width,
+                              //             padding: const EdgeInsets.all(0),
+                              //             child: StatefulBuilder(
+                              //               builder: (BuildContext context, StateSetter setState) {
+                              //                 return Stack(
+                              //                   children: [
+                              //                     Column(
+                              //                       mainAxisSize: MainAxisSize.min,
+                              //                       children: [
+                              //                         // showSelectPaymentDialog(
+                              //                         //     advancePayAmount,
+                              //                         //     selectedPartnerId!,
+                              //                         //     selectedOldQuotePrice!,
+                              //                         //     widget.bookingId,
+                              //                         //     selectedPartnerName!,
+                              //                         //     paymentStatus!,
+                              //                         //     selectedQuotePrice!,
+                              //                         //     advanceAmount
+                              //                         // );
+                              //                         Text('selectedPartnerId:${selectedPartnerId}'),
+                              //                         Text('selectedOldQuotePrice:${selectedOldQuotePrice}'),
+                              //                         Text('bookingId:${widget.bookingId}'),
+                              //                         Text('selectedPartnerName:${selectedPartnerName}'),
+                              //                         Text('selectedQuotePrice:${selectedQuotePrice}'),
+                              //                         Text('advanceAmount:${advanceAmount}'),
+                              //                         SizedBox(height: 10),
+                              //                       ],
+                              //                     ),
+                              //                     Positioned(
+                              //                       top: 10,
+                              //                       right: 10,
+                              //                       child: GestureDetector(
+                              //                         onTap: () => Navigator.of(context).pop(),
+                              //                         child: CircleAvatar(
+                              //                             backgroundColor: Colors.white,
+                              //                             child: Icon(Icons.cancel, color: Colors.grey,size: 30,)
+                              //                         ),
+                              //                       ),
+                              //                     ),
+                              //                   ],
+                              //                 );
+                              //               },
+                              //             ),
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     );
+                              //   },
+                              // );
                             },
                             child: Text(
                               viewUtil.isTablet
@@ -1876,20 +1916,18 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            // Full payment button with "Paid" status string
                             onPressed: selectedVendorId == null || selectedPartnerName == null || selectedPartnerId == null
                                 ? null
                                 : () async {
-                              initiateStripePayment(
-                                context,
-                                fullPayAmount,
-                                false,
-                                selectedPartnerName!,
-                                selectedPartnerId!,
-                                selectedOldQuotePrice!,
-                                selectedQuotePrice!,
-                                "Paid",
-                                fullAmount
+                              isPayAdvance =false;
+                              print(isPayAdvance);
+                              showSelectPaymentDialog(
+                                  selectedQuotePrice!,
+                                  selectedPartnerId!,
+                                  selectedOldQuotePrice!,
+                                  widget.bookingId,
+                                  selectedPartnerName!,
+                                  advanceAmount
                               );
                             },
                             child: Text(
@@ -1910,6 +1948,536 @@ class _ChooseVendorState extends State<ChooseVendor> {
             )
         ),
       ),
+    );
+  }
+
+  void showSelectPaymentDialog(int amount,String partnerId,int oldQuotePrice,String bookingId,String partnerName,int advanceAmount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            insetPadding: EdgeInsets.symmetric(horizontal: 25),
+            backgroundColor: Colors.white,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.all(0),
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                            onPressed: () {
+                              isOtherCardTapped = false;
+                              isMADATapped = false;
+                              Navigator.pop(context);
+                            },
+                            icon: Icon(
+                              Icons.cancel,
+                              color: Colors.grey,
+                            )),
+                      ),
+                      SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            isMADATapped = true;
+                            isOtherCardTapped = false;
+                            Navigator.pop(context);
+                          });
+                          await initiatePayment('MADA', amount,advanceAmount);
+                          showPaymentDialog(checkOutId??'', integrityId??'', true, amount, partnerId, oldQuotePrice, bookingId, partnerName, advanceAmount
+                          );
+                          },
+                        child: Container(
+                          color: isMADATapped
+                              ? Color(0xffD4D4D4)
+                              : Colors.transparent,
+                          padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Pay using MADA".tr(),
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              SvgPicture.asset(
+                                'assets/Mada_Logo.svg',
+                                height: 25,
+                                width: 20,
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            isMADATapped = false;
+                            isOtherCardTapped = true;
+                            Navigator.pop(context);
+                          });
+                          await initiatePayment('OTHER', amount,advanceAmount);
+                          showPaymentDialog(checkOutId??'', integrityId??'',false,amount,partnerId,oldQuotePrice,bookingId,partnerName,advanceAmount);
+                        },
+                        child: Container(
+                          color: isOtherCardTapped
+                              ? Color(0xffD4D4D4)
+                              : Colors.transparent,
+                          padding: const EdgeInsets.fromLTRB(25, 12, 25, 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text("Pay using Other Card Types".tr(),
+                                    style: TextStyle(fontSize: 18)),
+                              ),
+                              SvgPicture.asset('assets/visa-mastercard.svg',
+                                  height: 40, width: 20)
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 30)
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future initiatePayment(String paymentBrand,int amount,int advanceAmount) async {
+    setState(() {
+      commonWidgets.loadingDialog(context, true);
+    });
+    final result = await superUserServices.choosePayment(
+      context,
+      userId: widget.id,
+      paymentBrand: paymentBrand,
+      amount: isPayAdvance==true?advanceAmount:amount,
+    );
+    print('paymentBrand$paymentBrand');
+    print('amount$amount');
+    if (result != null) {
+      setState(() {
+        checkOutId = result['id'];
+        integrityId = result['integrity'];
+        print('checkOutId$checkOutId');
+        print('integrityId$integrityId');
+      });
+    }
+    setState(() {
+      Navigator.pop(context);
+    });
+  }
+
+  Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
+    final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
+    print('Processed');
+    print(isMadaTapped);
+
+    if (result != null && result['code'] != null) {
+      setState(() {
+        resultCode = result['code'] ?? '';
+        paymentResult = result['description'] ?? '';
+        print(resultCode);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to retrieve payment status.')),
+      );
+    }
+  }
+
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,int oldQuotePrice,String bookingId,String partnerName,int advanceAmount) {
+    if (checkOutId.isEmpty || integrity.isEmpty) {
+      print('Error: checkOutId or integrity is empty');
+      return;
+    }
+    final String visaHtml = '''
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyperPay Payment Integration</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .paymentWidgets {
+        width: 50%;
+        max-width: 100px;
+        box-sizing: border-box;
+      }
+      .paymentWidgets button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .paymentWidgets button:hover {
+        background-color: #45a049;
+      }
+      #submitButton {
+        display: none;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      #submitButton:active {
+        background-color: #45a049;
+      }
+    </style>
+
+    <script>
+       window['wpwlOptions'] = {
+      billingAddress: {},
+      mandatoryBillingFields: {
+        country: true,
+        state: true,
+        city: true,
+        postcode: true,
+        street1: true,
+        street2: false,
+      },
+    };
+
+      // Function to load the HyperPay payment widget script
+      function loadPaymentScript(checkoutId, integrity) {
+        const script = document.createElement('script');
+        script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+        script.crossOrigin = 'anonymous';
+        script.integrity = integrity;
+        script.onload = () => {
+          console.log('Payment widget script loaded'); 
+        };
+        document.body.appendChild(script);
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        loadPaymentScript("${checkOutId}", "${integrity}");
+      });
+    </script>
+  </head>
+
+  <body>
+    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+  </body>
+</html>
+''';
+
+    final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 10),
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.42,
+              child: WebView(
+                backgroundColor: Colors.transparent,
+                initialUrl: Uri.dataFromString(
+                    isMADATapped ? madaHtml : visaHtml,
+                    mimeType: 'text/html',
+                    encoding: Encoding.getByName('utf-8')
+                ).toString(),
+                javascriptMode: JavascriptMode.unrestricted,
+                javascriptChannels: {
+                  JavascriptChannel(
+                    name: 'NavigateToFlutter',
+                    onMessageReceived: (JavascriptMessage message) async {
+                      await getPaymentStatus(checkOutId,isMADATapped);
+                      if (resultCode == "000.100.110") {
+                        if(isPayAdvance == true)
+                          {
+                           advancePaymentSuccessDialog(advanceAmount);
+                            Future.delayed(Duration(seconds: 3), () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => PaymentSuccessScreen(
+                                    onContinuePressed: () async {
+                                      await fetchPaymentData(advanceAmount,'HalfPaid',partnerID,bookingId,oldQuotePrice);
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(builder: (context) => PendingPayment(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          selectedType: widget.selectedType,
+                                          token: widget.token,
+                                          unit: widget.unit,
+                                          load: widget.load,
+                                          size: widget.size,
+                                          bookingId: widget.bookingId,
+                                          unitType: widget.unitType,
+                                          dropPoints: widget.dropPoints,
+                                          pickup: widget.pickup,
+                                          cityName: widget.cityName,
+                                          address: widget.address,
+                                          zipCode: widget.zipCode,
+                                          unitTypeName: widget.unitTypeName,
+                                          id: widget.id,
+                                          partnerName: partnerName,
+                                          partnerId: partnerID,
+                                          oldQuotePrice: oldQuotePrice.toString(),
+                                          paymentStatus: updatedPaymentStatus.toString(),
+                                          quotePrice: amount.toString(),
+                                          advanceOrPay: advanceAmount,
+                                          bookingStatus: bookingStatus??'',
+                                          email: widget.email,
+                                        ),),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                              Future.delayed(Duration(seconds: 3), () async {
+                                await fetchPaymentData(advanceAmount,'HalfPaid',partnerID,bookingId,oldQuotePrice);
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (context) => PendingPayment(
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    selectedType: widget.selectedType,
+                                    token: widget.token,
+                                    unit: widget.unit,
+                                    load: widget.load,
+                                    size: widget.size,
+                                    bookingId: widget.bookingId,
+                                    unitType: widget.unitType,
+                                    dropPoints: widget.dropPoints,
+                                    pickup: widget.pickup,
+                                    cityName: widget.cityName,
+                                    address: widget.address,
+                                    zipCode: widget.zipCode,
+                                    unitTypeName: widget.unitTypeName,
+                                    id: widget.id,
+                                    partnerName: partnerName,
+                                    partnerId: partnerID,
+                                    oldQuotePrice: oldQuotePrice.toString(),
+                                    paymentStatus: updatedPaymentStatus.toString(),
+                                    quotePrice: amount.toString(),
+                                    advanceOrPay: advanceAmount,
+                                    bookingStatus: bookingStatus??'',
+                                    email: widget.email,
+                                  ),),
+                                );
+                              });
+                            });
+                          }
+                        else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  PaymentSuccessScreen(
+                                    onContinuePressed: () async {
+                                      await fetchPaymentData(amount, 'Paid', partnerID, bookingId, oldQuotePrice);
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(builder: (context) => PendingPayment(
+                                              firstName: widget.firstName,
+                                              lastName: widget.lastName,
+                                              selectedType: widget.selectedType,
+                                              token: widget.token,
+                                              unit: widget.unit,
+                                              load: widget.load,
+                                              size: widget.size,
+                                              bookingId: widget.bookingId,
+                                              unitType: widget.unitType,
+                                              dropPoints: widget.dropPoints,
+                                              pickup: widget.pickup,
+                                              cityName: widget.cityName,
+                                              address: widget.address,
+                                              zipCode: widget.zipCode,
+                                              unitTypeName: widget.unitTypeName,
+                                              id: widget.id,
+                                              partnerName: partnerName,
+                                              partnerId: partnerID,
+                                              oldQuotePrice: oldQuotePrice
+                                                  .toString(),
+                                              paymentStatus: updatedPaymentStatus
+                                                  .toString(),
+                                              quotePrice: amount.toString(),
+                                              advanceOrPay: advanceAmount,
+                                              bookingStatus: bookingStatus ??
+                                                  '',
+                                              email: widget.email,
+                                            ),),
+                                      );
+                                      Future.delayed(Duration(seconds: 3), () async {
+                                        await fetchPaymentData(amount, 'Paid', partnerID, bookingId, oldQuotePrice);
+                                        Navigator.of(context).pushReplacement(
+                                          MaterialPageRoute(builder: (context) => PendingPayment(
+                                            firstName: widget.firstName,
+                                            lastName: widget.lastName,
+                                            selectedType: widget.selectedType,
+                                            token: widget.token,
+                                            unit: widget.unit,
+                                            load: widget.load,
+                                            size: widget.size,
+                                            bookingId: widget.bookingId,
+                                            unitType: widget.unitType,
+                                            dropPoints: widget.dropPoints,
+                                            pickup: widget.pickup,
+                                            cityName: widget.cityName,
+                                            address: widget.address,
+                                            zipCode: widget.zipCode,
+                                            unitTypeName: widget.unitTypeName,
+                                            id: widget.id,
+                                            partnerName: partnerName,
+                                            partnerId: partnerID,
+                                            oldQuotePrice: oldQuotePrice.toString(),
+                                            paymentStatus: updatedPaymentStatus.toString(),
+                                            quotePrice: amount.toString(),
+                                            advanceOrPay: advanceAmount,
+                                            bookingStatus: bookingStatus??'',
+                                            email: widget.email,
+                                          ),),
+                                        );
+                                      });
+                                    },
+                                  ),
+                            ),
+                          );
+                        }
+                      }
+                      else {
+                        Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                              paymentStatus: paymentResult??'',
+                              onRetryPressed:() {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) => ChooseVendor(
+                                    id: widget.id,
+                                    bookingId: bookingId,
+                                    size: widget.size,
+                                    unitType: widget.unitType,
+                                    unitTypeName: widget.unitTypeName,
+                                    load: widget.load,
+                                    unit: widget.unit,
+                                    pickup: widget.pickup,
+                                    dropPoints: widget.dropPoints,
+                                    token: widget.token,
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    selectedType: widget.selectedType,
+                                    cityName: widget.cityName,
+                                    address: widget.address,
+                                    zipCode: widget.zipCode,
+                                    email: widget.email,
+                                    accountType: widget.accountType,
+                                  )),
+                                );
+                              },)));
+                      }
+                    },
+                  ),
+                },
+                onWebViewCreated: (WebViewController webViewController) {
+                  webViewController.clearCache();
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void advancePaymentSuccessDialog(int amount) {
+    ViewUtil viewUtil = ViewUtil(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(FontAwesomeIcons.multiply,size: viewUtil.isTablet? 30 :20),
+              ),
+            ],
+          ),
+          content: Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: viewUtil.isTablet
+                ? MediaQuery.of(context).size.height * 0.3
+                : MediaQuery.of(context).size.height * 0.25,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/confirm.svg',
+                      fit: BoxFit.contain,
+                      width: MediaQuery.of(context).size.width * 0.7,
+                    ),
+                    Positioned.fill(
+                      child: Center(
+                        child: Text(
+                          'Thank you!'.tr(),
+                          style: TextStyle(fontSize:viewUtil.isTablet? 40 :30),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'Your booking is confirmed'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet? 30 :20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    '${'with advance payment of'.tr()} \n SAR ${amount}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: viewUtil.isTablet? 22 :16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

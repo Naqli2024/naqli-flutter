@@ -1255,7 +1255,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
           ),
-          child: child!,
+          child: child ?? const SizedBox(),
         );
       },
     );
@@ -1276,7 +1276,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
           ),
-          child: child!,
+          child: child ?? const SizedBox(),
         );
       },
     );
@@ -1289,10 +1289,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   String _formatTimeOfDay(TimeOfDay time) {
-    return MaterialLocalizations.of(context).formatTimeOfDay(
-      time,
-      alwaysUse24HourFormat: false,
-    );
+    final hour = time.hour;
+    final minute = time.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final formattedHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    final formattedMinute = minute.toString().padLeft(2, '0');
+    return '$formattedHour:$formattedMinute $period';
   }
 
   void _onCheckboxChanged(bool? value) {

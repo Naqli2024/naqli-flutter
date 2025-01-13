@@ -9,6 +9,7 @@ import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
@@ -460,7 +461,7 @@ class CommonWidgets {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.cancel,size: viewUtil.isTablet? 30 :20),
+                  icon: Icon(Icons.cancel,size: viewUtil.isTablet? 30 :25),
                 ),
               ),
             ],
@@ -468,10 +469,10 @@ class CommonWidgets {
           content: Container(
             width: viewUtil.isTablet
               ? MediaQuery.of(context).size.width * 0.6
-              : MediaQuery.of(context).size.width * 0.5,
+              : MediaQuery.of(context).size.width * 0.55,
             height: viewUtil.isTablet
                 ? MediaQuery.of(context).size.height * 0.08
-                : MediaQuery.of(context).size.height * 0.1,
+                : MediaQuery.of(context).size.height * 0.13,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -486,8 +487,8 @@ class CommonWidgets {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(
-                    '${'Booking id'.tr()} $bookingId',
-                    style: TextStyle(fontSize: viewUtil.isTablet? 20 :14),
+                    '${'Booking id'.tr()} $bookingId',textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: viewUtil.isTablet? 20 :16),
                   ),
                 ),
               ],
@@ -637,6 +638,42 @@ class CommonWidgets {
           ),
         ],
       ),
+    );
+  }
+
+  void loadingDialog(BuildContext context, bool isProcessing){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Visibility(
+          visible: isProcessing,
+          child: Directionality(
+            textDirection: ui.TextDirection.ltr,
+            child: Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              insetPadding: EdgeInsets.symmetric(horizontal: 90),
+              backgroundColor: Colors.white,
+              child: StatefulBuilder(
+                builder: (BuildContext context, StateSetter setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 50),
+                      LoadingAnimationWidget.fourRotatingDots(
+                        color: Colors.blue,
+                        size: 80,
+                      ),
+                      SizedBox(height: 50)
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

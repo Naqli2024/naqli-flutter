@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -208,6 +209,7 @@ class _DriverNotificationState extends State<DriverNotification> {
 
   @override
   Widget build(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
     return Container(
       height: MediaQuery.sizeOf(context).height,
       child: Stack(
@@ -240,7 +242,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                     size: 30,
                   ),
                 ),
-                title: Text('Radar'.tr(), style: TextStyle(fontSize: 26)),
+                title: Text('Radar'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?30:26)),
               ),
               body: isLoading
                   ? Center(child: CircularProgressIndicator())
@@ -281,7 +283,10 @@ class _DriverNotificationState extends State<DriverNotification> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    SvgPicture.asset('assets/naqleeBorder.svg'),
+                                    SvgPicture.asset('assets/naqleeBorder.svg',
+                                      height: viewUtil.isTablet
+                                          ?MediaQuery.of(context).size.height * 0.05
+                                          :MediaQuery.of(context).size.height * 0.04),
                                   ],
                                 ),
                               ),
@@ -293,7 +298,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                                       alignment: Alignment.topLeft,
                                       child: Text(
                                         'SAR',
-                                        style: TextStyle(fontSize: 24),
+                                        style: TextStyle(fontSize: viewUtil.isTablet?26:24),
                                       ),
                                     ),
                                   ),
@@ -335,11 +340,11 @@ class _DriverNotificationState extends State<DriverNotification> {
                                             children: [
                                               Text(
                                                 '$currentToPickupDuration ($currentToPickupDistance) ${'away'.tr()}',
-                                                style: TextStyle(fontSize: 20),
+                                                style: TextStyle(fontSize: viewUtil.isTablet?26:20),
                                               ),
                                               Text(
                                                 booking?['pickup'] ?? '',
-                                                style: TextStyle(fontSize: 20),
+                                                style: TextStyle(fontSize: viewUtil.isTablet?26:20),
                                               ),
 
                                               if (dropPointsData.isNotEmpty) ...[
@@ -348,7 +353,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                                                     padding: EdgeInsets.only(top: 20),
                                                     child: Text(
                                                       '${dropPoint['duration']} (${dropPoint['distance']}) ${'left'.tr()}',
-                                                      style: TextStyle(fontSize: 20),
+                                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20),
                                                     ),
                                                   );
                                                 }).toList(),
@@ -360,7 +365,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                                                 booking?['dropPoints'] != null && booking!['dropPoints'] is List
                                                     ? (booking!['dropPoints'] as List).join(', ')
                                                     : '',
-                                                style: TextStyle(fontSize: 20),
+                                                style: TextStyle(fontSize: viewUtil.isTablet?26:20),
                                               ),
                                             ],
                                           ),
@@ -380,7 +385,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                     padding: EdgeInsets.only(top: 35),
                     child: Text(
                       '${"We’ll let you know when there".tr()}\n${'Is a request'.tr()}',
-                      style: TextStyle(fontSize: 18,color: Colors.black),
+                      style: TextStyle(fontSize: viewUtil.isTablet?26:18,color: Colors.black),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -394,7 +399,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                             token: widget.token,
                             id: widget.id,partnerId: widget.partnerId,mode: widget.mode,)));
                         },
-                        icon: Icon(Icons.cancel)
+                        icon: Icon(Icons.cancel,size: viewUtil.isTablet?30:25)
                     )
                   ),
                 ],
