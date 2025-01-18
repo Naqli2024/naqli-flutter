@@ -52,12 +52,9 @@ class _BookingDetailsState extends State<BookingDetails> {
 
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
-      print('Fetching booking details for partnerId: ${widget.partnerId}');
       final bookingIds = await _authService.getBookingData(widget.partnerId, widget.token);
-      print('Booking IDs retrieved: $bookingIds');
 
       if (bookingIds.isEmpty) {
-        print("No booking IDs found.");
         return [];
       }
 
@@ -68,34 +65,29 @@ class _BookingDetailsState extends State<BookingDetails> {
         final quotePrice = booking['quotePrice'].toString();
 
         try {
-          print('Fetching details for booking ID: $bookingId');
           final details = await _authService.getBookingId(bookingId, widget.token, '', widget.quotePrice);
 
           details['quotePrice'] = quotePrice;
           payment = details?['paymentStatus'];
-          print('STATUSS ${payment}');
           balance = details['remainingBalance'];
-          print('Details retrieved: $details');
-
           if (details['bookingStatus'] != 'Completed') {
             if (details.isNotEmpty || details['bookingStatus'] == 'Running' &&
                 (paymentType == 'NotPaid' || paymentType == 'Paid' || paymentType == 'HalfPaid')) {
               bookingDetails.add(details);
             } else {
-              print("Booking is not running or payment status does not match for booking ID $bookingId.");
+              return [];
             }
           } else {
-            print("Booking ID $bookingId is completed and will not be shown.");
+            return [];
           }
         } catch (e) {
-          print("Error fetching details for booking ID $bookingId: $e");
+          return [];
         }
       }
       loadingStates = List<bool>.filled(bookingDetails.length, false);
 
       return bookingDetails;
     } catch (e) {
-      print("Error fetching booking details: $e");
       return [];
     }
   }
@@ -110,7 +102,7 @@ class _BookingDetailsState extends State<BookingDetails> {
     } catch (e) {
       setState(() {
       });
-      print('Error fetching user name: $e');
+
     }
   }
 
@@ -131,7 +123,6 @@ class _BookingDetailsState extends State<BookingDetails> {
         if (details != null && details.isNotEmpty) {
           bookingDetails = details;
           paymentData = bookingDetails?['paymentStatus'];
-          print(paymentData);
         } else {
           errorMessage = 'No booking details found for the selected ID.';
         }
@@ -260,7 +251,6 @@ class _BookingDetailsState extends State<BookingDetails> {
                     final zipCode = booking?['fromTime'] ?? 'N/A';
                     final fromTime = booking?['fromTime'] ?? 'N/A';
                     final toTime = booking?['toTime'] ?? 'N/A';
-                     print('qqqqqqqqqqq$quotePrice');
                     return Column(
                       children: [
                         Container(
@@ -304,7 +294,6 @@ class _BookingDetailsState extends State<BookingDetails> {
                                       await fetchUserName(userId);
                                       await fetchPaymentType(id??"");
                                       // await fetchBookingDetails();
-                                      print('testt$paymentData');
                                       if(paymentData == 'Pending' || paymentData == 'NotPaid'){
                                         Navigator.push(
                                           context,

@@ -109,7 +109,6 @@ class _ViewBookingState extends State<ViewBooking> {
           bookingDetails = details;
           paymentStatus = bookingDetails?['paymentStatus'];
           bookingStatus = bookingDetails?['bookingStatus'];
-          print(paymentStatus);
         } else {
           errorMessage = 'No booking details found for the selected ID.';
         }
@@ -135,7 +134,6 @@ class _ViewBookingState extends State<ViewBooking> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching user name: $e');
     }
   }
 

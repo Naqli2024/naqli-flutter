@@ -194,18 +194,15 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
   Future<void> fetchPartnerData() async {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token,widget.bookingId);
-
-      print('Fetched Partner Data: $data');
-
       if (data.isNotEmpty) {
         setState(() {
           partnerData = data;
         });
       } else {
-        print('No partner data available');
+      return;
       }
     } catch (e) {
-      print('Error fetching partner data: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -291,7 +288,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
             currentPlace = currentAddress;
             if (currentAddress != null) {
               currentLocationName = currentAddress;
-              print('Current Location Name: $currentLocationName');
             }
           }
         }
@@ -372,7 +368,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
         }
       });
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -446,17 +442,16 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
               }
             });
           } else {
-            print('Pickup location is null');
+            return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -505,7 +500,6 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
           northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
         );
       } else {
-        print('No coordinates to fit.');
         return;
       }
 
@@ -516,7 +510,7 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
         )), // Padding in pixels
       );
     } else {
-      print('mapController is not initialized');
+     return;
     }
   }
 

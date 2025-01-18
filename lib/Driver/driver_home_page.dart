@@ -87,9 +87,6 @@ class _DriverHomePageState extends State<DriverHomePage>
     _loadDriverStatus();
     _fetchBookingRequest();
     _fetchBookingDetails();
-    print(widget.partnerId);
-    print(widget.id);
-    print(widget.mode);
   }
 
   @override
@@ -103,14 +100,10 @@ class _DriverHomePageState extends State<DriverHomePage>
 
   Future<void> _fetchBookingDetails() async {
     final bookingData = await driverService.fetchBookingDetails(bookingId??'', widget.token);
-
-    print("Fetched Booking Data: $bookingData");
-
     setState(() {
       booking = bookingData;
       cityName =booking?['cityName']??"";
       bookingStatus =booking?['bookingStatus']??'';
-      print('cityName-----$cityName');
     });
   }
 
@@ -123,7 +116,6 @@ class _DriverHomePageState extends State<DriverHomePage>
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print('Location services are disabled.');
       return;
     }
 
@@ -131,13 +123,11 @@ class _DriverHomePageState extends State<DriverHomePage>
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permissions are denied.');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print('Location permissions are permanently denied.');
       return;
     }
 
@@ -213,13 +203,13 @@ class _DriverHomePageState extends State<DriverHomePage>
             );
           });
         } else {
-          print('Failed to reverse geocode location. Status: ${data['status']}');
+          return;
         }
       } else {
-        print('Failed to fetch reverse geocoding. Status code: ${response.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      return;
     }
   }
 
@@ -276,21 +266,17 @@ class _DriverHomePageState extends State<DriverHomePage>
       if (data != null && data['bookingRequest'] != null) {
         if (data['bookingRequest']['assignedOperator'] != null) {
           final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
-          print('Booking ID from assignedOperator: $assignedOperatorBookingId');
         } else {
           final bookingRequestBookingId = data['bookingRequest']['bookingId'];
-          print('Booking ID from bookingRequest: $bookingRequestBookingId');
         }
         setState(() {
           bookingRequestData = data;
           bookingId = (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString();
-          print(booking);
         });
       } else {
-        print("No booking request data available.");
+       return;
       }
     } catch (e) {
-      print("Error during API call: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
@@ -307,7 +293,6 @@ class _DriverHomePageState extends State<DriverHomePage>
         );
       }
     } catch (e) {
-      print("Error during API call: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }

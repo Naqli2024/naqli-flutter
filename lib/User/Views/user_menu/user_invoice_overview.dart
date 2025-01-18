@@ -53,7 +53,6 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
         DateTime date = DateTime.parse(formattedDateString);
         return DateFormat('dd/MM/yyyy').format(date);
       } catch (e) {
-        print('Error parsing date: $e');
         return 'Invalid Date Format';
       }
     } else {
@@ -64,26 +63,21 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
   Future<void> fetchPartnerData() async {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token,widget.bookingId);
-
-      print('Fetched Partner Data: $data');
-
       if (data.isNotEmpty) {
         setState(() {
           partnerData = data;
         });
       } else {
-        print('No partner data available');
+
       }
     } catch (e) {
-      print('Error fetching partner data: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
   Future<void> _generateAndDownloadPdf(String address) async {
     final pdf = pw.Document();
     final logoImage = await imageFromAssetBundle('assets/naqleePdf.png');
-
-    // Create the invoice PDF with dynamic data
     pdf.addPage(
       pw.Page(
         build: (context) => pw.Column(
@@ -101,7 +95,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                 ),
                 pw.Expanded(
                   flex: 3,
-                  child: pw.Text('INVOICE', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                  child: pw.Text('Invoice'.tr(), style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
                 ),
               ],
             ),
@@ -129,7 +123,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Invoice id: ',
+                              text: 'Invoice Id:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -143,7 +137,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Invoice date: ',
+                              text: 'Invoice date:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -167,7 +161,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Bill to:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Bill to:'.tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                       pw.Text(widget.firstName+' '+widget.lastName),
                       pw.Text(address),
                     ],
@@ -182,7 +176,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Partner: ',
+                              text: 'Partner:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -196,7 +190,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Unit type: ',
+                              text: 'UnitType:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -210,7 +204,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Booking id: ',
+                              text: 'Booking id:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -224,7 +218,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         text: pw.TextSpan(
                           children: [
                             pw.TextSpan(
-                              text: 'Payment type: ',
+                              text: 'Payment type:'.tr(),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                             pw.TextSpan(
@@ -248,7 +242,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Description', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Description'.tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                       widget.pickup.isNotEmpty || widget.pickup != ''
                           ? pw.Column(
                         children: [
@@ -257,7 +251,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         ],
                       )
                           : pw.Text(widget.city),
-                      pw.Text('Qty: 1'),
+                      pw.Text('${"Qty:".tr()} 1'),
                     ],
                   ),
                 ),
@@ -274,27 +268,27 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
             ),
             pw.SizedBox(height: 20),
             pw.Divider(),
-            pw.Text("Total Summary", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text("Total Summary".tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("Sub total"), pw.Text('${widget.paymentAmount.toInt()} SAR')],
+              children: [pw.Text("Subtotal".tr()), pw.Text('${widget.paymentAmount.toInt()} SAR')],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("Labour charge"), pw.Text("0 SAR")],
+              children: [pw.Text("Labour charge".tr()), pw.Text("0 SAR")],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("VAT"), pw.Text("0%")],
+              children: [pw.Text("VAT".tr()), pw.Text("0%")],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Total", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                pw.Text("Total".tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                 pw.Text("${widget.paymentAmount.toInt()} SAR", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
               ],
             ),
@@ -304,10 +298,9 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
     );
 
     try {
-      // Print the generated PDF
       await Printing.layoutPdf(onLayout: (format) async => pdf.save());
     } catch (e) {
-      print("Error: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -365,7 +358,6 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            print(snapshot.error);
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
             final userData = snapshot.data!;
@@ -401,7 +393,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                         height: MediaQuery.of(context).size.height * 0.04),
                                   ),
                                 ),
-                                Expanded(flex:3,child: Text('INVOICE',style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 20, fontWeight: FontWeight.w500)))
+                                Expanded(flex:3,child: Text('Invoice'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 20, fontWeight: FontWeight.w500)))
                               ],
                             ),
                             SizedBox(height: 40),
@@ -424,8 +416,8 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      buildLabelValue('Invoice id', widget.invoiceId),
-                                      buildLabelValue('Invoice date', '${formatDateFromInvoiceId(widget.invoiceId)}'),
+                                      buildLabelValue('Invoice Id'.tr(), widget.invoiceId),
+                                      buildLabelValue('Invoice date'.tr(), '${formatDateFromInvoiceId(widget.invoiceId)}'),
                                     ],
                                   ),
                                 ),
@@ -440,7 +432,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Bill to:',style: TextStyle(fontSize: viewUtil.isTablet ? 22 :16, fontWeight: FontWeight.w500)),
+                                      Text('Bill to:'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :16, fontWeight: FontWeight.w500)),
                                       Text(userData.firstName+' '+userData.lastName,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                       Text(userData.address1,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                     ],
@@ -451,10 +443,10 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      buildLabelValue('Partner', partnerData?[0]['partnerName'] ?? 'no_data'.tr()),
-                                      buildLabelValue('Unit type', widget.unitType),
-                                      buildLabelValue('Booking id', widget.bookingId),
-                                      buildLabelValue('Payment type', widget.paymentType),
+                                      buildLabelValue('Partner'.tr(), partnerData?[0]['partnerName'] ?? 'no_data'.tr()),
+                                      buildLabelValue('UnitType'.tr(), widget.unitType),
+                                      buildLabelValue('Booking id'.tr(), widget.bookingId),
+                                      buildLabelValue('Payment type'.tr(), widget.paymentType),
                                     ],
                                   ),
                                 ),
@@ -469,7 +461,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Description',style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16, fontWeight: FontWeight.w500)),
+                                      Text('Description'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16, fontWeight: FontWeight.w500)),
                                       widget.pickup.isNotEmpty || widget.pickup != ''
                                       ? Column(
                                         children: [
@@ -478,7 +470,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                         ],
                                       )
                                       : Text(widget.city,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                      buildLabelValue('Qty','1'),
+                                      buildLabelValue('Qty'.tr(),'1'),
                                     ],
                                   ),
                                 ),
@@ -504,7 +496,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('Total Summary',style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16, fontWeight: FontWeight.w500)),
+                                        Text('Total Summary'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16, fontWeight: FontWeight.w500)),
                                         Column(
                                           children: [
                                             Padding(
@@ -512,7 +504,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                               child: Row(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Text('Sub total',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                                  Text('Subtotal'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                                   Text('${widget.paymentAmount.toInt()} SAR',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                                 ],
                                               ),
@@ -524,7 +516,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('Labour charge',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                              Text('Labour charge'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                               Text('0',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                             ],
                                           ),
@@ -534,7 +526,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('VAT',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                              Text('VAT'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                               Text('0%',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                             ],
                                           ),
@@ -544,7 +536,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('Total',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16, fontWeight: FontWeight.w500)),
+                                              Text('Total'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16, fontWeight: FontWeight.w500)),
                                               Text('${widget.paymentAmount.toInt()} SAR',style: TextStyle(fontSize: viewUtil.isTablet ? 20 :16, fontWeight: FontWeight.w500)),
                                             ],
                                           ),

@@ -433,5 +433,20 @@
   "Edit Partner": "साझेदार संपादित करें",
   "Edit Unit": "यूनिट संपादित करें",
   "Edit Operator": "ऑपरेटर संपादित करें",
-  "Terms and Conditions": "नियम और शर्तें"
+  "Terms and Conditions": "नियम और शर्तें",
+  "Drive Your Business Forward": "अपने व्यवसाय को आगे बढ़ाएं",
+  "with Seamless Vehicle Booking!": "सुगम वाहन बुकिंग के साथ!",
+  "Invoice": "चालान",
+  "Invoice Id": "चालान आईडी",
+  "Invoice date": "चालान की तारीख",
+  "Bill to:": "बिल प्राप्तकर्ता:",
+  "Payment type": "भुगतान प्रकार",
+  "Subtotal": "उप-योग",
+  "Labour charge": "श्रम का मूल्य",
+  "Total amount": "कुल राशि",
+  "Qty": "मात्रा:",
+  "VAT": "मूल्य संवर्धित कर",
+  "Total Summary": "कुल सारांश",
+  "Download": "डाउनलोड करना",
+  "No invoice data found": "कोई चालान डेटा नहीं मिला"
 }

@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Driver/Views/driver_auth/driver_forgotPassword.dar
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -71,7 +72,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -101,7 +102,7 @@ class DriverService{
           ),
         );
       } else {
-        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -112,7 +113,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -146,7 +147,7 @@ class DriverService{
           ),
         );
       } else {
-        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -157,7 +158,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -199,7 +200,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -243,7 +244,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -304,24 +305,22 @@ class DriverService{
           final Map<String, dynamic> bookingData = responseBody['data'];
           return bookingData;
         } else {
-          throw Exception('Unexpected response format: $responseBody');
+          final message = responseBody['message'] ?? 'No Booking request found';
+          commonWidgets.showToast(message);
+          return null;
         }
       }
-      else if (response.statusCode == 404 && response.body.contains('Booking not found')) {
+      else {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? 'No Data found';
+        commonWidgets.showToast(message);
         return null;
       }
-      else if (response.statusCode == 503) {
-        throw Exception('Service is temporarily unavailable. Please try again later.');
-      } else {
-        throw Exception('Failed to load booking details. Status code: ${response.statusCode}, Response body: ${response.body}');
-      }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet connection and try again.');
-    } on FormatException {
-      throw Exception('Invalid response format or empty response body.');
+      commonWidgets.showToast('No Internet connection');
+      return null;
     } catch (e) {
-      throw Exception('An unexpected error occurred');
+      return null;
     }
   }
 
@@ -349,16 +348,17 @@ class DriverService{
         } else {
           return null;
         }
-      } else if (response.statusCode == 401) {
-        throw Exception('Authorization failed');
-      } else {
-        throw Exception('Failed to load user data for user ID $userId');
+      }  else {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? 'No Data found';
+        commonWidgets.showToast(message);
+        return null;
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      commonWidgets.showToast('No Internet connection');
+      return null;
     } catch (e) {
-      throw Exception('An unexpected error occurred');
+      return null;
     }
   }
 
@@ -401,7 +401,7 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }

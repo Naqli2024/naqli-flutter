@@ -106,7 +106,7 @@ class _StepOneState extends State<StepOne> {
         isLoading = false;
       });
     } catch (error) {
-      print('Failed to load unit data: $error');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -251,13 +251,6 @@ class _StepOneState extends State<StepOne> {
                             }
                             if (_formKey.currentState!.validate() && istimaraUpload && vehicleUpload) {
                               String selectedUnitString = unitMap(selectedUnit);
-                              print(selectedUnitString);
-                              print(_selectedUnitClassification.toString());
-                              print(_selectedSubClassification.toString());
-                              print(plateInfoController.text);
-                              print(istimaraNoController.text);
-                              print(istimaraCardFile);
-                              print(vehilePictureFile);
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -620,7 +613,6 @@ class _StepOneState extends State<StepOne> {
                     istimaraUpload = true;
                     istimaraError = false;
                   });
-                  print(result.files.first.name);
                 }
               },
               child: Row(
@@ -705,7 +697,6 @@ class _StepOneState extends State<StepOne> {
                       vehicleUpload=true;
                       vehicleError=false;
                     });
-                    print(result.files.first.name);
                   }
                 },
                 child: Row(

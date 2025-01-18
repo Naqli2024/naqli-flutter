@@ -44,16 +44,14 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> {
       mobileNoController.text = partnerMobileNo??'';
       emailController.text = partnerEmailId??'';
     }).catchError((e) {
-      print("Error fetching user data: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     });
   }
 
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
-      print('Fetching booking details for partnerId: ${widget.partnerId}');
       final bookingIds = await authService.getBookingData(widget.partnerId, widget.token);
       if (bookingIds.isEmpty) {
-        print("No booking IDs found.");
         return [];
       }
 
@@ -69,7 +67,6 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> {
       }
       return bookingDetails;
     } catch (e) {
-      print("Error fetching booking details: $e");
       return [];
     }
   }
@@ -254,7 +251,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> {
         });
       }
     } catch (e) {
-      print("Error picking profile image: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 }

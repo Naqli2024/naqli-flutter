@@ -54,6 +54,7 @@ class _UserTypeState extends State<UserType> {
     {'title': 'Special', 'asset': 'assets/special.svg'},
     {'title': 'Others', 'asset': 'assets/others.svg'},
   ];
+  Locale currentLocale = Locale('en', 'US');
 
   @override
   void initState() {
@@ -71,14 +72,10 @@ class _UserTypeState extends State<UserType> {
       if (widget.id != null && widget.token != null) {
         bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
 
-        if (bookingId != null) {
-          // await saveBookingId(bookingId,widget.token);
-        } else {
-          print('No pending booking found, navigating to NewBooking.');
+        if (bookingId == null) {
           return null;
         }
       } else {
-        print('No userId or token available.');
         return null;
       }
     }
@@ -86,7 +83,6 @@ class _UserTypeState extends State<UserType> {
     if (bookingId != null && widget.token != null) {
       return await userService.fetchBookingDetails(bookingId, widget.token);
     } else {
-      print('Failed to fetch booking details due to missing bookingId or token.');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -114,7 +110,13 @@ class _UserTypeState extends State<UserType> {
           context,
           User: widget.firstName +' '+ widget.lastName,
           userId: widget.id,
-        ),
+          currentLocale: currentLocale,
+          onLocaleChanged: (Locale locale) {
+            setState(() {
+              currentLocale = locale;
+            });
+            context.setLocale(locale);
+          }),
         drawer: Drawer(
           backgroundColor: Colors.white,
           child: ListView(
@@ -347,16 +349,6 @@ class _UserTypeState extends State<UserType> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-
-                },
-              ),
-              ListTile(
                 leading: Icon(Icons.logout,color: Colors.red,size: 30,),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
@@ -429,29 +421,46 @@ class _UserTypeState extends State<UserType> {
               children: [
                 CarouselSlider(
                   options: CarouselOptions(
-                    enlargeCenterPage: true,
+                    enlargeCenterPage: false,
                     autoPlay: true,
                     aspectRatio: 20 / 10,
                     autoPlayCurve: Curves.fastOutSlowIn,
                     enableInfiniteScroll: true,
-                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                    viewportFraction: 1.2,
+                    autoPlayAnimationDuration:
+                    const Duration(milliseconds: 800),
+                    viewportFraction: 1,
                   ),
                   items: [
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome2.svg',fit: BoxFit.fill)),
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome3.svg',fit: BoxFit.fill)),
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome4.svg',fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome2.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome2.svg', fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome3.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome3.svg', fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome4.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome4.svg', fit: BoxFit.fill)),
                     Stack(
                       children: [
-                        Container(child: SvgPicture.asset('assets/userHome1.svg',fit: BoxFit.fill,)),
+                        Container(
+                            child: SvgPicture.asset(
+                              'assets/userHome1.svg',
+                              fit: BoxFit.fill,
+                            )),
                         Positioned(
                           left: MediaQuery.sizeOf(context).width * 0.3,
                           top: MediaQuery.sizeOf(context).height * 0.08,
                           child: Text(
-                            'Drive Your Business Forward \nwith Seamless Vehicle Booking!',
+                            '${'Drive Your Business Forward'.tr()} \n${'with Seamless Vehicle Booking!'.tr()}',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: viewUtil.isTablet ? 30 : 15,
+                              fontSize: viewUtil.isTablet ? 30 : 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),

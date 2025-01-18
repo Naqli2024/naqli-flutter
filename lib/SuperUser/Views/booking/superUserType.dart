@@ -48,6 +48,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
     {'title': 'Special', 'asset': 'assets/special.svg'},
     {'title': 'Others', 'asset': 'assets/others.svg'},
   ];
+  Locale currentLocale = Locale('en', 'US');
 
   @override
   void initState() {
@@ -67,7 +68,13 @@ class _SuperUsertypeState extends State<SuperUsertype> {
           userId: widget.id,
           showLeading: true,
           showLanguage: true,
-        ),
+            currentLocale: currentLocale,
+            onLocaleChanged: (Locale locale) {
+              setState(() {
+                currentLocale = locale;
+              });
+              context.setLocale(locale);
+            }),
         drawer: Drawer(
           backgroundColor: Colors.white,
           child: ListView(
@@ -243,29 +250,46 @@ class _SuperUsertypeState extends State<SuperUsertype> {
               children: [
                 CarouselSlider(
                   options: CarouselOptions(
-                    enlargeCenterPage: true,
+                    enlargeCenterPage: false,
                     autoPlay: true,
                     aspectRatio: 20 / 10,
                     autoPlayCurve: Curves.fastOutSlowIn,
                     enableInfiniteScroll: true,
-                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
-                    viewportFraction: 1.2,
+                    autoPlayAnimationDuration:
+                    const Duration(milliseconds: 800),
+                    viewportFraction: 1,
                   ),
                   items: [
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome2.svg',fit: BoxFit.fill)),
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome3.svg',fit: BoxFit.fill)),
-                    Container(width: MediaQuery.sizeOf(context).width * 1,child: SvgPicture.asset('assets/userHome4.svg',fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome2.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome2.svg', fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome3.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome3.svg', fit: BoxFit.fill)),
+                    Container(
+                        width: MediaQuery.sizeOf(context).width * 1,
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome4.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome4.svg', fit: BoxFit.fill)),
                     Stack(
                       children: [
-                        Container(child: SvgPicture.asset('assets/userHome1.svg',fit: BoxFit.fill,)),
+                        Container(
+                            child: SvgPicture.asset(
+                              'assets/userHome1.svg',
+                              fit: BoxFit.fill,
+                            )),
                         Positioned(
                           left: MediaQuery.sizeOf(context).width * 0.3,
                           top: MediaQuery.sizeOf(context).height * 0.08,
                           child: Text(
-                            'Drive Your Business Forward \nwith Seamless Vehicle Booking!',
+                            '${'Drive Your Business Forward'.tr()} \n${'with Seamless Vehicle Booking!'.tr()}',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: viewUtil.isTablet ? 30 : 15,
+                              fontSize: viewUtil.isTablet ? 30 : 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),

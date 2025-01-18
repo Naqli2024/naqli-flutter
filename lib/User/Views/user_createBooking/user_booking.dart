@@ -417,16 +417,6 @@ class _CreateBookingState extends State<CreateBooking> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.phone,size: 30,color: Color(0xff707070),),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('contact_us'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-
-                },
-              ),
-              ListTile(
                 leading: Icon(Icons.logout,color: Colors.red,size: 30,),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
@@ -579,7 +569,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets.showToast('Please fill all fields'.tr());
                                 } else {
                                   fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                    print('Fetched loadTypes: $loadTypes');
                                     if (loadTypes.isEmpty || selectedLoad !=null) {
 
                                       setState(() {
@@ -591,7 +580,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                       }
                                     }
                                   }).catchError((error) {
-                                    print('Error fetching load types: $error');
                                     commonWidgets.showToast('Error fetching load types');
                                   });
                                 }
@@ -762,7 +750,7 @@ class _CreateBookingState extends State<CreateBooking> {
         );
       });
     } catch (e) {
-      print('Error fetching current location: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -806,10 +794,10 @@ class _CreateBookingState extends State<CreateBooking> {
           );
         });
       } else {
-        print('Error with reverse geocoding API response: ${data['status']}');
+
       }
     } else {
-      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
+
     }
   }
 
@@ -856,10 +844,10 @@ class _CreateBookingState extends State<CreateBooking> {
           );
         });
       } else {
-        print('Error with reverse geocoding API response: ${data['status']}');
+
       }
     } else {
-      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
+
     }
   }
 
@@ -922,10 +910,10 @@ class _CreateBookingState extends State<CreateBooking> {
               _dropLatLngs.clear();
             });
           } else {
-            print('Pickup location is null');
+
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+
         }
 
         // Handle each drop point response
@@ -963,15 +951,13 @@ class _CreateBookingState extends State<CreateBooking> {
                   waypoints.add(dropLatLng);
                 });
               } else {
-                print('Drop location is null for point $i');
+
               }
             } else {
-              print(
-                  'Error with drop API response for point $i: ${dropData?['status']}');
+
             }
           } else {
-            print(
-                'Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
+
           }
         }
 
@@ -1004,12 +990,10 @@ class _CreateBookingState extends State<CreateBooking> {
                 });
               }
             } else {
-              print(
-                  'Error with directions API response: ${directionsData?['status']}');
+
             }
           } else {
-            print(
-                'Failed to load directions, status code: ${directionsResponse.statusCode}');
+
           }
         }
 
@@ -1019,11 +1003,10 @@ class _CreateBookingState extends State<CreateBooking> {
           }
         });
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1104,17 +1087,16 @@ class _CreateBookingState extends State<CreateBooking> {
               }
             });
           } else {
-            print('Pickup location is null');
+
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+
         }
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1163,7 +1145,6 @@ class _CreateBookingState extends State<CreateBooking> {
           northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
         );
       } else {
-        print('No coordinates to fit.');
         return;
       }
 
@@ -1174,7 +1155,7 @@ class _CreateBookingState extends State<CreateBooking> {
         )), // Padding in pixels
       );
     } else {
-      print('mapController is not initialized');
+      return;
     }
   }
 
@@ -1230,10 +1211,10 @@ class _CreateBookingState extends State<CreateBooking> {
           }
         });
       } else {
-        print('Failed to load suggestions');
+        return;
       }
     } catch (e) {
-      print('Error fetching suggestions: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1284,10 +1265,10 @@ class _CreateBookingState extends State<CreateBooking> {
           }
         });
       } else {
-        print('Failed to load suggestions');
+        return;
       }
     } catch (e) {
-      print('Error fetching suggestions: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1319,12 +1300,8 @@ class _CreateBookingState extends State<CreateBooking> {
                 typeImage: '',
                 scale: ''),
           );
-
-      print('Selected Type: ${selectedType.typeOfLoad}');
-
       return selectedType.typeOfLoad;
     } catch (e) {
-      print('Error fetching loads: $e');
       return [];
     }
   }
@@ -1412,19 +1389,6 @@ class _CreateBookingState extends State<CreateBooking> {
       if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
-        print('name$selectedName');
-        print('unitType${widget.selectedType}');
-        print('typeName$selectedTypeName');
-        print('scale$scale');
-        print('typeImage$typeImage');
-        print('typeOfLoad$selectedLoad');
-        print('date$formattedDate');
-        print('additionalLabour$selectedLabour');
-        print('time$formattedTime');
-        print('productValue${productController.text}');
-        print('pickup${pickUpController.text}');
-        print('dropPoints${_dropPointControllers.map((controller) => controller.text).toList()}');
-
         String? bookingId = await userService.userVehicleCreateBooking(
           context,
           name: selectedName.toString(),
@@ -1484,16 +1448,6 @@ class _CreateBookingState extends State<CreateBooking> {
             'Choose Pickup and DropPoints'.tr());
       }
       else {
-        print('unitType${widget.selectedType}');
-        print('name$selectedName');
-        print('typeImage$typeImage');
-        print('date$formattedDate');
-        print('additionalLabour$selectedLabour');
-        print('time$formattedTime');
-        print('productValue${productController.text}');
-        print('pickup${pickUpController.text}');
-        print('dropPoints${_dropPointControllers.map((
-            controller) => controller.text).toList()}');
         String? bookingId = await userService.userBusCreateBooking(
             context,
             name: selectedName.toString(),
@@ -1544,16 +1498,6 @@ class _CreateBookingState extends State<CreateBooking> {
         commonWidgets.showToast('Choose City name and Address'.tr());
       }
       else {
-        print('unitType${widget.selectedType}');
-        print('name$selectedName');
-        print('typeImage$typeImage');
-        print('FromTime$formattedTime');
-        print('ToTime$formattedToTime');
-        print('Date$formattedDate');
-        print('additionalLabour$selectedLabour');
-        print('city${cityNameController.text}');
-        print('address${addressController.text}');
-        print('zipcode${zipCodeController.text}');
         String? bookingId = await userService.userEquipmentCreateBooking(
             context,
             name: selectedName.toString(),
@@ -1607,16 +1551,6 @@ class _CreateBookingState extends State<CreateBooking> {
             'Choose City name and Address'.tr());
       }
       else {
-        print('unitType${widget.selectedType}');
-        print('name$selectedName');
-        print('typeImage$typeImage');
-        print('FromTime$formattedTime');
-        print('ToTime$formattedToTime');
-        print('Date$formattedDate');
-        print('additionalLabour$selectedLabour');
-        print('city${cityNameController.text}');
-        print('address${addressController.text}');
-        print('zipcode${zipCodeController.text}');
         String? bookingId = await userService.userSpecialCreateBooking(
             context,
             name: selectedName.toString(),
@@ -1674,19 +1608,15 @@ class _CreateBookingState extends State<CreateBooking> {
     final String? token = data['token'];
 
     if (bookingId == null || token == null) {
-      print('No bookingId found, fetching pending booking details.');
-
       if (widget.id != null && token != null) {
         bookingId = await userService.getPaymentPendingBooking(widget.id, token);
 
         if (bookingId != null) {
           // await saveBookingIdToPreferences(bookingId, token);
         } else {
-          print('No pending booking found, navigating to NewBooking.');
           return null;
         }
       } else {
-        print('No userId or token available.');
         return null;
       }
     }
@@ -1694,7 +1624,6 @@ class _CreateBookingState extends State<CreateBooking> {
     if (bookingId != null && token != null) {
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
-      print('Failed to fetch booking details due to missing bookingId or token.');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -1918,7 +1847,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                         int index = entry.key;
                                         var type = entry.value;
                                         typeCount = index + 1;
-                                        print('Dropdown item ${index + 1}: ${typeCount}');
                                             return PopupMenuItem<String>(
                                               value: type.typeName,
                                               child: Directionality(

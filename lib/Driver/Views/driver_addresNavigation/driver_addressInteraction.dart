@@ -191,9 +191,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
-                print('Travel time to Pickup: $durationToPickup');
-
-                // Center the map to the route
                 mapController?.animateCamera(CameraUpdate.newLatLngZoom(
                     LatLng(
                         (currentLatLng.latitude + pickupLatLng.latitude) / 2,
@@ -209,7 +206,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         }
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -238,25 +235,18 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   String formatDistance(double? distanceInKm) {
-    print('Distance in KM: $distanceInKm');
-
     if (distanceInKm == null || distanceInKm <= 0) {
-      print('Distance is null or zero, returning 0 ft');
       return '0 ft';
     }
 
     double distanceInFeet = distanceInKm * 3280.84;
-    print('Distance in Feet: $distanceInFeet');
-
     double distanceInMiles = distanceInFeet / 5280;
 
     if (distanceInMiles < 1) {
-      print('Distance is less than 1 mile, returning in feet');
       return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
       int miles = distanceInMiles.floor();
       double remainingFeet = distanceInFeet - (miles * 5280);
-      print('Distance is more than 1 mile, returning in miles and feet');
       return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft';
     }
   }
@@ -302,10 +292,10 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           );
         }
       } else {
-        print("Pickup location is not available.");
+      return;
       }
     } catch (e) {
-      print('Error recentering map: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -396,13 +386,11 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         _updateRealTimeData(currentLatLng);
       });
     } else {
-      print('Location permission denied');
+      return;
     }
   }
 
   void _initializePickupLocation() async {
-    print('Pickup string: "${widget.pickUp}"');
-
     String cleanedPickup = widget.pickUp.trim();
 
     if (cleanedPickup.isNotEmpty) {
@@ -410,12 +398,11 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
 
       if (latLng != null) {
         pickupLatLng = latLng;
-        print('Pickup location set to: $pickupLatLng');
       } else {
-        print('Could not get coordinates for the pickup location');
+        return;
       }
     } else {
-      print('Pickup location string is empty');
+      return;
     }
   }
 
@@ -432,12 +419,11 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         double lng = data['results'][0]['geometry']['location']['lng'];
         return LatLng(lat, lng);
       } else {
-        print('Error fetching geocode: ${data['status']}');
+        return null;
       }
     } else {
-      print('Error fetching geocode: ${response.statusCode}');
+      return null;
     }
-    return null;
   }
 
   Future<void> startLocationUpdates() async {
@@ -448,12 +434,9 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
 
     positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
       LatLng newLocation = LatLng(position.latitude, position.longitude);
-      print('newLocation: $newLocation');
-
       if (newLocation != currentLatLng) {
         await fetchNearbyPlaces(newLocation);
         await _updateRealTimeData(newLocation);
-        print('newLocationnn: $newLocation');
         setState(() {
           currentLatLng = newLocation;
           markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
@@ -477,7 +460,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   Future<void> _updateRealTimeData(LatLng currentLatLng) async {
     try {
       if (pickupLatLng == null) {
-        print('pickupLatLng is null');
+
         return;
       }
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
@@ -497,11 +480,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           if (!mounted) return;
 
           setState(() {
-
-            print('Current Location: $currentLatLng');
-            print('Distance to Pickup: $distanceToPickup');
-            print('Feet: $updatedFeet');
-            print('Travel Time: $durationToPickup');
             pickUpDistance = distanceToPickup;
             timeToPickup = durationToPickup;
             feet = updatedFeet;
@@ -529,7 +507,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
         }
       }
     } catch (e) {
-      print('Error updating real-time data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -606,7 +584,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
       });
 
       if (nearbyPlacesData['status'] == 'OK') {
-        print('near$nearbyPlacesData');
         for (var place in nearbyPlacesData['results']) {
           nearbyPlaces.add({
             'name': place['name'],
@@ -617,10 +594,10 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
           currentIndex = 0;
         });
       } else {
-        print('Error fetching places: ${nearbyPlacesData['status']}');
+          return;
       }
     } else {
-      print('Failed to load nearby places, status code: ${response.statusCode}');
+      return;
     }
 
     setState(() {
@@ -629,19 +606,12 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   }
 
   void checkPickupLocation() async {
-    print('Current LatLng: $currentLatLng');
-    print('Pickup LatLng: $pickupLatLng');
-
     if (pickupLatLng == null) {
-      print('Pickup location is null, cannot check distance.');
       return;
     }
 
     double distanceToPickupInKm = _haversineDistance(currentLatLng, pickupLatLng!);
     double distanceToPickupInFeet = distanceToPickupInKm * 3280.84;
-
-    print('Distance to Pickup in Feet: $distanceToPickupInFeet');
-
     if (distanceToPickupInFeet <= 50 && !hasNavigated) {
       hasNavigated = true;
 
@@ -665,11 +635,9 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
             ),
           ),
         );
-
-        print('Navigating to AddressCompleteOrder');
       }
     } else {
-      print('Current location is more than 50 feet from pickup location or already navigated.');
+      return;
     }
   }
 
@@ -702,7 +670,6 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching user name: $e');
     }
   }
 

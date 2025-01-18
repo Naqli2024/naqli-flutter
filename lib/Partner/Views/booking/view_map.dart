@@ -162,17 +162,16 @@ class _ViewMapState extends State<ViewMap> {
               }
             });
           } else {
-            print('Pickup location is null');
+              return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -239,13 +238,13 @@ class _ViewMapState extends State<ViewMap> {
             }
           });
         } else {
-          print('Error with API response: ${pickupData['status']} and ${dropData['status']}');
+
         }
       } else {
-        print('Failed to load coordinates, status code: ${pickupResponse.statusCode} and ${dropResponse.statusCode}');
+
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -278,13 +277,13 @@ class _ViewMapState extends State<ViewMap> {
             );
           });
         } else {
-          print('Error fetching route: ${routeData['status']}');
+          return;
         }
       } else {
-        print('Failed to load route, status code: ${routeResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching route: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -299,7 +298,6 @@ class _ViewMapState extends State<ViewMap> {
           northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
         );
       } else {
-        print('No coordinates to fit.');
         return;
       }
 
@@ -310,7 +308,7 @@ class _ViewMapState extends State<ViewMap> {
         )), // Padding in pixels
       );
     } else {
-      print('mapController is not initialized');
+      return;
     }
   }
 
@@ -342,39 +340,28 @@ class _ViewMapState extends State<ViewMap> {
     );
     commonWidgets.showToast('Additional charges were added');
     if (updatedRemainingBalance != null) {
-      print(
-          'Updated Remaining Balance: $updatedRemainingBalance'); // Print for debugging
       setState(() {
         remainingBalance =
             updatedRemainingBalance;
       });
     } else {
-      print('Failed to update remaining balance');
+     return;
     }
   }
 
   Future<void> fetchBookingDetails() async {
     try {
-      print("Fetching booking details...");
-      print("Booking ID: ${widget.bookingId}");
-      print("Token: ${widget.token}");
-
       final details = await _authService.getBookingId(
         widget.bookingId,
         widget.token,
         '',
         widget.quotePrice,
       );
-
-      print("API Response: $details");
-
       setState(() {
         if (details != null && details.isNotEmpty) {
           bookingDetails = details;
           paymentStatus = bookingDetails?['paymentStatus'];
           bookingStatus = bookingDetails?['bookingStatus'];
-          // remainingBalance = bookingDetails?['remainingBalance'];
-          print("Updated Payment Status: $paymentStatus");
         } else {
           errorMessage = 'No booking details found for the selected ID.';
         }

@@ -48,7 +48,7 @@ class CommonWidgets {
         await userService.updateNotificationsAsSeen(notificationIds);
       }
     } catch (e) {
-      print("Error updating notifications: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -63,6 +63,8 @@ class CommonWidgets {
         PreferredSizeWidget? bottom,
         bool showLeading = true,
         String? userId,
+        Locale? currentLocale,
+        Function(Locale)? onLocaleChanged,
         bool showLanguage = true,
         ui.TextDirection? textDirection}) {
     if (_notificationsNotifier.value.isEmpty) {
@@ -107,6 +109,9 @@ class CommonWidgets {
                     offset: const Offset(0, 55),
                     icon: Icon(Icons.language, color: Colors.blue,size: viewUtil.isTablet ? 35 : 25),
                     onSelected: (Locale locale) {
+                      if (onLocaleChanged != null) {
+                        onLocaleChanged(locale);
+                      }
                       context.setLocale(locale);
                     },
                     itemBuilder: (BuildContext context) {
@@ -422,7 +427,7 @@ class CommonWidgets {
       timeInSecForIosWeb: 1,
       backgroundColor: Colors.black,
       textColor: Colors.white,
-      fontSize: 16.0,
+      fontSize: 14.0,
     );
   }
 

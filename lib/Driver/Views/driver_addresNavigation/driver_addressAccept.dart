@@ -153,8 +153,6 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
-                print('Travel time to Pickup: $durationToPickup');
-
                 mapController?.animateCamera(CameraUpdate.newLatLngZoom(
                     LatLng(
                         (currentLatLng.latitude + pickupLatLng.latitude) / 2,
@@ -170,7 +168,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
         }
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -235,20 +233,17 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print('Location services are disabled.');
       return;
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permissions are denied.');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print('Location permissions are permanently denied.');
       return;
     }
 

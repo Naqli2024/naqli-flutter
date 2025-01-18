@@ -167,13 +167,13 @@ class _OrderAcceptState extends State<OrderAccept> {
                       waypoints.add(dropLatLng);
                     });
                   } else {
-                    print('Drop location is null for point $i');
+                    return;
                   }
                 } else {
-                  print('Error with drop API response for point $i: ${dropData?['status']}');
+                  return;
                 }
               } else {
-                print('Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
+                return;
               }
             }
             String directionsUrlFromCurrentToPickup =
@@ -195,7 +195,6 @@ class _OrderAcceptState extends State<OrderAccept> {
                 });
                 final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
-                print('Travel time to Pickup: $durationToPickup');
               }
             }
             if (dropLatLngs.isNotEmpty) {
@@ -220,7 +219,6 @@ class _OrderAcceptState extends State<OrderAccept> {
                   });
                   final durationFromPickupToDrop = directionsData['routes'][0]['legs'][0]['duration']['text'];
                   timeToDrop = durationFromPickupToDrop;
-                  print('Travel time from Pickup to Drop Points: $durationFromPickupToDrop');
                   setState(() {
                     isLoading = false;
                   });
@@ -231,7 +229,7 @@ class _OrderAcceptState extends State<OrderAccept> {
         }
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -295,20 +293,17 @@ class _OrderAcceptState extends State<OrderAccept> {
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print('Location services are disabled.');
       return;
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permissions are denied.');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print('Location permissions are permanently denied.');
       return;
     }
 

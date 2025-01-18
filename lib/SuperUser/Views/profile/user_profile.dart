@@ -74,7 +74,7 @@ class _UserProfileState extends State<UserProfile> {
       accountTypeController.text = data.accountType;
       idNoController.text = data.idNumber.toString();
     }).catchError((e) {
-      print("Error fetching user data: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     });
   }
 
@@ -90,7 +90,7 @@ class _UserProfileState extends State<UserProfile> {
         });
       }
     } catch (e) {
-      print("Error picking profile image: $e");
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -158,7 +158,6 @@ class _UserProfileState extends State<UserProfile> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  print(snapshot.error);
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }else{
                   final data = snapshot.data!;

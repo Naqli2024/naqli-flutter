@@ -67,27 +67,6 @@ class _StepThreeState extends State<StepThree> {
 
   Future<void> _submitForm() async {
     try{
-      print('sssssssssssssssSending data:');
-      print('partnerName: ${widget.partnerName}');
-      print('unitType: ${widget.unitType}');
-      print('unitClassification: ${widget.unitClassification}');
-      print('subClassification: ${widget.subClassification}');
-      print('plateInformation: ${widget.plateInformation}');
-      print('istimaraNo: ${widget.istimaraNo}');
-      print('firstName: ${widget.firstName}');
-      print('lastName: ${widget.lastName}');
-      print('email: ${widget.email}');
-      print('mobileNo: ${widget.mobileNo}');
-      print('dateOfBirth: ${widget.dateOfBirth}');
-      print('iqamaNo: ${widget.iqamaNo}');
-      print('panelInformation: ${widget.panelInformation}');
-      print('id: ${widget.partnerId}');
-      print('id: ${widget.istimaraCard}');
-      print('id: ${widget.pictureOfVehicle}');
-      print('id: ${widget.partnerId}');
-      print('id: ${widget.drivingLicense}');
-      print('id: ${widget.nationalID}');
-      print('id: ${widget.aramcoLicense}');
       setState(() {
         isLoading = true;
       });
@@ -122,7 +101,7 @@ class _StepThreeState extends State<StepThree> {
         isLoading = false;
       });
     }catch (e) {
-      print('Error: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
 
   }

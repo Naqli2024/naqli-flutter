@@ -83,37 +83,24 @@ class _BookingManagerState extends State<BookingManager> {
     try {
       final bookingsData = await superUserServices.getBookingsCount(userId, token);
       final bookings = bookingsData['bookings'] as List<Map<String, dynamic>>? ?? [];
-
-      print('Fetched bookings: $bookings');
-
       final partnerIds = bookings.map((booking) => booking['partner']).whereType<String>().toSet().toList();
 
       Map<String, String> partnerIdToNameMap = {};
       if (partnerIds.isNotEmpty) {
         partnerIdToNameMap = await superUserServices.getPartnerNames(partnerIds, token);
       }
-
-      print('Partner ID to Name Map: $partnerIdToNameMap');
-
       List<Map<String, dynamic>> updatedBookings = bookings.map((booking) {
         String partnerId = booking['partner'] ?? '';
         String partnerName = partnerIdToNameMap[partnerId] ?? 'N/A';
-
-        print('Booking ID: ${booking['_id']}, Partner ID: $partnerId, Partner Name: $partnerName');
-
         booking['partnerName'] = partnerName;
 
         return booking;
       }).toList();
-
-      print('Updated bookings with partner names: $updatedBookings');
-
       setState(() {
         this.bookings = updatedBookings;
         this.isLoading = false;
       });
     } catch (e) {
-      print('Error fetching bookings and partner names: $e');
       setState(() {
         this.isLoading = false;
       });
@@ -217,7 +204,6 @@ class _BookingManagerState extends State<BookingManager> {
         return (onlyDate.isAfter(startDate) || onlyDate.isAtSameMomentAs(startDate)) &&
             (onlyDate.isBefore(endDate) || onlyDate.isAtSameMomentAs(endDate));
       } catch (e) {
-        print('Date parsing error: ${booking['createdAt']}');
         return false;
       }
     }).toList();
@@ -227,23 +213,18 @@ class _BookingManagerState extends State<BookingManager> {
       _noBookingsFound = _filteredBookings.isEmpty;
       isLoading = false;
     });
-
-    print('Filtered bookings count: ${filteredBookings.length}');
   }
 
   Future<String> fetchPartnerNameForBooking(String partnerId, String token) async {
     try {
       final partnerNameData = await superUserServices.getPartnerNames([partnerId], token);
-      print('Received partnerNameData for $partnerId: $partnerNameData');
 
       if (partnerNameData is Map && partnerNameData.containsKey(partnerId)) {
         return partnerNameData[partnerId] ?? 'N/A';
       } else {
-        print('Unexpected data format for partner names: $partnerNameData');
         return 'N/A';
       }
     } catch (e) {
-      print('Error fetching partner name for $partnerId: $e');
       return 'N/A';
     }
   }
@@ -1288,14 +1269,10 @@ class _BookingManagerState extends State<BookingManager> {
       paymentBrand: paymentBrand,
       amount: amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -1305,14 +1282,10 @@ class _BookingManagerState extends State<BookingManager> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentStatus = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1323,7 +1296,6 @@ class _BookingManagerState extends State<BookingManager> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
 

@@ -200,8 +200,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
-                print('Travel time to Pickup: $durationToPickup');
-
                 mapController?.animateCamera(CameraUpdate.newLatLngZoom(
                     LatLng(
                         (currentLatLng.latitude + pickupLatLng.latitude) / 2,
@@ -217,7 +215,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         }
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -245,23 +243,17 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
   }
 
   String formatDistance(double? distanceInKm) {
-    print('Distance in KM: $distanceInKm');
     if (distanceInKm == null || distanceInKm <= 0) {
-      print('Distance is null or zero, returning 0 ft');
       return '0 ft';
     }
     double distanceInFeet = distanceInKm * 3280.84;
-    print('Distance in Feet: $distanceInFeet');
-
     double distanceInMiles = distanceInFeet / 5280;
 
     if (distanceInMiles < 1) {
-      print('Distance is less than 1 mile, returning in feet');
       return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
       int miles = distanceInMiles.floor();
       double remainingFeet = distanceInFeet - (miles * 5280);
-      print('Distance is more than 1 mile, returning in miles and feet');
       return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft';
     }
   }
@@ -307,10 +299,10 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           );
         }
       } else {
-        print("Pickup location is not available.");
+        return;
       }
     } catch (e) {
-      print('Error recentering map: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -400,13 +392,11 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         _updateRealTimeData(currentLatLng);
       });
     } else {
-      print('Location permission denied');
+      return;
     }
   }
 
   void _initializePickupLocation() async {
-    print('Pickup string: "${widget.pickUp}"');
-
     String cleanedPickup = widget.pickUp.trim();
 
     if (cleanedPickup.isNotEmpty) {
@@ -414,12 +404,11 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
 
       if (latLng != null) {
         pickupLatLng = latLng;
-        print('Pickup location set to: $pickupLatLng');
       } else {
-        print('Could not get coordinates for the pickup location');
+        return;
       }
     } else {
-      print('Pickup location string is empty');
+      return;
     }
   }
 
@@ -436,10 +425,10 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         double lng = data['results'][0]['geometry']['location']['lng'];
         return LatLng(lat, lng);
       } else {
-        print('Error fetching geocode: ${data['status']}');
+        return null;
       }
     } else {
-      print('Error fetching geocode: ${response.statusCode}');
+      return null;
     }
     return null;
   }
@@ -452,12 +441,10 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
 
     positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
       LatLng newLocation = LatLng(position.latitude, position.longitude);
-      print('newLocation: $newLocation');
 
       if (newLocation != currentLatLng) {
         await fetchNearbyPlaces(newLocation);
         await _updateRealTimeData(newLocation);
-        print('newLocationnn: $newLocation');
         setState(() {
           currentLatLng = newLocation;
           markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
@@ -480,7 +467,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
   Future<void> _updateRealTimeData(LatLng currentLatLng) async {
     try {
       if (pickupLatLng == null) {
-        print('pickupLatLng is null');
         return;
       }
 
@@ -502,7 +488,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           currentPlace = currentAddress;
           if (currentAddress != null) {
             currentLocationName = currentAddress;
-            print('Current Location Name: $currentLocationName');
           }
         }
       }
@@ -556,7 +541,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         }
       }
     } catch (e) {
-      print('Error updating real-time data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -632,7 +617,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
       });
 
       if (nearbyPlacesData['status'] == 'OK') {
-        print('near$nearbyPlacesData');
         for (var place in nearbyPlacesData['results']) {
           nearbyPlaces.add({
             'name': place['name'],
@@ -643,10 +627,10 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           currentIndex = 0;
         });
       } else {
-        print('Error fetching places: ${nearbyPlacesData['status']}');
+
       }
     } else {
-      print('Failed to load nearby places, status code: ${response.statusCode}');
+
     }
 
     setState(() {

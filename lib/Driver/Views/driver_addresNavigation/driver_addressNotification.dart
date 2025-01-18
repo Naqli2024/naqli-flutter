@@ -56,14 +56,12 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
 
   Future<void> _getDistanceData() async {
     if (booking == null) {
-      print("Booking data is null, cannot fetch distance data.");
       return;
     }
 
     final pickupAddress = cityName as String? ?? '';
 
     if (pickupAddress.isEmpty) {
-      print("Pickup address is empty.");
       return;
     }
 
@@ -75,7 +73,7 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
         currentToPickupDuration = data['currentToPickup']['duration'];
       });
     } else {
-      print("Failed to fetch distance data.");
+      return;
     }
   }
 
@@ -98,17 +96,16 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('API Response: $data');
         if (data['status'] == 'OK') {
           return _processDistanceMatrixResponse(data);
         } else {
-          print('API Status Error: ${data['status']}');
+          return null;
         }
       } else {
-        print('Error fetching distance matrix: ${response.body}');
+        return null;
       }
     } catch (e) {
-      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     } finally {
       setState(() {
         isCalculating = false;
@@ -133,16 +130,13 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
         };
       }
     } else {
-      print('API response status not OK: ${data['status']}');
+      return {};
     }
     return null;
   }
 
   Future<void> _fetchBookingDetails() async {
     final bookingData = await driverService.fetchBookingDetails(widget.bookingId, widget.token);
-
-    print("Fetched Booking Data: $bookingData");
-
     setState(() {
       booking = bookingData;
       cityName = booking?['cityName'];
@@ -162,10 +156,8 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
       if (data != null && data['bookingRequest'] != null) {
         if (data['bookingRequest']['assignedOperator'] != null) {
           final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
-          print('Booking ID from assignedOperator: $assignedOperatorBookingId');
         } else {
           final bookingRequestBookingId = data['bookingRequest']['bookingId'];
-          print('Booking ID from bookingRequest: $bookingRequestBookingId');
         }
 
         setState(() {
@@ -173,10 +165,9 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
           isLoading = false;
         });
       } else {
-        print("No booking request data available.");
+        return;
       }
     } catch (e) {
-      print("Error during API call: $e");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }

@@ -149,10 +149,10 @@ class _EditBookingState extends State<EditBooking> {
           }
         });
       } else {
-        print('Failed to load suggestions');
+
       }
     } catch (e) {
-      print('Error fetching suggestions: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -196,10 +196,10 @@ class _EditBookingState extends State<EditBooking> {
           );
         });
       } else {
-        print('Error with reverse geocoding API response: ${data['status']}');
+
       }
     } else {
-      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
+
     }
   }
 
@@ -222,7 +222,6 @@ class _EditBookingState extends State<EditBooking> {
 
       if (data != null && data['status'] == 'OK') {
         final formattedAddress = data['results'][0]['formatted_address'];
-
         setState(() {
           cityNameController.text = formattedAddress;
           isLocating = false;
@@ -243,10 +242,10 @@ class _EditBookingState extends State<EditBooking> {
           );
         });
       } else {
-        print('Error with reverse geocoding API response: ${data['status']}');
+       return;
       }
     } else {
-      print('Failed to load reverse geocoding data, status code: ${response.statusCode}');
+      return;
     }
   }
 

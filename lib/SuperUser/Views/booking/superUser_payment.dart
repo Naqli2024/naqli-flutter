@@ -108,15 +108,12 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
   Future<String> fetchPartnerNameForBooking(String partnerId, String token) async {
     try {
       final partnerNameData = await superUserServices.getPartnerNames([partnerId], token);
-      print('Received partnerNameData for $partnerId: $partnerNameData');
       if (partnerNameData is Map && partnerNameData.containsKey(partnerId)) {
         return partnerNameData[partnerId] ?? 'N/A';
       } else {
-        print('Unexpected data format for partner names: $partnerNameData');
         return 'N/A';
       }
     } catch (e) {
-      print('Error fetching partner name for $partnerId: $e');
       return 'N/A';
     }
   }
@@ -359,7 +356,6 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                               bookingTime = booking['time']??'N/A';
                               fromTime = booking['fromTime']??'N/A';
                               toTime = booking['toTime']??'N/A';
-                              print('partnerId''${partnerId}');
                               return FutureBuilder<String>(
                                 future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
                                 builder: (context, snapshot) {
@@ -832,14 +828,10 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
       paymentBrand: paymentBrand,
       amount: amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -849,14 +841,10 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentStatus = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -867,7 +855,6 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
     String htmlContent = '''

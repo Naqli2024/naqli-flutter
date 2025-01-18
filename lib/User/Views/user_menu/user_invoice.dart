@@ -95,7 +95,7 @@ class _UserInvoiceState extends State<UserInvoice> {
                 if (invoices.isEmpty) {
                   return Center(
                     child: Text(
-                      'No invoice data found',
+                      'No invoice data found'.tr(),
                       style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16, fontWeight: FontWeight.w500),
                     ),
                   );
@@ -165,7 +165,7 @@ class _UserInvoiceState extends State<UserInvoice> {
                                 ),
                               ),
                               subtitle: Text(
-                                'Invoice ID: ${invoice.invoiceId}',
+                                '${'Invoice Id'.tr()}: ${invoice.invoiceId}',
                                 style: TextStyle(fontSize: viewUtil.isTablet ? 17 : 14),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -186,7 +186,7 @@ class _UserInvoiceState extends State<UserInvoice> {
               } else {
                 return Center(
                   child: Text(
-                    'No invoice data found',
+                    'No invoice data found'.tr(),
                     style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16, fontWeight: FontWeight.w500),
                   ),
                 );

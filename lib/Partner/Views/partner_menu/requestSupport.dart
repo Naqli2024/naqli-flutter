@@ -207,7 +207,6 @@ class _RequestSupportState extends State<RequestSupport> {
                               documentUpload = true;
                               documentError = false;
                             });
-                            print(result.files.first.name);
                           }
                         },
                         child: Row(

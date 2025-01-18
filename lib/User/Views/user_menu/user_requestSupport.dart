@@ -202,7 +202,6 @@ class _UserRequestSupportState extends State<UserRequestSupport> {
                         documentUpload = true;
                         documentError = false;
                       });
-                      print(result.files.first.name);
                   }
                 },
                 child: Row(

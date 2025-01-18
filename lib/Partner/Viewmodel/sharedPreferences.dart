@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,10 +11,10 @@ Future<void> savePartnerData(String partnerId, String token, String partnerName,
     await prefs.setString('token', token);
     await prefs.setString('partnerName', partnerName);
     await prefs.setString('email', email);
-    print('PartnerData saved: partnerName=$partnerName, token=$token, id=$partnerId, email=$email');
+
   }
   catch (e) {
-    print('Error saving partnerData: $e');
+    CommonWidgets().showToast('An error occurred,Please try again.');
   }
 }
 
@@ -41,9 +42,8 @@ Future<void> saveUserData(String firstName, String lastName, String token, Strin
     await prefs.setString('id', id);
     await prefs.setString('email', email);
     await prefs.setString('accountType', accountType);
-    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email, accountType=$accountType');
   } catch (e) {
-    print('Error saving data: $e');
+    CommonWidgets().showToast('An error occurred,Please try again.');
   }
 }
 
@@ -56,10 +56,6 @@ Future<Map<String, String?>> getSavedUserData() async {
     final id = prefs.getString('id');
     final email = prefs.getString('email');
     final accountType = prefs.getString('accountType');
-
-    // Debugging
-    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, email=$email, accountType=$accountType');
-
     return {
       'firstName': firstName,
       'lastName': lastName,
@@ -69,7 +65,6 @@ Future<Map<String, String?>> getSavedUserData() async {
       'accountType': accountType,
     };
   } catch (e) {
-    print('Error retrieving data: $e');
     return {};
   }
 }
@@ -83,9 +78,8 @@ Future<void> saveDriverData(String firstName, String lastName, String token, Str
     await prefs.setString('id', id);
     await prefs.setString('partnerId', partnerId);
     await prefs.setString('mode', mode);
-    print('Data saved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, partnerId=$partnerId,mode= $mode');
   } catch (e) {
-    print('Error saving data: $e');
+    CommonWidgets().showToast('An error occurred,Please try again.');
   }
 }
 
@@ -98,10 +92,6 @@ Future<Map<String, String?>> getSavedDriverData() async {
     final id = prefs.getString('id');
     final partnerId = prefs.getString('partnerId');
     final mode = prefs.getString('mode');
-
-    // Debugging
-    print('Data retrieved: firstName=$firstName, lastName=$lastName, token=$token, id=$id, partnerId=$partnerId,mode= $mode');
-
     return {
       'firstName': firstName,
       'lastName': lastName,
@@ -111,7 +101,6 @@ Future<Map<String, String?>> getSavedDriverData() async {
       'mode': mode,
     };
   } catch (e) {
-    print('Error retrieving data: $e');
     return {};
   }
 }
@@ -122,9 +111,8 @@ Future<void> saveBookingId(String id, String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('_id', id);
     await prefs.setString('token', token);
-    print('Data saved: id=$id, token: $token');
   } catch (e) {
-    print('Error saving data: $e');
+    CommonWidgets().showToast('An error occurred,Please try again.');
   }
 }
 
@@ -135,9 +123,9 @@ Future<Map<String, String?>> getSavedBookingId() async {
     final token = prefs.getString('token');
 
     if (id == null || token == null) {
-      print('No data found for bookingId or token');
+
     } else {
-      print('Data retrieved: _id=$id, token=$token');
+
     }
 
     return {
@@ -145,7 +133,6 @@ Future<Map<String, String?>> getSavedBookingId() async {
       'token': token,
     };
   } catch (e) {
-    print('Error retrieving data: $e');
     return {};
   }
 }
@@ -153,7 +140,6 @@ Future<Map<String, String?>> getSavedBookingId() async {
 Future<void> clearDriverData() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
-  print('SharedPreferences cleared.');
 }
 
 
@@ -161,5 +147,4 @@ Future<void> clearDriverData() async {
 Future<void> clearUserData() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
-  print('SharedPreferences cleared.');
 }

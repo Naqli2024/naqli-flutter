@@ -245,7 +245,6 @@ class _StepTwoState extends State<StepTwo> {
                                       licenseUpload = true;
                                       licenseError = false;
                                     });
-                                    print(result.files.first.name);
                                   }
                                 },
                                 child: Row(
@@ -323,7 +322,6 @@ class _StepTwoState extends State<StepTwo> {
                                       nationalIdUpload = true;
                                       nationalIdError = false;
                                     });
-                                    print(result.files.first.name);
                                   }
                                 },
                                 child: Row(
@@ -401,7 +399,6 @@ class _StepTwoState extends State<StepTwo> {
                                       aramcoUpload =true;
                                       aramcoError =false;
                                     });
-                                    print(result.files.first.name);
                                   }
                                 },
                                 child: Row(

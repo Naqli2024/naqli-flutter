@@ -88,32 +88,11 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   @override
   void initState() {
-    print(widget.token);
-    print(widget.advanceOrPay);
-    print(widget.paymentStatus);
-    print(widget.partnerId);
-    print(widget.bookingId);
-    print(widget.quotePrice);
-    print(widget.oldQuotePrice);
     fetchAddressCoordinates();
     fetchCoordinates();
     fetchPartnerData();
     fetchAndSetBookingDetails();
-    // userService.updatePayment(widget.token, widget.advanceOrPay, widget.paymentStatus, widget.partnerId,widget.bookingId, widget.quotePrice, widget.oldQuotePrice);
-    _savePaymentDetailsToSharedPreferences(widget.paymentStatus, widget.advanceOrPay);
     super.initState();
-  }
-
-  Future<void> _savePaymentDetailsToSharedPreferences(String paymentStatus, int advanceOrPay) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    if (advanceOrPay > 0) {
-      await prefs.setString('paymentStatus', paymentStatus);
-      await prefs.setInt('advanceOrPay', advanceOrPay);
-      print('Payment status and advance/pay saved to SharedPreferences.');
-    } else {
-      print('Advance or Pay is 0, not saving to SharedPreferences.');
-    }
   }
 
   Future<void> initiateStripePayment(
@@ -247,7 +226,6 @@ class _PendingPaymentState extends State<PendingPayment> {
 
       return json.decode(response.body);
     } catch (err) {
-      print(err);
       throw Exception('Error creating payment intent: $err');
     }
   }
@@ -264,18 +242,15 @@ class _PendingPaymentState extends State<PendingPayment> {
   Future<void> fetchPartnerData() async {
     try {
       final data = await userService.getPartnerData(widget.partnerId, widget.token,widget.bookingId);
-
-      print('Fetched Partner Data: $data');
-
       if (data.isNotEmpty) {
         setState(() {
           partnerData = data;
         });
       } else {
-        print('No partner data available');
+        return;
       }
     } catch (e) {
-      print('Error fetching partner data: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -333,10 +308,10 @@ class _PendingPaymentState extends State<PendingPayment> {
               _dropLatLngs.clear();
             });
           } else {
-            print('Pickup location is null');
+            return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
 
         List<LatLng> waypoints = [];
@@ -373,15 +348,13 @@ class _PendingPaymentState extends State<PendingPayment> {
                   waypoints.add(dropLatLng);
                 });
               } else {
-                print('Drop location is null for point $i');
+                return;
               }
             } else {
-              print(
-                  'Error with drop API response for point $i: ${dropData?['status']}');
+              return;
             }
           } else {
-            print(
-                'Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
+            return;
           }
         }
 
@@ -414,12 +387,10 @@ class _PendingPaymentState extends State<PendingPayment> {
                 });
               }
             } else {
-              print(
-                  'Error with directions API response: ${directionsData?['status']}');
+             return;
             }
           } else {
-            print(
-                'Failed to load directions, status code: ${directionsResponse.statusCode}');
+            return;
           }
         }
 
@@ -429,11 +400,10 @@ class _PendingPaymentState extends State<PendingPayment> {
           }
         });
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -506,17 +476,16 @@ class _PendingPaymentState extends State<PendingPayment> {
               }
             });
           } else {
-            print('Pickup location is null');
+            return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -565,7 +534,6 @@ class _PendingPaymentState extends State<PendingPayment> {
           northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
         );
       } else {
-        print('No coordinates to fit.');
         return;
       }
 
@@ -576,7 +544,7 @@ class _PendingPaymentState extends State<PendingPayment> {
         )), // Padding in pixels
       );
     } else {
-      print('mapController is not initialized');
+      return;
     }
   }
 
@@ -610,19 +578,15 @@ class _PendingPaymentState extends State<PendingPayment> {
     final String? token = data['token'];
 
     if (bookingId == null || token == null) {
-      print('No bookingId found, fetching pending booking details.');
-
       if (widget.id != null && token != null) {
         bookingId = await userService.getPaymentPendingBooking(widget.id, token);
 
         if (bookingId != null) {
           // await saveBookingIdToPreferences(bookingId, token);
         } else {
-          print('No pending booking found, navigating to NewBooking.');
           return null;
         }
       } else {
-        print('No userId or token available.');
         return null;
       }
     }
@@ -630,7 +594,6 @@ class _PendingPaymentState extends State<PendingPayment> {
     if (bookingId != null && token != null) {
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
-      print('Failed to fetch booking details due to missing bookingId or token.');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -652,7 +615,6 @@ class _PendingPaymentState extends State<PendingPayment> {
     if (bookingDetails != null) {
       setState(() {
         advanceOrPay = bookingDetails['remainingBalance'] ?? 0;
-        print(advanceOrPay);
       });
     }
   }
@@ -1132,14 +1094,10 @@ class _PendingPaymentState extends State<PendingPayment> {
       paymentBrand: paymentBrand,
       amount: amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -1149,14 +1107,10 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentResult = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1167,7 +1121,6 @@ class _PendingPaymentState extends State<PendingPayment> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
 

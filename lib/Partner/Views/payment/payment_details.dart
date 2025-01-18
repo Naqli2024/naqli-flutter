@@ -47,12 +47,8 @@ class _PaymentDetailsState extends State<PaymentDetails> {
 
   Future<List<Map<String, dynamic>>> fetchBookingDetails() async {
     try {
-      print('Fetching booking details for partnerId: ${widget.partnerId}');
       final bookingIds = await _authService.getBookingData(widget.partnerId, widget.token);
-      print('Booking IDs retrieved: $bookingIds');
-
       if (bookingIds.isEmpty) {
-        print("No booking IDs found.");
         return [];
       }
 
@@ -63,10 +59,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
 
         paymentType = paymentStatus;
         try {
-          print('Fetching details for booking ID: $bookingId');
           final details = await _authService.getBookingId(bookingId, widget.token, paymentStatus, widget.quotePrice);
-          print('Details retrieved: $details');
-
           bookingType = details['bookingStatus'];
 
           if (details.isNotEmpty) {
@@ -74,16 +67,15 @@ class _PaymentDetailsState extends State<PaymentDetails> {
             details['bookingType'] = bookingType;
             bookingDetails.add(details);
           } else {
-            print("No details found for booking ID $bookingId.");
+
           }
         } catch (e) {
-          print("Error fetching details for booking ID $bookingId: $e");
+          commonWidgets.showToast('An error occurred,Please try again.');
         }
       }
 
       return bookingDetails;
     } catch (e) {
-      print("Error fetching booking details: $e");
       return [];
     }
   }

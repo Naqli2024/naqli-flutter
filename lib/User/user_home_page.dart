@@ -32,6 +32,7 @@ class _UserHomePageState extends State<UserHomePage> {
     {'title': 'Special', 'asset': 'assets/special.svg'},
     {'title': 'Others', 'asset': 'assets/others.svg'},
   ];
+  Locale currentLocale = Locale('en', 'US');
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +108,10 @@ class _UserHomePageState extends State<UserHomePage> {
                           size: viewUtil.isTablet ? 35 : 25,
                         ),
                         onSelected: (Locale locale) {
-                          context.setLocale(locale);
+                          setState(() {
+                            currentLocale = locale;
+                            context.setLocale(locale);
+                          });
                         },
                         itemBuilder: (BuildContext context) {
                           Locale currentLocale = context.locale;
@@ -224,17 +228,6 @@ class _UserHomePageState extends State<UserHomePage> {
                 },
               ),
               ListTile(
-                leading: Icon(FontAwesomeIcons.phone),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 15, top: 5),
-                  child: Text(
-                    'Contact us'.tr(),
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                onTap: () {},
-              ),
-              ListTile(
                 leading: SvgPicture.asset('assets/help_logo.svg'),
                 title: Padding(
                   padding: EdgeInsets.only(left: 13, top: 5),
@@ -257,28 +250,31 @@ class _UserHomePageState extends State<UserHomePage> {
               children: [
                 CarouselSlider(
                   options: CarouselOptions(
-                    enlargeCenterPage: true,
+                    enlargeCenterPage: false,
                     autoPlay: true,
                     aspectRatio: 20 / 10,
                     autoPlayCurve: Curves.fastOutSlowIn,
                     enableInfiniteScroll: true,
                     autoPlayAnimationDuration:
                         const Duration(milliseconds: 800),
-                    viewportFraction: 1.2,
+                    viewportFraction: 1,
                   ),
                   items: [
                     Container(
                         width: MediaQuery.sizeOf(context).width * 1,
-                        child: SvgPicture.asset('assets/userHome2.svg',
-                            fit: BoxFit.fill)),
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome2.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome2.svg', fit: BoxFit.fill)),
                     Container(
                         width: MediaQuery.sizeOf(context).width * 1,
-                        child: SvgPicture.asset('assets/userHome3.svg',
-                            fit: BoxFit.fill)),
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome3.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome3.svg', fit: BoxFit.fill)),
                     Container(
                         width: MediaQuery.sizeOf(context).width * 1,
-                        child: SvgPicture.asset('assets/userHome4.svg',
-                            fit: BoxFit.fill)),
+                        child: currentLocale == Locale('ar', 'SA')
+                            ?SvgPicture.asset('assets/arabicUserHome4.svg', fit: BoxFit.fill)
+                            :SvgPicture.asset('assets/userHome4.svg', fit: BoxFit.fill)),
                     Stack(
                       children: [
                         Container(
@@ -290,10 +286,10 @@ class _UserHomePageState extends State<UserHomePage> {
                           left: MediaQuery.sizeOf(context).width * 0.3,
                           top: MediaQuery.sizeOf(context).height * 0.08,
                           child: Text(
-                            'Drive Your Business Forward \nwith Seamless Vehicle Booking!',
+                            '${'Drive Your Business Forward'.tr()} \n${'with Seamless Vehicle Booking!'.tr()}',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: viewUtil.isTablet ? 30 : 15,
+                              fontSize: viewUtil.isTablet ? 30 : 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),

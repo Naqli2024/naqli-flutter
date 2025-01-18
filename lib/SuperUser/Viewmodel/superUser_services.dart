@@ -22,8 +22,6 @@ class SuperUserServices {
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-        print('Response body: $responseBody');
-
         final message = responseBody['message'] as String?;
         if (message != null) {
           CommonWidgets().showToast(message);
@@ -77,7 +75,6 @@ class SuperUserServices {
             'partnerIds': partnerIds,
           };
         } else {
-          print('No data key found in the response');
           return {
             'totalBookings': 0,
             'runningBookingsCount': 0,
@@ -89,7 +86,6 @@ class SuperUserServices {
           };
         }
       } else {
-        print('Failed to load bookings: ${response.body}');
         return {
           'totalBookings': 0,
           'runningBookingsCount': 0,
@@ -102,10 +98,25 @@ class SuperUserServices {
       }
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet connection and try again.');
+      return {
+        'totalBookings': 0,
+        'runningBookingsCount': 0,
+        'yetToStartBookingsCount': 0,
+        'completedBookings': 0,
+        'pendingPaymentCount': 0,
+        'halfPaidPaymentCount': 0,
+        'bookingDates': [],
+      };
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      return {
+        'totalBookings': 0,
+        'runningBookingsCount': 0,
+        'yetToStartBookingsCount': 0,
+        'completedBookings': 0,
+        'pendingPaymentCount': 0,
+        'halfPaidPaymentCount': 0,
+        'bookingDates': [],
+      };
     }
   }
 
@@ -138,7 +149,6 @@ class SuperUserServices {
           };
         }
       } catch (e) {
-        print('Error fetching data for $partnerId: $e');
         partnerIdToDataMap[partnerId] = {
           'partnerName': 'N/A',
           'mobileNo': 'N/A',
@@ -172,7 +182,6 @@ class SuperUserServices {
           partnerIdToNameMap[partnerId] = 'N/A';
         }
       } catch (e) {
-        print('Error fetching partner name for $partnerId: $e');
         partnerIdToNameMap[partnerId] = 'N/A';
       }
     }
@@ -206,11 +215,14 @@ class SuperUserServices {
           CommonWidgets().showToast(message);
         }
       } else {
-        print('Failed to update booking. Status code: ${response.statusCode}');
-        print('Response: ${response.body}');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] as String?;
+        if (message != null) {
+          CommonWidgets().showToast(message);
+        }
       }
     } catch (e) {
-      print('Error occurred: $e');
+      CommonWidgets().showToast('An error occurred,Please try again.');
     }
   }
 
@@ -236,8 +248,6 @@ class SuperUserServices {
       );
 
       final responseBody = jsonDecode(response.body);
-      print('Full Response Body: $responseBody');
-
       if (response.statusCode == 200) {
         final checkOutId = responseBody['id'];
         final integrityId = responseBody['integrity'];
@@ -253,16 +263,14 @@ class SuperUserServices {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to create booking: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
       return null;
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return null;
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      CommonWidgets().showToast('An error occurred,Please try again.');
+      return null;
     }
   }
 
@@ -281,12 +289,10 @@ class SuperUserServices {
       );
 
       final responseBody = jsonDecode(response.body);
-      print('Payment Response Body: $responseBody');
 
       if (response.statusCode == 200) {
         String resultCode = responseBody['result']['code'] ?? 'Unknown';
         String description = responseBody['result']['description'] ?? 'Unknown';
-        print('Result Code: $resultCode');
 
         return {
           'code': resultCode,
@@ -297,16 +303,14 @@ class SuperUserServices {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
-        print('Failed to create booking: ${response.statusCode}');
-        print('Response body: ${response.body}');
       }
       return null;
     } on SocketException {
       CommonWidgets().showToast('No Internet connection');
-      throw Exception('Please check your internet \nconnection and try again.');
+      return null;
     } catch (e) {
-      print('An error occurred: $e');
-      throw Exception('An unexpected error occurred: $e');
+      CommonWidgets().showToast('An error occurred,Please try again.');
+      return null;
     }
   }
 
@@ -358,11 +362,14 @@ class SuperUserServices {
           CommonWidgets().showToast(message);
         }
       } else {
-        print('Failed to update booking. Status code: ${response.statusCode}');
-        print('Response: ${response.body}');
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] as String?;
+        if (message != null) {
+          CommonWidgets().showToast(message);
+        }
       }
     } catch (e) {
-      print('Error occurred: $e');
+      CommonWidgets().showToast('An error occurred,Please try again.');
     }
   }
 

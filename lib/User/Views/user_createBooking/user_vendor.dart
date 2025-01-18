@@ -154,10 +154,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
         subClassification: widget.unitTypeName,
       );
 
-      print('Fetched Vendor Response: $fetchedVendorsNullable');
-
       if (fetchedVendorsNullable == null) {
-        print('Received null response from userService');
         setState(() {
           isFetching = false;
         });
@@ -168,7 +165,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       try {
         fetchedVendors = List<Map<String, dynamic>>.from(fetchedVendorsNullable);
       } catch (e) {
-        print('Error parsing response: $e');
         setState(() {
           isFetching = false;
         });
@@ -186,7 +182,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       setState(() {
         isFetching = false;
       });
-      print('Error fetching vendor: $e');
     }
   }
 
@@ -256,7 +251,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
         );
 
       if (response == null || !response.containsKey('success') || response['success'] == false) {
-        print('Error in response: ${response?['message'] ?? 'Unknown error'}');
         setState(() {
           isLoading = false;
         });
@@ -264,250 +258,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
       }
 
       setState(() {
-        print(response);
         bookingStatus = response['booking']['bookingStatus'] ?? '';
         updatedPaymentStatus = response['booking']['paymentStatus'] ?? '';
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching payment data: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
-
-
-
-  /*Future<void> initiateStripePayment(
-      BuildContext context,
-      double amount,
-      bool isPayAdvance,
-      String partnerName,
-      String partnerId,
-      String oldQuotePrice,
-      String quotePrice,
-      String paymentStatus,
-      int advanceOrPay,
-      ) async {
-    try {
-      ViewUtil viewUtil = ViewUtil(context);
-      var paymentIntent = await createPaymentIntent(
-        amount.toStringAsFixed(2),
-        'INR',
-      );
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntent['client_secret'],
-          billingDetails: BillingDetails(
-            name: 'YOUR NAME',
-            email: 'YOUREMAIL@gmail.com',
-            phone: 'YOUR PHONE',
-            address: Address(
-              city: 'YOUR CITY',
-              country: 'YOUR COUNTRY',
-              line1: 'YOUR ADDRESS LINE 1',
-              line2: 'YOUR ADDRESS LINE 2',
-              postalCode: '',
-              state: 'YOUR STATE',
-            ),
-          ),
-          style: ThemeMode.dark,
-          merchantDisplayName: 'Your Merchant Name',
-        ),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      Fluttertoast.showToast(msg: 'Payment successfully completed'.tr());
-
-      if (isPayAdvance) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              backgroundColor: Colors.white,
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(FontAwesomeIcons.multiply,size: viewUtil.isTablet? 30 :20),
-                  ),
-                ],
-              ),
-              content: Container(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: viewUtil.isTablet
-                    ? MediaQuery.of(context).size.height * 0.3
-                    : MediaQuery.of(context).size.height * 0.25,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      children: [
-                        SvgPicture.asset(
-                          'assets/confirm.svg',
-                          fit: BoxFit.contain,
-                          width: MediaQuery.of(context).size.width * 0.7,
-                        ),
-                        Positioned.fill(
-                          child: Center(
-                            child: Text(
-                              'Thank you!'.tr(),
-                              style: TextStyle(fontSize:viewUtil.isTablet? 40 :30),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        'Your booking is confirmed'.tr(),
-                        style: TextStyle(fontSize: viewUtil.isTablet? 30 :20, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Text(
-                        '${'with advance payment of'.tr()} \n SAR ${amount.toStringAsFixed(2)}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: viewUtil.isTablet? 22 :16),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-        await fetchPaymentData( partnerId,oldQuotePrice,quotePrice, paymentStatus, advanceOrPay,);
-        await Future.delayed(const Duration(seconds: 2));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PendingPayment(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              selectedType: widget.selectedType,
-              token: widget.token,
-              unit: widget.unit,
-              load: widget.load,
-              size: widget.size,
-              bookingId: widget.bookingId,
-              unitType: widget.unitType,
-              dropPoints: widget.dropPoints,
-              pickup: widget.pickup,
-              cityName: widget.cityName,
-              address: widget.address,
-              zipCode: widget.zipCode,
-              unitTypeName: widget.unitTypeName,
-              id: widget.id,
-              partnerName: partnerName,
-              partnerId: partnerId,
-              oldQuotePrice: oldQuotePrice,
-              paymentStatus: paymentStatus,
-              quotePrice: quotePrice,
-              advanceOrPay: advanceOrPay,
-              bookingStatus: bookingStatus??'',
-              email: widget.email,
-            ),
-          ),
-        );
-      } else {
-        await fetchPaymentData( partnerId,selectedOldQuotePrice!,selectedQuotePrice!, "Paid", fullAmount,);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PendingPayment(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              selectedType: widget.selectedType,
-              token: widget.token,
-              unit: widget.unit,
-              load: widget.load,
-              size: widget.size,
-              bookingId: widget.bookingId,
-              unitType: widget.unitType,
-              dropPoints: widget.dropPoints,
-              pickup: widget.pickup,
-              cityName: widget.cityName,
-              address: widget.address,
-              zipCode: widget.zipCode,
-              unitTypeName: widget.unitTypeName,
-              id: widget.id,
-              partnerName: partnerName,
-              partnerId: partnerId,
-              oldQuotePrice: oldQuotePrice,
-              paymentStatus: paymentStatus,
-              quotePrice: quotePrice,
-              advanceOrPay: advanceOrPay,
-              bookingStatus: bookingStatus??'',
-              email: widget.email,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      // Show error message
-      if (e is StripeException) {
-        Fluttertoast.showToast(
-          msg: 'Error from Stripe: ${e.error.localizedMessage}',
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: 'Unforeseen error: $e',
-        );
-      }
-    }
-  }
-
-  Future<Map<String, dynamic>> createPaymentIntent(
-      String amount, String currency) async {
-    try {
-      final calculatedAmount = calculateAmount(amount);
-
-      Map<String, dynamic> body = {
-        'amount': calculatedAmount,
-        'currency': currency,
-      };
-
-      final response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET']}',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body,
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to create payment intent: ${response.body}');
-      }
-
-      return json.decode(response.body);
-    } catch (err) {
-      throw Exception('Error creating payment intent: $err');
-    }
-  }
-
-  String calculateAmount(String amount) {
-    try {
-      final doubleAmount = double.tryParse(amount) ?? 0.0;
-      final intAmount =
-      (doubleAmount * 100).toInt();
-      return intAmount.toString();
-    } catch (e) {
-      throw Exception('Invalid amount format: $amount');
-    }
-  }*/
 
   Future<void> fetchCoordinates() async {
     try {
@@ -564,10 +324,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
               _dropLatLngs.clear();
             });
           } else {
-            print('Pickup location is null');
+            return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
 
         // Handle each drop point response
@@ -605,15 +365,13 @@ class _ChooseVendorState extends State<ChooseVendor> {
                   waypoints.add(dropLatLng);
                 });
               } else {
-                print('Drop location is null for point $i');
+                return;
               }
             } else {
-              print(
-                  'Error with drop API response for point $i: ${dropData?['status']}');
+              return;
             }
           } else {
-            print(
-                'Failed to load drop coordinates for point $i, status code: ${dropResponse.statusCode}');
+            return;
           }
         }
 
@@ -646,12 +404,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                 });
               }
             } else {
-              print(
-                  'Error with directions API response: ${directionsData?['status']}');
+              return;
             }
           } else {
-            print(
-                'Failed to load directions, status code: ${directionsResponse.statusCode}');
+            return;
           }
         }
 
@@ -663,11 +419,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
         );
 
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      print(e);
     }
   }
 
@@ -741,17 +496,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
               }
             });
           } else {
-            print('Pickup location is null');
+            return;
           }
         } else {
-          print('Error with pickup API response: ${pickupData?['status']}');
+          return;
         }
       } else {
-        print(
-            'Failed to load pickup coordinates, status code: ${pickupResponse.statusCode}');
+        return;
       }
     } catch (e) {
-      print('Error fetching coordinates: $e');
+      print(e);
     }
   }
 
@@ -800,7 +554,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
           northeast: LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude),
         );
       } else {
-        print('No coordinates to fit.');
         return;
       }
 
@@ -811,7 +564,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
         )), // Padding in pixels
       );
     } else {
-      print('mapController is not initialized');
+      return;
     }
   }
 
@@ -845,19 +598,15 @@ class _ChooseVendorState extends State<ChooseVendor> {
     final String? token = data['token'];
 
     if (bookingId == null || token == null) {
-      print('No bookingId found, fetching pending booking details.');
-
       if (widget.id != null && token != null) {
         bookingId = await userService.getPaymentPendingBooking(widget.id, token);
 
         if (bookingId != null) {
           // await saveBookingIdToPreferences(bookingId, token);
         } else {
-          print('No pending booking found, navigating to NewBooking.');
           return null;
         }
       } else {
-        print('No userId or token available.');
         return null;
       }
     }
@@ -865,7 +614,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
     if (bookingId != null && token != null) {
       return await userService.fetchBookingDetails(bookingId, token);
     } else {
-      print('Failed to fetch booking details due to missing bookingId or token.');
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -979,11 +727,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
         unitClassification: widget.unit,
         subClassification: widget.unitTypeName,
       );
-
-      print('Fetched Vendor Response: $fetchedVendorsNullable');
-
       if (fetchedVendorsNullable == null) {
-        print('Received null response from userService');
         setState(() {
           isFetching = false;
         });
@@ -994,7 +738,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       try {
         fetchedVendors = List<Map<String, dynamic>>.from(fetchedVendorsNullable);
       } catch (e) {
-        print('Error parsing response: $e');
         setState(() {
           isFetching = false;
         });
@@ -1011,7 +754,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
       setState(() {
         isFetching = false;
       });
-      print('Error fetching vendor: $e');
     }
   }
 
@@ -1366,21 +1108,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             email: widget.email
                         )));
                   },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.phone,
-                    size: 30,
-                    color: Color(0xff707070),
-                  ),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      'contact_us'.tr(),
-                      style: TextStyle(fontSize: 25),
-                    ),
-                  ),
-                  onTap: () {},
                 ),
                 ListTile(
                   leading: Icon(
@@ -1767,7 +1494,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                             fullPayAmount = fullAmount;
                                             advancePayAmount = advanceAmount;
                                           } catch (e) {
-                                            print('Error parsing amount: $e');
                                             fullPayAmount = 0;
                                             advancePayAmount = 0;
                                           }
@@ -1815,7 +1541,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 ? null
                                 : () {
                               isPayAdvance =true;
-                              print(isPayAdvance);
                               showSelectPaymentDialog(
                                   selectedQuotePrice!,
                                   selectedPartnerId!,
@@ -1824,69 +1549,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                   selectedPartnerName!,
                                   advanceAmount
                               );
-                              // showDialog(
-                              //   context: context,
-                              //   builder: (BuildContext context) {
-                              //     ViewUtil viewUtil = ViewUtil(context);
-                              //     return Directionality(
-                              //       textDirection: ui.TextDirection.ltr,
-                              //       child: Dialog(
-                              //         shape: RoundedRectangleBorder(
-                              //           borderRadius: BorderRadius.circular(8),
-                              //         ),
-                              //         insetPadding: EdgeInsets.symmetric(horizontal: 15),
-                              //         backgroundColor: Colors.white,
-                              //         child: SingleChildScrollView(
-                              //           child: Container(
-                              //             width: MediaQuery.of(context).size.width,
-                              //             padding: const EdgeInsets.all(0),
-                              //             child: StatefulBuilder(
-                              //               builder: (BuildContext context, StateSetter setState) {
-                              //                 return Stack(
-                              //                   children: [
-                              //                     Column(
-                              //                       mainAxisSize: MainAxisSize.min,
-                              //                       children: [
-                              //                         // showSelectPaymentDialog(
-                              //                         //     advancePayAmount,
-                              //                         //     selectedPartnerId!,
-                              //                         //     selectedOldQuotePrice!,
-                              //                         //     widget.bookingId,
-                              //                         //     selectedPartnerName!,
-                              //                         //     paymentStatus!,
-                              //                         //     selectedQuotePrice!,
-                              //                         //     advanceAmount
-                              //                         // );
-                              //                         Text('selectedPartnerId:${selectedPartnerId}'),
-                              //                         Text('selectedOldQuotePrice:${selectedOldQuotePrice}'),
-                              //                         Text('bookingId:${widget.bookingId}'),
-                              //                         Text('selectedPartnerName:${selectedPartnerName}'),
-                              //                         Text('selectedQuotePrice:${selectedQuotePrice}'),
-                              //                         Text('advanceAmount:${advanceAmount}'),
-                              //                         SizedBox(height: 10),
-                              //                       ],
-                              //                     ),
-                              //                     Positioned(
-                              //                       top: 10,
-                              //                       right: 10,
-                              //                       child: GestureDetector(
-                              //                         onTap: () => Navigator.of(context).pop(),
-                              //                         child: CircleAvatar(
-                              //                             backgroundColor: Colors.white,
-                              //                             child: Icon(Icons.cancel, color: Colors.grey,size: 30,)
-                              //                         ),
-                              //                       ),
-                              //                     ),
-                              //                   ],
-                              //                 );
-                              //               },
-                              //             ),
-                              //           ),
-                              //         ),
-                              //       ),
-                              //     );
-                              //   },
-                              // );
                             },
                             child: Text(
                               viewUtil.isTablet
@@ -1920,7 +1582,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 ? null
                                 : () async {
                               isPayAdvance =false;
-                              print(isPayAdvance);
                               showSelectPaymentDialog(
                                   selectedQuotePrice!,
                                   selectedPartnerId!,
@@ -2068,14 +1729,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
       paymentBrand: paymentBrand,
       amount: isPayAdvance==true?advanceAmount:amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -2085,14 +1742,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentResult = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2103,7 +1756,6 @@ class _ChooseVendorState extends State<ChooseVendor> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,int oldQuotePrice,String bookingId,String partnerName,int advanceAmount) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
     final String visaHtml = '''

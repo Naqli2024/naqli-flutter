@@ -574,14 +574,10 @@ class _PaymentState extends State<Payment> {
       paymentBrand: paymentBrand,
       amount: amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -591,14 +587,10 @@ class _PaymentState extends State<Payment> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentStatus = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -609,7 +601,6 @@ class _PaymentState extends State<Payment> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
 

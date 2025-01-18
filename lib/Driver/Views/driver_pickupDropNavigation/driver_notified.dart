@@ -89,7 +89,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   @override
   void initState() {
     super.initState();
-    print('Navigated');
     _initLocationListener();
     startLocationUpdatesForDropPoints();
     loadCustomArrowIcon();
@@ -119,8 +118,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
 
     positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
       LatLng newLocation = LatLng(position.latitude, position.longitude);
-      print('newLocation (Customer Notified Page): $newLocation');
-
       if (newLocation != currentLatLng) {
         await _updateRealTimeDataToDropPoints(newLocation);
         await fetchNearbyPlaces(newLocation);
@@ -200,7 +197,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
             currentPlace = currentAddress;
             if (currentAddress != null) {
               currentLocationName = currentAddress;
-              print('Current Location Name: $currentLocationName');
             }
           }
         }
@@ -242,7 +238,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
         }
       }
     } catch (e) {
-      print('Error updating real-time data to drop points: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -255,11 +251,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       location.onLocationChanged.listen((location_package.LocationData newLocation) {
         currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
         _updateRealTimeDataToDropPoints(currentLatLng);
-        print('Updated Current LatLng: $currentLatLng');
         checkDropLocation();
       });
     } else {
-      print('Location permission denied');
+
     }
   }
 
@@ -276,10 +271,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
         double lng = data['results'][0]['geometry']['location']['lng'];
         return LatLng(lat, lng);
       } else {
-        print('Error fetching geocode: ${data['status']}');
+
       }
     } else {
-      print('Error fetching geocode: ${response.statusCode}');
+
     }
     return null;
   }
@@ -357,7 +352,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       });
 
       if (nearbyPlacesData['status'] == 'OK') {
-        print(nearbyPlacesData);
         for (var place in nearbyPlacesData['results']) {
           nearbyPlaces.add({
             'name': place['name'],
@@ -368,10 +362,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
           currentIndex = 0;
         });
       } else {
-        print('Error fetching places: ${nearbyPlacesData['status']}');
+
       }
     } else {
-      print('Failed to load nearby places, status code: ${response.statusCode}');
+
     }
 
     setState(() {
@@ -455,10 +449,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
           // mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50)); // 50 is the padding
         }
       } else {
-        print("Pickup location is not available.");
+
       }
     } catch (e) {
-      print('Error recentering map: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
 
@@ -522,19 +516,12 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   }
 
   void checkDropLocation() async {
-    print('Current LatLng: $currentLatLng');
-    print('Drop LatLng: $dropPointLatLng');
-
     double distanceToDropInKm = _haversineDistance(currentLatLng, dropPointLatLng!);
     // 1 kilometer = 0.621371 miles
     // 1 mile = 5280 feet
     // Therefore, 1 kilometer = 3280.84 feet
     // Convert kilometers to feet (1 km = 3280.84 feet)
     double distanceInFeet = distanceToDropInKm * 3280.84;
-
-    print('Distance to Drop in Feet: $distanceInFeet');
-
-
     if (distanceInFeet <= 30 && !hasNavigated) {
       hasNavigated = true;
 
@@ -542,10 +529,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
         setState(() {
           isAtDropLocation = true;
         });
-        print('Navigating to CustomerNotified');
+
       }
     } else {
-      print('Current location is more than 3000 feet from pickup location or already navigated.');
+
     }
   }
 

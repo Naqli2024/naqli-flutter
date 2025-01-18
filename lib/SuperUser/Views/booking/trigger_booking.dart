@@ -189,8 +189,6 @@ class _TriggerBookingState extends State<TriggerBooking> {
     try {
       final partnerData =
           await superUserServices.getPartnerDetails([partnerId], token);
-      print('Received partnerData for $partnerId: $partnerData');
-
       if (partnerData is Map && partnerData.containsKey(partnerId)) {
         final details = partnerData[partnerId];
 
@@ -199,14 +197,12 @@ class _TriggerBookingState extends State<TriggerBooking> {
           'mobileNo': details?['mobileNo'] ?? 'N/A',
         };
       } else {
-        print('Unexpected data format for partner details: $partnerData');
         return {
           'partnerName': 'N/A',
           'mobileNo': 'N/A',
         };
       }
     } catch (e) {
-      print('Error fetching partner details for $partnerId: $e');
       return {
         'partnerName': 'N/A',
         'mobileNo': 'N/A',
@@ -341,10 +337,6 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   subClassification = booking['type']?.isNotEmpty ?? ''
                                           ? booking['type'][0]['typeName'] ?? ''.tr()
                                           : '';
-                                  print(bookingId);
-                                  print(unitType);
-                                  print(unitClassification);
-                                  print(subClassification);
                                   return GestureDetector(
                                     onLongPress: () {
                                       setState(() {
@@ -954,7 +946,6 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                 onPressed: () async {
                                   Navigator.pop(context);
                                   isPayAdvance =false;
-                                  print((selectedQuotePrices[booking['_id']] ?? 0) * 2);
                                   showSelectPaymentDialog(selectedQuotePrices[booking['_id']]??0,partnerId,oldQuotePrice,booking['_id']);
                                 },
                                 child: Text(
@@ -1111,14 +1102,10 @@ class _TriggerBookingState extends State<TriggerBooking> {
       paymentBrand: paymentBrand,
       amount: amount,
     );
-    print('paymentBrand$paymentBrand');
-    print('amount$amount');
     if (result != null) {
       setState(() {
         checkOutId = result['id'];
         integrityId = result['integrity'];
-        print('checkOutId$checkOutId');
-        print('integrityId$integrityId');
       });
     }
     setState(() {
@@ -1128,14 +1115,10 @@ class _TriggerBookingState extends State<TriggerBooking> {
 
   Future<void> getPaymentStatus(String checkOutId, bool isMadaTapped) async {
     final result = await superUserServices.getPaymentDetails(context, checkOutId, isMadaTapped);
-    print('Processed');
-    print(isMadaTapped);
-
     if (result != null && result['code'] != null) {
       setState(() {
         resultCode = result['code'] ?? '';
         paymentStatus = result['description'] ?? '';
-        print(resultCode);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1146,7 +1129,6 @@ class _TriggerBookingState extends State<TriggerBooking> {
 
   void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,int oldQuotePrice,String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
-      print('Error: checkOutId or integrity is empty');
       return;
     }
     final String visaHtml = '''
@@ -1285,10 +1267,6 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                   amount,
                                   oldQuotePrice,
                                 );
-                              print(isPayAdvance);
-                              print(bookingId);
-                              print(partnerID);
-                              print(amount*2);
                               Navigator.of(context).push(
                                 MaterialPageRoute(builder: (context) => TriggerBooking(
                                   firstName: widget.firstName,

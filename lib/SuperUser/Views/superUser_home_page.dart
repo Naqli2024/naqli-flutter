@@ -1015,8 +1015,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
 
     try {
       final counts = await superUserServices.getBookingsCount(userId, token);
-      print('Counts received: $counts$pendingBookingDate');
-
       setState(() {
         totalBookingsCount = counts['totalBookings'] ?? 0;
         runningBookingsCount = counts['runningBookingsCount'] ?? 0;
@@ -1036,7 +1034,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
         isLoading = false;
       });
     } catch (e) {
-      print('Error fetching running bookings count: $e');
       setState(() {
         isLoading = false;
       });
@@ -1476,9 +1473,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     List<String> weekDays = ['Sun'.tr(), 'Mon'.tr(), 'Tue'.tr(), 'Wed'.tr(), 'Thu'.tr(), 'Fri'.tr(), 'Sat'.tr()];
     List<String> months = ['', 'Jan'.tr(), 'Feb'.tr(), 'Mar'.tr(), 'Apr'.tr(), 'May'.tr(), 'Jun'.tr(), 'Jul'.tr(), 'Aug'.tr(), 'Sep'.tr(), 'Oct'.tr(), 'Nov'.tr(), 'Dec'.tr(), ''];
     List<String> allTimeTitles = ['All Bookings'.tr(), 'Completed'.tr()];
-    print("Monthly counts: ${countBookingsByMonth(filteredDates)}");
-    print("Spots generated: $spots");
-
     double maxY = spots.isNotEmpty
         ? spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.1
         : 1;
@@ -1570,7 +1564,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
         int month = date.month;
         monthlyCounts[month] = (monthlyCounts[month] ?? 0) + 1;
       } catch (e) {
-        print("Invalid date format: $dateStr");
+        commonWidgets.showToast('An error occurred,Please try again.');
       }
     }
     return monthlyCounts;
@@ -1644,9 +1638,6 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
             : filteredDates = pendingBookingDate;
         break;
     }
-
-    print("Filtered Dates: $filteredDates");
-
     if (filteredDates.isEmpty) {
       setState(() {
         final monthlyCounts = countBookingsByMonth(filteredDates);

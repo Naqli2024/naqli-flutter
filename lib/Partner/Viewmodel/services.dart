@@ -76,7 +76,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -123,7 +123,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -165,7 +165,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -197,7 +197,7 @@ class AuthService {
           ),
         );
       } else {
-        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -208,7 +208,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -243,7 +243,7 @@ class AuthService {
           ),
         );
       } else {
-        final message = responseBody['message'] ?? 'An unexpected error occurred. Please try again.';
+        final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -254,7 +254,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -292,7 +292,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -359,7 +359,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -485,7 +485,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -517,7 +517,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return [];
     } catch (e) {
       return [];
@@ -537,7 +537,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return [];
     } catch (e) {
       return [];
@@ -557,7 +557,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return [];
     } catch (e) {
       return [];
@@ -577,7 +577,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return [];
     } catch (e) {
       return [];
@@ -632,7 +632,7 @@ class AuthService {
         return [];
       }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return [];
     } catch (e) {
       return [];
@@ -706,7 +706,7 @@ class AuthService {
         return {};
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return {};
     } catch (e) {
       return {};
@@ -747,7 +747,7 @@ class AuthService {
         return null;
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return null;
     } catch (e) {
       return null;
@@ -789,7 +789,7 @@ class AuthService {
         );
       }
     }on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -827,7 +827,7 @@ class AuthService {
         return null;
       }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
       return null;
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
@@ -858,7 +858,7 @@ class AuthService {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -885,7 +885,7 @@ class AuthService {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      commonWidgets.showToast('No Internet connection');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -938,7 +938,7 @@ class AuthService {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred')),
+        SnackBar(content: Text('An error occurred,Please try again.')),
       );
     }
   }
@@ -980,7 +980,7 @@ class AuthService {
         final jsonResponse = jsonDecode(responseBody);
         final message = jsonResponse['message'] as String?;
         if (message != null) {
-          CommonWidgets().showToast(message);
+          commonWidgets.showToast(message);
         }
       } else {
         final responseBody = await response.stream.bytesToString();

@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
@@ -29,7 +30,7 @@ void main() async {
     try {
       await InAppWebViewController.setWebContentsDebuggingEnabled(true);
     } catch (e) {
-      debugPrint("Error enabling debugging: $e");
+      CommonWidgets().showToast('An error occurred,Please try again.');
     }
   }
   SystemChrome.setPreferredOrientations([
@@ -111,8 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
               final partnerId = partnerData['partnerId'] ?? '';
               final token = partnerData['token'] ?? '';
               final email = partnerData['email'] ?? '';
-              print('Partner data: partnerName=$partnerName, token=$token, id=$partnerId');
               if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
+                print(token);
                 return BookingDetails(
                   partnerName: partnerName,
                   partnerId: partnerId,
@@ -139,8 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   final id = driverData['id'] ?? '';
                   final token = driverData['token'] ?? '';
                   final driverPartnerId = driverData['partnerId'] ?? '';
-                  print('Driver data: firstName=$firstName, lastName=$lastName, token=$token, id=$id');
                   if (id.isNotEmpty && token.isNotEmpty && driverPartnerId.isNotEmpty) {
+                    print(token);
                     return DriverHomePage(
                       firstName: firstName,
                       lastName: lastName,
@@ -168,9 +169,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       final id = userData['id'] ?? '';
                       final email = userData['email'] ?? '';
                       final accountType = userData['accountType'] ?? '';
-                      print('User data: firstName=$firstName, lastName=$lastName, token=$token, id=$id, accountType=$accountType');
                       if(accountType == 'Single User') {
                         if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
+                          print(token);
                           return UserType(
                             firstName: firstName,
                             lastName: lastName,
