@@ -1,14 +1,18 @@
+import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'dart:ui' as ui;
-import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class UserInvoiceOverview extends StatefulWidget {
   final String token;
@@ -37,6 +41,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
   final UserService userService = UserService();
   late Future<UserDataModel> userData;
   List<Map<String, dynamic>>? partnerData;
+  bool isVerified = false;
 
   @override
   void initState() {
@@ -75,159 +80,152 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
     }
   }
 
+  Future<Uint8List> _generateQrCodeImage(String data) async {
+    final qrPainter = QrPainter(
+      data: data,
+      version: QrVersions.auto,
+      errorCorrectionLevel: QrErrorCorrectLevel.M,
+    );
+    final picData = await qrPainter.toImageData(150.0);
+    return picData!.buffer.asUint8List();
+  }
+
+  bool get isTablet {
+    final size = MediaQuery.of(context).size;
+    final diagonal = sqrt(size.width * size.width + size.height * size.height);
+    return diagonal > 1100;
+  }
+
   Future<void> _generateAndDownloadPdf(String address) async {
     final pdf = pw.Document();
     final logoImage = await imageFromAssetBundle('assets/naqleePdf.png');
+    final qrCodeData = 'http://localhost:4200/home/user/invoice-data/${widget.invoiceId}/${formatDateFromInvoiceId(widget.invoiceId)}/${'${widget.firstName} ${widget.lastName}'}/${widget.paymentAmount.toInt()}/${address}/${widget.bookingId}/${widget.unitType}/${partnerData?[0]['partnerName']}/${widget.paymentType}';
+    final qrCodeImage = await _generateQrCodeImage(qrCodeData);
+
     pdf.addPage(
       pw.Page(
         build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            pw.Image(
+                logoImage,
+                width: 200,
+                height: 200,
+                fit: pw.BoxFit.contain),
+            pw.SizedBox(height: 20),
             pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Expanded(
-                  flex: 5,
+                  flex:4,
                   child: pw.Align(
                     alignment: pw.Alignment.topLeft,
-                    child: pw.Image(logoImage),
+                    child: pw.Image(pw.MemoryImage(qrCodeImage)),
                   ),
                 ),
                 pw.Expanded(
-                  flex: 3,
-                  child: pw.Text('Invoice'.tr(), style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                  flex:5,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Padding(
+                        padding: pw.EdgeInsets.only(bottom: 8),
+                        child: pw.Text('PIANNAT AL-HASIB',textAlign: pw.TextAlign.center,style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                      ),
+                      pw.Text('3455 al-dammam',textAlign: pw.TextAlign.center,style: pw.TextStyle(fontSize: 16)),
+                      pw.Padding(
+                        padding: pw.EdgeInsets.all(8.0),
+                        child: pw.Text('34264-7932 3',textAlign: pw.TextAlign.center,style: pw.TextStyle(fontSize: 16)),
+                      ),
+                    ],
+                  ),
                 ),
+                pw.Expanded(
+                    flex:5,
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                      children: [
+                        pw.Text('Tax Invoice'.tr(),style: pw.TextStyle(fontSize:16, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('Invoice no:'.tr(),textAlign: pw.TextAlign.center,style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('${widget.invoiceId}'.tr(),textAlign: pw.TextAlign.center,style: pw.TextStyle(fontSize: 16)),
+                      ],
+                    ))
               ],
             ),
             pw.SizedBox(height: 20),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Expanded(
-                  flex: 5,
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text('PIANNAT AL-HASIB', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('3455 al-dhammam'),
-                      pw.Text('24164-7932 3'),
-                    ],
-                  ),
-                ),
-                pw.Expanded(
-                  flex: 3,
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'Invoice Id:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: widget.invoiceId,
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'Invoice date:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: '${formatDateFromInvoiceId(widget.invoiceId)}',
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            pw.Divider(),
             pw.SizedBox(height: 20),
             pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Expanded(
-                  flex: 5,
+                  flex:5,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('Bill to:'.tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                      pw.Text(widget.firstName+' '+widget.lastName),
-                      pw.Text(address),
+                      pw.Text('Date'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                      pw.Text(formatDateFromInvoiceId(widget.invoiceId),style: pw.TextStyle(fontSize: 16)),
                     ],
                   ),
                 ),
                 pw.Expanded(
-                  flex: 3,
+                  flex: 1,
+                  child: pw.Container(
+                    height: 50,
+                    child: pw.VerticalDivider(
+                      thickness: 1,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex:5,
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'Partner:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: partnerData?[0]['partnerName'] ?? 'No data',
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'UnitType:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: widget.unitType,
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'Booking id:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: widget.bookingId,
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          children: [
-                            pw.TextSpan(
-                              text: 'Payment type:'.tr(),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.TextSpan(
-                              text: widget.paymentType,
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-                            ),
-                          ],
-                        ),
-                      ),
+                      pw.Text('Booking id'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                      pw.Text(widget.bookingId,style: pw.TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Container(
+                    height: 50,
+                    child: pw. VerticalDivider(
+                      thickness: 1,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex:5,
+                  child: pw.Padding(
+                    padding: pw.EdgeInsets.only(left: 8,right:8),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Unit type'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                        pw.Text(widget.unitType,style: pw.TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Container(
+                    height: 50,
+                    child: pw.VerticalDivider(
+                      thickness: 1,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex:5,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Payment type'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                      pw.Text(widget.paymentType,style: pw.TextStyle(fontSize: 16)),
                     ],
                   ),
                 ),
@@ -238,58 +236,91 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Expanded(
-                  flex: 5,
+                  flex:5,
                   child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Name:'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                      pw.Text(widget.firstName+' '+widget.lastName,style: pw.TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Container(
+                    height: 50,
+                    child: pw.VerticalDivider(
+                      thickness: 1,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex:11,
+                  child: pw.Padding(
+                    padding: pw.EdgeInsets.only(left: 8,right:8),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Address:'.tr(),style: pw.TextStyle(fontSize: 16,fontWeight: pw.FontWeight.bold)),
+                        pw.Text(address,style: pw.TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                    flex:6,
+                    child: pw.Container()
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text('Description'.tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                       widget.pickup.isNotEmpty || widget.pickup != ''
                           ? pw.Column(
                         children: [
-                          pw.Text(widget.pickup),
-                          pw.Text((widget.dropPoints as List).join(', ')),
+                          pw.Text(widget.pickup,style: pw.TextStyle(fontSize: 16)),
+                          pw.Text((widget.dropPoints as List).join(', '),style: pw.TextStyle(fontSize: 16)),
                         ],
                       )
-                          : pw.Text(widget.city),
-                      pw.Text('${"Qty:".tr()} 1'),
+                          : pw.Text(widget.city,style: pw.TextStyle(fontSize: 16)),
+                      pw.Text('${"Qty:".tr()} 1',style: pw.TextStyle(fontSize: 16)),
                     ],
                   ),
-                ),
-                pw.Expanded(
-                  flex: 3,
-                  child: pw.Column(
+                pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('${widget.paymentAmount.toInt()} SAR'),
+                      pw.Text('${widget.paymentAmount.toInt()} SAR',style: pw.TextStyle(fontSize: 16)),
                     ],
                   ),
-                ),
               ],
             ),
-            pw.SizedBox(height: 20),
             pw.Divider(),
-            pw.Text("Total Summary".tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 5),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("Subtotal".tr()), pw.Text('${widget.paymentAmount.toInt()} SAR')],
+            pw.Align(
+              alignment: pw.Alignment.topLeft,
+              child: pw.Text("Total Summary".tr(),textAlign: pw.TextAlign.left, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("Labour charge".tr()), pw.Text("0 SAR")],
+              children: [pw.Text("Subtotal".tr(),style: pw.TextStyle(fontSize: 16)), pw.Text('${widget.paymentAmount.toInt()} SAR',style: pw.TextStyle(fontSize: 16))],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("VAT".tr()), pw.Text("0%")],
+              children: [pw.Text("VAT".tr(),style: pw.TextStyle(fontSize: 16)), pw.Text("0%",style: pw.TextStyle(fontSize: 16))],
             ),
             pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Total".tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                pw.Text("${widget.paymentAmount.toInt()} SAR", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                pw.Text("Total".tr(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold,fontSize: 16)),
+                pw.Text("${widget.paymentAmount.toInt()} SAR", style: pw.TextStyle(fontWeight: pw.FontWeight.bold,fontSize: 16)),
               ],
             ),
           ],
@@ -382,22 +413,59 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                         padding: const EdgeInsets.all(15),
                         child: Column(
                           children: [
+                            SvgPicture.asset('assets/naqlee-logo.svg',
+                                height: MediaQuery.of(context).size.height * 0.055),
+                            SizedBox(height: 20),
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
-                                  flex:5,
+                                  flex:4,
                                   child: Align(
                                     alignment: Alignment.topLeft,
-                                    child: SvgPicture.asset('assets/naqlee-logo.svg',
-                                        height: MediaQuery.of(context).size.height * 0.04),
+                                    child: PrettyQr(
+                                      data: 'http://localhost:4200/home/user/invoice-data?InvoiceId=${widget.invoiceId}&InvoiceDate=${formatDateFromInvoiceId(widget.invoiceId)}&CustomerName=${'${userData.firstName} ${userData.lastName}'}&PaymentAmount=${widget.paymentAmount.toInt()}&Address=${userData.address1}&bookingId=${widget.bookingId}&unitType=${widget.unitType}&partnerName=${partnerData?[0]['partnerName']}&paymentType=${widget.paymentType}',
+                                      size: viewUtil.isTablet ?100:80,
+                                      errorCorrectLevel: QrErrorCorrectLevel.M,
+                                      roundEdges: true,
+                                    ),
                                   ),
                                 ),
-                                Expanded(flex:3,child: Text('Invoice'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 20, fontWeight: FontWeight.w500)))
+                                Expanded(
+                                  flex:5,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: Text('PIANNAT AL-HASIB',textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12, fontWeight: FontWeight.w500)),
+                                      ),
+                                      Text('3455 al-dammam',textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('34264-7932 3',textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                    flex:5,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text('Tax Invoice'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 20, fontWeight: FontWeight.w500)),
+                                        Text('Invoice no:'.tr(),textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14,fontWeight: FontWeight.w500)),
+                                        Text('${widget.invoiceId}'.tr(),textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                      ],
+                                    ))
                               ],
                             ),
-                            SizedBox(height: 40),
+                            SizedBox(height: 20),
+                            Divider(),
+                            SizedBox(height: 20),
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
@@ -405,84 +473,140 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('PIANNAT AL-HASIB',style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 16, fontWeight: FontWeight.w500)),
-                                      Text('3455 al-dammam',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                      Text('34264-7932 3',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                      Text('Date'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                      Text(formatDateFromInvoiceId(widget.invoiceId),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
                                     ],
                                   ),
                                 ),
                                 Expanded(
-                                  flex:3,
+                                  flex: 1,
+                                  child: Container(
+                                    height: 50,
+                                    child: const VerticalDivider(
+                                      color: Colors.grey,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex:5,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      buildLabelValue('Invoice Id'.tr(), widget.invoiceId),
-                                      buildLabelValue('Invoice date'.tr(), '${formatDateFromInvoiceId(widget.invoiceId)}'),
+                                      Text('Booking id'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                      Text(widget.bookingId,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    height: 50,
+                                    child: const VerticalDivider(
+                                      color: Colors.grey,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex:5,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8,right: 8),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Unit type'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                        Text(widget.unitType,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    height: 50,
+                                    child: const VerticalDivider(
+                                      color: Colors.grey,
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex:5,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Payment type'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                      Text(widget.paymentType,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 40),
+                            SizedBox(height: 20),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
                                   flex:5,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Bill to:'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 :16, fontWeight: FontWeight.w500)),
-                                      Text(userData.firstName+' '+userData.lastName,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                      Text(userData.address1,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                      Text('Name:'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                      Text(userData.firstName+' '+userData.lastName,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
                                     ],
                                   ),
                                 ),
                                 Expanded(
-                                  flex:3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      buildLabelValue('Partner'.tr(), partnerData?[0]['partnerName'] ?? 'no_data'.tr()),
-                                      buildLabelValue('UnitType'.tr(), widget.unitType),
-                                      buildLabelValue('Booking id'.tr(), widget.bookingId),
-                                      buildLabelValue('Payment type'.tr(), widget.paymentType),
-                                    ],
+                                  flex: 1,
+                                  child: Container(
+                                    height: 50,
+                                    child: const VerticalDivider(
+                                      color: Colors.grey,
+                                      thickness: 1,
+                                    ),
                                   ),
+                                ),
+                                Expanded(
+                                  flex:11,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8,right: 8),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Address:'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 12,fontWeight: FontWeight.w500)),
+                                        Text(userData.address1,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 12)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex:6,
+                                  child: Container()
                                 ),
                               ],
                             ),
-                            SizedBox(height: 50),
+                            SizedBox(height: 20),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  flex:5,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Description'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16, fontWeight: FontWeight.w500)),
-                                      widget.pickup.isNotEmpty || widget.pickup != ''
-                                      ? Column(
-                                        children: [
-                                          Text(widget.pickup,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                          Text( (widget.dropPoints as List).join(', '),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                        ],
-                                      )
-                                      : Text(widget.city,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                      buildLabelValue('Qty'.tr(),'1'),
-                                    ],
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Description'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 16, fontWeight: FontWeight.w500)),
+                                    widget.pickup.isNotEmpty || widget.pickup != ''
+                                    ? Column(
+                                      children: [
+                                        Text(widget.pickup,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                        Text( (widget.dropPoints as List).join(', '),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                      ],
+                                    )
+                                    : Text(widget.city,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                    buildLabelValue('Qty'.tr(),'1'),
+                                  ],
                                 ),
-                                Expanded(
-                                  flex:3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${widget.paymentAmount.toInt()} SAR',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                    ],
-                                  ),
-                                ),
+                                Text('${widget.paymentAmount.toInt()} SAR',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                               ],
                             ),
                             Divider(),
@@ -516,16 +640,6 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                           child: Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('Labour charge'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                              Text('0',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                            ],
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
                                               Text('VAT'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                               Text('0%',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                             ],
@@ -547,6 +661,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                 ],
                               ),
                             ),
+                            SizedBox(height: 10),
                           ],
                         ),
                       ),
@@ -605,3 +720,4 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
     );
   }
 }
+

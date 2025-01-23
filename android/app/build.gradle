@@ -34,7 +34,7 @@ android {
     defaultConfig {
         applicationId = "com.example.flutter_naqli"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""

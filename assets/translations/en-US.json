@@ -419,5 +419,10 @@
   "VAT": "VAT",
   "Total Summary": "Total Summary",
   "Download": "Download",
-  "No invoice data found": "No invoice data found"
+  "No invoice data found": "No invoice data found",
+  "Tax Invoice": "Tax Invoice",
+  "Invoice no:": "Invoice no:",
+  "Unit type": "Unit type",
+  "Name:": "Name:",
+  "Address:": "Address:"
 }

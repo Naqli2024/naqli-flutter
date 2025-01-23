@@ -455,5 +455,10 @@
   "VAT": "ضريبة القيمة المضافة",
   "Total Summary": "الملخص الإجمالي",
   "Download": "تحميل",
-  "No invoice data found": "لا توجد بيانات فاتورة"
+  "No invoice data found": "لا توجد بيانات فاتورة",
+  "Tax Invoice": "فاتورة ضريبية",
+  "Invoice no:": "رقم الفاتورة:",
+  "Unit type": "نوع الوحدة",
+  "Name:": "الاسم:",
+  "Address:": "العنوان:"
 }

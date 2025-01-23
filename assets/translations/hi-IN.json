@@ -448,5 +448,10 @@
   "VAT": "मूल्य संवर्धित कर",
   "Total Summary": "कुल सारांश",
   "Download": "डाउनलोड करना",
-  "No invoice data found": "कोई चालान डेटा नहीं मिला"
+  "No invoice data found": "कोई चालान डेटा नहीं मिला",
+  "Tax Invoice": "कर चालान",
+  "Invoice no:": "चालान संख्या:",
+  "Unit type": "यूनिट प्रकार",
+  "Name:": "नाम:",
+  "Address:": "पता:"
 }

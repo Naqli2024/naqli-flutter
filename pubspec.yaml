@@ -69,11 +69,13 @@ dependencies:
   pdf: ^3.10.1
   printing: ^5.13.4
   app_links: ^6.3.3
-
+  pretty_qr_code: ^3.3.0
+  qr_flutter: ^4.0.0
 
   flutter_localizations:
     sdk: flutter
   easy_localization: ^3.0.7
+
 
 
 
@@ -108,7 +110,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/fonts/arabic-font.ttf
     - assets/generated_logo.svg
     - assets/booking_history.svg
     - assets/launchLogo.png
