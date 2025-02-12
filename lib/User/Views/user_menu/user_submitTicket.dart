@@ -111,7 +111,7 @@ class _UserSubmitTicketState extends State<UserSubmitTicket> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 40,bottom: 5),
-                              child: Text("${'You can reach us via email at'.tr()} naqlee45@gmail.com ${'if that would be more convenient for you.'.tr()} ${'In either case, we try to reply to every communication within 1 working day.'.tr()}".tr(),
+                              child: Text("${'You can reach us via email at'.tr()} sales@naqlee.com ${'if that would be more convenient for you.'.tr()} ${'In either case, we try to reply to every communication within 1 working day.'.tr()}".tr(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: viewUtil.isTablet? 22 : 16,

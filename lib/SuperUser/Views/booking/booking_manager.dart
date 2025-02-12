@@ -1379,7 +1379,7 @@ class _BookingManagerState extends State<BookingManager> {
   </head>
 
   <body>
-    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+    <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
   </body>
 </html>
 ''';

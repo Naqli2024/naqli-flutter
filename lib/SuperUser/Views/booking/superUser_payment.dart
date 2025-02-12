@@ -857,69 +857,6 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
-    String htmlContent = '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Status</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            text-align: center;
-            padding: 30px;
-        }
-
-        .loading-spinner {
-            border: 8px solid #BCBCBC;
-            border-top: 8px solid #4caf50;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Processing...</h1>
-        <div class="loading-spinner"></div>
-        <p>Please wait... Loading your payment results.</p>
-    </div>
-
-    <script>
-        setTimeout(() => {
-            console.log("Posting message: NavigateToFlutter");
-            window.parent.postMessage("NavigateToFlutter", "*");
-            if (window.NavigateToFlutter) {
-                window.NavigateToFlutter.postMessage('NavigateToFlutter');
-            }
-        }, 5000);
-    </script>
-</body>
-</html>
-  ''';
 
     final String visaHtml = '''
 <!DOCTYPE html>
@@ -1001,7 +938,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
   </head>
 
   <body>
-    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+    <form action="https://naqlee.com/payment/results" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
   </body>
 </html>
 ''';

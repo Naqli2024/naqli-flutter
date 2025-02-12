@@ -1211,7 +1211,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
   </head>
 
   <body>
-    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+    <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
   </body>
 </html>
 ''';

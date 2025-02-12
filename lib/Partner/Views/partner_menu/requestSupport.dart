@@ -91,7 +91,7 @@ class _RequestSupportState extends State<RequestSupport> {
                       ),
                       children: [
                         TextSpan(
-                          text: "naqlee45@gmail.com",
+                          text: "sales@naqlee.com",
                           style: TextStyle(
                             fontSize: viewUtil.isTablet? 22 :17,
                             color: Colors.blue,
@@ -99,7 +99,7 @@ class _RequestSupportState extends State<RequestSupport> {
                           recognizer: TapGestureRecognizer()..onTap = () {
                             final Uri emailLaunchUri = Uri(
                               scheme: 'mailto',
-                              path: 'naqlee45@gmail.com',
+                              path: 'sales@naqlee.com',
                               query: 'subject=Support&body=Hello, I have a question.',
                             );
                           },

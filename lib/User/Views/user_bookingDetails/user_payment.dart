@@ -7,7 +7,6 @@ import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -684,7 +683,7 @@ class _PaymentState extends State<Payment> {
             </head>
           
             <body>
-              <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+              <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
             </body>
           </html>
           ''';

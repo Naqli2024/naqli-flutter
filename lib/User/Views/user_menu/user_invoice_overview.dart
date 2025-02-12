@@ -425,7 +425,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: PrettyQr(
-                                      data: 'http://localhost:4200/home/user/invoice-data?InvoiceId=${widget.invoiceId}&InvoiceDate=${formatDateFromInvoiceId(widget.invoiceId)}&CustomerName=${'${userData.firstName} ${userData.lastName}'}&PaymentAmount=${widget.paymentAmount.toInt()}&Address=${userData.address1}&bookingId=${widget.bookingId}&unitType=${widget.unitType}&partnerName=${partnerData?[0]['partnerName']}&paymentType=${widget.paymentType}',
+                                      data: 'https://naqlee.com/home/user/invoice-data?InvoiceId=${widget.invoiceId}&InvoiceDate=${formatDateFromInvoiceId(widget.invoiceId)}&CustomerName=${'${userData.firstName} ${userData.lastName}'}&PaymentAmount=${widget.paymentAmount.toInt()}&Address=${userData.address1}&bookingId=${widget.bookingId}&unitType=${widget.unitType}&partnerName=${partnerData?[0]['partnerName']}&paymentType=${widget.paymentType}',
                                       size: viewUtil.isTablet ?100:80,
                                       errorCorrectLevel: QrErrorCorrectLevel.M,
                                       roundEdges: true,

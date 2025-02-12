@@ -13,6 +13,7 @@ import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
+import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
@@ -41,6 +42,7 @@ class SuperUserHomePage extends StatefulWidget {
 class _SuperUserHomePageState extends State<SuperUserHomePage> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final SuperUserServices superUserServices = SuperUserServices();
+  final UserService userService = UserService();
   int totalBookingsCount = 0;
   int runningBookingsCount = 0;
   int completedBookingsCount = 0;
@@ -289,6 +291,16 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                           id: widget.id,
                           email: widget.email
                       )));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.person_remove_alt_1_outlined,color: Colors.red,size: 30,),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 7),
+                  child: Text('Delete Account'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
+                ),
+                onTap: () {
+                  showDeleteAccountDialog();
                 },
               ),
               ListTile(
@@ -958,6 +970,66 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
           onTabTapped: _onTabTapped,
         ),
       ),
+    );
+  }
+
+  void showDeleteAccountDialog() {
+    ViewUtil viewUtil = ViewUtil(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.all(20),
+            content: Container(
+              width: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.width * 0.6
+                  : MediaQuery.of(context).size.width,
+              height: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.height * 0.1
+                  : MediaQuery.of(context).size.height * 0.1,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: 30),
+                    child: Text(
+                      'Are you sure you want to delete this account?'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('yes'.tr(),
+                  style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
+                onPressed: () async {
+                  await userService.deleteUserAccount(context, widget.token, widget.id);
+                  await clearUserData();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserLogin()),
+                  );
+                },
+              ),
+              TextButton(
+                child: Text('no'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

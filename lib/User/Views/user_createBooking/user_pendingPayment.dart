@@ -13,7 +13,6 @@ import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -93,150 +92,6 @@ class _PendingPaymentState extends State<PendingPayment> {
     fetchPartnerData();
     fetchAndSetBookingDetails();
     super.initState();
-  }
-
-  Future<void> initiateStripePayment(
-      BuildContext context,
-      String status,
-      String bookingId,
-      int amount,
-      String partnerId,
-      ) async {
-    try {
-      var paymentIntent = await createPaymentIntent(
-        amount,
-        'INR',
-      );
-
-      await Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: paymentIntent['client_secret'],
-          billingDetails: BillingDetails(
-            name: 'YOUR NAME',
-            email: 'YOUREMAIL@gmail.com',
-            phone: 'YOUR PHONE',
-            address: Address(
-              city: 'YOUR CITY',
-              country: 'YOUR COUNTRY',
-              line1: 'YOUR ADDRESS LINE 1',
-              line2: 'YOUR ADDRESS LINE 2',
-              postalCode: '',
-              state: 'YOUR STATE',
-            ),
-          ),
-          style: ThemeMode.dark,
-          merchantDisplayName: 'Your Merchant Name',
-        ),
-      );
-
-      await Stripe.instance.presentPaymentSheet();
-
-      Fluttertoast.showToast(msg: 'Payment successfully completed'.tr());
-      await userService.updatePayment(
-        widget.token,
-        amount,
-        'Completed',
-        partnerId,
-        bookingId,
-        zeroQuotePrice,
-        zeroQuotePrice,
-      );
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SuccessScreen(
-            id: widget.id,
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            token: widget.token,
-            Image: 'assets/payment_success.svg',
-            title: 'Thank you!'.tr(),
-            subTitle: 'Your Payment was successful'.tr(),
-          ),
-        ),
-      );
-
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PaymentCompleted(
-              firstName: widget.firstName,
-              lastName: widget.lastName,
-              token: widget.token,
-              id: widget.id,
-              selectedType: widget.selectedType,
-              unit: widget.unit,
-              load: widget.load,
-              bookingId: widget.bookingId,
-              unitType: widget.unitType,
-              dropPoints: widget.dropPoints,
-              pickup: widget.pickup,
-              cityName: widget.cityName,
-              address: widget.address,
-              zipCode: widget.zipCode,
-              unitTypeName: widget.unitTypeName,
-              partnerId: widget.partnerId,
-              size: widget.size,
-              bookingStatus: widget.bookingStatus,
-              email: widget.email,
-            ),
-          ),
-        );
-      });
-
-    } catch (e) {
-      if (e is StripeException) {
-        Fluttertoast.showToast(
-          msg: 'Error from Stripe: ${e.error.localizedMessage}',
-        );
-      } else {
-        Fluttertoast.showToast(
-          msg: 'Unforeseen error: $e',
-        );
-      }
-    }
-  }
-
-  Future<Map<String, dynamic>> createPaymentIntent(
-      int amount,
-      String currency,
-      ) async {
-    try {
-      final calculatedAmount = calculateAmount(amount);
-
-      Map<String, dynamic> body = {
-        'amount': calculatedAmount,
-        'currency': currency,
-      };
-
-      final response = await http.post(
-        Uri.parse('https://api.stripe.com/v1/payment_intents'),
-        headers: {
-          'Authorization': 'Bearer ${dotenv.env['STRIPE_SECRET']}',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body,
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to create payment intent: ${response.body}');
-      }
-
-      return json.decode(response.body);
-    } catch (err) {
-      throw Exception('Error creating payment intent: $err');
-    }
-  }
-
-  String calculateAmount(int amount) {
-    try {
-      final intAmount = amount * 100;
-      return intAmount.toString();
-    } catch (e) {
-      throw Exception('Invalid amount format: $amount');
-    }
   }
 
   Future<void> fetchPartnerData() async {
@@ -1204,7 +1059,7 @@ class _PendingPaymentState extends State<PendingPayment> {
             </head>
           
             <body>
-              <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+              <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
             </body>
           </html>
           ''';

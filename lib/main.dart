@@ -16,14 +16,12 @@ import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'dart:ui' as ui;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {

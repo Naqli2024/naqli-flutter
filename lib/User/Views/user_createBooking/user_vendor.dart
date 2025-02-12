@@ -24,12 +24,8 @@ import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
 import 'dart:ui' as ui;
 import 'package:permission_handler/permission_handler.dart'as permissionHandler;
-// import 'package:permission_handler/permission_handler.dart';
-import 'package:stripe_platform_interface/src/models/payment_methods.dart'
-    as stripe;
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -1838,7 +1834,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
   </head>
 
   <body>
-    <form action="https://naqlimobilepaymentresult.onrender.com/" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+    <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
   </body>
 </html>
 ''';

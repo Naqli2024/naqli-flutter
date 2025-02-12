@@ -11,6 +11,7 @@ import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,6 +26,9 @@ class UserHomePage extends StatefulWidget {
 
 class _UserHomePageState extends State<UserHomePage> {
   final CommonWidgets commonWidgets = CommonWidgets();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController mobileNoController = TextEditingController();
+  final TextEditingController emailIdController = TextEditingController();
   final List<Map<String, String>> cardData = [
     {'title': 'Vehicle', 'asset': 'assets/vehicle.svg'},
     {'title': 'Bus', 'asset': 'assets/bus.png'},
@@ -440,98 +444,161 @@ class _UserHomePageState extends State<UserHomePage> {
       context: context,
       isScrollControlled: true,
       builder: (BuildContext context) {
-        return Directionality(
-          textDirection: ui.TextDirection.ltr,
-          child: Container(
-            width: MediaQuery.sizeOf(context).width,
-            child: DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.70,
-              minChildSize: 0,
-              maxChildSize: 0.75,
-              builder: (BuildContext context, ScrollController scrollController) {
-                return Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(16.0),
-                  width: MediaQuery.sizeOf(context).width,
-                  child: Stack(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'how_may_we_assist_you'.tr(),
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet ? 25 : 16, fontWeight: FontWeight.bold),
+        return StatefulBuilder(
+          builder: (BuildContext context,StateSetter setState){
+            return Directionality(
+              textDirection: ui.TextDirection.ltr,
+              child: Container(
+                width: MediaQuery.sizeOf(context).width,
+                child: DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: 0.90,
+                  minChildSize: 0,
+                  maxChildSize: 0.95,
+                  builder: (BuildContext context, ScrollController scrollController) {
+                    return Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(16.0),
+                      width: MediaQuery.sizeOf(context).width,
+                      child: Stack(
+                        children: [
+                          SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Center(
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: 30),
+                                    child: Card(
+                                      shape:RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        side: const BorderSide(
+                                          color: Color(0xff707070),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      color: Colors.white,
+                                      shadowColor: Colors.black,
+                                      elevation: 3.0,
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 20,top: 20),
+                                            child: Text('Contact Us For Estimate Details'.tr(),
+                                              style: TextStyle(fontSize: viewUtil.isTablet? 25 : 20,fontWeight: FontWeight.w500),),
+                                          ),
+                                          estimateTextField('Name'.tr(),nameController),
+                                          estimateTextField('Mobile no'.tr(),mobileNoController),
+                                          estimateTextField('Email Id'.tr(),emailIdController),
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 30),
+                                            child: SizedBox(
+                                              height: viewUtil.isTablet
+                                                  ? MediaQuery.of(context).size.height * 0.06
+                                                  : MediaQuery.of(context).size.height * 0.07,
+                                              width: MediaQuery.of(context).size.width * 0.5,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(0xff0022CC),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                  ),
+                                                ),
+                                                onPressed: () async{
+                                                  await userService.postGetAnEstimate(
+                                                    context,
+                                                    name:nameController.text,
+                                                    email:emailIdController.text,
+                                                    mobile: mobileNoController.text
+                                                  );
+                                                },
+                                                child: Text(
+                                                  'Submit'.tr(),
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: viewUtil.isTablet ?23 :20,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20,bottom: 20),
+                                  child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text('Get an estimate'.tr(),
+                                          style: TextStyle(fontSize: viewUtil.isTablet? 25 : 20,fontWeight: FontWeight.w500))),
+                                ),
+                                Text('Naqlee is an online portal that specializes in logistics, machinery rentals, and transportation services. It connects businesses and individuals to freight and machinery services, allowing for efficient shipping and delivery.'.tr()),
+                                Padding(
+                                  padding: EdgeInsets.only(top: 20,bottom: 20),
+                                  child: Text("The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.".tr()),
+                                )
+                              ],
+                            ),
                           ),
-                          Text('please_select_service'.tr(),
-                          style: TextStyle(
-                            fontSize: viewUtil.isTablet ? 20 : 16),
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              controller: scrollController,
-                              itemCount: cardData.length,
-                              itemBuilder: (context, index) {
-                                final item = cardData[index];
-                                return bottomCard(
-                                    item['asset']!, item['title']!.tr());
+                          Positioned(
+                            top: -15,
+                            right: -10,
+                            child: IconButton(
+                              alignment: Alignment.topRight,
+                              onPressed: () {
+                                Navigator.pop(context);
                               },
+                              icon: Icon(FontAwesomeIcons.multiply,color: Colors.red,),
                             ),
                           ),
                         ],
                       ),
-                      Positioned(
-                        top: -15,
-                        right: -10,
-                        child: IconButton(
-                          alignment: Alignment.topRight,
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: Icon(FontAwesomeIcons.multiply),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget bottomCard(String imagePath, String title) {
+  Widget estimateTextField (
+    String label,
+    TextEditingController controller,
+    ) {
     ViewUtil viewUtil = ViewUtil(context);
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Card(
-        elevation: 5,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0), // Rounded corners
-          side: const BorderSide(
-            color: Color(0xffE0E0E0), // Border color
-            width: 1, // Border width
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+          alignment: Alignment.topLeft,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: viewUtil.isTablet ?20 :15,
+              color: Color(0xff707070),
+            ),
           ),
         ),
-        child: Row(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: imagePath.endsWith('.svg')
-                  ? SvgPicture.asset(imagePath, width: viewUtil.isTablet ? 130:90, height: viewUtil.isTablet ? 90:70)
-                  : Image.asset(imagePath, width: viewUtil.isTablet ? 130:100, height: viewUtil.isTablet ? 90:80),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC), width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            Padding(
-              padding: EdgeInsets.only(left: 50),
-              child: Text(title, style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 17)),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
+
 }

@@ -1278,5 +1278,75 @@ class UserService{
     }
   }
 
+  Future<void> postGetAnEstimate(context,{
+    required String name,
+    required String email,
+    required String mobile,
+  }) async {
+    try{
+      final url = Uri.parse('${baseUrl}get-an-estimate');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'mobile': mobile
+        })
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final message = responseBody['message'] ?? 'Send Successfully';
+        commonWidgets.showToast(message);
+      }  else {
+          final message = responseBody['message'] ?? 'Failed to send';
+         commonWidgets.showToast(message);
+        }
+    }on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred,Please try again.')),
+      );
+    }
+  }
+
+  Future<void> deleteUserAccount(context,String token,String userId) async {
+    final String url = '${baseUrl}deleteUser';
+
+    try {
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+          body: jsonEncode({
+            'userId': userId,
+          })
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? responseBody;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } else {
+        final responseBody = jsonDecode(response.body);
+        final message = responseBody['message'] ?? 'Please try again';
+        commonWidgets.showToast(message);
+      }
+    } on SocketException {
+      commonWidgets.showToast('No Internet connection');
+    } catch (e) {
+      commonWidgets.showToast('An error occurred,Please try again.');
+    }
+  }
+
 
 }
