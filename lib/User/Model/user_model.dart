@@ -1,4 +1,4 @@
-class Vehicle {
+/*class Vehicle {
   final String name;
   final List<VehicleType> types;
 
@@ -49,7 +49,63 @@ class LoadType {
       load: json['load'],
     );
   }
+}*/
+
+
+class Vehicle {
+  final String name;
+  final String unitType;
+  final List<VehicleType> types;
+
+  Vehicle({required this.name, required this.unitType, required this.types});
+
+  factory Vehicle.fromJson(Map<String, dynamic> json) {
+    return Vehicle(
+      name: json['name'],
+      unitType: json['unitType'],
+      types: (json['type'] as List<dynamic>)
+          .map((typeJson) => VehicleType.fromJson(typeJson))
+          .toList(),
+    );
+  }
 }
+
+class VehicleType {
+  final String typeName;
+  final String scale;
+  final String typeImage;
+  final List<LoadType> typeOfLoad;
+
+  VehicleType({
+    required this.typeName,
+    required this.scale,
+    required this.typeImage,
+    required this.typeOfLoad,
+  });
+
+  factory VehicleType.fromJson(Map<String, dynamic> json) {
+    return VehicleType(
+      typeName: json['typeName'],
+      scale: json['scale'] ?? '',
+      typeImage: json['typeImage'],
+      typeOfLoad: (json['typeOfLoad'] as List<dynamic>?)
+          ?.map((loadJson) => LoadType.fromJson(loadJson))
+          .toList() ??
+          [],
+    );
+  }
+}
+
+class LoadType {
+  final String load;
+
+  LoadType({required this.load});
+
+  factory LoadType.fromJson(Map<String, dynamic> json) {
+    return LoadType(load: json['load']);
+  }
+}
+
 
 class Buses {
   final String name;

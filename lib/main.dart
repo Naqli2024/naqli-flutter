@@ -20,6 +20,7 @@ import 'dart:ui' as ui;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top]);
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: ".env");
   if (!kIsWeb &&
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ViewUtil viewUtil = ViewUtil(context);
+
     return MaterialApp(
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
@@ -111,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
               final token = partnerData['token'] ?? '';
               final email = partnerData['email'] ?? '';
               if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
-                print(token);
                 return BookingDetails(
                   partnerName: partnerName,
                   partnerId: partnerId,
@@ -139,7 +140,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   final token = driverData['token'] ?? '';
                   final driverPartnerId = driverData['partnerId'] ?? '';
                   if (id.isNotEmpty && token.isNotEmpty && driverPartnerId.isNotEmpty) {
-                    print(token);
                     return DriverHomePage(
                       firstName: firstName,
                       lastName: lastName,
@@ -169,7 +169,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       final accountType = userData['accountType'] ?? '';
                       if(accountType == 'Single User') {
                         if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
-                          print(token);
                           return UserType(
                             firstName: firstName,
                             lastName: lastName,

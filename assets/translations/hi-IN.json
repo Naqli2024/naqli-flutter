@@ -462,5 +462,20 @@
   "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.":
   "'अनुरोध पर विशेष उद्धरण' सुविधा उपभोक्ताओं को उनके विशिष्ट परिवहन आवश्यकताओं के आधार पर व्यक्तिगत मूल्य निर्धारण प्रदान करती है, जिसके परिणामस्वरूप निश्चित दरों के बजाय अनुकूलित समाधान मिलते हैं। यह कार्यक्षमता उन फर्मों के लिए लाभदायक है जो व्यक्तिगत लॉजिस्टिक सेवाएँ चाहते हैं।",
   "Are you sure you want to delete this account?": "क्या आप वाकई इस खाते को हटाना चाहते हैं?",
-  "Delete Account": "खाता हटाएं"
+  "Delete Account": "खाता हटाएं",
+  "Bank Details": "बैंक विवरण",
+  "Company": "कंपनी",
+  "IBAN": "आईबीएएन",
+  "Region": "क्षेत्र",
+  "Bank Name": "बैंक का नाम",
+  "Legal Name": "कानूनी नाम",
+  "Phone No": "फोन नंबर",
+  "Address": "पता",
+  "Zipcode": "पिन कोड",
+  "Company Type": "कंपनी का प्रकार",
+  "Company Id No": "कंपनी आईडी नंबर",
+  "Company Details": "कंपनी का विवरण",
+  "Password": "पासवर्ड",
+  "Driver Login": "ड्राइवर लॉगिन",
+  "Delete Operator": "ऑपरेटर हटाएं"
 }

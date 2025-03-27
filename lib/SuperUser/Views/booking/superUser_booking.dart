@@ -1672,19 +1672,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                               child: Directionality(
                                 textDirection: ui.TextDirection.ltr,
                                 child: Container(
+                                  height: 50,
                                   width: double.infinity,
                                   child: PopupMenuButton<String>(
                                     elevation: 5,
                                     constraints: BoxConstraints(
-                                      minWidth:viewUtil.isTablet
-                                          ?MediaQuery.sizeOf(context).width * 0.92: 350,
-                                      maxWidth:viewUtil.isTablet
-                                          ?MediaQuery.sizeOf(context).width * 0.92: 350,
+                                      minWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
+                                      maxWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    offset:  Offset(0, 55),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    offset: Offset(0, 55),
                                     padding: EdgeInsets.zero,
                                     color: Colors.white,
                                     onSelected: (newValue) {
@@ -1692,92 +1689,50 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                         _selectedSubClassification[vehicle.name] = newValue;
                                         selectedTypeName = newValue;
                                         selectedName = vehicle.name;
-                                        scale = vehicle.types
-                                            ?.firstWhere((type) => type.typeName == newValue)
-                                            .scale;
-                                        typeImage = vehicle.types
-                                            ?.firstWhere((type) => type.typeName == newValue)
-                                            .typeImage;
+                                        var selectedTypeObj = vehicle.types?.firstWhere((type) => type.typeName == newValue);
+                                        scale = selectedTypeObj?.scale;
+                                        typeImage = selectedTypeObj?.typeImage;
                                       });
                                     },
                                     itemBuilder: (context) {
-                                      return vehicle.types?.asMap().entries.map((entry) {
-                                        int index = entry.key;
-                                        var type = entry.value;
-                                        typeCount = index + 1;
+                                      return vehicle.types?.map((type) {
                                         return PopupMenuItem<String>(
                                           value: type.typeName,
-                                          child: Directionality(
-                                            textDirection: ui.TextDirection.ltr,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(15),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          child: Row(
+                                            children: [
+                                              SizedBox(
+                                                child: Image.asset(
+                                                  type.typeImage,
+                                                  width: MediaQuery.of(context).size.width * 0.15,
+                                                  height: MediaQuery.of(context).size.height * 0.06,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 15),
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Expanded(
-                                                    flex: 1,
-                                                    child: FutureBuilder(
-                                                      future: _loadSvg(type.typeImage),
-                                                      builder: (context, snapshot) {
-                                                        if (snapshot.connectionState == ConnectionState.waiting) {
-                                                          return const SizedBox(
-                                                            width: 24,
-                                                            height: 24,
-                                                            child: Icon(Icons.rotate_right),
-                                                          );
-                                                        } else if (snapshot.hasError) {
-                                                          return const Icon(Icons.error);
-                                                        } else {
-                                                          return SvgPicture.asset(
-                                                            type.typeImage,
-                                                            width: viewUtil.isTablet?50: 40,
-                                                            height: viewUtil.isTablet?40: 30,
-                                                          );
-                                                        }
-                                                      },
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 20),
-                                                  Expanded(
-                                                    flex: 3,
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(type.typeName.tr(),
-                                                            style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
-                                                        Text(type.scale,
-                                                            style: TextStyle(fontSize: viewUtil.isTablet?20: 14)),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                  Text(type.typeName.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16)),
+                                                  Text(type.scale, style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                                                 ],
                                               ),
-                                            ),
+                                            ],
                                           ),
                                         );
-                                      }).toList() ??
-                                          [];
+                                      }).toList() ?? [];
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                      width: double.infinity,
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              selectedType.isEmpty
-                                                  ? 'select'.tr()
-                                                  : selectedType.isNotEmpty
-                                                  ? selectedType.tr()
-                                                  : vehicle.types?.isNotEmpty == true
-                                                  ? vehicle.types!.first.typeName
-                                                  : 'no_data'.tr(),
-                                              style: TextStyle(fontSize: viewUtil.isTablet?20: 16),
+                                              selectedType.isEmpty ? 'select'.tr() : selectedType.tr(),
+                                              style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                                             ),
                                           ),
                                           const SizedBox(width: 10),
-                                          Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?25: 20),
+                                          Icon(Icons.arrow_drop_down, size: viewUtil.isTablet ? 25 : 20),
                                         ],
                                       ),
                                     ),
@@ -1981,6 +1936,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             Expanded(
                               flex: 7,
                               child: Container(
+                                height: 50,
                                 width: double.infinity,
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
@@ -2016,36 +1972,17 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                           child: Container(
                                             padding: const EdgeInsets.all(15),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
-                                                Expanded(
-                                                  child: FutureBuilder(
-                                                    future: _loadSvg(type.typeImage),
-                                                    builder: (context, snapshot) {
-                                                      if (snapshot.connectionState == ConnectionState.waiting) {
-                                                        return const SizedBox(
-                                                          width: 24,
-                                                          height: 24,
-                                                          child:Icon(Icons.rotate_right),
-                                                        );
-                                                      } else if (snapshot.hasError) {
-                                                        return const Icon(Icons.error);
-                                                      } else {
-                                                        return SvgPicture.asset(
-                                                          type.typeImage,
-                                                          width: viewUtil.isTablet?50: 40,
-                                                          height: viewUtil.isTablet?40: 30,
-                                                        );
-                                                      }
-                                                    },
+                                                SizedBox(
+                                                  child: Image.asset(
+                                                    type.typeImage,
+                                                    width: MediaQuery.of(context).size.width * 0.15,
+                                                    height: MediaQuery.of(context).size.height * 0.04,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 20),
-                                                Expanded(
-                                                  flex: 3,
-                                                  child: Text(type.typeName.tr(),
-                                                      style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
-                                                ),
+                                                const SizedBox(width: 15),
+                                                Text(type.typeName.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
                                               ],
                                             ),
                                           ),
@@ -2698,36 +2635,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectTime(context),
-                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2741,36 +2683,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectToTime(context),
-                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectToTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectToTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectToTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectToTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2784,36 +2731,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectDate(context),
-                  icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectDate(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
@@ -2902,36 +2854,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectTime(context),
-                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2945,36 +2902,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectToTime(context),
-                  icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectToTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectToTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectToTime(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectToTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Container(
@@ -2988,36 +2950,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xffBCBCBC)),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                IconButton(
-                  onPressed: () => _selectDate(context),
-                  icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                ),
-                Container(
-                  height: viewUtil.isTablet ?60:50,
-                  child: const VerticalDivider(
-                    color: Colors.grey,
-                    thickness: 1.2,
+          GestureDetector(
+            onTap: (){
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
                   ),
-                ),
-                GestureDetector(
-                  onTap: (){
-                    _selectDate(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                  Container(
+                    height: viewUtil.isTablet ?60:50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
                   ),
-                ),
-              ],
+                  GestureDetector(
+                    onTap: (){
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
@@ -4081,44 +4048,60 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8.0),
             ),
-            child: PopupMenuButton<String>(
-              onSelected: (String newValue) {
-                widget.onLoadChanged(newValue);
-              },
-              elevation: 5,
-              color: Colors.white,
-              constraints: BoxConstraints.tightFor(
-                  width: viewUtil.isTablet
-                      ?MediaQuery.sizeOf(context).width * 0.92 :350),
-              offset: const Offset(0, -280),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    (widget.selectedLoad?.isNotEmpty ?? false)
-                        ? widget.selectedLoad!
-                        : 'loadType'.tr(),
-                    style: TextStyle(fontSize: viewUtil.isTablet ?20:16),
-                  ),
-                  Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?30: 26),
-                ],
-              ),
-              itemBuilder: (BuildContext context) {
-                return loadItems.map((LoadType load) {
-                  return PopupMenuItem<String>(
-                    value: load.load.tr(),
-                    child: Directionality(
-                      textDirection: ui.TextDirection.ltr,
-                      child: Row(
-                        children: [
-                          Text(load.load.tr(),
-                              style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                        ],
-                      ),
+            child: Container(
+              height: 30,
+              child: PopupMenuButton<String>(
+                position: PopupMenuPosition.under,
+                onSelected: (String newValue) {
+                  widget.onLoadChanged(newValue);
+                },
+                elevation: 5,
+                color: Colors.white,
+                constraints: BoxConstraints.tightFor(
+                    width: viewUtil.isTablet
+                        ?MediaQuery.sizeOf(context).width * 0.92 :350),
+                // offset: const Offset(0, -280),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      (widget.selectedLoad?.isNotEmpty ?? false)
+                          ? widget.selectedLoad!
+                          : 'loadType'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet ?20:16),
                     ),
-                  );
-                }).toList();
-              },
+                    Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?30: 26),
+                  ],
+                ),
+                itemBuilder: (BuildContext context) {
+                  if (loadItems.isEmpty) {
+                    return [
+                      PopupMenuItem<String>(
+                        value: null,
+                        enabled: false,
+                        child: Text(
+                          'No Load Type Available',
+                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16,color: Colors.black),
+                        ),
+                      ),
+                    ];
+                  }
+                  return loadItems.map((LoadType load) {
+                    return PopupMenuItem<String>(
+                      value: load.load.tr(),
+                      child: Directionality(
+                        textDirection: ui.TextDirection.ltr,
+                        child: Row(
+                          children: [
+                            Text(load.load.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+              ),
             ),
           );
         } else {

@@ -1,0 +1,2 @@
+D:/naqli-flutter/android/app/.cxx/RelWithDebInfo/6j1t162u/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/naqli-flutter/android/app/.cxx/RelWithDebInfo/6j1t162u/armeabi-v7a/CMakeFiles/rebuild_cache.dir

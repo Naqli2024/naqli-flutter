@@ -36,7 +36,8 @@ class CustomerNotified extends StatefulWidget {
   final String quotePrice;
   final String userName;
   final String partnerId;
-  const CustomerNotified({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.bookingId, required this.pickUp, required this.dropPoints, required this.quotePrice, required this.userName, required this.partnerId});
+  final String contactNo;
+  const CustomerNotified({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.bookingId, required this.pickUp, required this.dropPoints, required this.quotePrice, required this.userName, required this.partnerId, required this.contactNo});
 
   @override
   State<CustomerNotified> createState() => _CustomerNotifiedState();
@@ -155,12 +156,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
   }
 
-  @override
-  void dispose() {
-    positionStream?.cancel();
-    _locationCheckTimer?.cancel();
-    super.dispose();
-  }
+
 
   Future<void> _updateRealTimeDataToDropPoints(LatLng currentLatLng) async {
     try {
@@ -241,7 +237,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
   }
-
 
   void _initLocationListener() async {
     location_package.Location location = location_package.Location();
@@ -410,23 +405,16 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
 
   Future<void> recenterMap() async {
     try {
-      isMoveClicked = true;
       Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
       double heading = currentPosition.heading;
 
-      // Update camera position
-      await mapController?.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: currentLatLng,
-          zoom: 20,
-          tilt: 20,
-          bearing: heading,
-        ),
-      ));
       if (pickupLatLng != null) {
-        final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
+        LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
+
+        // Fetch route points
         List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
+
         setState(() {
           polylines.add(Polyline(
             polylineId: PolylineId('route'),
@@ -435,6 +423,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
             width: 5,
           ));
         });
+
         if (routePoints.isNotEmpty) {
           LatLngBounds bounds = LatLngBounds(
             southwest: LatLng(
@@ -446,10 +435,20 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
               routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
             ),
           );
-          // mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50)); // 50 is the padding
+
+          // Animate camera to show the entire route
+          await mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)); // Adjust padding if needed
         }
       } else {
-
+        // If no pickup location, just focus on the current location
+        await mapController?.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: currentLatLng,
+            zoom: 18,
+            tilt: 20,
+            bearing: heading,
+          ),
+        ));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
@@ -511,6 +510,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     double distanceInMeters = position.accuracy;
     return (distanceInMeters * 3.28084).toStringAsFixed(0);
   }
+
   double formattedDistance(double distanceInMeters) {
     return distanceInMeters * 3.28084; // Convert meters to feet and return as double
   }
@@ -522,7 +522,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     // Therefore, 1 kilometer = 3280.84 feet
     // Convert kilometers to feet (1 km = 3280.84 feet)
     double distanceInFeet = distanceToDropInKm * 3280.84;
-    if (distanceInFeet <= 30 && !hasNavigated) {
+    print(distanceInFeet);
+    if (distanceInFeet <= 1850/*60*/ && !hasNavigated) {
       hasNavigated = true;
 
       if (mounted) {
@@ -568,6 +569,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       ),
                       markers: Set<Marker>.of(markers),
                       polylines: Set<Polyline>.of(polylines),
+                      compassEnabled: false,
                       myLocationEnabled: false,
                       myLocationButtonEnabled: true,
                       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
@@ -577,47 +579,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       },
                     ),),
                   Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: viewUtil.isTablet ? 30 : 20,
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: (){
-                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                          firstName: widget.firstName,
-                                          lastName: widget.lastName,
-                                          token: widget.token,
-                                          id: widget.id,
-                                          partnerId: widget.partnerId,
-                                          mode: 'online')));
-                                    },
-                                    icon: Icon(FontAwesomeIcons.multiply,
-                                        size: viewUtil.isTablet?30:20)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                  Positioned(
-                    top: MediaQuery.sizeOf(context).height * 0.1,
+                    top: MediaQuery.sizeOf(context).height * 0.02,
                     child: isAtDropLocation
                       ? Container(
                       margin: EdgeInsets.only(left: 20),
@@ -677,8 +639,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                         children: [
                                           SvgPicture.asset('assets/upArrow.svg'),
                                           Text(
-                                            '$feet',
-                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16, color: Color(0xff676565)),
+                                            feet == null?'0 ft':'$feet',
+                                            style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:18, color: Color(0xff676565)),
                                           ),
                                         ],
                                       ),
@@ -687,46 +649,20 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(nearbyPlaces[currentIndex]['name'] ?? '',
+                                          Text("DropPoint Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text(widget.dropPoints.join(', '),textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                          /***Commented for removing Nearby location***/
+                                         /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
                                             style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                                           Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
                                           Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
-                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),*/
                                         ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            Divider(
-                              indent: 15,
-                              endIndent: 15,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: Color(0xff6069FF),
-                                        size: viewUtil.isTablet?30:20
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Column(
-                                      children: [
-                                        Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         )
                             : Padding(
@@ -743,7 +679,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('Fetching nearby Location...',
+                                child: Text('Fetching DropPoint Location...',
                                     style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                               ),
                             ],
@@ -752,50 +688,314 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       ),
                     )
                   ),
-          if (!isAtDropLocation)
-            Positioned(
-        bottom: MediaQuery.sizeOf(context).height * 0.27,
-        child: GestureDetector(
-          onTap: recenterMap,
-          child: Container(
-            width: MediaQuery.sizeOf(context).width,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 5),
+                  Visibility(
+                    visible: isAtDropLocation,
+                    child: Container(
+                      width: MediaQuery.sizeOf(context).width * 0.93,
+                      child: Card(
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      timeToDrop ?? '',
+                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SvgPicture.asset('assets/person.svg'),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      dropPointsDistance.isNotEmpty
+                                          ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
+                                          : 'Calculating...'.tr(),
+                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Divider(
+                                indent: 15,
+                                endIndent: 15,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  widget.userName,
+                                  style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 15, top: 20),
+                                child: SizedBox(
+                                  height: MediaQuery.of(context).size.height * 0.07,
+                                  width: MediaQuery.of(context).size.width * 0.62,
+                                  child: SlideAction(
+                                    borderRadius: 12,
+                                    elevation: 0,
+                                    submittedIcon: Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: viewUtil.isTablet?30:26,
+                                    ),
+                                    innerColor: Color(0xff6069FF),
+                                    outerColor: Color(0xff6069FF),
+                                    sliderButtonIcon: AnimatedBuilder(
+                                      animation: _animation,
+                                      builder: (context, child) {
+                                        return Transform.translate(
+                                          offset: Offset(_animation.value, 0),
+                                          child: Icon(
+                                            Icons.arrow_forward_outlined,
+                                            color: Colors.white,
+                                            size: viewUtil.isTablet?30:26,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    text: "Complete Order".tr(),
+                                    textStyle: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: viewUtil.isTablet?26:18,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    onSubmit: () async{
+                                      setState(() {
+                                        isCompleting =true;
+                                      });
+                                      await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          token: widget.token,
+                                          id: widget.id,
+                                          partnerId: widget.partnerId,
+                                          mode: 'online')));
+                                      setState(() {
+                                        isCompleting =false;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!isAtDropLocation)
+                  Visibility(
+          visible: !isMoveClicked,
+          replacement: Positioned(
+              bottom: MediaQuery.sizeOf(context).height * 0.3,
+              right: 20,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
-              border: Border.all(
-                color: Color(0xff6069FF),
-                width: 6,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
+                child: Tooltip(
+                  message: 'Re-centre',
+                  child: CircleAvatar(
+                    radius: viewUtil.isTablet ? 30 : 20,
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                        onPressed: recenterMap,
+                        icon: Icon(Icons.my_location)),
+                  ),
                 ),
-              ),
-              child: CircleAvatar(
-                minRadius: viewUtil.isTablet?55:40,
-                maxRadius: double.maxFinite,
-                backgroundColor: Color(0xff6069FF),
-                child: Text(
-                  'Move'.tr(),
-                  style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?26:20),
+              )),
+          child: Positioned(
+            bottom: MediaQuery.sizeOf(context).height * 0.27,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  isMoveClicked = true;
+                });
+                recenterMap();
+              },
+              child: Container(
+                width: MediaQuery.sizeOf(context).width,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Color(0xff6069FF),
+                    width: 6,
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    minRadius: viewUtil.isTablet ? 55 : 40,
+                    backgroundColor: Color(0xff6069FF),
+                    child: Text(
+                      'Move'.tr(),
+                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-            Positioned(
+                  Visibility(
+                    visible: isMoveClicked,
+                    replacement: Positioned(
+                      bottom: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'Customer Notified'.tr(),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      widget.userName,
+                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        commonWidgets.makePhoneCall(widget.contactNo);
+                                      },
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    child: Positioned(
+                      bottom: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          timeToDrop == null ? 'Calculating...'.tr() : timeToDrop ?? '',
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SvgPicture.asset('assets/person.svg'),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 20),
+                                    child: Text(
+                                      'Dropping of Product'.tr(),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        commonWidgets.makePhoneCall(widget.contactNo);
+                                      },
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+
+
+
+           /* Positioned(
         bottom: 20,
         child: Padding(
           padding: const EdgeInsets.only(left: 15, right: 30),
@@ -834,20 +1034,27 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       ],
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                          Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                        ],
-                      ),
-                    ),
-                    Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: Text(
                         'Dropping of Product'.tr(),
                         style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          commonWidgets.makePhoneCall(widget.contactNo);
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
+                            ),
+                          ],),
                       ),
                     ),
                   ],
@@ -919,7 +1126,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                             animation: _animation,
                             builder: (context, child) {
                               return Transform.translate(
-                                offset: Offset(_animation.value, 0), // Horizontal movement
+                                offset: Offset(_animation.value, 0),
                                 child: Icon(
                                   Icons.arrow_forward_outlined,
                                   color: Colors.white,
@@ -982,13 +1189,20 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                          Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                        ],
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          commonWidgets.makePhoneCall(widget.contactNo);
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
+                            ),
+                          ],),
                       ),
                     ),
                   ],
@@ -997,7 +1211,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
             ),
           ),
         )
-      ),
+      ),*/
                 ]
               ),
             ],
@@ -1006,4 +1220,181 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       ),
     );
   }
+
+
+
+  Widget buildBottomUI() {
+    ViewUtil viewUtil = ViewUtil(context);
+
+    if (!isAtDropLocation) {
+      return Positioned(
+        bottom: MediaQuery.sizeOf(context).height * 0.27,
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              isMoveClicked = true;
+            });
+            recenterMap();
+          },
+          child: Container(
+            width: MediaQuery.sizeOf(context).width,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+              border: Border.all(
+                color: Color(0xff6069FF),
+                width: 6,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                minRadius: viewUtil.isTablet ? 55 : 40,
+                backgroundColor: Color(0xff6069FF),
+                child: Text(
+                  'Move'.tr(),
+                  style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ✅ FIX: Show "Customer Notified" when isMoveClicked is false
+    if (isMoveClicked) {
+      return Positioned(
+        bottom: 20,
+        child: Container(
+          width: MediaQuery.sizeOf(context).width * 0.93,
+          child: Card(
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      'Customer Notified'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      widget.userName,
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        commonWidgets.makePhoneCall(widget.contactNo);
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ✅ FIX: Show "Dropping of Product" only when isMoveClicked is true
+    return Positioned(
+      bottom: 20,
+      child: Container(
+        width: MediaQuery.sizeOf(context).width * 0.93,
+        child: Card(
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        timeToDrop == null ? 'Calculating...'.tr() : timeToDrop ?? '',
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SvgPicture.asset('assets/person.svg'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(),
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    'Dropping of Product'.tr(),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      commonWidgets.makePhoneCall(widget.contactNo);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
 }

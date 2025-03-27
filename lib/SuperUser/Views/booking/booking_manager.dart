@@ -1294,7 +1294,8 @@ class _BookingManagerState extends State<BookingManager> {
     }
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
+
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -1332,39 +1333,24 @@ class _BookingManagerState extends State<BookingManager> {
       .paymentWidgets button:hover {
         background-color: #45a049;
       }
-      #submitButton {
-        display: none;
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 5px;
-      }
-      #submitButton:active {
-        background-color: #45a049;
-      }
     </style>
 
     <script>
-       window['wpwlOptions'] = {
-      billingAddress: {},
-      mandatoryBillingFields: {
-        country: true,
-        state: true,
-        city: true,
-        postcode: true,
-        street1: true,
-        street2: false,
-      },
-    };
+      window['wpwlOptions'] = {
+        billingAddress: {},
+        mandatoryBillingFields: {
+          country: true,
+          state: true,
+          city: true,
+          postcode: true,
+          street1: true,
+          street2: false,
+        },
+      };
 
-      // Function to load the HyperPay payment widget script
       function loadPaymentScript(checkoutId, integrity) {
         const script = document.createElement('script');
-        script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+        script.src = "https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
         script.crossOrigin = 'anonymous';
         script.integrity = integrity;
         script.onload = () => {
@@ -1372,9 +1358,14 @@ class _BookingManagerState extends State<BookingManager> {
         };
         document.body.appendChild(script);
       }
+
       document.addEventListener("DOMContentLoaded", function () {
         loadPaymentScript("${checkOutId}", "${integrity}");
       });
+
+      function sendPaymentStatus(status) {
+        NavigateToFlutter.postMessage(status);
+      }
     </script>
   </head>
 
@@ -1385,6 +1376,62 @@ class _BookingManagerState extends State<BookingManager> {
 ''';
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+
+    WebViewController webViewController = WebViewController()
+      ..setBackgroundColor(Colors.transparent)
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'NavigateToFlutter',
+        onMessageReceived: (JavaScriptMessage message) async {
+          String paymentStatus = message.message;
+          await getPaymentStatus(checkOutId, isMADATapped);
+
+          if (resultCode == "000.000.000") {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
+                  onContinuePressed:() async {
+                    await userService.updatePayment(
+                      widget.token,
+                      amount,
+                      'Completed',
+                      partnerID,
+                      bookingId,
+                      amount*2,
+                      0,
+                    );
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => BookingManager(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email,
+                      ),),
+                    );
+                  },)));
+          } else {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                  paymentStatus: paymentStatus??'',
+                  onRetryPressed:() {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => BookingManager(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email,
+                      ),),
+                    );
+                  },)));
+          }
+        },
+      )
+      ..loadRequest(Uri.dataFromString(
+        isMADATapped ? madaHtml : visaHtml,
+        mimeType: 'text/html',
+        encoding: Encoding.getByName('utf-8'),
+      ));
 
     showDialog(
       context: context,
@@ -1397,70 +1444,13 @@ class _BookingManagerState extends State<BookingManager> {
           backgroundColor: Colors.transparent,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Container(
+            child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.42,
-              child: WebView(
-                backgroundColor: Colors.transparent,
-                initialUrl: Uri.dataFromString(
-                    isMADATapped ? madaHtml : visaHtml,
-                    mimeType: 'text/html',
-                    encoding: Encoding.getByName('utf-8')
-                ).toString(),
-                javascriptMode: JavascriptMode.unrestricted,
-                javascriptChannels: {
-                  JavascriptChannel(
-                    name: 'NavigateToFlutter',
-                    onMessageReceived: (JavascriptMessage message) async {
-                      await getPaymentStatus(checkOutId,isMADATapped);
-                      resultCode == "000.100.110"
-                          ? Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
-                            onContinuePressed:() async {
-                              await userService.updatePayment(
-                                widget.token,
-                                amount,
-                                'Completed',
-                                partnerID,
-                                bookingId,
-                                amount*2,
-                                0,
-                              );
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => BookingManager(
-                                  firstName: widget.firstName,
-                                  lastName: widget.lastName,
-                                  token: widget.token,
-                                  id: widget.id,
-                                  email: widget.email,
-                                ),),
-                              );
-                            },)))
-                          : Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => PaymentFailureScreen(
-                            paymentStatus: paymentStatus??'',
-                            onRetryPressed:() {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => BookingManager(
-                                  firstName: widget.firstName,
-                                  lastName: widget.lastName,
-                                  token: widget.token,
-                                  id: widget.id,
-                                  email: widget.email,
-                                ),),
-                              );
-                            },)));
-                    },
-                  ),
-                },
-                onWebViewCreated: (WebViewController webViewController) {
-                  webViewController.clearCache();
-                },
-              ),
+              child: WebViewWidget(controller: webViewController),
             ),
           ),
         );
       },
     );
   }
-
 }

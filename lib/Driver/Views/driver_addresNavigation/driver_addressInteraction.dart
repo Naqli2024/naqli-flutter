@@ -62,6 +62,7 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
   LatLng currentLatLng = LatLng(37.7749, -122.4194);
   String? firstName;
   String? lastName;
+  String? contactNo;
   List<Map<String, dynamic>> nearbyPlaces = [];
   late StreamSubscription<Position> positionStream;
   int currentIndex = 0;
@@ -660,12 +661,20 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
 
   Future<void> fetchUserName() async {
     try {
-      final fetchedFirstName = await driverService.getUserName(widget.userId, widget.token);
-      setState(() {
-        firstName = fetchedFirstName;
-        lastName = fetchedFirstName;
-        isLoading = false;
-      });
+      final userDetails = await driverService.getUserDetails(widget.userId, widget.token);
+
+      if (userDetails != null) {
+        setState(() {
+          firstName = userDetails['firstName'] ?? 'N/A';
+          lastName = userDetails['lastName'] ?? 'N/A';
+          contactNo = userDetails['contactNo'] ?? 'N/A';
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -924,23 +933,20 @@ class _DriverAddressInteractionState extends State<DriverAddressInteraction> {
                                     style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565)),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 20),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                        Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                                        ),
-                                        Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                        Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: Text('Message'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                                        ),
-                                        Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                        Text('Cancel'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                                      ],
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        commonWidgets.makePhoneCall(contactNo??'');
+                                      },
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
+                                          ),
+                                        ],),
                                     ),
                                   ),
                                 ],

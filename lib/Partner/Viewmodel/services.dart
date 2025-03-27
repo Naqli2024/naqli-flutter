@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Partner/Model/partner_model.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Views/auth/forgotPassword.dart';
@@ -15,8 +16,11 @@ import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:path/path.dart';
+import 'package:http/http.dart' as http;
 
 class AuthService {
   static const String baseUrl = 'https://prod.naqlee.com:443/api/partner/';
@@ -598,21 +602,38 @@ class AuthService {
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
-       final partnerName = partnerData['partnerName'];
-       final mobileNo = partnerData['mobileNo'];
-       final email = partnerData['email'];
-        if (partnerData['bookingRequest'] != null) {
+
+        final partnerName = partnerData['partnerName'] ?? '';
+        final mobileNo = partnerData['mobileNo'] ?? '';
+        final email = partnerData['email'] ?? '';
+        final region = partnerData['region'] ?? '';
+        final city = partnerData['city'] ?? '';
+        final bank = partnerData['bank'] ?? '';
+        final company = partnerData['company'] ?? '';
+        final ibanNumber = partnerData['ibanNumber'] ?? '';
+
+        final bookingIds = <Map<String, dynamic>>[];
+        final companyDetails = (partnerData['companyDetails'] as List<dynamic>?)?.map((company) {
+          return {
+            'companyName': company['companyName'] ?? '',
+            'legalName': company['legalName'] ?? '',
+            'phoneNumber': company['phoneNumber'] ?? '',
+            'address': company['address'] ?? '',
+            'cityName': company['cityName'] ?? '',
+            'zipCode': company['zipCode'] ?? '',
+            'companyType': company['companyType'] ?? '',
+            'companyIdNo': company['companyIdNo'] ?? '',
+          };
+        }).toList() ?? [];
+
+        if (partnerData['bookingRequest'] != null && (partnerData['bookingRequest'] as List).isNotEmpty) {
           final bookingRequests = partnerData['bookingRequest'] as List<dynamic>;
-          final bookingIds = <Map<String, dynamic>>[];
 
           for (var booking in bookingRequests) {
             final bookingId = booking['bookingId']?.toString() ?? 'Unknown ID';
-
-            final quotePrice = booking['quotePrice'] is int
-                ? booking['quotePrice'].toString()
-                : booking['quotePrice'].toString();
-
+            final quotePrice = booking['quotePrice']?.toString() ?? '';
             final paymentStatus = booking['paymentStatus']?.toString() ?? '';
+
             bookingIds.add({
               'bookingId': bookingId,
               'paymentStatus': paymentStatus,
@@ -620,14 +641,31 @@ class AuthService {
               'mobileNo': mobileNo,
               'name': partnerName,
               'email': email,
+              'region': region,
+              'city': city,
+              'bank': bank,
+              'company': company,
+              'ibanNumber': ibanNumber,
+              'companyDetails': companyDetails,
             });
           }
-          return bookingIds;
         } else {
-          return [];
+          // Add partner details even when bookingRequest is empty
+          bookingIds.add({
+            'mobileNo': mobileNo,
+            'name': partnerName,
+            'email': email,
+            'region': region,
+            'city': city,
+            'bank': bank,
+            'company': company,
+            'ibanNumber': ibanNumber,
+            'companyDetails': companyDetails,
+            'bookingRequests': [],
+          });
         }
-      } else if (response.statusCode == 401) {
-        return [];
+
+        return bookingIds;
       } else {
         return [];
       }
@@ -648,7 +686,6 @@ class AuthService {
           'Authorization': 'Bearer $token',
         },
       );
-
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final Map<String, dynamic> data = responseBody['data'] as Map<String, dynamic>;
@@ -952,6 +989,11 @@ class AuthService {
       String emailAddress,
       String password,
       String confirmPassword,
+      String city,
+      String company,
+      String ibanNumber,
+      String region,
+      String bank,
       ) async {
     final String url = 'https://prod.naqlee.com:443/api/partner/edit-partner/$partnerId';
     try {
@@ -964,6 +1006,11 @@ class AuthService {
       request.fields['password'] = password;
       request.fields['confirmPassword'] = confirmPassword;
       request.fields['mobileNo'] = mobileNo;
+      request.fields['city'] = city;
+      request.fields['company'] = company;
+      request.fields['ibanNumber'] = ibanNumber;
+      request.fields['region'] = region;
+      request.fields['bank'] = bank;
 
       if (profileImage != null) {
         request.files.add(
@@ -990,6 +1037,186 @@ class AuthService {
       commonWidgets.showToast('Something went wrong. Please try again');
     }
   }
+
+  Future<void> addCompanyDetails(
+       BuildContext context,
+        String partnerId,
+        String company,
+        String legalName,
+        String phoneNo,
+        String altNo,
+        String address,
+        String city,
+        String zipCode,
+        String companyType,
+        String companyId,
+      ) async {
+    try{
+      final url = Uri.parse('${baseUrl}edit-company-details/$partnerId');
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "companyName": company,
+          "legalName": legalName,
+          "phoneNumber": phoneNo,
+          "address": address,
+          "cityName": city,
+          "zipCode": zipCode,
+          "companyType": companyType,
+          "companyIdNo": companyId
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final message = responseBody['message'] ?? 'Send failed. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } else {
+        final message = responseBody['message'] ?? 'Send failed. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    }on SocketException {
+      commonWidgets.showToast('No Internet connection');
+    } catch (e) {
+      commonWidgets.showToast('Something went wrong,Please try again');
+    }
+  }
+
+  Future<List<Operator>> getOperatorData(String partnerId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://prod.naqlee.com:443/api/partner/$partnerId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final partnerData = responseBody['data'];
+
+        if (partnerData['operators'] != null && (partnerData['operators'] as List).isNotEmpty) {
+          final operators = partnerData['operators'] as List<dynamic>;
+
+          return operators.map((operator) => Operator.fromJson(operator)).toList();
+        } else {
+          return [];
+        }
+      } else {
+        return [];
+      }
+    } on SocketException {
+      commonWidgets.showToast('No Internet connection');
+      return [];
+    } catch (e) {
+      commonWidgets.showToast('Something went wrong,Please try again');
+      return [];
+    }
+  }
+
+
+  Future<void> updateOperatorProfile(
+      String partnerId,
+      String operatorId,
+      String firstName,
+      String lastName,
+      String emailId,
+      String mobileNo,
+      String password,
+      String confirmPassword,
+      String iqamaNo,
+      String dateOfBirth,
+      String panelInfo,
+      String plateInfo,
+      File? drivingLicense,
+      File? aramcoLicense,
+      File? nationalId,
+      ) async {
+    final String url = 'https://prod.naqlee.com:443/api/partner/edit-operator';
+    try {
+      var request = http.MultipartRequest('PUT', Uri.parse(url));
+      request.fields['firstName'] = firstName;
+      request.fields['lastName'] = lastName;
+      request.fields['email'] = emailId;
+      request.fields['mobileNo'] = mobileNo;
+      request.fields['password'] = password;
+      request.fields['confirmPassword'] = confirmPassword;
+      request.fields['iqamaNo'] = iqamaNo;
+      request.fields['dateOfBirth'] = dateOfBirth;
+      request.fields['panelInformation'] = panelInfo;
+      request.fields['plateInformation'] = plateInfo;
+      request.fields['partnerId'] = partnerId;
+      request.fields['operatorId'] = operatorId;
+      Future<void> addFile(String fieldName, File? file, http.MultipartRequest request) async {
+        if (file != null) {
+          String? mimeType = lookupMimeType(file.path);
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              fieldName,
+              file.path,
+              contentType: mimeType != null ? MediaType.parse(mimeType) : null,
+              filename: file.path,
+            ),
+          );
+        }
+      }
+      await addFile('drivingLicense', drivingLicense, request);
+      await addFile('aramcoLicense', aramcoLicense, request);
+      await addFile('nationalID', nationalId, request);
+      var response = await request.send();
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final jsonResponse = jsonDecode(responseBody);
+        final message = jsonResponse['message'] as String?;
+        if (message != null) {
+          commonWidgets.showToast(message);
+        }
+      } else {
+        final responseBody = await response.stream.bytesToString();
+        final jsonResponse = jsonDecode(responseBody);
+        final message = jsonResponse['message'] as String?;
+        commonWidgets.showToast(message??'');
+      }
+    } catch (e) {
+      commonWidgets.showToast('Something went wrong. Please try again');
+    }
+  }
+
+  Future<void> deleteOperator(BuildContext context,String operatorId) async {
+    try {
+      final url = Uri.parse('https://prod.naqlee.com:443/api/partner/delete-operator/$operatorId');
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        final message = responseBody['message'] ?? 'Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } else {
+        commonWidgets.showToast('Something went wrong,Please try again');
+      }
+    } on SocketException {
+      commonWidgets.showToast('No Internet connection');
+    } catch (e) {
+      commonWidgets.showToast('Something went wrong,Please try again');
+    }
+  }
+
+
 
 }
 

@@ -39,6 +39,11 @@ class _UserLoginState extends State<UserLogin> {
   bool isPasswordObscured = true;
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
     emailAddressController.dispose();
     passwordController.dispose();

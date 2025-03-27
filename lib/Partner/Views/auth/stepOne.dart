@@ -106,7 +106,7 @@ class _StepOneState extends State<StepOne> {
         isLoading = false;
       });
     } catch (error) {
-      commonWidgets.showToast('An error occurred,Please try again.');
+      // commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -643,18 +643,6 @@ class _StepOneState extends State<StepOne> {
             ),
           ),
         ),
-        if (istimaraError)
-          Container(
-            margin: const EdgeInsets.only(left: 60, bottom: 20),
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Please upload a file'.tr(),
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: viewUtil.isTablet?17:12,
-              ),
-            ),
-            ),
       ],
     );
   }

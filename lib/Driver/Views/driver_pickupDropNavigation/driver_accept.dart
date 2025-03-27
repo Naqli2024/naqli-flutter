@@ -357,40 +357,6 @@ class _OrderAcceptState extends State<OrderAccept> {
                     ),
                   ),
                   Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: viewUtil.isTablet ? 30 : 20,
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: (){
-                                      Navigator.pop(context);
-                                    },
-                                    icon: Icon(FontAwesomeIcons.multiply,
-                                        size: viewUtil.isTablet?30:20)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                  Positioned(
                       bottom: 20,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 15,right: 30),
@@ -402,12 +368,48 @@ class _OrderAcceptState extends State<OrderAccept> {
                               padding: const EdgeInsets.only(left: 10,right: 10),
                               child: Column(
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 15),
-                                    child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',
-                                        height: viewUtil.isTablet
-                                            ?MediaQuery.of(context).size.height * 0.05
-                                            :MediaQuery.of(context).size.height * 0.04)),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        child: Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 15),
+                                            child: SvgPicture.asset(
+                                              'assets/naqleeBorder.svg',
+                                              height: viewUtil.isTablet
+                                                  ? MediaQuery.of(context).size.height * 0.05
+                                                  : MediaQuery.of(context).size.height * 0.04,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(right: 10),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.2),
+                                              spreadRadius: 2,
+                                              blurRadius: 5,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: viewUtil.isTablet ? 30 : 20,
+                                          backgroundColor: Colors.white,
+                                          child: IconButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            icon: Icon(FontAwesomeIcons.multiply,
+                                                size: viewUtil.isTablet ? 30 : 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Row(
                                     children: [
@@ -440,18 +442,20 @@ class _OrderAcceptState extends State<OrderAccept> {
                                                 child: Column(
                                                   mainAxisAlignment: MainAxisAlignment.start,
                                                   children: [
-                                                    Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
+                                                    Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',
+                                                      style: TextStyle(fontStyle: FontStyle.italic,fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:20),),
                                                     Padding(
-                                                      padding: const EdgeInsets.only(bottom: 20),
-                                                      child: Text(widget.pickUp,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
+                                                      padding: const EdgeInsets.only(bottom: 10),
+                                                      child: Text(widget.pickUp,
+                                                        style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                     ),
                                                     if (dropPointsDistance != null && dropPointsDistance!.isNotEmpty) ...[
                                                       ...dropPointsDistance!.map((distance) {
                                                         return Padding(
-                                                          padding: EdgeInsets.only(top: 20),
+                                                          padding: EdgeInsets.only(top: 0),
                                                           child: Text(
                                                             '${timeToDrop} (${distance.toStringAsFixed(2)}km) ${'left'.tr()}',
-                                                            style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),
+                                                            style: TextStyle(fontStyle: FontStyle.italic,fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:20)
                                                           ),
                                                         );
                                                       }).toList(),

@@ -24,7 +24,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart' as location_package;
 import 'dart:ui' as ui;
 
-import 'package:permission_handler/permission_handler.dart';
 class DriverInteraction extends StatefulWidget {
   final String firstName;
   final String lastName;
@@ -63,6 +62,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
   LatLng currentLatLng = LatLng(37.7749, -122.4194);
   String? firstName;
   String? lastName;
+  String? contactNo;
   List<Map<String, dynamic>> nearbyPlaces = [];
   late StreamSubscription<Position> positionStream;
   int currentIndex = 0;
@@ -79,6 +79,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
   StreamSubscription<location_package.LocationData>? locationSubscription;
   double proximityThreshold = 0.001;
   bool hasNavigated = false;
+  bool isMoveClicked = false;
 
   @override
   void initState() {
@@ -284,9 +285,16 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
   Future<void> recenterMap() async {
     try {
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      LatLng currentLatLng = LatLng(
+        currentPosition.latitude,
+        currentPosition.longitude,
+      );
       double heading = currentPosition.heading;
+
+      // Move camera to current location first
       await mapController?.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: currentLatLng,
@@ -295,9 +303,19 @@ class _DriverInteractionState extends State<DriverInteraction> {
           bearing: heading,
         ),
       ));
+
       if (pickupLatLng != null) {
-        final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
-        List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
+        final LatLng pickUpLocation = LatLng(
+          pickupLatLng!.latitude,
+          pickupLatLng!.longitude,
+        );
+
+        // Fetch route points
+        List<LatLng> routePoints = await fetchDirections(
+          currentLatLng,
+          pickUpLocation,
+        );
+
         setState(() {
           polylines.add(Polyline(
             polylineId: PolylineId('route'),
@@ -306,6 +324,8 @@ class _DriverInteractionState extends State<DriverInteraction> {
             width: 5,
           ));
         });
+
+        // Ensure both points fit in the camera view
         if (routePoints.isNotEmpty) {
           LatLngBounds bounds = LatLngBounds(
             southwest: LatLng(
@@ -317,14 +337,18 @@ class _DriverInteractionState extends State<DriverInteraction> {
               routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
             ),
           );
+
+          // Animate camera to fit both the current location and pickup location
+          await mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
         }
-      } else {
-        return;
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred. Please try again.')),
+      );
     }
   }
+
 
   double _haversineDistance(LatLng start, LatLng end) {
     const double R = 6371;
@@ -536,8 +560,11 @@ class _DriverInteractionState extends State<DriverInteraction> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
-    }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }    }
   }
 
   void updateLocationMarker(LatLng position, double heading) {
@@ -641,15 +668,16 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
     // Convert kilometers to feet (1 km = 3280.84 feet)
     double distanceToPickupInFeet = distanceToPickupInKm * 3280.84;
+    print(distanceToPickupInFeet);
     // Check if the distance is less than or equal to 50 feet and hasn't navigated yet
-    if (distanceToPickupInFeet <= 50 && !hasNavigated) {
+    if (distanceToPickupInFeet <= 1305 /*70*/ && !hasNavigated) {
       hasNavigated = true; // Prevent multiple navigations
 
       if (mounted) {
         setState(() {
           isAtPickupLocation = true;
         });
-
+        commonWidgets.showToast('Reached Pickup Location..');
         await positionStream?.cancel();
         Navigator.pushReplacement(
           context,
@@ -664,9 +692,10 @@ class _DriverInteractionState extends State<DriverInteraction> {
               pickUp: widget.pickUp,
               dropPoints: widget.dropPoints,
               quotePrice: widget.quotePrice,
-              userName: firstName != null
-                  ? '$firstName'
-                  : '' + '${lastName != null ? '$lastName' : ''}',
+              userName: firstName != null || lastName!= null
+                  ? '$firstName'+' '+ '$lastName'
+                  : '',
+              contactNo:contactNo.toString()
             ),
           ),
         );
@@ -690,16 +719,23 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
     return latLngList;
   }
-
-
+  
   Future<void> fetchUserName() async {
     try {
-      final fetchedFirstName = await driverService.getUserName(widget.userId, widget.token);
-      setState(() {
-        firstName = fetchedFirstName;
-        lastName = fetchedFirstName;
-        isLoading = false;
-      });
+      final userDetails = await driverService.getUserDetails(widget.userId, widget.token);
+
+      if (userDetails != null) {
+        setState(() {
+          firstName = userDetails['firstName'] ?? 'N/A';
+          lastName = userDetails['lastName'] ?? 'N/A';
+          contactNo = userDetails['contactNo'] ?? 'N/A';
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -737,6 +773,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       ),
                       markers: Set<Marker>.of(markers),
                       polylines: Set<Polyline>.of(polylines),
+                      compassEnabled: false,
                       myLocationEnabled: false,
                       myLocationButtonEnabled: true,
                       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
@@ -747,41 +784,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                     ),
                   ),
                   Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: viewUtil.isTablet ? 30 : 20,
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: (){
-                                      Navigator.pop(context);
-                                    },
-                                    icon: Icon(FontAwesomeIcons.multiply,
-                                        size: viewUtil.isTablet?30:20)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                  Positioned(
-                    top: MediaQuery.sizeOf(context).height * 0.1,
+                    top: MediaQuery.sizeOf(context).height * 0.02,
                     left: viewUtil.isTablet
                         ? MediaQuery.sizeOf(context).height * 0.027
                         : MediaQuery.sizeOf(context).height * 0.017,
@@ -805,7 +808,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                           SvgPicture.asset('assets/upArrow.svg'),
                                           Text(
                                             feet == null?'0 ft':'$feet',
-                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16, color: Color(0xff676565)),
+                                            style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:18, color: Color(0xff676565)),
                                           ),
                                         ],
                                       ),
@@ -814,46 +817,20 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text(nearbyPlaces[currentIndex]['name'] ?? '',
+                                          Text("Pickup Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text(widget.pickUp,textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                         /***Commented for removing Nearby location***/
+                                         /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
                                             style: TextStyle(fontSize: viewUtil.isTablet?26:16),),
                                           Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
                                           Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center,
-                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),*/
                                         ],
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            Divider(
-                              indent: 15,
-                              endIndent: 15,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: Color(0xff6069FF),
-                                      size: viewUtil.isTablet?30:20
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Column(
-                                      children: [
-                                        Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         )
                             : Padding(
@@ -870,7 +847,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('Fetching nearby Location...',
+                                child: Text('Fetching Pickup Location...',
                                     style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                               ),
                             ],
@@ -879,10 +856,40 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       ),
                     ),
                   ),
-                  Positioned(
+                  isMoveClicked
+                  ? Positioned(
+                      bottom: MediaQuery.sizeOf(context).height * 0.25,
+                      right: 20,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Tooltip(
+                          message: 'Re-centre',
+                          child: CircleAvatar(
+                            radius: viewUtil.isTablet ? 30 : 20,
+                            backgroundColor: Colors.white,
+                            child: IconButton(
+                                onPressed: recenterMap,
+                                icon: Icon(Icons.my_location)),
+                          ),
+                        ),
+                      ))
+                  : Positioned(
                     bottom: MediaQuery.sizeOf(context).height * 0.27,
                     child: GestureDetector(
-                      onTap: recenterMap,
+                      onTap: (){
+                        isMoveClicked = true;
+                        recenterMap();
+                      },
                       child: Container(
                         width: MediaQuery.sizeOf(context).width,
                         decoration: BoxDecoration(
@@ -941,9 +948,9 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                   Spacer(),
                                   Expanded(
                                     child: Text(
-                                      firstName != null
-                                          ? '$firstName'
-                                          : '' + '${lastName != null ? '$lastName' : ''}',
+                                      firstName != null || lastName!= null
+                                          ? '$firstName'+' '+ '$lastName'
+                                          : '',
                                       style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
                                     ),
                                   ),
@@ -951,29 +958,25 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                 ],
                               ),
                             ),
-                            // Show updated distance and time
                             Text(
                                 timeToPickup ==null ?'Calculating...'.tr():'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
                               style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565)),
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
+                              padding: const EdgeInsets.all(8.0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  commonWidgets.makePhoneCall(contactNo??'');
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
                                   Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                                   Padding(
-                                    padding: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.all(8.0),
                                     child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
                                   ),
-                                  Icon(Icons.message, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: Text('Message'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                                  ),
-                                  Icon(FontAwesomeIcons.multiply, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                  Text('Cancel'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                                ],
+                                ],),
                               ),
                             ),
                           ],

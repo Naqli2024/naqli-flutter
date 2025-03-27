@@ -184,7 +184,7 @@ class _StepTwoState extends State<StepTwo> {
                       padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
                       child: TextField(focusNode: dobFocusNode,
                         controller: dobController,
-                        readOnly: true, // Make the field read-only
+                        readOnly: true,
                         decoration: InputDecoration(
                           hintStyle: TextStyle(color: Color(0xffCCCCCC)),
                           border: OutlineInputBorder(

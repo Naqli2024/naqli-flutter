@@ -470,5 +470,20 @@
   "Delete Account": "حذف الحساب",
   "Terms and Privacy Policy": "الشروط وسياسة الخصوصية",
   "Terms & Conditions":  "الشروط والأحكام",
-  "Privacy Policy": "سياسة الخصوصية"
+  "Privacy Policy": "سياسة الخصوصية",
+  "Bank Details": "تفاصيل البنك",
+  "Company": "شركة",
+  "IBAN": "رقم الحساب المصرفي الدولي",
+  "Region": "منطقة",
+  "Bank Name": "اسم البنك",
+  "Legal Name": "الاسم القانوني",
+  "Phone No": "رقم الهاتف",
+  "Address": "عنوان",
+  "Zipcode": "الرمز البريدي",
+  "Company Type": "نوع الشركة",
+  "Company Id No": "رقم هوية الشركة",
+  "Company Details": "تفاصيل الشركة",
+  "Password": "كلمة المرور",
+  "Driver Login": "تسجيل دخول السائق",
+  "Delete Operator": "حذف المشغل"
 }

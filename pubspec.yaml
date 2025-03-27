@@ -35,7 +35,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   carousel_slider: ^5.0.0
   flutter_svg: ^2.0.16
-  file_picker: ^8.3.1
+  file_picker: ^9.0.0
   http: ^1.2.2
   shared_preferences: ^2.1.0
   fluttertoast: ^8.2.1
@@ -48,16 +48,15 @@ dependencies:
   flutter_cache_manager: ^3.0.0
   geocoding: ^3.0.0
   google_maps_flutter_web: ^0.5.10
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
   slide_to_act: ^2.0.1
-  geolocator: ^12.0.0
-  location: ^6.0.2
-  mime: ^1.0.0
+  geolocator: ^13.0.2
+  location: 5.0.3
+  mime: ^2.0.0
   dotted_border: ^2.0.0
   path: ^1.8.0
   intl: 0.19.0
   provider: ^6.0.0
-  webview_flutter: ^3.0.0
   fl_chart: ^0.69.0
   loading_animation_widget: ^1.3.0
   flutter_inappwebview: ^6.0.0
@@ -66,7 +65,11 @@ dependencies:
   pretty_qr_code: ^3.3.0
   qr_flutter: ^4.0.0
   google_maps_flutter: ^2.10.0
-  google_places_flutter_api: ^1.0.2
+  webview_flutter: ^4.0.0
+  flutter_phone_direct_caller: ^2.1.1
+  http_parser: ^4.0.2
+  dio: ^5.3.2
+  open_file: ^3.3.2
 
   flutter_localizations:
     sdk: flutter
@@ -176,30 +179,6 @@ flutter:
     - assets/arabicUserHome4.svg
     - assets/userHome4.svg
     - assets/partnerHome.svg
-    - assets/images/short-sides.svg
-    - assets/images/curtain.svg
-    - assets/images/refrigerator.svg
-    - assets/images/flatbed.svg
-    - assets/images/high-sides.svg
-    - assets/images/freezer.svg
-    - assets/images/Six-Sides.svg
-    - assets/images/six-refrigerator.svg
-    - assets/images/lorry 7 meters-sides.svg
-    - assets/images/lorry-sides.svg
-    - assets/images/lorry-closed.svg
-    - assets/images/lorry-Refrigerator.svg
-    - assets/images/lorry-Crane 5 ton.svg
-    - assets/images/lorry-Crane 7 ton.svg
-    - assets/images/lorry-freezer.svg
-    - assets/images/lorry-Crane 7 ton.svg
-    - assets/images/Closed.svg
-    - assets/images/Crane.svg
-    - assets/images/Diana-Refrigerator.svg
-    - assets/images/Diana-Sides.svg
-    - assets/images/Diana-Freezer.svg
-    - assets/images/pick up.svg
-    - assets/images/regular.svg
-    - assets/images/hydraulic.svg
     - assets/images/bus 15 pax.svg
     - assets/images/bus +30 pax.svg
     - assets/images/bus 15 - 30 pax.svg
@@ -208,23 +187,48 @@ flutter:
     - assets/images/lorry crane.svg
     - assets/images/power generators.svg
     - assets/images/fuel truck.svg
-    - assets/images/crawler crane.svg
-    - assets/images/mobile crane.svg
-    - assets/images/excavator.svg
-    - assets/images/compactors.svg
-    - assets/images/bull dozers.svg
-    - assets/images/graders.svg
-    - assets/images/dump truck.svg
-    - assets/images/fork lift.svg
-    - assets/images/scissor lift.svg
-    - assets/images/backhoe.svg
-    - assets/images/front hoe.svg
-    - assets/images/skid steer.svg
-    - assets/images/tow-truck-for-trucks.svg
-    - assets/images/tow-truck-two-cars.svg
-    - assets/images/tow-truck-VIP.svg
     - .env
     - assets/translations/
+    - assets/vehicles/vehicles.json
+    - assets/equipments/equipments.json
+    - assets/vehicles/short-sides.png
+    - assets/vehicles/curtain.png
+    - assets/vehicles/refrigerator.png
+    - assets/vehicles/flatbed.png
+    - assets/vehicles/high-sides.png
+    - assets/vehicles/freezer.png
+    - assets/vehicles/Six-Sides.png
+    - assets/vehicles/six-refrigerator.png
+    - assets/vehicles/lorry 7 meters-sides.png
+    - assets/vehicles/lorry-sides.png
+    - assets/vehicles/lorry-closed.png
+    - assets/vehicles/lorry-Refrigerator.png
+    - assets/vehicles/lorry-Crane 5 ton.png
+    - assets/vehicles/lorry-Crane 7 ton.png
+    - assets/vehicles/lorry-freezer.png
+    - assets/vehicles/Closed.png
+    - assets/vehicles/Crane.png
+    - assets/vehicles/Diana-Refrigerator.png
+    - assets/vehicles/Diana-Sides.png
+    - assets/vehicles/Diana-Freezer.png
+    - assets/vehicles/pick up.png
+    - assets/vehicles/regular.png
+    - assets/vehicles/hydraulic.png
+    - assets/vehicles/tow-truck-VIP.png
+    - assets/vehicles/tow-truck-two-cars.png
+    - assets/vehicles/tow-truck-for-trucks.png
+    - assets/equipments/excavator.png
+    - assets/equipments/backhoe.png
+    - assets/equipments/front hoe.png
+    - assets/equipments/skid steer.png
+    - assets/equipments/crawler crane.png
+    - assets/equipments/mobile crane.png
+    - assets/equipments/compactors.png
+    - assets/equipments/bull dozers.png
+    - assets/equipments/graders.png
+    - assets/equipments/dump truck.png
+    - assets/equipments/fork lift.png
+    - assets/equipments/scissor lift.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

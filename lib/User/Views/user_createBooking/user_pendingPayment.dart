@@ -974,62 +974,20 @@ class _PendingPaymentState extends State<PendingPayment> {
     }
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
 
     final String visaHtml = '''
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>HyperPay Payment Integration</title>
-              <style>
-                body {
-                  margin: 0;
-                  padding: 0;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  align-items: center;
-                }
-                .paymentWidgets {
-                  width: 50%;
-                  max-width: 100px;
-                  box-sizing: border-box;
-                }
-                .paymentWidgets button {
-                  background-color: #4CAF50;
-                  color: white;
-                  border: none;
-                  padding: 10px 20px;
-                  font-size: 16px;
-                  border-radius: 5px;
-                  cursor: pointer;
-                }
-                .paymentWidgets button:hover {
-                  background-color: #45a049;
-                }
-                #submitButton {
-                  display: none;
-                  margin-top: 20px;
-                  padding: 10px 20px;
-                  font-size: 16px;
-                  background-color: #4CAF50;
-                  color: white;
-                  border: none;
-                  cursor: pointer;
-                  border-radius: 5px;
-                }
-                #submitButton:active {
-                  background-color: #45a049;
-                }
-              </style>
-          
-              <script>
-                 window['wpwlOptions'] = {
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>HyperPay Payment Integration</title>
+            <script>
+              window['wpwlOptions'] = {
                 billingAddress: {},
                 mandatoryBillingFields: {
                   country: true,
@@ -1040,181 +998,172 @@ class _PendingPaymentState extends State<PendingPayment> {
                   street2: false,
                 },
               };
-          
-                // Function to load the HyperPay payment widget script
-                function loadPaymentScript(checkoutId, integrity) {
-                  const script = document.createElement('script');
-                  script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
-                  script.crossOrigin = 'anonymous';
-                  script.integrity = integrity;
-                  script.onload = () => {
-                    console.log('Payment widget script loaded'); 
-                  };
-                  document.body.appendChild(script);
-                }
-                document.addEventListener("DOMContentLoaded", function () {
-                  loadPaymentScript("${checkOutId}", "${integrity}");
-                });
-              </script>
-            </head>
-          
-            <body>
-              <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
-            </body>
-          </html>
-          ''';
+              
+              function loadPaymentScript(checkoutId, integrity) {
+                const script = document.createElement('script');
+                script.src = "https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+                script.crossOrigin = 'anonymous';
+                script.integrity = integrity;
+                document.body.appendChild(script);
+              }
+              
+              document.addEventListener("DOMContentLoaded", function () {
+                loadPaymentScript("${checkOutId}", "${integrity}");
+              });
+            </script>
+          </head>
+          <body>
+            <form action="https://naqlee.com/payment/results" method="POST" class="paymentWidgets" data-brands="VISA MASTER AMEX"></form>
+          </body>
+        </html>
+       ''';
 
-    final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+  final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 10),
-          backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.42,
-              child: WebView(
-                backgroundColor: Colors.transparent,
-                initialUrl: Uri.dataFromString(
-                    isMADATapped ? madaHtml : visaHtml,
-                    mimeType: 'text/html',
-                    encoding: Encoding.getByName('utf-8')
-                ).toString(),
-                javascriptMode: JavascriptMode.unrestricted,
-                javascriptChannels: {
-                  JavascriptChannel(
-                    name: 'NavigateToFlutter',
-                    onMessageReceived: (JavascriptMessage message) async {
-                      await getPaymentStatus(checkOutId, isMADATapped);
-                      if (resultCode == "000.100.110") {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PaymentSuccessScreen(
-                              onContinuePressed: () async {
-                                await userService.updatePayment(
-                                  widget.token,
-                                  amount,
-                                  'Completed',
-                                  partnerID,
-                                  bookingId,
-                                  amount * 2,
-                                  0,
-                                );
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) => PaymentCompleted(
-                                    firstName: widget.firstName,
-                                    lastName: widget.lastName,
-                                    token: widget.token,
-                                    id: widget.id,
-                                    selectedType: widget.selectedType,
-                                    unit: widget.unit,
-                                    load: widget.load,
-                                    bookingId: widget.bookingId,
-                                    unitType: widget.unitType,
-                                    dropPoints: widget.dropPoints,
-                                    pickup: widget.pickup,
-                                    cityName: widget.cityName,
-                                    address: widget.address,
-                                    zipCode: widget.zipCode,
-                                    unitTypeName: widget.unitTypeName,
-                                    partnerId: widget.partnerId,
-                                    size: widget.size,
-                                    bookingStatus: widget.bookingStatus,
-                                    email: widget.email,
-                                  ),),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                        Future.delayed(Duration(seconds: 3), () async {
-                          await userService.updatePayment(
-                            widget.token,
-                            amount,
-                            'Completed',
-                            partnerID,
-                            bookingId,
-                            amount * 2,
-                            0,
-                          );
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => PaymentCompleted(
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              token: widget.token,
-                              id: widget.id,
-                              selectedType: widget.selectedType,
-                              unit: widget.unit,
-                              load: widget.load,
-                              bookingId: widget.bookingId,
-                              unitType: widget.unitType,
-                              dropPoints: widget.dropPoints,
-                              pickup: widget.pickup,
-                              cityName: widget.cityName,
-                              address: widget.address,
-                              zipCode: widget.zipCode,
-                              unitTypeName: widget.unitTypeName,
-                              partnerId: widget.partnerId,
-                              size: widget.size,
-                              bookingStatus: widget.bookingStatus,
-                              email: widget.email,
-                            ),),
-                          );
-                        });
-                      }
-                      else {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => PaymentFailureScreen(
-                              paymentStatus: paymentResult??'',
-                              onRetryPressed:() {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (context) => PendingPayment(
-                                    firstName: widget.firstName,
-                                    lastName: widget.lastName,
-                                    selectedType: widget.selectedType,
-                                    token: widget.token,
-                                    unit: widget.unit,
-                                    load: widget.load,
-                                    size: widget.size,
-                                    bookingId: widget.bookingId,
-                                    unitType: widget.unitType,
-                                    dropPoints: widget.dropPoints,
-                                    pickup: widget.pickup,
-                                    cityName: widget.cityName,
-                                    address: widget.address,
-                                    zipCode: widget.zipCode,
-                                    unitTypeName: widget.unitTypeName,
-                                    id: widget.id,
-                                    partnerName: widget.partnerName,
-                                    partnerId: partnerID,
-                                    oldQuotePrice: widget.oldQuotePrice,
-                                    paymentStatus: widget.paymentStatus,
-                                    quotePrice: amount.toString(),
-                                    advanceOrPay: widget.advanceOrPay,
-                                    bookingStatus: bookingStatus??'',
-                                    email: widget.email,
-                                  ),),
-                                );
-                              },)));
-                      }
-                    },
-                  ),
-                },
-                onWebViewCreated: (WebViewController webViewController) {
-                  webViewController.clearCache();
+  WebViewController webViewController = WebViewController()
+    ..setBackgroundColor(Colors.transparent)
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..addJavaScriptChannel(
+      'NavigateToFlutter',
+      onMessageReceived: (JavaScriptMessage message) async {
+        await getPaymentStatus(checkOutId, isMADATapped);
+        if (resultCode == "000.000.000") {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => PaymentSuccessScreen(
+                onContinuePressed: () async {
+                  await userService.updatePayment(
+                    widget.token,
+                    amount,
+                    'Completed',
+                    partnerID,
+                    bookingId,
+                    amount * 2,
+                    0,
+                  );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => PaymentCompleted(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      selectedType: widget.selectedType,
+                      unit: widget.unit,
+                      load: widget.load,
+                      bookingId: widget.bookingId,
+                      unitType: widget.unitType,
+                      dropPoints: widget.dropPoints,
+                      pickup: widget.pickup,
+                      cityName: widget.cityName,
+                      address: widget.address,
+                      zipCode: widget.zipCode,
+                      unitTypeName: widget.unitTypeName,
+                      partnerId: widget.partnerId,
+                      size: widget.size,
+                      bookingStatus: widget.bookingStatus,
+                      email: widget.email,
+                    ),),
+                  );
                 },
               ),
             ),
-          ),
-        );
+          );
+          Future.delayed(Duration(seconds: 3), () async {
+            await userService.updatePayment(
+              widget.token,
+              amount,
+              'Completed',
+              partnerID,
+              bookingId,
+              amount * 2,
+              0,
+            );
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => PaymentCompleted(
+                firstName: widget.firstName,
+                lastName: widget.lastName,
+                token: widget.token,
+                id: widget.id,
+                selectedType: widget.selectedType,
+                unit: widget.unit,
+                load: widget.load,
+                bookingId: widget.bookingId,
+                unitType: widget.unitType,
+                dropPoints: widget.dropPoints,
+                pickup: widget.pickup,
+                cityName: widget.cityName,
+                address: widget.address,
+                zipCode: widget.zipCode,
+                unitTypeName: widget.unitTypeName,
+                partnerId: widget.partnerId,
+                size: widget.size,
+                bookingStatus: widget.bookingStatus,
+                email: widget.email,
+              ),),
+            );
+          });
+        } else {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                paymentStatus: paymentResult??'',
+                onRetryPressed:() {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => PendingPayment(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      selectedType: widget.selectedType,
+                      token: widget.token,
+                      unit: widget.unit,
+                      load: widget.load,
+                      size: widget.size,
+                      bookingId: widget.bookingId,
+                      unitType: widget.unitType,
+                      dropPoints: widget.dropPoints,
+                      pickup: widget.pickup,
+                      cityName: widget.cityName,
+                      address: widget.address,
+                      zipCode: widget.zipCode,
+                      unitTypeName: widget.unitTypeName,
+                      id: widget.id,
+                      partnerName: widget.partnerName,
+                      partnerId: partnerID,
+                      oldQuotePrice: widget.oldQuotePrice,
+                      paymentStatus: widget.paymentStatus,
+                      quotePrice: amount.toString(),
+                      advanceOrPay: widget.advanceOrPay,
+                      bookingStatus: bookingStatus??'',
+                      email: widget.email,
+                    ),),
+                  );
+                },)));
+        }
       },
-    );
-  }
+    )
+    ..loadRequest(Uri.dataFromString(
+      isMADATapped ? madaHtml : visaHtml,
+      mimeType: 'text/html',
+      encoding: Encoding.getByName('utf-8'),
+    ));
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        insetPadding: EdgeInsets.symmetric(horizontal: 10),
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.42,
+            child: WebViewWidget(controller: webViewController),
+          ),
+        ),
+      );
+    },
+  );
+}
 
 }

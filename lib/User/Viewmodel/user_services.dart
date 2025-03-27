@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
@@ -397,8 +398,21 @@ class UserService{
     }
   }
 
-
   Future<List<Vehicle>> fetchUserVehicle() async {
+    try {
+      final String response = await rootBundle.loadString('assets/vehicles/vehicles.json');
+      final Map<String, dynamic> jsonData = jsonDecode(response);
+
+      final List<dynamic> vehiclesList = jsonData['vehicles'] ?? [];
+
+      return vehiclesList.map((data) => Vehicle.fromJson(data)).toList();
+    } catch (e) {
+      commonWidgets.showToast('An error occurred, please try again.');
+      return [];
+    }
+  }
+
+/*  Future<List<Vehicle>> fetchUserVehicle() async {
     try {
       final response = await http.get(Uri.parse('${baseUrl}vehicles'));
 
@@ -415,7 +429,7 @@ class UserService{
      commonWidgets.showToast('An error occurred,Please try again.');
       return [];
     }
-  }
+  }*/
 
   Future<List<Buses>> fetchUserBuses() async {
     try{
@@ -455,7 +469,7 @@ class UserService{
     }
   }
 
-  Future<List<Equipment>> fetchUserEquipment() async {
+/*  Future<List<Equipment>> fetchUserEquipment() async {
     try{
       final response = await http.get(Uri.parse('${baseUrl}equipments'));
 
@@ -473,7 +487,22 @@ class UserService{
      commonWidgets.showToast('An error occurred,Please try again.');
       return [];
     }
+  }*/
+
+  Future<List<Equipment>> fetchUserEquipment() async {
+    try {
+      final String response = await rootBundle.loadString('assets/equipments/equipments.json');
+      final Map<String, dynamic> jsonData = jsonDecode(response);
+
+      final List<dynamic> equipmentList = jsonData['equipment'] ?? [];
+
+      return equipmentList.map((data) => Equipment.fromJson(data)).toList();
+    } catch (e) {
+      commonWidgets.showToast('An error occurred, please try again.');
+      return [];
+    }
   }
+
 
   Future<String?> userVehicleCreateBooking(
       BuildContext context, {

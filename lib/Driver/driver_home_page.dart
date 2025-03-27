@@ -10,6 +10,7 @@ import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_addresNavigation/driver_addressNotification.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notification.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_profile.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
@@ -51,6 +52,7 @@ class _DriverHomePageState extends State<DriverHomePage>
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
   bool _showNotification = false;
+  bool isModeChanging = false;
   String? distance;
   LatLng? currentLocation;
   double? pickUpDistance;
@@ -105,10 +107,6 @@ class _DriverHomePageState extends State<DriverHomePage>
       cityName =booking?['cityName']??"";
       bookingStatus =booking?['bookingStatus']??'';
     });
-  }
-
-  double _degreesToRadians(double degrees) {
-    return degrees * (pi / 180);
   }
 
   Future<void> _checkPermissionsAndFetchLocation() async {
@@ -252,6 +250,7 @@ class _DriverHomePageState extends State<DriverHomePage>
   }
 
   void driverOnlineModeChange() async{
+    isModeChanging = true;
     await driverService.driverMode(context, partnerId: widget.partnerId, operatorId: widget.id, mode: "online");
   }
 
@@ -327,6 +326,21 @@ class _DriverHomePageState extends State<DriverHomePage>
                 ),
               ),
               const Divider(),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(Icons.person,size: 30,),
+                ),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('Profile'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                    DriverProfile(firstName: widget.firstName,lastName: widget.lastName,operatorId: widget.id, partnerId: widget.partnerId,)
+                  ));
+                },
+              ),
               ListTile(
                 leading: const Padding(
                   padding: EdgeInsets.only(left: 12),
@@ -467,27 +481,31 @@ class _DriverHomePageState extends State<DriverHomePage>
                                     ),
                                   ),
                                 ),
-                                // Container(
-                                //   decoration: BoxDecoration(
-                                //     shape: BoxShape.circle,
-                                //     boxShadow: [
-                                //       BoxShadow(
-                                //         color: Colors.black.withOpacity(0.3),
-                                //         spreadRadius: 2,
-                                //         blurRadius: 5,
-                                //         offset: const Offset(0, 5),
-                                //       ),
-                                //     ],
-                                //   ),
-                                //   child: CircleAvatar(
-                                //     backgroundColor: Colors.white,
-                                //     child: IconButton(
-                                //         onPressed: () {
-                                //
-                                //         },
-                                //         icon: Icon(Icons.search)),
-                                //   ),
-                                // ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.white,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _checkPermissionsAndFetchLocation();
+                                            fetchCoordinates();
+                                            _fetchBookingRequest();
+                                          });
+                                        },
+                                        icon: Icon(Icons.refresh)),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -495,7 +513,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                       ],
                     ),
                     if (!isOnline)
-                      Container(
+                       Container(
                         margin: const EdgeInsets.only(top: 30, bottom: 20),
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 0.07,
@@ -511,6 +529,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                               ),
                             ),
                             onPressed: () async {
+                              isModeChanging =true;
                               await _fetchBookingRequest();
                               await _fetchBookingDetails();
                               await _handleDriverRequest();
@@ -520,7 +539,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                                 _saveDriverStatus(isOnline);
                               });
                             },
-                            child: Row(
+                            child: isModeChanging
+                                ? Center(child: CircularProgressIndicator())
+                                : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 SvgPicture.asset('assets/carOffline.svg', height: viewUtil.isTablet ?40:35),
@@ -618,7 +639,7 @@ class _DriverHomePageState extends State<DriverHomePage>
         ),
       );
     } else {
-       commonWidgets.showToast('Booking Completed...'.tr());
+       // commonWidgets.showToast('Booking Completed...'.tr());
     }
     return Container();
   }

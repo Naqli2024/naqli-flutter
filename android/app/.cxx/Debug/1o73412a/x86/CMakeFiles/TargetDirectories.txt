@@ -1,0 +1,2 @@
+D:/naqli-flutter/android/app/.cxx/Debug/1o73412a/x86/CMakeFiles/edit_cache.dir
+D:/naqli-flutter/android/app/.cxx/Debug/1o73412a/x86/CMakeFiles/rebuild_cache.dir

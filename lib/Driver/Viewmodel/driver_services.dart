@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_forgotPassword.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
+import 'package:flutter_naqli/Partner/Model/partner_model.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
@@ -228,9 +229,9 @@ class DriverService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Failed';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(message)),
+        // );
       }
       else {
         final message = responseBody['message'] ?? 'Please try again.';
@@ -324,8 +325,8 @@ class DriverService{
     }
   }
 
-  Future<String?> getUserName(String userId, String token) async {
-    try{
+  Future<Map<String, String>?> getUserDetails(String userId, String token) async {
+    try {
       final response = await http.get(
         Uri.parse('https://prod.naqlee.com:443/api/users/$userId'),
         headers: {
@@ -337,29 +338,29 @@ class DriverService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         if (responseBody != null) {
-          final firstName = responseBody['firstName'] ?? '';
-          final lastName = responseBody['lastName'] ?? '';
+          final firstName = responseBody['firstName']?.toString() ?? '';
+          final lastName = responseBody['lastName']?.toString() ?? '';
+          final contactNo = responseBody['contactNumber']?.toString() ?? '';
 
-          if (firstName.isNotEmpty && lastName.isNotEmpty) {
-            return '$firstName $lastName';
-          } else {
-            return null;
+          if (firstName.isNotEmpty || lastName.isNotEmpty || contactNo.isNotEmpty) {
+            return {
+              'firstName': firstName,
+              'lastName': lastName,
+              'contactNo': contactNo,
+            };
           }
-        } else {
-          return null;
         }
-      }  else {
+      } else {
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? 'No Data found';
         commonWidgets.showToast(message);
-        return null;
       }
-    }on SocketException {
+    } on SocketException {
       commonWidgets.showToast('No Internet connection');
-      return null;
     } catch (e) {
-      return null;
+      commonWidgets.showToast('Error fetching user details');
     }
+    return null;
   }
 
 
@@ -405,5 +406,46 @@ class DriverService{
       );
     }
   }
+
+
+  Future<OperatorDetail?> getOperatorDetail(BuildContext context,String partnerId, String operatorId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://prod.naqlee.com:443/api/partner/$partnerId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final partnerData = responseBody['data'];
+
+        if (partnerData['operators'] != null) {
+          final operators = partnerData['operators'] as List<dynamic>;
+          for (var operator in operators) {
+            if (operator['operatorsDetail'] != null) {
+              for (var detail in operator['operatorsDetail']) {
+                if (detail['_id'].toString().trim() == operatorId.trim()) {
+                  return OperatorDetail.fromJson(detail);
+                }
+              }
+            }
+          }
+        }
+      }
+      return null;
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred,Please try again.')),
+      );
+    }
+    return null;
+  }
+
 
 }

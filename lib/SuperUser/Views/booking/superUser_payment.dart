@@ -852,8 +852,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
       );
     }
   }
-
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped,int amount,String partnerID,String bookingId) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -920,10 +919,9 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
       },
     };
 
-      // Function to load the HyperPay payment widget script
       function loadPaymentScript(checkoutId, integrity) {
         const script = document.createElement('script');
-        script.src = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
+        script.src = "https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId=" + checkoutId;
         script.crossOrigin = 'anonymous';
         script.integrity = integrity;
         script.onload = () => {
@@ -931,9 +929,14 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
         };
         document.body.appendChild(script);
       }
+
       document.addEventListener("DOMContentLoaded", function () {
         loadPaymentScript("${checkOutId}", "${integrity}");
       });
+
+      function sendPaymentStatus(status) {
+        NavigateToFlutter.postMessage(status);
+      }
     </script>
   </head>
 
@@ -944,6 +947,60 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
 ''';
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
+
+    WebViewController webViewController = WebViewController()
+      ..setBackgroundColor(Colors.transparent)
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'NavigateToFlutter',
+        onMessageReceived: (JavaScriptMessage message) async {
+          await getPaymentStatus(checkOutId, isMADATapped);
+          if (resultCode == "000.000.000") {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
+                  onContinuePressed:() async {
+                    await userService.updatePayment(
+                      widget.token,
+                      amount,
+                      'Completed',
+                      partnerID,
+                      bookingId,
+                      amount*2,
+                      0,
+                    );
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => SuperUserPayment(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email,
+                      ),),
+                    );
+                  },)));
+          } else {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => PaymentFailureScreen(
+                  paymentStatus: paymentStatus??'',
+                  onRetryPressed:() {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => SuperUserPayment(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email,
+                      ),),
+                    );
+                  },)));
+          }
+        },
+      )
+      ..loadRequest(Uri.dataFromString(
+        isMADATapped ? madaHtml : visaHtml,
+        mimeType: 'text/html',
+        encoding: Encoding.getByName('utf-8'),
+      ));
 
     showDialog(
       context: context,
@@ -956,65 +1013,9 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
           backgroundColor: Colors.transparent,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Container(
+            child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.42,
-              child: WebView(
-                backgroundColor: Colors.transparent,
-                initialUrl: Uri.dataFromString(
-                    isMADATapped ? madaHtml : visaHtml,
-                    mimeType: 'text/html',
-                    encoding: Encoding.getByName('utf-8')
-                ).toString(),
-                javascriptMode: JavascriptMode.unrestricted,
-                javascriptChannels: {
-                  JavascriptChannel(
-                    name: 'NavigateToFlutter',
-                    onMessageReceived: (JavascriptMessage message) async {
-                      await getPaymentStatus(checkOutId,isMADATapped);
-                      resultCode == "000.100.110"
-                      ? Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => PaymentSuccessScreen(
-                          onContinuePressed:() async {
-                            await userService.updatePayment(
-                              widget.token,
-                              amount,
-                              'Completed',
-                              partnerID,
-                              bookingId,
-                              amount*2,
-                              0,
-                            );
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => SuperUserPayment(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                token: widget.token,
-                                id: widget.id,
-                                email: widget.email,
-                              ),),
-                            );
-                          },)))
-                        : Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => PaymentFailureScreen(
-                            paymentStatus: paymentStatus??'',
-                            onRetryPressed:() {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => SuperUserPayment(
-                                  firstName: widget.firstName,
-                                  lastName: widget.lastName,
-                                  token: widget.token,
-                                  id: widget.id,
-                                  email: widget.email,
-                                ),),
-                              );
-                            },)));
-                    },
-                  ),
-                },
-                onWebViewCreated: (WebViewController webViewController) {
-                  webViewController.clearCache();
-                },
-              ),
+              child: WebViewWidget(controller: webViewController),
             ),
           ),
         );

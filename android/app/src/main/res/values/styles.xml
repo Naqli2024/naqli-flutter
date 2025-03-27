@@ -4,7 +4,8 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Show a splash screen on the activity. Automatically removed when the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
-
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
         <!-- Define other theme attributes -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

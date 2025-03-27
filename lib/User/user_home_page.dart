@@ -344,22 +344,36 @@ class _UserHomePageState extends State<UserHomePage> {
                                         height: MediaQuery.sizeOf(context).height * 0.12,
                                         placeholderBuilder: (context) =>
                                             Container(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
+                                                height: viewUtil.isTablet
+                                                    ? MediaQuery.sizeOf(context).height * 0.1
+                                                    : MediaQuery.sizeOf(context).height * 0.12,
+                                              child: Icon(Icons.image,size: 40,color: Colors.grey,)
                                             ))
                                     : Padding(
-                                        padding: EdgeInsets.only(bottom: viewUtil.isTablet?15:0),
-                                        child: Image.asset(
+                                  padding: EdgeInsets.only(bottom: viewUtil.isTablet ? 15 : 0),
+                                  child: FutureBuilder(
+                                    future: precacheImage(AssetImage(item['asset']!), context),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.done) {
+                                        return Image.asset(
                                           item['asset']!,
                                           height: viewUtil.isTablet
                                               ? MediaQuery.sizeOf(context).height * 0.1
                                               : MediaQuery.sizeOf(context).height * 0.12,
                                           fit: BoxFit.contain,
-                                        ),
-                                      ),
+                                        );
+                                      } else {
+                                        return Container(
+                                          height: viewUtil.isTablet
+                                              ? MediaQuery.sizeOf(context).height * 0.1
+                                              : MediaQuery.sizeOf(context).height * 0.12,
+                                          alignment: Alignment.center,
+                                          child: Icon(Icons.image, size: 40, color: Colors.grey),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
                                 SizedBox(height: 7),
                                 Divider(
                                   indent: viewUtil.isTablet ? 15 : 7,

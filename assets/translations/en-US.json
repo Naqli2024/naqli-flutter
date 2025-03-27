@@ -433,5 +433,19 @@
   "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.":
   "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.",
   "Are you sure you want to delete this account?": "Are you sure you want to delete this account?",
-  "Delete Account": "Delete Account"
+  "Delete Account": "Delete Account",
+  "Bank Details": "Bank Details",
+  "Company": "Company",
+  "IBAN": "IBAN",
+  "Region": "Region",
+  "Bank Name": "Bank Name",
+  "Legal Name": "Legal Name",
+  "Phone No": "Phone No",
+  "Address": "Address",
+  "Zipcode": "Zipcode",
+  "Company Type": "Company Type",
+  "Company Id No": "Company Id No",
+  "Company Details": "Company Details",
+  "Driver Login": "Driver Login",
+  "Delete Operator": "Delete Operator"
 }
