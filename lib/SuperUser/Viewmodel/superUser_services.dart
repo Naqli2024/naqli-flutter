@@ -97,7 +97,7 @@ class SuperUserServices {
         };
       }
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      CommonWidgets().showToast('Please Check your Internet Connection..');
       return {
         'totalBookings': 0,
         'runningBookingsCount': 0,
@@ -266,7 +266,7 @@ class SuperUserServices {
       }
       return null;
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      CommonWidgets().showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       CommonWidgets().showToast('An error occurred,Please try again.');
@@ -306,7 +306,7 @@ class SuperUserServices {
       }
       return null;
     } on SocketException {
-      CommonWidgets().showToast('No Internet connection');
+      CommonWidgets().showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       CommonWidgets().showToast('An error occurred,Please try again.');

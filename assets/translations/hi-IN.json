@@ -477,5 +477,10 @@
   "Company Details": "कंपनी का विवरण",
   "Password": "पासवर्ड",
   "Driver Login": "ड्राइवर लॉगिन",
-  "Delete Operator": "ऑपरेटर हटाएं"
+  "Delete Operator": "ऑपरेटर हटाएं",
+  "Fetching DropPoint Location...": "ड्रॉप पॉइंट स्थान प्राप्त किया जा रहा है...",
+  "DropPoint Location": "ड्रॉप पॉइंट स्थान",
+  "Fetching Pickup Location...": "पिकअप स्थान प्राप्त किया जा रहा है...",
+  "Pickup Location": "पिकअप स्थान",
+  "Reached Pickup Location..": "पिकअप स्थान पर पहुंच गए।"
 }

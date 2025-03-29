@@ -9,6 +9,7 @@ class Operator {
   final String istimaraCard;
   final String pictureOfVehicle;
   final List<OperatorDetail> operatorsDetail;
+  final List<OperatorDetail> extraOperators;
 
   Operator({
     required this.unitType,
@@ -19,12 +20,18 @@ class Operator {
     required this.istimaraCard,
     required this.pictureOfVehicle,
     required this.operatorsDetail,
+    required this.extraOperators,
   });
 
   factory Operator.fromJson(Map<String, dynamic> json) {
     var operatorsDetailList = json['operatorsDetail'] as List? ?? [];
+    var extraOperatorsList = json['extraOperators'] as List? ?? []; // Fix here
+
     List<OperatorDetail> parsedOperatorsDetail =
     operatorsDetailList.map((e) => OperatorDetail.fromJson(e)).toList();
+
+    List<OperatorDetail> parsedExtraOperators =
+    extraOperatorsList.map((e) => OperatorDetail.fromJson(e)).toList();
 
     return Operator(
       unitType: json['unitType'] ?? '',
@@ -39,7 +46,9 @@ class Operator {
       pictureOfVehicle: json['pictureOfVehicle'] != null && json['pictureOfVehicle']['fileName'] != null
           ? json['pictureOfVehicle']['fileName']
           : 'Upload a file',
+
       operatorsDetail: parsedOperatorsDetail,
+      extraOperators: parsedExtraOperators, // Fix here
     );
   }
 }
@@ -91,10 +100,10 @@ class OperatorDetail {
       nationalID: json['nationalID'] != null && json['nationalID']['fileName'] != null
           ? json['nationalID']['fileName']
           : 'Upload a file',
+
       dateOfBirth: json['dateOfBirth'] != null
           ? DateFormat('yyyy-MM-dd').format(DateTime.parse(json['dateOfBirth']))
           : '',
     );
   }
 }
-

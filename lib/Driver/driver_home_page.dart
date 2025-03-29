@@ -387,7 +387,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                               child: Text('yes'.tr(),
                                 style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
                               onPressed: () async {
-                                await clearUserData();
+                                await clearDriverData();
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => DriverLogin()),

@@ -485,5 +485,10 @@
   "Company Details": "تفاصيل الشركة",
   "Password": "كلمة المرور",
   "Driver Login": "تسجيل دخول السائق",
-  "Delete Operator": "حذف المشغل"
+  "Delete Operator": "حذف المشغل",
+  "Fetching DropPoint Location...": "جارٍ جلب موقع نقطة الإنزال...",
+  "DropPoint Location": "موقع نقطة الإنزال",
+  "Fetching Pickup Location...": "جارٍ جلب موقع الالتقاط...",
+  "Pickup Location": "موقع الالتقاط",
+  "Reached Pickup Location..": "تم الوصول إلى موقع الالتقاط."
 }

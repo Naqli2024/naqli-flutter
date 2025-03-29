@@ -447,5 +447,10 @@
   "Company Id No": "Company Id No",
   "Company Details": "Company Details",
   "Driver Login": "Driver Login",
-  "Delete Operator": "Delete Operator"
+  "Delete Operator": "Delete Operator",
+  "Fetching DropPoint Location...": "Fetching DropPoint Location...",
+  "DropPoint Location": "DropPoint Location",
+  "Fetching Pickup Location...": "Fetching Pickup Location...",
+  "Pickup Location": "Pickup Location",
+  "Reached Pickup Location..": "Reached Pickup Location.."
 }

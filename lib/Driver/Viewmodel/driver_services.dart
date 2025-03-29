@@ -318,7 +318,7 @@ class DriverService{
         return null;
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
@@ -356,7 +356,7 @@ class DriverService{
         commonWidgets.showToast(message);
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Error fetching user details');
     }
@@ -408,8 +408,9 @@ class DriverService{
   }
 
 
-  Future<OperatorDetail?> getOperatorDetail(BuildContext context,String partnerId, String operatorId) async {
+  Future<OperatorDetail?> getOperatorDetail(BuildContext context, String partnerId, String operatorId) async {
     try {
+      print(operatorId);
       final response = await http.get(
         Uri.parse('https://prod.naqlee.com:443/api/partner/$partnerId'),
         headers: {
@@ -420,10 +421,11 @@ class DriverService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
+        print(responseBody);
 
-        if (partnerData['operators'] != null) {
-          final operators = partnerData['operators'] as List<dynamic>;
-          for (var operator in operators) {
+        // Function to search for the operator in a given list (for 'operators' list)
+        OperatorDetail? findOperatorInOperatorsList(List<dynamic> operatorList) {
+          for (var operator in operatorList) {
             if (operator['operatorsDetail'] != null) {
               for (var detail in operator['operatorsDetail']) {
                 if (detail['_id'].toString().trim() == operatorId.trim()) {
@@ -431,6 +433,33 @@ class DriverService{
                 }
               }
             }
+          }
+          return null;
+        }
+        OperatorDetail? findOperatorInExtraOperatorsList(List<dynamic> extraOperatorsList) {
+          for (var detail in extraOperatorsList) {
+            if (detail['_id'].toString().trim() == operatorId.trim()) {
+              return OperatorDetail.fromJson(detail);
+            }
+          }
+          return null;
+        }
+
+        // Search in 'operators'
+        if (partnerData['operators'] != null) {
+          final operators = partnerData['operators'] as List<dynamic>;
+          OperatorDetail? operatorDetail = findOperatorInOperatorsList(operators);
+          if (operatorDetail != null) {
+            return operatorDetail;
+          }
+        }
+
+        // If not found, search in 'extraOperators'
+        if (partnerData['extraOperators'] != null) {
+          final extraOperators = partnerData['extraOperators'] as List<dynamic>;
+          OperatorDetail? operatorDetail = findOperatorInExtraOperatorsList(extraOperators);
+          if (operatorDetail != null) {
+            return operatorDetail;
           }
         }
       }
@@ -441,11 +470,12 @@ class DriverService{
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
+        const SnackBar(content: Text('An error occurred, please try again.')),
       );
     }
     return null;
   }
+
 
 
 }

@@ -83,6 +83,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
   bool completeOrder = true;
   late AnimationController _animationController;
   late Animation<double> _animation;
+  Timer? _animationTimer;
 
   @override
   void initState() {
@@ -92,7 +93,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     startLocationUpdates();
     loadCustomArrowIcon();
     _initLocationListener();
-    _startLocationUpdates();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -102,12 +102,78 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     );
   }
 
-  void _startLocationUpdates() {
-    positionStream = Geolocator.getPositionStream().listen((Position position) {
-      setState(() {
-        currentLatLng = LatLng(position.latitude, position.longitude); // Update current location
-      });
+  Future<void> startLocationUpdates() async {
+    LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 1,
+      timeLimit: Duration(milliseconds: 200),
+    );
+
+    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
+      LatLng newLocation = LatLng(position.latitude, position.longitude);
+      double heading = position.heading;
+
+      if (currentLatLng == null || newLocation != currentLatLng) {
+        // Move marker smoothly
+        animateMarkerAlongPolyline(currentLatLng ?? newLocation, newLocation, heading);
+
+        setState(() {
+          currentLatLng = newLocation;
+        });
+
+        // Move camera dynamically
+        mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: newLocation,
+              zoom: 18,
+              bearing: heading,
+              tilt: 30,
+            ),
+          ),
+        );
+
+        // Fetch new route dynamically
+        await updateRouteDetails(newLocation);
+      }
     });
+  }
+
+  void animateMarkerAlongPolyline(LatLng oldPos, LatLng newPos, double heading) {
+    const int steps = 10;
+    const duration = Duration(milliseconds: 500);
+    int tick = 0;
+
+    _animationTimer?.cancel(); // Cancel any existing timer before starting a new one
+
+    _animationTimer = Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
+      if (tick > steps || !mounted) { // Check if widget is mounted
+        timer.cancel();
+        return;
+      }
+
+      double lat = lerp(oldPos.latitude, newPos.latitude, tick / steps);
+      double lng = lerp(oldPos.longitude, newPos.longitude, tick / steps);
+      LatLng interpolatedPos = LatLng(lat, lng);
+
+      if (mounted) {
+        setState(() {
+          currentLocationMarker = Marker(
+            markerId: const MarkerId('current_location'),
+            position: interpolatedPos,
+            icon: customArrowIcon!,
+            rotation: heading,
+            anchor: const Offset(0.5, 0.5),
+          );
+        });
+      }
+
+      tick++;
+    });
+  }
+
+  double lerp(double start, double end, double t) {
+    return start + (end - start) * t;
   }
 
   Future<void> fetchCoordinates() async {
@@ -117,6 +183,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         isLoading = true;
       });
       String pickupPlace = widget.pickUp;
+
       Position currentPosition = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
       LatLng currentLatLng =
@@ -126,6 +193,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         markers.clear();
         polylines.clear();
       });
+
       String pickupUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
       final pickupResponse = await http.get(Uri.parse(pickupUrl));
@@ -164,7 +232,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                   markerId: const MarkerId('pickup'),
                   position: pickupLatLng,
                   infoWindow: InfoWindow(
-                    title: 'Drop Point'.tr(),
+                    title: 'Pickup Point'.tr(),
                     snippet: '$pickupAddress - ${'Distance:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
                   ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -196,7 +264,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                 });
                 double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
                 pickUpDistance = distanceToPickup;
-                // Extract travel time
                 final durationToPickup =
                 directionsData['routes'][0]['legs'][0]['duration']['text'];
                 timeToPickup = durationToPickup;
@@ -231,7 +298,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       List<LatLng> points = [];
-
       if (data['routes'].isNotEmpty) {
         final polylinePoints = data['routes'][0]['overview_polyline']['points'];
         points = _decodePolyline(polylinePoints);
@@ -248,7 +314,6 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     }
     double distanceInFeet = distanceInKm * 3280.84;
     double distanceInMiles = distanceInFeet / 5280;
-
     if (distanceInMiles < 1) {
       return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
@@ -260,54 +325,82 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
 
   Future<void> recenterMap() async {
     try {
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      LatLng currentLatLng = LatLng(
+        currentPosition.latitude,
+        currentPosition.longitude,
+      );
       double heading = currentPosition.heading;
 
-      await mapController?.animateCamera(CameraUpdate.newCameraPosition(
+      // Ensure mapController is available
+      if (mapController == null) return;
+
+      // Move camera to the current location first
+      await mapController!.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: currentLatLng,
-          zoom: 20,
-          tilt: 20,
-          bearing: heading,
+          zoom: 18.5, // Adjust zoom level for better visibility
+          tilt: 25,   // Slight tilt for a 3D effect
+          bearing: heading, // Rotate based on user heading
         ),
       ));
 
-      if (pickupLatLng != null) {
-        final LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
-        List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
+      // If there's no pickup location, return
+      if (pickupLatLng == null) return;
 
+      LatLng pickUpLocation = LatLng(
+        pickupLatLng!.latitude,
+        pickupLatLng!.longitude,
+      );
+
+      // Fetch route points
+      List<LatLng> routePoints = await fetchDirections(
+        currentLatLng,
+        pickUpLocation,
+      );
+
+      if (routePoints.isNotEmpty) {
         setState(() {
+          polylines.clear(); // Clear existing route before adding new one
           polylines.add(Polyline(
-            polylineId: PolylineId('route'),
+            polylineId: const PolylineId('route'),
             points: routePoints,
             color: Colors.blue,
-            width: 5,
+            width: 8,
+            endCap: Cap.roundCap,
+            startCap: Cap.roundCap,
+            jointType: JointType.round,
           ));
         });
 
-        if (routePoints.isNotEmpty) {
-          LatLngBounds bounds = LatLngBounds(
-            southwest: LatLng(
-              routePoints.map((point) => point.latitude).reduce((a, b) => a < b ? a : b),
-              routePoints.map((point) => point.longitude).reduce((a, b) => a < b ? a : b),
-            ),
-            northeast: LatLng(
-              routePoints.map((point) => point.latitude).reduce((a, b) => a > b ? a : b),
-              routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
-            ),
-          );
-        }
-      } else {
-        return;
+        // Adjust camera to fit both points
+        LatLngBounds bounds = LatLngBounds(
+          southwest: LatLng(
+            routePoints.map((point) => point.latitude).reduce((a, b) => a < b ? a : b),
+            routePoints.map((point) => point.longitude).reduce((a, b) => a < b ? a : b),
+          ),
+          northeast: LatLng(
+            routePoints.map((point) => point.latitude).reduce((a, b) => a > b ? a : b),
+            routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
+          ),
+        );
+
+        // Animate camera to fit the route
+        await mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }
     }
   }
 
   double _haversineDistance(LatLng start, LatLng end) {
-    const double R = 6371; // Radius of the Earth in kilometers
+    const double R = 6371;
     double dLat = _degToRad(end.latitude - start.latitude);
     double dLon = _degToRad(end.longitude - start.longitude);
     double a =
@@ -367,6 +460,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     positionStreamSubscription?.cancel();
     positionStream.cancel();
     _locationTimer?.cancel();
+    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -425,54 +519,25 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         double lng = data['results'][0]['geometry']['location']['lng'];
         return LatLng(lat, lng);
       } else {
-        return null;
+
       }
     } else {
-      return null;
+
     }
     return null;
   }
 
-  Future<void> startLocationUpdates() async {
-    LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-    );
-
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
-      LatLng newLocation = LatLng(position.latitude, position.longitude);
-
-      if (newLocation != currentLatLng) {
-        await fetchNearbyPlaces(newLocation);
-        await _updateRealTimeData(newLocation);
-        setState(() {
-          currentLatLng = newLocation;
-          markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-          markers.add(Marker(
-            markerId: const MarkerId('currentLocation'),
-            position: newLocation,
-            infoWindow: InfoWindow(
-              title: 'Current Location'.tr(),
-            ),
-            icon: customArrowIcon!,
-          ));
-        });
-        updateCameraPosition(newLocation);
-        updateLocationMarker(newLocation, position.heading);
-        await updateRouteDetails(newLocation);
-      }
-    });
-  }
-
   Future<void> _updateRealTimeData(LatLng currentLatLng) async {
     try {
-      if (pickupLatLng == null) {
-        return;
-      }
+      if (!mounted || pickupLatLng == null) return;
 
       double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
       String updatedFeet = formatDistance(distanceToPickup);
+
+      // Fetch route points
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
+      await fetchNearbyPlaces(currentLatLng);
+
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
       String reverseGeocodeUrl =
           'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
@@ -491,8 +556,14 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           }
         }
       }
-      String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
+      String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?'
+          'origin=${currentLatLng.latitude},${currentLatLng.longitude}'
+          '&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}'
+          '&mode=driving&key=$apiKey';
+
       final directionsResponse = await http.get(Uri.parse(directionsUrl));
+
+      if (!mounted) return;
 
       if (directionsResponse.statusCode == 200) {
         final directionsData = json.decode(directionsResponse.body);
@@ -500,51 +571,49 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
           final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
 
-          if (!mounted) return;
-
           setState(() {
             pickUpDistance = distanceToPickup;
             timeToPickup = durationToPickup;
             feet = updatedFeet;
+
             polylines.clear();
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
               color: Colors.blue,
-              width: 5,
+              width: 8,
               points: updatedRoutePoints,
+              endCap: Cap.roundCap,
+              startCap: Cap.roundCap,
+              jointType: JointType.round,
             ));
+
+            // Update user marker
             markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
             markers.add(Marker(
               markerId: const MarkerId('currentLocation'),
               position: currentLatLng,
               infoWindow: InfoWindow(
                 title: placeName,
-                snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
+                snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
               ),
               icon: customArrowIcon!,
             ));
-
-            mapController?.animateCamera(CameraUpdate.newLatLngBounds(
-              LatLngBounds(
-                southwest: LatLng(
-                  currentLatLng.latitude < pickupLatLng!.latitude ? currentLatLng.latitude : pickupLatLng!.latitude,
-                  currentLatLng.longitude < pickupLatLng!.longitude ? currentLatLng.longitude : pickupLatLng!.longitude,
-                ),
-                northeast: LatLng(
-                  currentLatLng.latitude > pickupLatLng!.latitude ? currentLatLng.latitude : pickupLatLng!.latitude,
-                  currentLatLng.longitude > pickupLatLng!.longitude ? currentLatLng.longitude : pickupLatLng!.longitude,
-                ),
-              ),
-              100.0,
-            ));
           });
+
+          // 🗺 Update camera to focus on user's current location
+          if (mapController != null) {
+            mapController!.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 15.5));
+          }
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }
     }
   }
-
 
   void updateLocationMarker(LatLng position, double heading) {
     if (mapController != null && customArrowIcon != null) {
@@ -553,49 +622,50 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
           markerId: MarkerId('current_location'),
           position: position,
           icon: customArrowIcon!,
-          rotation: heading,
+          rotation: heading, // Rotates according to movement direction
           anchor: Offset(0.5, 0.5),
         );
       });
+
+      mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: position,
+            zoom: 16,  // Adjust zoom level
+            bearing: heading, // Rotate map smoothly
+            tilt: 30,  // Slight tilt for 3D effect
+          ),
+        ),
+      );
     }
   }
 
-  void updateCameraPosition(LatLng currentLatLng) {
+  void updateCameraPosition(LatLng newLocation) {
     mapController?.animateCamera(
-      CameraUpdate.newLatLng(currentLatLng),
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: newLocation,
+          zoom: 17.0,
+          bearing: 45,
+          tilt: 30,
+        ),
+      ),
     );
   }
 
-  Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    if (pickupLatLng != null) {
-      double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
-      String feet = formatDistance(distanceToPickup);
-      List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      String directionsUrl =
-          'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
+  Future<void> updateRouteDetails(LatLng newLocation) async {
+    if (pickupLatLng == null) return;
 
-      final response = await http.get(Uri.parse(directionsUrl));
-      if (response.statusCode == 200) {
-        final directionsData = json.decode(response.body);
-        if (directionsData['status'] == 'OK') {
-          final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-          setState(() {
-            polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
-            polylines.add(Polyline(
-              polylineId: const PolylineId('currentToPickup'),
-              color: Colors.blue,
-              width: 5,
-              points: updatedRoutePoints,
-            ));
-            pickUpDistance = distanceToPickup;
-            timeToPickup = durationToPickup;
-            feet = formatDistance(distanceToPickup);
-          });
-
-        }
-      }
-    }
+    List<LatLng> newRoute = await fetchDirections(newLocation, pickupLatLng!);
+    setState(() {
+      polylines.clear();
+      polylines.add(Polyline(
+        polylineId: const PolylineId('dynamicRoute'),
+        color: Colors.blue,
+        width: 8,
+        points: newRoute,
+      ));
+    });
   }
 
   Future<void> fetchNearbyPlaces(LatLng currentLatLng) async {
@@ -613,7 +683,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
       final nearbyPlacesData = json.decode(response.body);
 
       setState(() {
-        nearbyPlaces = []; // Clear previous places
+        nearbyPlaces = [];
       });
 
       if (nearbyPlacesData['status'] == 'OK') {
@@ -651,6 +721,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
 
     return latLngList;
   }
+
 
 
   @override
@@ -693,47 +764,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                     ),
                   ),
                   Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: viewUtil.isTablet ? 30 : 20,
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: (){
-                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                          firstName: widget.firstName,
-                                          lastName: widget.lastName,
-                                          token: widget.token,
-                                          id: widget.id,
-                                          partnerId: widget.partnerId,
-                                          mode: 'online')));
-                                    },
-                                    icon: Icon(FontAwesomeIcons.multiply,
-                                        size: viewUtil.isTablet?30:20)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                  Positioned(
-                      top: MediaQuery.sizeOf(context).height * 0.1,
+                      top: MediaQuery.sizeOf(context).height * 0.02,
                       child: Container(
                         margin: EdgeInsets.only(left: 20),
                         width: MediaQuery.sizeOf(context).width * 0.92,
@@ -779,7 +810,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                       )
                   ),
                   Positioned(
-                      bottom: 20,
+                      bottom: 50,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 15, right: 30),
                         child: Container(

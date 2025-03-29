@@ -138,177 +138,182 @@ class _DriverProfileState extends State<DriverProfile> {
                 ),
           ),
         ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 20,bottom: 40),
-            child: Column(
-              children: [
-                commonWidgets.buildTextField(
-                    'First Name'.tr(), firstNameController,
-                    context: context,readOnly: true),
-                commonWidgets.buildTextField(
-                    'Last Name'.tr(), lastNameController,
-                    context: context,readOnly: true),
-                commonWidgets.buildTextField(
-                    'Email Address'.tr(), emailController,
-                    context: context,readOnly: true),
-                commonWidgets.buildTextField(
-                    'Mobile No'.tr(), mobileNoController,
-                    context: context,readOnly: true),
-                commonWidgets.buildTextField(
-                    'Iqama No'.tr(), iqamaNoController,
-                    context: context,readOnly: true),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Date of Birth'.tr(),
-                      style: TextStyle(
-                          fontSize: viewUtil.isTablet ? 24 : 20,
-                          fontWeight: FontWeight.w500),
+        body: RefreshIndicator(
+          onRefresh: () async{
+            await fetchOperatorDetail();
+          },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20,bottom: 40),
+              child: Column(
+                children: [
+                  commonWidgets.buildTextField(
+                      'First Name'.tr(), firstNameController,
+                      context: context,readOnly: true),
+                  commonWidgets.buildTextField(
+                      'Last Name'.tr(), lastNameController,
+                      context: context,readOnly: true),
+                  commonWidgets.buildTextField(
+                      'Email Address'.tr(), emailController,
+                      context: context,readOnly: true),
+                  commonWidgets.buildTextField(
+                      'Mobile No'.tr(), mobileNoController,
+                      context: context,readOnly: true),
+                  commonWidgets.buildTextField(
+                      'Iqama No'.tr(), iqamaNoController,
+                      context: context,readOnly: true),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Date of Birth'.tr(),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 24 : 20,
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
-                  child: TextField(
-                    controller: dobController,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      hintStyle: TextStyle(color: Color(0xffCCCCCC)),
-                      border: OutlineInputBorder(
-                        borderRadius:
-                        const BorderRadius.all(Radius.circular(10)),
-                        borderSide: const BorderSide(
-                          color: Color(0xffBCBCBC),
-                          width: 1.0,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+                    child: TextField(
+                      controller: dobController,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        hintStyle: TextStyle(color: Color(0xffCCCCCC)),
+                        border: OutlineInputBorder(
+                          borderRadius:
+                          const BorderRadius.all(Radius.circular(10)),
+                          borderSide: const BorderSide(
+                            color: Color(0xffBCBCBC),
+                            width: 1.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                          const BorderRadius.all(Radius.circular(10)),
+                          borderSide: const BorderSide(
+                            color: Color(0xffBCBCBC),
+                            width: 1.0,
+                          ),
                         ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius:
-                        const BorderRadius.all(Radius.circular(10)),
-                        borderSide: const BorderSide(
-                          color: Color(0xffBCBCBC),
-                          width: 1.0,
+                    ),
+                  ),
+                  commonWidgets.buildTextField(
+                      'Panel Information'.tr(), panelInfoController,
+                      context: context,readOnly: true),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Driving License'.tr(),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 24 : 20,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
+                    alignment: Alignment.topLeft,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await FileDownloader.downloadAndOpenFile(
+                          context,
+                          "https://prod.naqlee.com/api/files/$drivingLicenseName",
+                          "$drivingLicenseName.pdf",
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                commonWidgets.buildTextField(
-                    'Panel Information'.tr(), panelInfoController,
-                    context: context,readOnly: true),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Driving License'.tr(),
-                      style: TextStyle(
-                          fontSize: viewUtil.isTablet ? 24 : 20,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
-                  alignment: Alignment.topLeft,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await FileDownloader.downloadAndOpenFile(
-                        context,
-                        "https://prod.naqlee.com/api/files/$drivingLicenseName",
-                        "$drivingLicenseName.pdf",
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                      child: const Text(
+                        "View File",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
-                    child: const Text(
-                      "View File",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
                   ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Aramco License'.tr(),
-                      style: TextStyle(
-                          fontSize: viewUtil.isTablet ? 24 : 20,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
-                  alignment: Alignment.topLeft,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await FileDownloader.downloadAndOpenFile(
-                        context,
-                        "https://prod.naqlee.com/api/files/$aramcoLicenseName",
-                        "$aramcoLicenseName.pdf",
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Aramco License'.tr(),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 24 : 20,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
-                    child: const Text(
-                      "View File",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
                   ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'National Id'.tr(),
-                      style: TextStyle(
-                          fontSize: viewUtil.isTablet ? 24 : 20,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
-                  alignment: Alignment.topLeft,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await FileDownloader.downloadAndOpenFile(
-                        context,
-                        "https://prod.naqlee.com/api/files/$nationalIdName",
-                        "$nationalIdName",
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
+                    alignment: Alignment.topLeft,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await FileDownloader.downloadAndOpenFile(
+                          context,
+                          "https://prod.naqlee.com/api/files/$aramcoLicenseName",
+                          "$aramcoLicenseName.pdf",
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "View File",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
-                    child: const Text(
-                      "View File",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'National Id'.tr(),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 24 : 20,
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(40, 0, 40, 10),
+                    alignment: Alignment.topLeft,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await FileDownloader.downloadAndOpenFile(
+                          context,
+                          "https://prod.naqlee.com/api/files/$nationalIdName",
+                          "$nationalIdName",
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "View File",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

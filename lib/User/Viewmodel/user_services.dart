@@ -423,7 +423,7 @@ class UserService{
         return [];
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -442,7 +442,7 @@ class UserService{
         return [];
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -461,7 +461,7 @@ class UserService{
         return [];
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -481,7 +481,7 @@ class UserService{
         return [];
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -563,7 +563,7 @@ class UserService{
       }
       return null;
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -622,7 +622,7 @@ class UserService{
       }
       return null;
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -687,7 +687,7 @@ class UserService{
       }
       return null;
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -748,7 +748,7 @@ class UserService{
       }
       return null;
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
@@ -806,7 +806,7 @@ class UserService{
       }
       return null;
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
@@ -838,7 +838,7 @@ class UserService{
         return null;
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
@@ -868,7 +868,7 @@ class UserService{
           return [];
         }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
@@ -907,7 +907,7 @@ class UserService{
         return null;
       }
     } on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } on FormatException {
       return null;
@@ -1000,7 +1000,7 @@ class UserService{
         return [];
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -1032,7 +1032,7 @@ class UserService{
         commonWidgets.showToast(message);
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }
@@ -1119,7 +1119,7 @@ class UserService{
         return null;
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
@@ -1149,7 +1149,7 @@ class UserService{
         return [];
       }
     }  on SocketException {
-     commonWidgets.showToast('No Internet connection');
+     commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -1189,7 +1189,7 @@ class UserService{
         throw Exception('Failed to load user data for user ID $userId');
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       throw Exception('Please check your internet \nconnection and try again.');
     } catch (e) {
       throw Exception('An error occurred,Please try again.');
@@ -1229,7 +1229,7 @@ class UserService{
         );
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return UserInvoiceModel(
         success: false,
         message: 'Failed to load user data for user ID $userId',
@@ -1371,7 +1371,7 @@ class UserService{
         commonWidgets.showToast(message);
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }

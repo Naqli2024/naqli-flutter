@@ -298,40 +298,6 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                     ),
                   ),
                   Positioned(
-                      top: 15,
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width,
-                        padding: const EdgeInsets.only(left: 10,right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 5), // changes position of shadow
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: viewUtil.isTablet ? 30 : 20,
-                                backgroundColor: Colors.white,
-                                child: IconButton(
-                                    onPressed: (){
-                                      Navigator.pop(context);
-                                    },
-                                    icon: Icon(FontAwesomeIcons.multiply,
-                                        size: viewUtil.isTablet?30:20)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                  Positioned(
                     bottom: 20,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 15,right: 30),
@@ -343,12 +309,48 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                             padding: const EdgeInsets.only(left: 10,right: 10),
                             child: Column(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 15),
-                                  child: Center(child: SvgPicture.asset('assets/naqleeBorder.svg',
-                                      height: viewUtil.isTablet
-                                          ?MediaQuery.of(context).size.height * 0.05
-                                          :MediaQuery.of(context).size.height * 0.04)),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(top: 15),
+                                          child: SvgPicture.asset(
+                                            'assets/naqleeBorder.svg',
+                                            height: viewUtil.isTablet
+                                                ? MediaQuery.of(context).size.height * 0.05
+                                                : MediaQuery.of(context).size.height * 0.04,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: EdgeInsets.only(right: 10),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            spreadRadius: 2,
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: viewUtil.isTablet ? 30 : 20,
+                                        backgroundColor: Colors.white,
+                                        child: IconButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          icon: Icon(FontAwesomeIcons.multiply,
+                                              size: viewUtil.isTablet ? 30 : 20),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Row(
                                   children: [
@@ -381,13 +383,14 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.start,
                                                 children: [
-                                                  Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
+                                                  Text('$timeToPickup(${pickUpDistance?.toStringAsFixed(2)}km)${'away'.tr()}',
+                                                      style: TextStyle(fontStyle: FontStyle.italic,fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:20)),
                                                   Padding(
                                                     padding: const EdgeInsets.only(right: 45),
                                                     child: Text(widget.pickUp,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   ),
                                                   Padding(
-                                                    padding: const EdgeInsets.only(bottom: 20),
+                                                    padding: const EdgeInsets.only(bottom: 10),
                                                     child: Text(widget.address,style: TextStyle(fontSize: viewUtil.isTablet?26:20,color: Color(0xff676565)),),
                                                   ),
                                                 ],

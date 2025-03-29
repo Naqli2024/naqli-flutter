@@ -111,38 +111,38 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     });
   }
 
-  Future<void> startLocationUpdatesForDropPoints() async {
+  void startLocationUpdatesForDropPoints() {
     LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 1,
+      timeLimit: Duration(milliseconds: 200),
     );
 
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
+    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings)
+        .listen((Position position) async {
       LatLng newLocation = LatLng(position.latitude, position.longitude);
-      if (newLocation != currentLatLng) {
-        await _updateRealTimeDataToDropPoints(newLocation);
-        await fetchNearbyPlaces(newLocation);
-        if (mounted) {
-          setState(() {
-            currentLatLng = newLocation;
-            markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-            markers.add(Marker(
-              markerId: const MarkerId('currentLocation'),
-              position: newLocation,
-              infoWindow: InfoWindow(
-                title: '$currentPlace',
-              ),
-              icon: customArrowIcon!,
-            ));
-          });
-          checkDropLocation();
-          updateCameraPosition(newLocation);
-          updateLocationMarker(newLocation, position.heading);
-          await updateRouteDetails(newLocation);
+      double heading = position.heading;
+
+      if (mounted) {
+        updateLocationMarker(newLocation, heading);
+
+        if (currentLatLng == null || _haversineDistance(currentLatLng!, newLocation) > 50) {
+          updateCameraPosition(newLocation, heading);
         }
+
+        if (currentLatLng != null && _haversineDistance(currentLatLng!, newLocation) < 5) {
+          animateMarkerMovement(currentLatLng!, newLocation);
+        }
+
+        setState(() {
+          currentLatLng = newLocation;
+        });
+
+        await updateRouteDetails(newLocation);
       }
     });
   }
+
 
   Future<void> loadCustomArrowIcon() async {
     final Uint8List markerIcon = await getBytesFromAsset('assets/arrow.png', 140);
@@ -155,8 +155,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     ui.FrameInfo fi = await codec.getNextFrame();
     return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
   }
-
-
 
   Future<void> _updateRealTimeDataToDropPoints(LatLng currentLatLng) async {
     try {
@@ -215,7 +213,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                 polylines.add(Polyline(
                   polylineId: PolylineId('currentToDrop$i'),
                   color: Colors.green,
-                  width: 5,
+                  width: 10,
                   points: updatedRoutePoints,
                 ));
 
@@ -244,12 +242,19 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
 
     if (permission == location_package.PermissionStatus.granted) {
       location.onLocationChanged.listen((location_package.LocationData newLocation) {
-        currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
+        LatLng updatedLocation = LatLng(newLocation.latitude!, newLocation.longitude!);
+
+        if (currentLatLng != null) {
+          animateMarkerMovement(currentLatLng, updatedLocation);
+        }
+
+        setState(() {
+          currentLatLng = updatedLocation;
+        });
+
         _updateRealTimeDataToDropPoints(currentLatLng);
         checkDropLocation();
       });
-    } else {
-
     }
   }
 
@@ -274,56 +279,72 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     return null;
   }
 
-  void updateLocationMarker(LatLng position, double heading) {
+  void updateLocationMarker(LatLng newPosition, double heading) {
     if (mapController != null && customArrowIcon != null) {
       setState(() {
-        currentLocationMarker = Marker(
-          markerId: MarkerId('current_location'),
-          position: position,
-          infoWindow: InfoWindow(
-            title: '$currentPlace',
-          ),
+        markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
+
+        markers.add(Marker(
+          markerId: const MarkerId('currentLocation'),
+          position: newPosition,
           icon: customArrowIcon!,
           rotation: heading,
-          anchor: Offset(0.5, 0.5),
-        );
+          anchor: const Offset(0.5, 0.5),
+        ));
       });
+
+      updateCameraPosition(newPosition, heading);
     }
   }
 
-  void updateCameraPosition(LatLng currentLatLng) {
+  void animateMarkerMovement(LatLng oldPos, LatLng newPos) {
+    const int animationDuration = 100;
+    const int framesPerSecond = 30;
+    int frame = 0;
+
+    Timer.periodic(Duration(milliseconds: animationDuration ~/ framesPerSecond), (timer) {
+      frame++;
+      double lat = oldPos.latitude + (newPos.latitude - oldPos.latitude) * (frame / framesPerSecond);
+      double lng = oldPos.longitude + (newPos.longitude - oldPos.longitude) * (frame / framesPerSecond);
+
+      setState(() {
+        currentLatLng = LatLng(lat, lng);
+      });
+
+      if (frame >= framesPerSecond) {
+        timer.cancel();
+      }
+    });
+  }
+
+
+  void updateCameraPosition(LatLng newLocation, double bearing) {
     mapController?.animateCamera(
-      CameraUpdate.newLatLng(currentLatLng),
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: newLocation,
+          zoom: 18.0,
+          tilt: 20.0,
+          bearing: bearing,
+        ),
+      ),
     );
   }
 
   Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    if (pickupLatLng != null) {
-      double distanceToPickup = _haversineDistance(currentLatLng, dropPointLatLng!);
-      String feet = formatDistance(distanceToPickup);
+    if (dropPointLatLng != null) {
       List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, dropPointLatLng!);
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      String directionsUrl =
-          'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${dropPointLatLng!.latitude},${dropPointLatLng!.longitude}&key=$apiKey';
 
-      final response = await http.get(Uri.parse(directionsUrl));
-      if (response.statusCode == 200) {
-        final directionsData = json.decode(response.body);
-        if (directionsData['status'] == 'OK') {
-          final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-          setState(() {
-            polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
-            polylines.add(Polyline(
-              polylineId: const PolylineId('currentToPickup'),
-              color: Colors.blue,
-              width: 5,
-              points: updatedRoutePoints,
-            ));
-            pickUpDistance = distanceToPickup;
-            timeToDrop = durationToPickup;
-            feet = formatDistance(distanceToPickup);
-          });
-        }
+      if (mounted) {
+        setState(() {
+          polylines.clear();
+          polylines.add(Polyline(
+            polylineId: const PolylineId('currentToDrop'),
+            color: Colors.green,
+            width: 10,
+            points: updatedRoutePoints,
+          ));
+        });
       }
     }
   }
@@ -391,65 +412,44 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   }
 
   String formatDistance(double distanceInKm) {
-    double distanceInFeet = distanceInKm * 3280.84; // Convert km to feet
-    double distanceInMiles = distanceInFeet / 5280; // Convert feet to miles
+    double distanceInFeet = distanceInKm * 3280.84;
+    double distanceInMiles = distanceInFeet / 5280;
 
     if (distanceInMiles < 1) {
-      return '${distanceInFeet.toStringAsFixed(0)} ft'; // Display feet if less than 1 mile
+      return '${distanceInFeet.toStringAsFixed(0)} ft';
     } else {
       int miles = distanceInMiles.floor(); // Whole miles
-      double remainingFeet = distanceInFeet - (miles * 5280); // Remaining feet
-      return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft'; // Display miles and remaining feet
+      double remainingFeet = distanceInFeet - (miles * 5280);
+      return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft';
     }
   }
 
   Future<void> recenterMap() async {
     try {
       Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
+      LatLng newLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
       double heading = currentPosition.heading;
 
-      if (pickupLatLng != null) {
-        LatLng pickUpLocation = LatLng(pickupLatLng!.latitude, pickupLatLng!.longitude);
-
-        // Fetch route points
-        List<LatLng> routePoints = await fetchDirections(currentLatLng, pickUpLocation);
+      if (mounted) {
+        if (currentLatLng != null) {
+          animateMarkerMovement(currentLatLng, newLatLng);
+        }
 
         setState(() {
-          polylines.add(Polyline(
-            polylineId: PolylineId('route'),
-            points: routePoints,
-            color: Colors.blue,
-            width: 5,
-          ));
+          currentLatLng = newLatLng;
         });
 
-        if (routePoints.isNotEmpty) {
-          LatLngBounds bounds = LatLngBounds(
-            southwest: LatLng(
-              routePoints.map((point) => point.latitude).reduce((a, b) => a < b ? a : b),
-              routePoints.map((point) => point.longitude).reduce((a, b) => a < b ? a : b),
-            ),
-            northeast: LatLng(
-              routePoints.map((point) => point.latitude).reduce((a, b) => a > b ? a : b),
-              routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
-            ),
-          );
-
-          // Animate camera to show the entire route
-          await mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100)); // Adjust padding if needed
-        }
-      } else {
-        // If no pickup location, just focus on the current location
-        await mapController?.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: currentLatLng,
-            zoom: 18,
-            tilt: 20,
-            bearing: heading,
-          ),
+        markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
+        markers.add(Marker(
+          markerId: const MarkerId('currentLocation'),
+          position: newLatLng,
+          icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+          rotation: heading,
+          anchor: const Offset(0.5, 0.5),
         ));
       }
+
+      updateCameraPosition(newLatLng, heading);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
@@ -512,7 +512,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   }
 
   double formattedDistance(double distanceInMeters) {
-    return distanceInMeters * 3.28084; // Convert meters to feet and return as double
+    return distanceInMeters * 3.28084;
   }
 
   void checkDropLocation() async {
@@ -523,7 +523,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     // Convert kilometers to feet (1 km = 3280.84 feet)
     double distanceInFeet = distanceToDropInKm * 3280.84;
     print(distanceInFeet);
-    if (distanceInFeet <= 1850/*60*/ && !hasNavigated) {
+    if (distanceInFeet <= 100 && !hasNavigated) {
       hasNavigated = true;
 
       if (mounted) {
@@ -567,6 +567,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                         target: LatLng(0, 0),
                         zoom: 2,
                       ),
+                      buildingsEnabled: false,
                       markers: Set<Marker>.of(markers),
                       polylines: Set<Polyline>.of(polylines),
                       compassEnabled: false,
@@ -649,7 +650,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text("DropPoint Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text("DropPoint Location".tr(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
                                           Text(widget.dropPoints.join(', '),textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                                           /***Commented for removing Nearby location***/
                                          /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
@@ -679,7 +680,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('Fetching DropPoint Location...',
+                                child: Text('Fetching DropPoint Location...'.tr(),
                                     style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                               ),
                             ],
@@ -690,110 +691,116 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                   ),
                   Visibility(
                     visible: isAtDropLocation,
-                    child: Container(
-                      width: MediaQuery.sizeOf(context).width * 0.93,
-                      child: Card(
-                        color: Colors.white,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                    child: Positioned(
+                      bottom: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                              child: Column(
                                 children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          timeToDrop ?? '',
+                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SvgPicture.asset('assets/person.svg'),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          dropPointsDistance.isNotEmpty
+                                              ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
+                                              : 'Calculating...'.tr(),
+                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Divider(
+                                    indent: 15,
+                                    endIndent: 15,
+                                  ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      timeToDrop ?? '',
+                                      widget.userName,
                                       style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SvgPicture.asset('assets/person.svg'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      dropPointsDistance.isNotEmpty
-                                          ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                                          : 'Calculating...'.tr(),
-                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 15, top: 20),
+                                    child: SizedBox(
+                                      height: MediaQuery.of(context).size.height * 0.07,
+                                      width: MediaQuery.of(context).size.width * 0.62,
+                                      child: SlideAction(
+                                        borderRadius: 12,
+                                        elevation: 0,
+                                        submittedIcon: Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: viewUtil.isTablet?30:26,
+                                        ),
+                                        innerColor: Color(0xff6069FF),
+                                        outerColor: Color(0xff6069FF),
+                                        sliderButtonIcon: AnimatedBuilder(
+                                          animation: _animation,
+                                          builder: (context, child) {
+                                            return Transform.translate(
+                                              offset: Offset(_animation.value, 0),
+                                              child: Icon(
+                                                Icons.arrow_forward_outlined,
+                                                color: Colors.white,
+                                                size: viewUtil.isTablet?30:26,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        text: "Complete Order".tr(),
+                                        textStyle: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: viewUtil.isTablet?26:18,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        onSubmit: () async{
+                                          setState(() {
+                                            isCompleting =true;
+                                          });
+                                          await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+                                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                              firstName: widget.firstName,
+                                              lastName: widget.lastName,
+                                              token: widget.token,
+                                              id: widget.id,
+                                              partnerId: widget.partnerId,
+                                              mode: 'online')));
+                                          setState(() {
+                                            isCompleting =false;
+                                          });
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                              Divider(
-                                indent: 15,
-                                endIndent: 15,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  widget.userName,
-                                  style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                                ),
-                              ),
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 15, top: 20),
-                                child: SizedBox(
-                                  height: MediaQuery.of(context).size.height * 0.07,
-                                  width: MediaQuery.of(context).size.width * 0.62,
-                                  child: SlideAction(
-                                    borderRadius: 12,
-                                    elevation: 0,
-                                    submittedIcon: Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: viewUtil.isTablet?30:26,
-                                    ),
-                                    innerColor: Color(0xff6069FF),
-                                    outerColor: Color(0xff6069FF),
-                                    sliderButtonIcon: AnimatedBuilder(
-                                      animation: _animation,
-                                      builder: (context, child) {
-                                        return Transform.translate(
-                                          offset: Offset(_animation.value, 0),
-                                          child: Icon(
-                                            Icons.arrow_forward_outlined,
-                                            color: Colors.white,
-                                            size: viewUtil.isTablet?30:26,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    text: "Complete Order".tr(),
-                                    textStyle: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: viewUtil.isTablet?26:18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    onSubmit: () async{
-                                      setState(() {
-                                        isCompleting =true;
-                                      });
-                                      await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                          firstName: widget.firstName,
-                                          lastName: widget.lastName,
-                                          token: widget.token,
-                                          id: widget.id,
-                                          partnerId: widget.partnerId,
-                                          mode: 'online')));
-                                      setState(() {
-                                        isCompleting =false;
-                                      });
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  if (!isAtDropLocation)
+                  if (!isAtDropLocation)...[
                   Visibility(
           visible: !isMoveClicked,
           replacement: Positioned(
@@ -887,7 +894,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      'Customer Notified'.tr(),
+                                      'Notify Customer'.tr(),
                                       style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
                                     ),
                                   ),
@@ -991,227 +998,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                       ),
                     ),
                   ),
-
-
-
-
-           /* Positioned(
-        bottom: 20,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 15, right: 30),
-          child: isMoveClicked
-              ? Container(
-            width: MediaQuery.sizeOf(context).width * 0.93,
-            child: Card(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            timeToDrop == null ?'Calculating...'.tr() :timeToDrop ?? '',
-                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SvgPicture.asset('assets/person.svg'),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            dropPointsDistance.isNotEmpty
-                                ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                                : 'Calculating...'.tr(),
-                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        'Dropping of Product'.tr(),
-                        style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          commonWidgets.makePhoneCall(widget.contactNo);
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                            ),
-                          ],),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-              : isAtDropLocation
-              ? Container(
-            width: MediaQuery.sizeOf(context).width * 0.93,
-            child: Card(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            timeToDrop ?? '',
-                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SvgPicture.asset('assets/person.svg'),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            dropPointsDistance.isNotEmpty
-                                ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                                : 'Calculating...'.tr(),
-                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Divider(
-                      indent: 15,
-                      endIndent: 15,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        widget.userName,
-                        style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 15, top: 20),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.07,
-                        width: MediaQuery.of(context).size.width * 0.62,
-                        child: SlideAction(
-                          borderRadius: 12,
-                          elevation: 0,
-                          submittedIcon: Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: viewUtil.isTablet?30:26,
-                          ),
-                          innerColor: Color(0xff6069FF),
-                          outerColor: Color(0xff6069FF),
-                          sliderButtonIcon: AnimatedBuilder(
-                            animation: _animation,
-                            builder: (context, child) {
-                              return Transform.translate(
-                                offset: Offset(_animation.value, 0),
-                                child: Icon(
-                                  Icons.arrow_forward_outlined,
-                                  color: Colors.white,
-                                  size: viewUtil.isTablet?30:26,
-                                ),
-                              );
-                            },
-                          ),
-                          text: "Complete Order".tr(),
-                          textStyle: TextStyle(
-                            color: Colors.white,
-                            fontSize: viewUtil.isTablet?26:18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          onSubmit: () async{
-                            setState(() {
-                              isCompleting =true;
-                            });
-                            await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                token: widget.token,
-                                id: widget.id,
-                                partnerId: widget.partnerId,
-                                mode: 'online')));
-                            setState(() {
-                              isCompleting =false;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-              : Container(
-            width: MediaQuery.sizeOf(context).width * 0.93,
-            child: Card(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Customer Notified'.tr(),
-                        style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        widget.userName,
-                        style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          commonWidgets.makePhoneCall(widget.contactNo);
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.call, color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565))),
-                            ),
-                          ],),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        )
-      ),*/
+    ]
                 ]
               ),
             ],
@@ -1220,181 +1007,4 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       ),
     );
   }
-
-
-
-  Widget buildBottomUI() {
-    ViewUtil viewUtil = ViewUtil(context);
-
-    if (!isAtDropLocation) {
-      return Positioned(
-        bottom: MediaQuery.sizeOf(context).height * 0.27,
-        child: GestureDetector(
-          onTap: () {
-            setState(() {
-              isMoveClicked = true;
-            });
-            recenterMap();
-          },
-          child: Container(
-            width: MediaQuery.sizeOf(context).width,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-              border: Border.all(
-                color: Color(0xff6069FF),
-                width: 6,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
-              ),
-              child: CircleAvatar(
-                minRadius: viewUtil.isTablet ? 55 : 40,
-                backgroundColor: Color(0xff6069FF),
-                child: Text(
-                  'Move'.tr(),
-                  style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // ✅ FIX: Show "Customer Notified" when isMoveClicked is false
-    if (isMoveClicked) {
-      return Positioned(
-        bottom: 20,
-        child: Container(
-          width: MediaQuery.sizeOf(context).width * 0.93,
-          child: Card(
-            color: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      'Customer Notified'.tr(),
-                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      widget.userName,
-                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        commonWidgets.makePhoneCall(widget.contactNo);
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // ✅ FIX: Show "Dropping of Product" only when isMoveClicked is true
-    return Positioned(
-      bottom: 20,
-      child: Container(
-        width: MediaQuery.sizeOf(context).width * 0.93,
-        child: Card(
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        timeToDrop == null ? 'Calculating...'.tr() : timeToDrop ?? '',
-                        style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset('assets/person.svg'),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(),
-                        style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
-                      ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    'Dropping of Product'.tr(),
-                    style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      commonWidgets.makePhoneCall(widget.contactNo);
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-
-
 }

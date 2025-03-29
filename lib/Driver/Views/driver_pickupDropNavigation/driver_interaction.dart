@@ -80,6 +80,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
   double proximityThreshold = 0.001;
   bool hasNavigated = false;
   bool isMoveClicked = false;
+  Timer? _animationTimer;
 
   @override
   void initState() {
@@ -90,16 +91,82 @@ class _DriverInteractionState extends State<DriverInteraction> {
     startLocationUpdates();
     loadCustomArrowIcon();
     _initLocationListener();
-    _startLocationUpdates();
+    startLocationUpdates();
   }
 
-  void _startLocationUpdates() {
-    positionStream = Geolocator.getPositionStream().listen((Position position) {
-      setState(() {
-        currentLatLng = LatLng(position.latitude, position.longitude); // Update current location
-      });
-      checkPickupLocation();
+
+  Future<void> startLocationUpdates() async {
+    LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 1,
+      timeLimit: Duration(milliseconds: 200),
+    );
+
+    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
+      LatLng newLocation = LatLng(position.latitude, position.longitude);
+      double heading = position.heading;
+
+      if (currentLatLng == null || newLocation != currentLatLng) {
+        // Move marker smoothly
+        animateMarkerAlongPolyline(currentLatLng ?? newLocation, newLocation, heading);
+
+        setState(() {
+          currentLatLng = newLocation;
+        });
+
+        // Move camera dynamically
+        mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: newLocation,
+              zoom: 18,
+              bearing: heading,
+              tilt: 30,
+            ),
+          ),
+        );
+
+        // Fetch new route dynamically
+        await updateRouteDetails(newLocation);
+      }
     });
+  }
+
+  void animateMarkerAlongPolyline(LatLng oldPos, LatLng newPos, double heading) {
+    const int steps = 10;
+    const duration = Duration(milliseconds: 500);
+    int tick = 0;
+
+    _animationTimer?.cancel(); // Cancel any existing timer before starting a new one
+
+    _animationTimer = Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
+      if (tick > steps || !mounted) { // Check if widget is mounted
+        timer.cancel();
+        return;
+      }
+
+      double lat = lerp(oldPos.latitude, newPos.latitude, tick / steps);
+      double lng = lerp(oldPos.longitude, newPos.longitude, tick / steps);
+      LatLng interpolatedPos = LatLng(lat, lng);
+
+      if (mounted) {
+        setState(() {
+          currentLocationMarker = Marker(
+            markerId: const MarkerId('current_location'),
+            position: interpolatedPos,
+            icon: customArrowIcon!,
+            rotation: heading,
+            anchor: const Offset(0.5, 0.5),
+          );
+        });
+      }
+
+      tick++;
+    });
+  }
+
+  double lerp(double start, double end, double t) {
+    return start + (end - start) * t;
   }
 
   Future<void> fetchCoordinates() async {
@@ -172,7 +239,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                   polylines.add(Polyline(
                     polylineId: const PolylineId('currentToPickup'),
                     color: Colors.blue,
-                    width: 5,
+                    width: 10,
                     points: routePoints,
                   ));
                 });
@@ -321,7 +388,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
             polylineId: PolylineId('route'),
             points: routePoints,
             color: Colors.blue,
-            width: 5,
+            width: 10,
           ));
         });
 
@@ -348,7 +415,6 @@ class _DriverInteractionState extends State<DriverInteraction> {
       );
     }
   }
-
 
   double _haversineDistance(LatLng start, LatLng end) {
     const double R = 6371;
@@ -411,6 +477,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
     positionStreamSubscription?.cancel();
     positionStream.cancel();
     _locationTimer?.cancel();
+    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -478,37 +545,6 @@ class _DriverInteractionState extends State<DriverInteraction> {
     return null;
   }
 
-  Future<void> startLocationUpdates() async {
-    LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-    );
-
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
-      LatLng newLocation = LatLng(position.latitude, position.longitude);
-      if (newLocation != currentLatLng) {
-        await fetchNearbyPlaces(newLocation);
-        await _updateRealTimeData(newLocation);
-        setState(() {
-          currentLatLng = newLocation;
-          markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-          markers.add(Marker(
-            markerId: const MarkerId('currentLocation'),
-            position: newLocation,
-            infoWindow: const InfoWindow(
-              title: 'Current Location',
-            ),
-            icon: customArrowIcon!,
-          ));
-        });
-        checkPickupLocation();
-        updateCameraPosition(newLocation);
-        updateLocationMarker(newLocation, position.heading);
-        await updateRouteDetails(newLocation);
-      }
-    });
-  }
-
   Future<void> _updateRealTimeData(LatLng currentLatLng) async {
     try {
       if (pickupLatLng == null) {
@@ -541,7 +577,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
             polylines.add(Polyline(
               polylineId: const PolylineId('currentToPickup'),
               color: Colors.blue,
-              width: 5,
+              width: 10,
               points: updatedRoutePoints,
             ));
 
@@ -574,49 +610,50 @@ class _DriverInteractionState extends State<DriverInteraction> {
           markerId: MarkerId('current_location'),
           position: position,
           icon: customArrowIcon!,
-          rotation: heading,
+          rotation: heading, // Rotates according to movement direction
           anchor: Offset(0.5, 0.5),
         );
       });
+
+      mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: position,
+            zoom: 16,  // Adjust zoom level
+            bearing: heading, // Rotate map smoothly
+            tilt: 30,  // Slight tilt for 3D effect
+          ),
+        ),
+      );
     }
   }
 
-  void updateCameraPosition(LatLng currentLatLng) {
+  void updateCameraPosition(LatLng newLocation) {
     mapController?.animateCamera(
-      CameraUpdate.newLatLng(currentLatLng),
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: newLocation,
+          zoom: 17.0,
+          bearing: 45,
+          tilt: 30,
+        ),
+      ),
     );
   }
 
-  Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    if (pickupLatLng != null) {
-      double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
-      String feet = formatDistance(distanceToPickup);
-      List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      String directionsUrl =
-          'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
+  Future<void> updateRouteDetails(LatLng newLocation) async {
+    if (pickupLatLng == null) return;
 
-      final response = await http.get(Uri.parse(directionsUrl));
-      if (response.statusCode == 200) {
-        final directionsData = json.decode(response.body);
-        if (directionsData['status'] == 'OK') {
-          final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-          setState(() {
-            polylines.removeWhere((p) => p.polylineId == const PolylineId('currentToPickup'));
-            polylines.add(Polyline(
-              polylineId: const PolylineId('currentToPickup'),
-              color: Colors.blue,
-              width: 5,
-              points: updatedRoutePoints,
-            ));
-            pickUpDistance = distanceToPickup;
-            timeToPickup = durationToPickup;
-            feet = formatDistance(distanceToPickup);
-          });
-
-        }
-      }
-    }
+    List<LatLng> newRoute = await fetchDirections(newLocation, pickupLatLng!);
+    setState(() {
+      polylines.clear();
+      polylines.add(Polyline(
+        polylineId: const PolylineId('dynamicRoute'),
+        color: Colors.blue,
+        width: 8,
+        points: newRoute,
+      ));
+    });
   }
 
   Future<void> fetchNearbyPlaces(LatLng currentLatLng) async {
@@ -670,14 +707,14 @@ class _DriverInteractionState extends State<DriverInteraction> {
     double distanceToPickupInFeet = distanceToPickupInKm * 3280.84;
     print(distanceToPickupInFeet);
     // Check if the distance is less than or equal to 50 feet and hasn't navigated yet
-    if (distanceToPickupInFeet <= 1305 /*70*/ && !hasNavigated) {
+    if (distanceToPickupInFeet <=  100 && !hasNavigated) {
       hasNavigated = true; // Prevent multiple navigations
 
       if (mounted) {
         setState(() {
           isAtPickupLocation = true;
         });
-        commonWidgets.showToast('Reached Pickup Location..');
+        commonWidgets.showToast('Reached Pickup Location..'.tr());
         await positionStream?.cancel();
         Navigator.pushReplacement(
           context,
@@ -704,7 +741,6 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
     }
   }
-
 
   List<LatLng> convertToLatLng(List<dynamic> coordinates) {
     List<LatLng> latLngList = [];
@@ -773,6 +809,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       ),
                       markers: Set<Marker>.of(markers),
                       polylines: Set<Polyline>.of(polylines),
+                      buildingsEnabled: false,
                       compassEnabled: false,
                       myLocationEnabled: false,
                       myLocationButtonEnabled: true,
@@ -817,7 +854,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Text("Pickup Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                          Text("Pickup Location".tr(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
                                           Text(widget.pickUp,textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                                          /***Commented for removing Nearby location***/
                                          /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
@@ -847,7 +884,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('Fetching Pickup Location...',
+                                child: Text('Fetching Pickup Location...'.tr(),
                                     style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                               ),
                             ],

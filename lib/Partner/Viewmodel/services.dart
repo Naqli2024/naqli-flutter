@@ -521,7 +521,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -541,7 +541,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -561,7 +561,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -581,7 +581,7 @@ class AuthService {
         return [];
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -670,7 +670,7 @@ class AuthService {
         return [];
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       return [];
@@ -743,7 +743,7 @@ class AuthService {
         return {};
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return {};
     } catch (e) {
       return {};
@@ -784,7 +784,7 @@ class AuthService {
         return null;
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
@@ -826,7 +826,7 @@ class AuthService {
         );
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -864,7 +864,7 @@ class AuthService {
         return null;
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
@@ -895,7 +895,7 @@ class AuthService {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -922,7 +922,7 @@ class AuthService {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -1084,7 +1084,7 @@ class AuthService {
         );
       }
     }on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
@@ -1114,7 +1114,7 @@ class AuthService {
         return [];
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
       return [];
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
@@ -1210,7 +1210,7 @@ class AuthService {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
     } on SocketException {
-      commonWidgets.showToast('No Internet connection');
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
       commonWidgets.showToast('Something went wrong,Please try again');
     }
