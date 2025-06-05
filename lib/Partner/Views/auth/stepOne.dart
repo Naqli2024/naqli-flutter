@@ -580,15 +580,30 @@ class _StepOneState extends State<StepOne> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+          margin: const EdgeInsets.only(left:30),
           alignment: Alignment.topLeft,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: viewUtil.isTablet?24:20,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: viewUtil.isTablet?24:20,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5),
+                  child: Text(
+                    '(Only PDF, DOC, DOCX allowed)',
+                    style: TextStyle(
+                      fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xff808080)
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -606,10 +621,27 @@ class _StepOneState extends State<StepOne> {
                     side: const BorderSide(color: Colors.black)),
               ),
               onPressed: () async {
-                FilePickerResult? result = await FilePicker.platform.pickFiles();
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf', 'doc', 'docx'],
+                );
+
                 if (result != null) {
+                  PlatformFile file = result.files.first;
+
+                  if (file.size > 100 * 1024) {
+                    commonWidgets.showToast('File must be 100 KB or less');
+                    return;
+                  }
+
+                  String? extension = file.extension?.toLowerCase();
+                  if (extension == null || !(extension == 'pdf' || extension == 'doc' || extension == 'docx')) {
+                    commonWidgets.showToast("Invalid file type. Only PDF, DOC, DOCX allowed");
+                    return;
+                  }
+
                   setState(() {
-                    istimaraCardFile = result.files.first;
+                    istimaraCardFile = file;
                     istimaraUpload = true;
                     istimaraError = false;
                   });
@@ -643,6 +675,18 @@ class _StepOneState extends State<StepOne> {
             ),
           ),
         ),
+        if (istimaraError)
+          Container(
+            margin: const EdgeInsets.only(left: 60, bottom: 20),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Please upload a file'.tr(),
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: viewUtil.isTablet?17:12,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -652,15 +696,30 @@ class _StepOneState extends State<StepOne> {
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+          margin: const EdgeInsets.only(left:30),
           alignment: Alignment.topLeft,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: viewUtil.isTablet?24:20,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: viewUtil.isTablet?24:20,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5),
+                  child: Text(
+                    '(Only JPG, PNG, JPEG, SVG allowed)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xff808080)
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -678,8 +737,25 @@ class _StepOneState extends State<StepOne> {
                       side: const BorderSide(color: Colors.black)),
                 ),
                 onPressed: () async {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['png', 'jpg', 'jpeg', 'svg'],
+                  );
+
                   if (result != null) {
+                    PlatformFile file = result.files.first;
+
+                    if (file.size > 100 * 1024) {
+                      commonWidgets.showToast('File must be 100 KB or less');
+                      return;
+                    }
+
+                    String? extension = file.extension?.toLowerCase();
+                    if (extension == null || !(extension == 'png' || extension == 'jpg' || extension == 'jpeg' || extension == 'svg')) {
+                      commonWidgets.showToast("Invalid file type. Only JPG, PNG, JPEG, SVG allowed");
+                      return;
+                    }
+
                     setState(() {
                       vehilePictureFile = result!.files.first;
                       vehicleUpload=true;

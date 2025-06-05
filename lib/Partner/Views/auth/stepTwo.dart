@@ -214,12 +214,27 @@ class _StepTwoState extends State<StepTwo> {
                         alignment: Alignment.topLeft,
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            'Driving License'.tr(),
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet ?24 :20,
-                                fontWeight: FontWeight.w500
-                            ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Driving License'.tr(),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ?24 :20,
+                                    fontWeight: FontWeight.w500
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  '(Only PDF, DOC, DOCX allowed)',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff808080)
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )),
                     Column(
@@ -238,8 +253,24 @@ class _StepTwoState extends State<StepTwo> {
                                       side: const BorderSide(color: Colors.black)),
                                 ),
                                 onPressed: () async {
-                                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'doc', 'docx'],
+                                  );
+
                                   if (result != null) {
+                                    PlatformFile file = result.files.first;
+
+                                    if (file.size > 100 * 1024) {
+                                      commonWidgets.showToast('File must be 100 KB or less');
+                                      return;
+                                    }
+
+                                    String? extension = file.extension?.toLowerCase();
+                                    if (extension == null || !(extension == 'pdf' || extension == 'doc' || extension == 'docx')) {
+                                      commonWidgets.showToast("Invalid file type. Only PDF, DOC, DOCX allowed");
+                                      return;
+                                    }
                                     setState(() {
                                       licenseFile = result!.files.first;
                                       licenseUpload = true;
@@ -291,12 +322,27 @@ class _StepTwoState extends State<StepTwo> {
                         alignment: Alignment.topLeft,
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            'national ID'.tr(),
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet?24:20,
-                                fontWeight: FontWeight.w500
-                            ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'national ID'.tr(),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet?24:20,
+                                    fontWeight: FontWeight.w500
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  '(Only PDF, DOC, DOCX allowed)',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff808080)
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )),
                     Column(
@@ -315,8 +361,24 @@ class _StepTwoState extends State<StepTwo> {
                                       side: const BorderSide(color: Colors.black)),
                                 ),
                                 onPressed: () async {
-                                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'doc', 'docx'],
+                                  );
+
                                   if (result != null) {
+                                    PlatformFile file = result.files.first;
+
+                                    if (file.size > 100 * 1024) {
+                                      commonWidgets.showToast('File must be 100 KB or less');
+                                      return;
+                                    }
+
+                                    String? extension = file.extension?.toLowerCase();
+                                    if (extension == null || !(extension == 'pdf' || extension == 'doc' || extension == 'docx')) {
+                                      commonWidgets.showToast("Invalid file type. Only PDF, DOC, DOCX allowed");
+                                      return;
+                                    }
                                     setState(() {
                                       nationalIdFile = result!.files.first;
                                       nationalIdUpload = true;
@@ -368,12 +430,27 @@ class _StepTwoState extends State<StepTwo> {
                         alignment: Alignment.topLeft,
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Text(
-                            'Aramco Certificate'.tr(),
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet?24:20,
-                                fontWeight: FontWeight.w500
-                            ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Aramco Certificate'.tr(),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet?24:20,
+                                    fontWeight: FontWeight.w500
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  '(Only PDF, DOC, DOCX allowed)',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff808080)
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         )),
                     Column(
@@ -392,8 +469,24 @@ class _StepTwoState extends State<StepTwo> {
                                       side: const BorderSide(color: Colors.black)),
                                 ),
                                 onPressed: () async {
-                                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'doc', 'docx'],
+                                  );
+
                                   if (result != null) {
+                                    PlatformFile file = result.files.first;
+
+                                    if (file.size > 100 * 1024) {
+                                      commonWidgets.showToast('File must be 100 KB or less');
+                                      return;
+                                    }
+
+                                    String? extension = file.extension?.toLowerCase();
+                                    if (extension == null || !(extension == 'pdf' || extension == 'doc' || extension == 'docx')) {
+                                      commonWidgets.showToast("Invalid file type. Only PDF, DOC, DOCX allowed");
+                                      return;
+                                    }
                                     setState(() {
                                       aramcoFile = result!.files.first;
                                       aramcoUpload =true;

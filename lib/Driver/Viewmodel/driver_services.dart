@@ -34,9 +34,7 @@ class DriverService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Login Failed';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
 
         final driverData = responseBody['data']['operator'];
         final tokenData = responseBody['data'];
@@ -57,24 +55,16 @@ class DriverService{
           await saveDriverData(firstName, lastName, token, operatorId,partnerId,mode);
         } else {
           final message = responseBody['message'] ?? 'Login failed. Please try again.';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         }
       } else {
         final message = responseBody['message'] ?? 'Login failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -104,18 +94,12 @@ class DriverService{
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -149,18 +133,12 @@ class DriverService{
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -191,18 +169,12 @@ class DriverService{
         );
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -229,24 +201,15 @@ class DriverService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Failed';
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text(message)),
-        // );
       }
       else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -267,25 +230,18 @@ class DriverService{
       );
 
       final responseBody = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
         return responseBody;
       } else {
         final message = responseBody['message'] ?? 'No Booking request found';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
         return null;
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
       return null;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please try again...')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
       return null;
     }
   }
@@ -318,7 +274,7 @@ class DriverService{
         return null;
       }
     } on SocketException {
-      commonWidgets.showToast('Please Check your Internet Connection..');
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
       return null;
     } catch (e) {
       return null;
@@ -356,7 +312,7 @@ class DriverService{
         commonWidgets.showToast(message);
       }
     } on SocketException {
-      commonWidgets.showToast('Please Check your Internet Connection..');
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
       commonWidgets.showToast('Error fetching user details');
     }
@@ -386,31 +342,22 @@ class DriverService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Failed';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
 
   Future<OperatorDetail?> getOperatorDetail(BuildContext context, String partnerId, String operatorId) async {
     try {
-      print(operatorId);
       final response = await http.get(
         Uri.parse('https://prod.naqlee.com:443/api/partner/$partnerId'),
         headers: {
@@ -421,7 +368,6 @@ class DriverService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final partnerData = responseBody['data'];
-        print(responseBody);
 
         // Function to search for the operator in a given list (for 'operators' list)
         OperatorDetail? findOperatorInOperatorsList(List<dynamic> operatorList) {
@@ -465,17 +411,129 @@ class DriverService{
       }
       return null;
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred, please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
     return null;
   }
 
+  Future<String?> driverCurrentCoordinates(
+      BuildContext context, {
+        required String partnerId,
+        required String operatorId,
+        required double latitude,
+        required double longitude,
+      }) async {
+    try {
+      final url = Uri.parse('https://prod.naqlee.com/api/driver-location');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          "partnerId": partnerId,
+          "operatorId": operatorId,
+          "latitude": latitude,
+          "longitude": longitude
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+      } else {
+        return null;
+      }
+    } on SocketException {
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
+      return null;
+    } catch (e) {
+      commonWidgets.showToast('An error occurred,Please try again.');
+      return null;
+    }
+    return null;
+  }
+
+  Future<void> driverStartTripOTP(context,{
+    required String bookingId,
+  }) async {
+    try{
+      final url = Uri.parse('https://prod.naqlee.com/api/driver-to-take-trip');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'bookingId': bookingId,
+        }),
+      );
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(
+          msg: 'OTP Send Successfully',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      } else {
+        final message = responseBody['message'];
+        commonWidgets.showToast(message);
+      }
+    }on SocketException {
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
+    } catch (e) {
+      commonWidgets.showToast('An error occurred,Please try again.');
+    }
+  }
+
+  Future<bool> driverVerifyOTP(
+      BuildContext context, {
+        required String bookingId,
+        required String otp,
+      }) async {
+    try {
+      final url = Uri.parse('https://prod.naqlee.com/api/driver-verify-otp');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'bookingId': bookingId,
+          'otp': otp,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(
+          msg: 'OTP Verified Successfully, Start your Trip',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        return true;
+      } else {
+        final message = responseBody['message'] ?? 'Invalid OTP';
+        commonWidgets.showToast(message);
+        return false;
+      }
+    } on SocketException {
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
+      return false;
+    } catch (e) {
+      commonWidgets.showToast('An error occurred,Please try again.');
+      return false;
+    }
+  }
 
 
 }

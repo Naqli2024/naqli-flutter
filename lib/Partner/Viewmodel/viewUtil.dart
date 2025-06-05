@@ -7,8 +7,8 @@ class ViewUtil {
   ViewUtil(this.context);
 
   bool get isTablet {
-    final size = MediaQuery.of(context).size;
-    final diagonal = sqrt(size.width * size.width + size.height * size.height);
-    return diagonal > 1100;
+    final shortestSide = MediaQuery.of(context).size.shortestSide;
+    return shortestSide >= 600;
   }
 }
+

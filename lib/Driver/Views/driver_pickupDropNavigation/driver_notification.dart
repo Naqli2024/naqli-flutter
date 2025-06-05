@@ -26,7 +26,8 @@ class DriverNotification extends StatefulWidget {
   final String partnerId;
   final String bookingId;
   final String mode;
-  const DriverNotification({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.distanceToPickup, required this.distanceToDropPoints, required this.timeToPickup, required this.timeToDrop, required this.partnerId, required this.mode, required this.bookingId});
+  final String quotePrice;
+  const DriverNotification({super.key, required this.firstName, required this.lastName, required this.token, required this.id, required this.distanceToPickup, required this.distanceToDropPoints, required this.timeToPickup, required this.timeToDrop, required this.partnerId, required this.mode, required this.bookingId, required this.quotePrice});
 
   @override
   State<DriverNotification> createState() => _DriverNotificationState();
@@ -35,7 +36,6 @@ class DriverNotification extends StatefulWidget {
 class _DriverNotificationState extends State<DriverNotification> {
   final CommonWidgets commonWidgets = CommonWidgets();
   final DriverService driverService = DriverService();
-  Map<String, dynamic>? bookingRequestData;
   Map<String, dynamic>? booking;
   bool isLoading = false;
   bool isCalculating = false;
@@ -50,7 +50,6 @@ class _DriverNotificationState extends State<DriverNotification> {
   void initState() {
     super.initState();
     _fetchBookingDetails();
-    _fetchBookingRequest();
     _getDistanceData();
   }
 
@@ -95,10 +94,9 @@ class _DriverNotificationState extends State<DriverNotification> {
         isCalculating = true;
       });
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       String currentLocation = '${position.latitude},${position.longitude}';
 
-      // String url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=$currentLocation|$pickupAddress&destinations=$pickupAddress|${dropPointsAddresses.join('|')}&key=$apiKey';
       String url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=${currentLocation}&destinations=${pickupAddress}|${dropPointsAddresses.join('|')}&key=$apiKey';
       final response = await http.get(Uri.parse(url));
 
@@ -171,32 +169,6 @@ class _DriverNotificationState extends State<DriverNotification> {
     await _getDistanceData();
   }
 
-  Future<void> _fetchBookingRequest() async {
-    try {
-      setState(() {
-        isLoading = true;
-      });
-      final data = await driverService.driverRequest(context, operatorId: widget.id);
-
-      if (data != null && data['bookingRequest'] != null) {
-        if (data['bookingRequest']['assignedOperator'] != null) {
-          final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
-        } else {
-          final bookingRequestBookingId = data['bookingRequest']['bookingId'];
-        }
-
-        setState(() {
-          bookingRequestData = data;
-          isLoading = false;
-        });
-      } else {
-        return;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     ViewUtil viewUtil = ViewUtil(context);
@@ -251,10 +223,10 @@ class _DriverNotificationState extends State<DriverNotification> {
                           token: widget.token,
                           id: widget.id,
                           partnerId: widget.partnerId,
-                          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+                          bookingId: widget.bookingId,
                           pickUp: booking?['pickup'],
                           dropPoints: dropPoints,
-                          quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
+                          quotePrice: widget.quotePrice.toString(),
                           userId: booking?['user'],
                         )));
                       },
@@ -297,7 +269,7 @@ class _DriverNotificationState extends State<DriverNotification> {
                                     child: Align(
                                       alignment: Alignment.topLeft,
                                       child: Text(
-                                        (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
+                                        widget.quotePrice .toString(),
                                         style: TextStyle(fontSize: 34),
                                       ),
                                     ),

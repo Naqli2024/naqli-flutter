@@ -41,6 +41,7 @@ class _BookingDetailsState extends State<BookingDetails> {
   bool isLaunching = false;
   List<bool> loadingStates = [];
   Map<String, dynamic>? bookingDetails;
+  String? partnerProfileImage;
 
   @override
   void initState() {
@@ -63,24 +64,26 @@ class _BookingDetailsState extends State<BookingDetails> {
         final bookingId = booking['bookingId'] as String;
         final paymentType = booking['paymentStatus'] as String;
         final quotePrice = booking['quotePrice'].toString();
+        final profileImage = booking['profileImage'];
+        partnerProfileImage = profileImage;
 
         try {
           final details = await _authService.getBookingId(bookingId, widget.token, '', widget.quotePrice);
-
           details['quotePrice'] = quotePrice;
-          payment = details?['paymentStatus'];
+          payment = details['paymentStatus'];
           balance = details['remainingBalance'];
           if (details['bookingStatus'] != 'Completed') {
             if (details.isNotEmpty || details['bookingStatus'] == 'Running' &&
                 (paymentType == 'NotPaid' || paymentType == 'Paid' || paymentType == 'HalfPaid')) {
               bookingDetails.add(details);
             } else {
-              return [];
+              print("Booking is not running or payment status does not match for booking ID $bookingId.");
             }
           } else {
-            return [];
+            print("Booking ID $bookingId is completed and will not be shown.");
           }
         } catch (e) {
+          print("Error fetching details for booking ID $bookingId: $e");
           return [];
         }
       }
@@ -178,6 +181,10 @@ class _BookingDetailsState extends State<BookingDetails> {
         drawer: commonWidgets.createDrawer(context,
             widget.partnerId,
             widget.partnerName,
+            profileImage: partnerProfileImage,
+          onBookingPressed: (){
+            Navigator.pop(context);
+          },
           onEditProfilePressed: (){
             Navigator.push(
               context,

@@ -1,12 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_profile.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -22,7 +26,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart' as location_package;
 import 'dart:ui' as ui;
-
+import 'package:image/image.dart' as img;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
 class CustomerNotified extends StatefulWidget {
@@ -46,22 +51,13 @@ class CustomerNotified extends StatefulWidget {
 class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerProviderStateMixin{
   final CommonWidgets commonWidgets = CommonWidgets();
   final DriverService driverService = DriverService();
-  GoogleMapController? mapController;
-  final Set<Marker> markers = {};
   final Set<Polyline> polylines = {};
-  LatLng? pickupLatLng;
   LatLng? dropPointLatLng;
-  final List<LatLng> dropLatLngs = [];
   String? distance;
   LatLng? currentLocation;
-  double? pickUpDistance;
-  List<double> dropPointsDistance = [];
-  bool isLoading = true;
+  bool isLoading = false;
   bool isCompleting = false;
-  String? timeToPickup;
   String? timeToDrop;
-  String ? feet;
-  LatLng currentLatLng = LatLng(37.7749, -122.4194);
   String? firstName;
   String? lastName;
   List<Map<String, dynamic>> nearbyPlaces = [];
@@ -71,7 +67,6 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   bool isAtDropLocation = false;
   Timer? _locationTimer;
   StreamSubscription<Position>? positionStreamSubscription;
-  BitmapDescriptor? customArrowIcon;
   Marker? currentLocationMarker;
   List<LatLng> waypoints = [];
   String totalDistance = '';
@@ -82,18 +77,34 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
   double proximityThreshold = 0.001;
   bool isMoveClicked = false;
   bool hasNavigated = false;
-  Timer? _locationCheckTimer;
   bool completeOrder = true;
   late AnimationController _animationController;
   late Animation<double> _animation;
+  Set<Polyline> dropPointPolylines = {};
+  LatLng? currentLatLng;
+  LatLng? pickupLatLng;
+  List<LatLng> dropLatLngs = [];
+  Set<Marker> markers = {};
+  Set<Polyline> routePolylines = {};
+  GoogleMapController? mapController;
+  Timer? _recenterTimer;
+  BitmapDescriptor? customArrowIcon;
+  LatLng? previousLatLng;
+  List<double> dropPointsDistance = [];
+  List<String> dropPointsFeet = [];
+  List<String> dropPointsTime = [];
+  StreamSubscription<Position>? _positionSubscription;
+  int _seconds = 120;
+  Timer? _timer;
+  final List<TextEditingController> otpController = List.generate(4, (_) => TextEditingController());
+  Map<String, LatLng> _geocodeCache = {};
+  Map<String, List<LatLng>> _polylineCache = {};
+  DateTime? _lastPolylineRequestTime;
+  DateTime? _lastMovementTime;
 
   @override
   void initState() {
     super.initState();
-    _initLocationListener();
-    startLocationUpdatesForDropPoints();
-    loadCustomArrowIcon();
-    _startLocationUpdates();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -103,438 +114,712 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     );
   }
 
-  void _startLocationUpdates() {
-    positionStream = Geolocator.getPositionStream().listen((Position position) {
-      setState(() {
-        currentLatLng = LatLng(position.latitude, position.longitude);
-      });
-    });
+  @override
+  void dispose() {
+    _recenterTimer?.cancel();
+    _positionSubscription?.cancel();
+    _timer?.cancel();
+    super.dispose();
   }
 
-  void startLocationUpdatesForDropPoints() {
-    LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 1,
-      timeLimit: Duration(milliseconds: 200),
-    );
+  Future<void> _loadData() async {
+    await _loadDropPoints();
 
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position position) async {
-      LatLng newLocation = LatLng(position.latitude, position.longitude);
-      double heading = position.heading;
-
-      if (mounted) {
-        updateLocationMarker(newLocation, heading);
-
-        if (currentLatLng == null || _haversineDistance(currentLatLng!, newLocation) > 50) {
-          updateCameraPosition(newLocation, heading);
-        }
-
-        if (currentLatLng != null && _haversineDistance(currentLatLng!, newLocation) < 5) {
-          animateMarkerMovement(currentLatLng!, newLocation);
-        }
-
-        setState(() {
-          currentLatLng = newLocation;
-        });
-
-        await updateRouteDetails(newLocation);
-      }
-    });
-  }
-
-
-  Future<void> loadCustomArrowIcon() async {
-    final Uint8List markerIcon = await getBytesFromAsset('assets/arrow.png', 140);
-    customArrowIcon = BitmapDescriptor.fromBytes(markerIcon);
-  }
-
-  Future<Uint8List> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
-  }
-
-  Future<void> _updateRealTimeDataToDropPoints(LatLng currentLatLng) async {
     try {
-      for (int i = 0; i < widget.dropPoints.length; i++) {
-        final dropPoint = widget.dropPoints[i];
-        LatLng? dropLatLng;
+      Position initialPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+      currentLatLng = LatLng(initialPosition.latitude, initialPosition.longitude);
+      print("Initial User Location: $currentLatLng");
+      _updateMarkers();
+      await _updatePolyline();
+      _updateDistanceAndTime();
+      setState(() {});
+    } catch (e) {
+      print("Error getting initial location: $e");
+    }
+    _trackUserLocation();
+  }
 
-        if (dropPoint is Map && dropPoint.containsKey('latitude') && dropPoint.containsKey('longitude')) {
-          dropLatLng = LatLng(dropPoint['latitude'], dropPoint['longitude']);
-        } else if (dropPoint is String) {
-          dropLatLng = await getLatLngFromAddress(dropPoint);
-        }
-        dropPointLatLng = dropLatLng;
-        if (dropLatLng == null) continue;
-
-        double distanceToDrop = _haversineDistance(currentLatLng, dropLatLng);
-        String updatedFeet = formatDistance(distanceToDrop);
-        List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, dropLatLng);
-        await fetchNearbyPlaces(currentLatLng);
-
-        String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-
-        String reverseGeocodeUrl =
-            'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
-        final reverseGeocodeResponse = await http.get(Uri.parse(reverseGeocodeUrl));
-
-        String currentLocationName = 'Unknown Location'; // Default value
-
-        if (reverseGeocodeResponse.statusCode == 200) {
-          final reverseGeocodeData = json.decode(reverseGeocodeResponse.body);
-
-          if (reverseGeocodeData['status'] == 'OK') {
-            final currentAddress = reverseGeocodeData['results']?[0]['formatted_address'];
-            currentPlace = currentAddress;
-            if (currentAddress != null) {
-              currentLocationName = currentAddress;
-            }
-          }
-        }
-        String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${dropLatLng.latitude},${dropLatLng.longitude}&key=$apiKey';
-        final directionsResponse = await http.get(Uri.parse(directionsUrl));
-
-        if (directionsResponse.statusCode == 200) {
-          final directionsData = json.decode(directionsResponse.body);
-          if (directionsData['status'] == 'OK') {
-            final durationToDrop = directionsData['routes'][0]['legs'][0]['duration']['text'];
-            final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
-            if (mounted) {
-              setState(() {
-                dropPointsDistance.add(distanceToDrop);
-                dropPointsDistance = [distanceToDrop];
-                timeToDrop = durationToDrop;
-                feet = updatedFeet;
-
-                polylines.clear();
-                polylines.add(Polyline(
-                  polylineId: PolylineId('currentToDrop$i'),
-                  color: Colors.green,
-                  width: 10,
-                  points: updatedRoutePoints,
-                ));
-
-                markers.add(Marker(
-                  markerId: MarkerId('dropPoint$i'),
-                  position: dropLatLng!,
-                  infoWindow: InfoWindow(
-                    title: placeName,
-                    snippet: '${'Distance:'} ${distanceToDrop.toStringAsFixed(2)} km\nFeet: $updatedFeet\nTime: $durationToDrop',
-                  ),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                ));
-              });
-            }
-          }
+  Future<void> _loadDropPoints() async {
+    for (String address in widget.dropPoints) {
+      if (_geocodeCache.containsKey(address)) {
+        dropLatLngs.add(_geocodeCache[address]!);
+      } else {
+        LatLng? dropPoint = await _geocodeAddress(address);
+        if (dropPoint != null) {
+          _geocodeCache[address] = dropPoint;
+          dropLatLngs.add(dropPoint);
         }
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
     }
+    _updateMarkers();
+    await _updatePolyline();
+    _updateDistanceAndTime();
   }
 
-  void _initLocationListener() async {
-    location_package.Location location = location_package.Location();
-    location_package.PermissionStatus permission = await location.requestPermission();
+  Future<void> _updatePolyline() async {
+    if (currentLatLng == null || dropLatLngs.isEmpty) return;
 
-    if (permission == location_package.PermissionStatus.granted) {
-      location.onLocationChanged.listen((location_package.LocationData newLocation) {
-        LatLng updatedLocation = LatLng(newLocation.latitude!, newLocation.longitude!);
+    // Throttle API calls: Only request if 5 sec has passed since the last request
+    if (_lastPolylineRequestTime != null &&
+        DateTime.now().difference(_lastPolylineRequestTime!).inSeconds < 5) {
+      return;
+    }
 
-        if (currentLatLng != null) {
-          animateMarkerMovement(currentLatLng, updatedLocation);
+    _lastPolylineRequestTime = DateTime.now();
+
+    List<Polyline> updatedPolylines = [];
+    for (int i = 0; i < dropLatLngs.length; i++) {
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+      String url =
+          'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng!.latitude},${currentLatLng!.longitude}&destination=${dropLatLngs[i].latitude},${dropLatLngs[i].longitude}&key=$apiKey';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'OK') {
+          List<LatLng> polylineCoordinates =
+          _decodePolyline(data['routes'][0]['overview_polyline']['points']);
+
+          updatedPolylines.add(Polyline(
+            polylineId: PolylineId('route_$i'),
+            color: Colors.blue,
+            width: 5,
+            points: polylineCoordinates,
+          ));
         }
-
-        setState(() {
-          currentLatLng = updatedLocation;
-        });
-
-        _updateRealTimeDataToDropPoints(currentLatLng);
-        checkDropLocation();
-      });
+      }
     }
+    setState(() {
+      routePolylines = updatedPolylines.toSet();
+    });
   }
 
-  Future<LatLng?> getLatLngFromAddress(String address) async {
+  Future<LatLng?> _geocodeAddress(String address) async {
+    if (_geocodeCache.containsKey(address)) {
+      return _geocodeCache[address];
+    }
+
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
     String url = 'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$apiKey';
 
     final response = await http.get(Uri.parse(url));
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       if (data['status'] == 'OK') {
-        double lat = data['results'][0]['geometry']['location']['lat'];
-        double lng = data['results'][0]['geometry']['location']['lng'];
-        return LatLng(lat, lng);
-      } else {
-
+        LatLng latLng = LatLng(
+          data['results'][0]['geometry']['location']['lat'],
+          data['results'][0]['geometry']['location']['lng'],
+        );
+        _geocodeCache[address] = latLng;
+        return latLng;
       }
-    } else {
-
     }
     return null;
   }
 
-  void updateLocationMarker(LatLng newPosition, double heading) {
-    if (mapController != null && customArrowIcon != null) {
-      setState(() {
-        markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-
-        markers.add(Marker(
-          markerId: const MarkerId('currentLocation'),
-          position: newPosition,
-          icon: customArrowIcon!,
-          rotation: heading,
-          anchor: const Offset(0.5, 0.5),
-        ));
-      });
-
-      updateCameraPosition(newPosition, heading);
-    }
-  }
-
-  void animateMarkerMovement(LatLng oldPos, LatLng newPos) {
-    const int animationDuration = 100;
-    const int framesPerSecond = 30;
-    int frame = 0;
-
-    Timer.periodic(Duration(milliseconds: animationDuration ~/ framesPerSecond), (timer) {
-      frame++;
-      double lat = oldPos.latitude + (newPos.latitude - oldPos.latitude) * (frame / framesPerSecond);
-      double lng = oldPos.longitude + (newPos.longitude - oldPos.longitude) * (frame / framesPerSecond);
-
-      setState(() {
-        currentLatLng = LatLng(lat, lng);
-      });
-
-      if (frame >= framesPerSecond) {
-        timer.cancel();
+  void _startRecenterTimer() {
+    _recenterTimer = Timer.periodic(const Duration(seconds: 10), (Timer timer) {
+      if (currentLatLng != null && mapController != null) {
+        mapController!.animateCamera(
+          CameraUpdate.newLatLng(currentLatLng!),
+        );
       }
     });
   }
 
+  void _trackUserLocation() {
+    _lastMovementTime = DateTime.now();
 
-  void updateCameraPosition(LatLng newLocation, double bearing) {
-    mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: newLocation,
-          zoom: 18.0,
-          tilt: 20.0,
-          bearing: bearing,
-        ),
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 5,
       ),
-    );
-  }
+    ).listen((Position position) async {
+      LatLng newLatLng = LatLng(position.latitude, position.longitude);
+      double movementThreshold = 0.005; // ~5 meters
+      bool hasMoved = currentLatLng == null || _haversineDistance(currentLatLng!, newLatLng) > movementThreshold;
 
-  Future<void> updateRouteDetails(LatLng currentLatLng) async {
-    if (dropPointLatLng != null) {
-      List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, dropPointLatLng!);
+      DateTime now = DateTime.now();
+      bool shouldUpdateDueToTime = _lastMovementTime != null &&
+          now.difference(_lastMovementTime!).inSeconds >= 5;
 
-      if (mounted) {
-        setState(() {
-          polylines.clear();
-          polylines.add(Polyline(
-            polylineId: const PolylineId('currentToDrop'),
-            color: Colors.green,
-            width: 10,
-            points: updatedRoutePoints,
-          ));
-        });
+      if (hasMoved || shouldUpdateDueToTime) {
+        currentLatLng = newLatLng;
+        _lastMovementTime = now;
+
+        _updateMarkers();
+        await _updatePolyline();
+        _updateDistanceAndTime();
+        checkDropLocation();
+
+        if (mapController != null && mounted) {
+          mapController!.animateCamera(CameraUpdate.newLatLng(currentLatLng!));
+        }
+
+        await driverService.driverCurrentCoordinates(
+          context,
+          partnerId: widget.partnerId,
+          operatorId: widget.id,
+          latitude: currentLatLng!.latitude,
+          longitude: currentLatLng!.longitude,
+        );
+
+        setState(() {});
       }
-    }
-  }
 
-  Future<void> fetchNearbyPlaces(LatLng currentLatLng) async {
-    setState(() {
-      isLoading = true;
-    });
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          newLatLng.latitude,
+          newLatLng.longitude,
+        );
 
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    String nearbyPlacesUrl =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${currentLatLng.latitude},${currentLatLng.longitude}&radius=1500&type=restaurant&key=$apiKey';
+        if (placemarks.isNotEmpty) {
+          Placemark placemark = placemarks[0];
+          String address =
+              "${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
 
-    final response = await http.get(Uri.parse(nearbyPlacesUrl));
+          setState(() {
+            currentPlace = address;
 
-    if (response.statusCode == 200) {
-      final nearbyPlacesData = json.decode(response.body);
-
-      setState(() {
-        nearbyPlaces = [];
-      });
-
-      if (nearbyPlacesData['status'] == 'OK') {
-        for (var place in nearbyPlacesData['results']) {
-          nearbyPlaces.add({
-            'name': place['name'],
-            'address': place['vicinity'],
+            markers.removeWhere((marker) => marker.markerId == const MarkerId('currentLocation'));
+            markers.add(Marker(
+              markerId: const MarkerId('currentLocation'),
+              position: newLatLng,
+              icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+              infoWindow: InfoWindow(title: 'Your Location', snippet: address),
+            ));
           });
         }
-        setState(() {
-          currentIndex = 0;
-        });
-      } else {
-
+      } catch (e) {
+        print("Geocoding Error: $e");
       }
-    } else {
-
-    }
-
-    setState(() {
-      isLoading = false;
     });
   }
 
-  Future<List<LatLng>> fetchDirections(LatLng start, LatLng destination) async {
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    final String url = 'https://maps.googleapis.com/maps/api/directions/json'
-        '?origin=${start.latitude},${start.longitude}'
-        '&destination=${destination.latitude},${destination.longitude}'
-        '&key=$apiKey';
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      List<LatLng> points = [];
-      if (data['routes'].isNotEmpty) {
-        final polylinePoints = data['routes'][0]['overview_polyline']['points'];
-        points = _decodePolyline(polylinePoints);
-      }
-      return points;
-    } else {
-      throw Exception('Failed to fetch directions');
+  void _updateDistanceAndTime() {
+    if (currentLatLng == null || dropLatLngs.isEmpty) {
+      return;
     }
+
+    dropPointsDistance.clear();
+    dropPointsFeet.clear();
+    dropPointsTime.clear();
+
+    for (LatLng dropPoint in dropLatLngs) {
+      double distanceMeters = Geolocator.distanceBetween(
+        currentLatLng!.latitude,
+        currentLatLng!.longitude,
+        dropPoint.latitude,
+        dropPoint.longitude,
+      );
+
+      double distanceKm = distanceMeters / 1000;
+      double distanceFeet = distanceMeters * 3.281;
+
+      String feetDisplayValue = distanceFeet >= 5280
+          ? "${(distanceFeet / 5280).toStringAsFixed(1)} mi ${(distanceFeet % 5280).round()} ft"
+          : "${distanceFeet.toStringAsFixed(0)} ft";
+
+      int timeInMinutes = ((distanceKm / 40.0) * 60).ceil();
+      String timeDisplay = timeInMinutes < 1
+          ? "${((distanceKm / 40.0) * 3600).toStringAsFixed(0)} sec"
+          : "$timeInMinutes min";
+
+      dropPointsDistance.add(distanceKm);
+      dropPointsFeet.add(feetDisplayValue);
+      dropPointsTime.add(timeDisplay);
+
+    }
+    setState(() {});
   }
 
-  String formatDistance(double distanceInKm) {
-    double distanceInFeet = distanceInKm * 3280.84;
-    double distanceInMiles = distanceInFeet / 5280;
+  static double _haversineDistance(LatLng start, LatLng end) {
+    const double R = 6371; // Earth radius in KM
+    double lat1 = start.latitude * pi / 180;
+    double lon1 = start.longitude * pi / 180;
+    double lat2 = end.latitude * pi / 180;
+    double lon2 = end.longitude * pi / 180;
 
-    if (distanceInMiles < 1) {
-      return '${distanceInFeet.toStringAsFixed(0)} ft';
-    } else {
-      int miles = distanceInMiles.floor(); // Whole miles
-      double remainingFeet = distanceInFeet - (miles * 5280);
-      return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft';
-    }
-  }
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
 
-  Future<void> recenterMap() async {
-    try {
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      LatLng newLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
-      double heading = currentPosition.heading;
-
-      if (mounted) {
-        if (currentLatLng != null) {
-          animateMarkerMovement(currentLatLng, newLatLng);
-        }
-
-        setState(() {
-          currentLatLng = newLatLng;
-        });
-
-        markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-        markers.add(Marker(
-          markerId: const MarkerId('currentLocation'),
-          position: newLatLng,
-          icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
-          rotation: heading,
-          anchor: const Offset(0.5, 0.5),
-        ));
-      }
-
-      updateCameraPosition(newLatLng, heading);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
-    }
-  }
-
-  double _haversineDistance(LatLng start, LatLng end) {
-    const double R = 6371;
-    double dLat = _degToRad(end.latitude - start.latitude);
-    double dLon = _degToRad(end.longitude - start.longitude);
-    double a =
-        sin(dLat / 2) * sin(dLat / 2) +
-            cos(_degToRad(start.latitude)) * cos(_degToRad(end.latitude)) *
-                sin(dLon / 2) * sin(dLon / 2);
+    double a = pow(sin(dLat / 2), 2) +
+        cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c;
+
+    return R * c; // Distance in KM
   }
 
-  double _degToRad(double deg) {
-    return deg * (pi / 180);
+  void _updateMarkers() {
+    if (currentLatLng == null || dropLatLngs.isEmpty) return;
+
+    markers.clear();
+
+    markers.add(Marker(
+      markerId: const MarkerId('currentLocation'),
+      position: currentLatLng!,
+      icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+      infoWindow: const InfoWindow(title: 'Your Location'),
+    ));
+
+    for (int i = 0; i < dropLatLngs.length; i++) {
+      markers.add(Marker(
+        markerId: MarkerId('dropPoint_$i'),
+        position: dropLatLngs[i],
+        infoWindow: InfoWindow(title: widget.dropPoints.join(', ')),
+      ));
+    }
+    setState(() {});
   }
 
-  List<LatLng> _decodePolyline(String polyline) {
-    List<LatLng> points = [];
-    int index = 0;
-    int len = polyline.length;
-    int lat = 0;
-    int lng = 0;
+  void recenterMap() {
+    if (currentLatLng == null || dropLatLngs.isEmpty || mapController == null) return;
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        min(currentLatLng!.latitude, dropLatLngs.map((e) => e.latitude).reduce(min)),
+        min(currentLatLng!.longitude, dropLatLngs.map((e) => e.longitude).reduce(min)),
+      ),
+      northeast: LatLng(
+        max(currentLatLng!.latitude, dropLatLngs.map((e) => e.latitude).reduce(max)),
+        max(currentLatLng!.longitude, dropLatLngs.map((e) => e.longitude).reduce(max)),
+      ),
+    );
+
+    mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80)); // Padding for better view
+  }
+
+  void _loadCustomMarker() async {
+    final ByteData byteData = await rootBundle.load('assets/arrow.png');
+    final Uint8List markerImage = byteData.buffer.asUint8List();
+
+    img.Image? originalImage = img.decodeImage(markerImage);
+
+    if (originalImage != null) {
+      img.Image resizedImage =
+      img.copyResize(originalImage, width: 200, height: 200);
+
+      final Uint8List resizedMarkerImage =
+      Uint8List.fromList(img.encodePng(resizedImage));
+
+      customArrowIcon = BitmapDescriptor.fromBytes(resizedMarkerImage);
+
+      setState(() {});
+    }
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> polylineCoordinates = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
 
     while (index < len) {
-      int shift = 0;
-      int result = 0;
-      int b;
+      int shift = 0, result = 0;
+      int byte;
       do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1F) << shift;
         shift += 5;
-      } while (b >= 0x20);
-      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lat += dlat;
+      } while (byte >= 0x20);
+      int deltaLat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += deltaLat;
 
       shift = 0;
       result = 0;
       do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1F) << shift;
         shift += 5;
-      } while (b >= 0x20);
-      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lng += dlng;
+      } while (byte >= 0x20);
+      int deltaLng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += deltaLng;
 
-      points.add(LatLng(lat / 1E5, lng / 1E5));
+      polylineCoordinates.add(LatLng(lat / 1E5, lng / 1E5));
     }
 
-    return points;
-  }
-
-  String calculateFeet(Position position) {
-    double distanceInMeters = position.accuracy;
-    return (distanceInMeters * 3.28084).toStringAsFixed(0);
-  }
-
-  double formattedDistance(double distanceInMeters) {
-    return distanceInMeters * 3.28084;
+    return polylineCoordinates;
   }
 
   void checkDropLocation() async {
-    double distanceToDropInKm = _haversineDistance(currentLatLng, dropPointLatLng!);
-    // 1 kilometer = 0.621371 miles
-    // 1 mile = 5280 feet
-    // Therefore, 1 kilometer = 3280.84 feet
-    // Convert kilometers to feet (1 km = 3280.84 feet)
+    if (dropLatLngs.isEmpty || currentLatLng == null) return;
+
+    if (currentIndex >= dropLatLngs.length) return;
+
+    double distanceToDropInKm =
+    _haversineDistance(currentLatLng!, dropLatLngs[currentIndex]);
     double distanceInFeet = distanceToDropInKm * 3280.84;
-    print(distanceInFeet);
     if (distanceInFeet <= 100 && !hasNavigated) {
       hasNavigated = true;
+      setState(() {
+        isAtDropLocation = true;
+      });
 
-      if (mounted) {
+      commonWidgets.showToast('Reached Drop Location...'.tr());
+
+      currentIndex++;
+      hasNavigated = false;
+
+      if (currentIndex >= widget.dropPoints.length) {
         setState(() {
-          isAtDropLocation = true;
+          completeOrder = true;
         });
-
+      } else {
+        _updateDistanceAndTime();
+        recenterMap();
       }
     } else {
-
+      _updateDistanceAndTime();
     }
+  }
+
+  void resendOtp() async {
+    for (var controller in otpController) {
+      controller.clear();
+    }
+    await driverService.driverStartTripOTP(
+      context,
+      bookingId: widget.bookingId,
+    );
+  }
+
+  void verifyOtp() async {
+    String otp = otpController.map((controller) => controller.text).join();
+
+    if (otp.isEmpty || otp.length < otpController.length) {
+      CommonWidgets().showToast('please_enter_otp'.tr());
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    bool isVerified = await driverService.driverVerifyOTP(
+      context,
+      bookingId: widget.bookingId,
+      otp: otp,
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (isVerified != true) {
+      CommonWidgets().showToast('Please enter correct OTP'.tr());
+      return;
+    }
+
+    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        Future.delayed(Duration(seconds: 3), () {
+          if (dialogContext.mounted) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+        ViewUtil viewUtil = ViewUtil(context);
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shadowColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: EdgeInsets.fromLTRB(20, 30, 20, 20),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.height * 0.4
+                  :MediaQuery.of(context).size.height * 0.35,
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Center(
+                        child: SvgPicture.asset(
+                          'assets/payment_success.svg',
+                          width: MediaQuery.of(context).size.width,
+                          height: viewUtil.isTablet
+                              ? MediaQuery.of(context).size.height * 0.25
+                              : MediaQuery.of(context).size.height * 0.2,
+                        ),
+                      ),
+                      Positioned(
+                        top: -15,
+                        right: -15,
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(FontAwesomeIcons.multiply, size: viewUtil.isTablet ? 30 : 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                    child: Text(
+                      'OTP Verified'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 30:25, fontWeight: FontWeight.bold,color: Colors.green),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Text(
+                      'Your trip is Starting'.tr(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 25:20,fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    _loadCustomMarker();
+    await _loadData();
+    _startRecenterTimer();
+    recenterMap();
+
+    if (mounted) {
+      setState(() {
+        isMoveClicked = true;
+      });
+    }
+  }
+
+  void showOTPDialog() {
+    ViewUtil viewUtil = ViewUtil(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              void _startTimer() {
+                _timer?.cancel(); // Cancel any existing timer
+                _seconds = 120; // Reset timer
+                _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                  setState(() {
+                    if (_seconds > 0) {
+                      _seconds--;
+                    } else {
+                      _timer?.cancel();
+                    }
+                  });
+                });
+              }
+
+              String _formattedTime() {
+                final minutes = _seconds ~/ 60;
+                final seconds = _seconds % 60;
+                return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+              }
+
+              if (_timer == null) {
+                _startTimer();
+              }
+
+              return Center(
+                child: SingleChildScrollView(
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    backgroundColor: Colors.white,
+                    contentPadding: const EdgeInsets.all(20),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('otp_verification'.tr(),
+                              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "Please enter the OTP sent to the customer".tr(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: viewUtil.isTablet ?23 :16),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(4, (index) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: SizedBox(
+                                  width: viewUtil.isTablet ? 60 : 50,
+                                  child: TextField(
+                                    controller: otpController[index],
+                                    maxLength: 1,
+                                    textAlign: TextAlign.center,
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    decoration: InputDecoration(
+                                      counterText: '',
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xffBCBCBC),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      if (value.length == 1 && index < 5) {
+                                        FocusScope.of(context).nextFocus();
+                                      } else if (value.isEmpty && index > 0) {
+                                        FocusScope.of(context).previousFocus();
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Remaining time:".tr(),
+                                style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet ? 20 : 15),
+                                children: <TextSpan>[
+                                  TextSpan(
+                                    text: _formattedTime(),
+                                    style: TextStyle(color: Colors.blue, fontSize: viewUtil.isTablet ? 20 : 15),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                resendOtp();
+                                _startTimer();
+                              });
+                            },
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: RichText(
+                                text: TextSpan(
+                                  text: "didn't_receive_otp".tr(),
+                                  style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet ? 20 : 15),
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                      text: 'resend'.tr(),
+                                      style: TextStyle(color: Colors.blue, fontSize: viewUtil.isTablet ? 20 : 15),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 30, 8, 8),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xff6A66D1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              onPressed: () {
+                                verifyOtp();
+                              },
+                              child: isLoading
+                                  ? Container(
+                                height: 10,
+                                width: 10,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Text(
+                                'Verify'.tr(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: viewUtil.isTablet ?23 :18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    side: BorderSide(color: Color(0xff6A66D1) )
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                'Cancel'.tr(),
+                                style: TextStyle(
+                                  color: Color(0xff6A66D1),
+                                  fontSize: viewUtil.isTablet ?23 :18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ).then((_) {
+      _timer?.cancel();
+      _timer = null;
+    });
   }
 
   @override
@@ -546,8 +831,113 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
             context,
-            showLeading: false,
+            showLeading: true,
           User: widget.firstName +' '+ widget.lastName,
+        ),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SvgPicture.asset('assets/naqlee-logo.svg',
+                        height: MediaQuery.of(context).size.height * 0.05),
+                    GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                        },
+                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                  ],
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(Icons.person,size: 30,),
+                ),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('Profile'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                      DriverProfile(firstName: widget.firstName,lastName: widget.lastName,operatorId: widget.id, partnerId: widget.partnerId,)
+                  ));
+                },
+              ),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(Icons.logout,color: Colors.red,size: 30,),
+                ),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Directionality(
+                        textDirection: ui.TextDirection.ltr,
+                        child: AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          backgroundColor: Colors.white,
+                          contentPadding: const EdgeInsets.all(20),
+                          content: Container(
+                            width: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.width * 0.6
+                                : MediaQuery.of(context).size.width,
+                            height: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.height * 0.08
+                                : MediaQuery.of(context).size.height * 0.12,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                                  child: Text(
+                                    'are_you_sure_you_want_to_logout'.tr(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('yes'.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
+                              onPressed: () async {
+                                await clearDriverData();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => DriverLogin()),
+                                );
+                              },
+                            ),
+                            TextButton(
+                              child: Text('no'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
         body: isCompleting
             ? Center(child: CircularProgressIndicator())
@@ -561,15 +951,17 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                     child: GoogleMap(
                       mapType: MapType.normal,
                       onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;
+                        setState(() {
+                          mapController = controller;
+                        });
                       },
-                      initialCameraPosition: const CameraPosition(
+                      initialCameraPosition: CameraPosition(
                         target: LatLng(0, 0),
-                        zoom: 2,
+                        zoom: 5,
                       ),
+                      markers: markers,
+                      polylines: routePolylines,
                       buildingsEnabled: false,
-                      markers: Set<Marker>.of(markers),
-                      polylines: Set<Polyline>.of(polylines),
                       compassEnabled: false,
                       myLocationEnabled: false,
                       myLocationButtonEnabled: true,
@@ -579,115 +971,122 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                         ),
                       },
                     ),),
-                  Positioned(
-                    top: MediaQuery.sizeOf(context).height * 0.02,
-                    child: isAtDropLocation
-                      ? Container(
-                      margin: EdgeInsets.only(left: 20),
-                      width: MediaQuery.sizeOf(context).width * 0.92,
-                      child: Card(
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
-                                    child: Column(
-                                      children: [
-                                        Icon(Icons.location_on,color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: viewUtil.isTablet?26:16,color: Color(0xff676565))),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                      : Container(
-                      margin: EdgeInsets.only(left: 20),
-                      width: MediaQuery.sizeOf(context).width * 0.92,
-                      child: Card(
-                        color: Colors.white,
-                        child: nearbyPlaces.isNotEmpty
-                            ? Column(
-                          children: [
-                            if (nearbyPlaces.isNotEmpty && currentIndex < nearbyPlaces.length)
+                  Visibility(
+                    visible: isMoveClicked,
+                    child: Positioned(
+                      top: MediaQuery.sizeOf(context).height * 0.02,
+                      child: isAtDropLocation
+                        ? Container(
+                        margin: EdgeInsets.only(left: 20),
+                        width: MediaQuery.sizeOf(context).width * 0.92,
+                        child: Card(
+                          color: Colors.white,
+                          child: Column(
+                            children: [
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 15, right: 10),
+                                      padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
                                       child: Column(
                                         children: [
-                                          SvgPicture.asset('assets/upArrow.svg'),
-                                          Text(
-                                            feet == null?'0 ft':'$feet',
-                                            style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:18, color: Color(0xff676565)),
-                                          ),
+                                          Icon(Icons.location_on,color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
                                         ],
                                       ),
                                     ),
-                                    Expanded( // Wrap in Expanded to avoid overflow
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text("DropPoint Location".tr(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
-                                          Text(widget.dropPoints.join(', '),textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                                          /***Commented for removing Nearby location***/
-                                         /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
-                                            style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                                          Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
-                                          Text(nearbyPlaces[currentIndex]['address'] ?? 'Xxxxxxxxx', textAlign: TextAlign.center,
-                                              style: TextStyle(fontSize: viewUtil.isTablet?26:16)),*/
-                                        ],
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: viewUtil.isTablet?26:16,color: Color(0xff676565))),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        )
-                            : Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 3,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('Fetching DropPoint Location...'.tr(),
-                                    style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                              ),
                             ],
                           ),
                         ),
-                      ),
-                    )
+                      )
+                        : Container(
+                        margin: EdgeInsets.only(left: 20),
+                        width: MediaQuery.sizeOf(context).width * 0.92,
+                        child: Card(
+                          color: Colors.white,
+                          child: dropPointsFeet.isNotEmpty
+                              ? Column(
+                            children: [
+                              for (int i = 0; i < widget.dropPoints.length; i++)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 15, right: 10),
+                                        child: Column(
+                                          children: [
+                                            SvgPicture.asset('assets/upArrow.svg'),
+                                            Text(
+                                              dropPointsFeet.isNotEmpty ? dropPointsFeet[i] : '0 ft',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: viewUtil.isTablet ? 26 : 18,
+                                                  color: Color(0xff676565)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Text("Drop Point ${i + 1}".tr(),
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: viewUtil.isTablet ? 26 : 16)),
+                                            Text(widget.dropPoints[i],
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                    fontSize: viewUtil.isTablet ? 26 : 16)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          )
+                              : Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('Fetching DropPoint Location...'.tr(),
+                                      style: TextStyle(
+                                          fontSize: viewUtil.isTablet ? 26 : 16)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    ),
                   ),
                   Visibility(
                     visible: isAtDropLocation,
@@ -709,7 +1108,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          timeToDrop ?? '',
+                                          dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
                                           style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
                                         ),
                                       ),
@@ -773,10 +1172,12 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                           fontSize: viewUtil.isTablet?26:18,
                                           fontWeight: FontWeight.w500,
                                         ),
-                                        onSubmit: () async{
+                                        onSubmit: () async {
                                           setState(() {
                                             isCompleting =true;
                                           });
+                                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                                          await prefs.setBool('driverInteractionActive', false);
                                           await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
                                           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
                                               firstName: widget.firstName,
@@ -833,10 +1234,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
             bottom: MediaQuery.sizeOf(context).height * 0.27,
             child: GestureDetector(
               onTap: () {
-                setState(() {
-                  isMoveClicked = true;
-                });
-                recenterMap();
+                resendOtp();
+                showOTPDialog();
               },
               child: Container(
                 width: MediaQuery.sizeOf(context).width,
@@ -864,10 +1263,10 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                     ),
                   ),
                   child: CircleAvatar(
-                    minRadius: viewUtil.isTablet ? 55 : 40,
+                    minRadius: viewUtil.isTablet ? 60 : 50,
                     backgroundColor: Color(0xff6069FF),
                     child: Text(
-                      'Move'.tr(),
+                      'Start Trip'.tr(),
                       style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
                     ),
                   ),
@@ -908,18 +1307,25 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: GestureDetector(
-                                      onTap: () {
-                                        commonWidgets.makePhoneCall(widget.contactNo);
+                                      onTap: () async {
+                                        await commonWidgets.makePhoneCall(widget.contactNo);
                                       },
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
-                                          ),
-                                        ],
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            color: Color(0xff6069FF),
+                                            borderRadius: BorderRadius.circular(30)
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                            ),
+                                          ],),
                                       ),
                                     ),
                                   ),
@@ -948,7 +1354,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          timeToDrop == null ? 'Calculating...'.tr() : timeToDrop ?? '',
+                                          dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
                                           style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
                                         ),
                                       ),
@@ -959,7 +1365,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(),
+                                          dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(), // Display distance for first drop point
                                           style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
                                         ),
                                       ),
@@ -975,18 +1381,25 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: GestureDetector(
-                                      onTap: () {
-                                        commonWidgets.makePhoneCall(widget.contactNo);
+                                      onTap: () async {
+                                        await commonWidgets.makePhoneCall(widget.contactNo);
                                       },
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.call, color: Color(0xff6069FF), size: viewUtil.isTablet ? 30 : 20),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 17, color: Color(0xff676565))),
-                                          ),
-                                        ],
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            color: Color(0xff6069FF),
+                                            borderRadius: BorderRadius.circular(30)
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                            ),
+                                          ],),
                                       ),
                                     ),
                                   ),
@@ -994,7 +1407,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                               ),
                             ),
                           ),
-                        ),
+                        )
                       ),
                     ),
                   ),

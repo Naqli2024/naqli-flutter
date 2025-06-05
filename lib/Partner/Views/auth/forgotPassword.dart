@@ -128,7 +128,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       onTap: (){
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                          MaterialPageRoute(builder: (context) => LoginPage()),
                         );
                       },
                       child: Padding(
@@ -338,7 +338,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                           onTap: (){
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                              MaterialPageRoute(builder: (context) => LoginPage()),
                             );
                           },
                           child: Padding(
@@ -509,7 +509,7 @@ class _SetNewPasswordState extends State<SetNewPassword> {
                           onTap: (){
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),
+                              MaterialPageRoute(builder: (context) => LoginPage()),
                             );
                           },
                           child: Padding(
@@ -608,7 +608,7 @@ class _ForgotPasswordSuccessState extends State<ForgotPasswordSuccess> {
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                  LoginPage(partnerName: '', mobileNo: '', password: '', token: '', partnerId: '')),);
+                                  LoginPage()));
                     },
                     child: Text(
                       'Continue'.tr(),

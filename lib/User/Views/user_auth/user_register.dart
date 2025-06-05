@@ -36,8 +36,8 @@ class _UserRegisterState extends State<UserRegister> {
   bool isConfirmPasswordObscured = true;
   String? selectedAccount;
   String? selectedId;
-  final List<String> accountItems = ['Single User'.tr(), 'Super User'.tr()];
-  final List<String> govtIdItems = ['iqama No'.tr(), 'national ID'.tr()];
+  final List<String> accountItems = ['Single User', 'Super User'];
+  final List<String> govtIdItems = ['iqama No', 'national ID'];
   final UserService userService = UserService();
   final ScrollController _scrollController = ScrollController();
   final FocusNode firstNameFocusNode = FocusNode();
@@ -399,7 +399,7 @@ class _UserRegisterState extends State<UserRegister> {
               items: accountItems.map((account) {
                 return DropdownMenuItem<String>(
                   value: account,
-                  child: Text(account),
+                  child: Text(account.tr()),
                 );
               }).toList(),
               validator: (value) =>
@@ -454,7 +454,7 @@ class _UserRegisterState extends State<UserRegister> {
               items: govtIdItems.map((id) {
                 return DropdownMenuItem<String>(
                   value: id,
-                  child: Text(id),
+                  child: Text(id.tr()),
                 );
               }).toList(),
               validator: (value) =>

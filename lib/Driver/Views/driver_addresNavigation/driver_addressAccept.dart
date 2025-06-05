@@ -10,6 +10,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -73,7 +74,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
       String pickupPlace = widget.pickUp;
 
       Position currentPosition = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+          desiredAccuracy: LocationAccuracy.best);
       LatLng currentLatLng =
       LatLng(currentPosition.latitude, currentPosition.longitude);
 
@@ -168,7 +169,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      commonWidgets.showToast('An error occurred. Please try again.');
     }
   }
 
@@ -248,7 +249,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
@@ -412,7 +413,19 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                                 borderRadius: BorderRadius.circular(10),
                                               ),
                                             ),
-                                            onPressed: () {
+                                            onPressed: () async {
+                                              await saveDriverAddressInteractionData(
+                                                bookingId: widget.bookingId,
+                                                firstName: widget.firstName,
+                                                lastName: widget.lastName,
+                                                token: widget.token,
+                                                id: widget.id,
+                                                partnerId: widget.partnerId,
+                                                pickUp: widget.pickUp,
+                                                address: widget.address,
+                                                quotePrice: widget.quotePrice,
+                                                userId: widget.userId,
+                                              );
                                               Navigator.push(context,
                                                   MaterialPageRoute(builder: (context) => DriverAddressInteraction(
                                                     firstName: widget.firstName,
@@ -422,6 +435,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
                                                     partnerId: widget.partnerId,
                                                     bookingId: widget.bookingId,
                                                     pickUp: widget.pickUp,
+                                                    address: widget.address,
                                                     quotePrice: (bookingRequestData?['bookingRequest']['quotePrice'] ?? 0).toString(),
                                                     userId: widget.userId,
                                                   )));

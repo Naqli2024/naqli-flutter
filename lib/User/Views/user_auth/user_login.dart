@@ -2,14 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
-import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
-import 'package:flutter_naqli/User/Views/user_auth/user_otp.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_register.dart';
-import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
@@ -52,6 +48,7 @@ class _UserLoginState extends State<UserLogin> {
 
   void userLogin() async {
     if (_formKey.currentState!.validate()) {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -61,7 +58,7 @@ class _UserLoginState extends State<UserLogin> {
         emailAddress: emailAddressController.text,
         password: passwordController.text,
       );
-
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });

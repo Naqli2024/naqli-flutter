@@ -7,8 +7,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
+import 'package:flutter_naqli/Driver/Views/driver_addresNavigation/driver_addressInteraction.dart';
 import 'package:flutter_naqli/Driver/Views/driver_addresNavigation/driver_addressNotification.dart';
 import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_interaction.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notification.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_profile.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
@@ -59,7 +61,6 @@ class _DriverHomePageState extends State<DriverHomePage>
   List<double>? dropPointsDistance;
   String? timeToPickup;
   String? timeToDrop;
-  String? bookingId;
   String cityName = '';
   String bookingStatus = '';
   LatLng currentLatLng = LatLng(37.7749, -122.4194);
@@ -69,6 +70,8 @@ class _DriverHomePageState extends State<DriverHomePage>
   Map<String, dynamic>? bookingRequestData;
   bool isLoading = false;
   Map<String, dynamic>? booking;
+  String bookingId = '';
+  String quotePrice = '0';
 
   @override
   void initState() {
@@ -89,6 +92,7 @@ class _DriverHomePageState extends State<DriverHomePage>
     _loadDriverStatus();
     _fetchBookingRequest();
     _fetchBookingDetails();
+    _checkInteractionData();
   }
 
   @override
@@ -130,7 +134,7 @@ class _DriverHomePageState extends State<DriverHomePage>
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
@@ -142,7 +146,7 @@ class _DriverHomePageState extends State<DriverHomePage>
 
   Future<void> fetchCoordinates() async {
     try {
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
 
       setState(() {
@@ -262,23 +266,50 @@ class _DriverHomePageState extends State<DriverHomePage>
     try {
       final data = await driverService.driverRequest(context, operatorId: widget.id);
 
-      if (data != null && data['bookingRequest'] != null) {
-        if (data['bookingRequest']['assignedOperator'] != null) {
-          final assignedOperatorBookingId = data['bookingRequest']['assignedOperator']['bookingId'];
-        } else {
-          final bookingRequestBookingId = data['bookingRequest']['bookingId'];
+      if (data != null) {
+        String? fetchedBookingId;
+        String? fetchedQuotePrice;
+        Map<String, dynamic>? matchedBooking;
+
+        if (data['bookingRequest'] != null && data['bookingRequest']['assignedOperator'] != null) {
+          matchedBooking = data['bookingRequest'];
+          fetchedBookingId = matchedBooking?['assignedOperator']['bookingId']?.toString();
+          fetchedQuotePrice = matchedBooking?['quotePrice']?.toString();
         }
-        setState(() {
-          bookingRequestData = data;
-          bookingId = (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString();
-        });
-      } else {
-       return;
+
+        if (fetchedBookingId == null && data['bookingRequests'] != null) {
+          final requests = List<Map<String, dynamic>>.from(data['bookingRequests']);
+
+          for (final request in requests) {
+            final quotePrice = request['quotePrice'];
+            final paymentStatus = request['paymentStatus'];
+
+            if (quotePrice != null &&
+                (paymentStatus == 'HalfPaid' || paymentStatus == 'Paid' || paymentStatus == 'Completed') &&
+                    request['bookingStatus'] != 'Completed') {
+              matchedBooking = request;
+              fetchedBookingId = request['bookingId']?.toString();
+              fetchedQuotePrice = quotePrice.toString();
+              break;
+            }
+          }
+        }
+
+        if (fetchedBookingId != null && fetchedQuotePrice != null) {
+          setState(() {
+            bookingRequestData = matchedBooking;
+            bookingId = fetchedBookingId!;
+            quotePrice = fetchedQuotePrice!;
+          });
+        } else {
+          print('No valid booking with quote/payment found.');
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      commonWidgets.showToast('An error occurred. Please try again:');
     }
   }
+
 
   Future<void> _handleDriverRequest() async {
     try {
@@ -287,12 +318,10 @@ class _DriverHomePageState extends State<DriverHomePage>
       if (response != null) {
         _toggleNotification();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No data available from the API.')),
-        );
+        commonWidgets.showToast('No data available');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      commonWidgets.showToast('An error occurred. Please try again.');
     }
   }
 
@@ -368,7 +397,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                                 : MediaQuery.of(context).size.width,
                             height: viewUtil.isTablet
                                 ? MediaQuery.of(context).size.height * 0.08
-                                : MediaQuery.of(context).size.height * 0.1,
+                                : MediaQuery.of(context).size.height * 0.12,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -376,6 +405,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                                   padding: EdgeInsets.only(top: 30,bottom: 10),
                                   child: Text(
                                     'are_you_sure_you_want_to_logout'.tr(),
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                                   ),
                                 ),
@@ -530,6 +560,7 @@ class _DriverHomePageState extends State<DriverHomePage>
                             ),
                             onPressed: () async {
                               isModeChanging =true;
+                              _checkPermissionsAndFetchLocation();
                               await _fetchBookingRequest();
                               await _fetchBookingDetails();
                               await _handleDriverRequest();
@@ -537,6 +568,9 @@ class _DriverHomePageState extends State<DriverHomePage>
                                 driverOnlineModeChange();
                                 isOnline = true;
                                 _saveDriverStatus(isOnline);
+                                if (bookingStatus == 'Completed') {
+                                  CommonWidgets().showToast('This booking is already completed.');
+                                }
                               });
                             },
                             child: isModeChanging
@@ -603,44 +637,86 @@ class _DriverHomePageState extends State<DriverHomePage>
     );
   }
 
-  Widget _buildNotification() {
-    if (_showNotification)
-
-    if (bookingStatus != 'Completed') {
-      return cityName.isEmpty
-          ? SlideTransition(
-        position: _slideAnimation,
-        child: DriverNotification(
-          firstName: widget.firstName,
-          lastName: widget.lastName,
-          token: widget.token,
-          id: widget.id,
-          distanceToPickup: pickUpDistance ?? 0.0,
-          distanceToDropPoints: dropPointsDistance ?? [],
-          timeToDrop: timeToDrop ?? '',
-          timeToPickup: timeToPickup ?? '',
-          partnerId: widget.partnerId,
-          mode: widget.mode,
-          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+  Future<void> _checkInteractionData() async {
+    final interactionAddressData = await getSavedDriverAddressInteractionData();
+    final interactionData = await getSavedDriverInteractionData();
+    if (interactionAddressData != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DriverAddressInteraction(
+            firstName: interactionAddressData['firstName'] ?? '',
+            lastName: interactionAddressData['lastName'] ?? '',
+            token: interactionAddressData['token'] ?? '',
+            id: interactionAddressData['id'] ?? '',
+            partnerId: interactionAddressData['partnerId'] ?? '',
+            bookingId: interactionAddressData['bookingId'] ?? '',
+            pickUp: interactionAddressData['pickUp'] ?? '',
+            address: interactionAddressData['address'] ?? '',
+            quotePrice: interactionAddressData['quotePrice'] ?? '',
+            userId: interactionAddressData['userId'] ?? '',
+          ),
         ),
-      )
-          : SlideTransition(
-        position: _slideAnimation,
-        child: DriverAddressNotification(
-          firstName: widget.firstName,
-          lastName: widget.lastName,
-          token: widget.token,
-          id: widget.id,
-          distanceToPickup: pickUpDistance ?? 0.0,
-          timeToPickup: timeToPickup ?? '',
-          partnerId: widget.partnerId,
-          mode: widget.mode,
-          bookingId: (bookingRequestData?['bookingRequest']['bookingId'] ?? '').toString(),
+      );
+    } else if (interactionData != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DriverInteraction(
+            bookingId: interactionData['bookingId'],
+            firstName: interactionData['firstName'],
+            lastName: interactionData['lastName'],
+            token: interactionData['token'],
+            id: interactionData['id'],
+            partnerId: interactionData['partnerId'],
+            pickUp: interactionData['pickUp'],
+            dropPoints: List<String>.from(interactionData['dropPoints']),
+            quotePrice: interactionData['quotePrice'],
+            userId: interactionData['userId'],
+          )
         ),
       );
     } else {
-       // commonWidgets.showToast('Booking Completed...'.tr());
+      return null;
+    }
+  }
+
+  Widget _buildNotification() {
+    if (_showNotification && bookingStatus != 'Completed' && bookingId.isNotEmpty && quotePrice != '0') {
+      final childWidget = cityName.isEmpty
+          ? DriverNotification(
+        firstName: widget.firstName,
+        lastName: widget.lastName,
+        token: widget.token,
+        id: widget.id,
+        distanceToPickup: pickUpDistance ?? 0.0,
+        distanceToDropPoints: dropPointsDistance ?? [],
+        timeToDrop: timeToDrop ?? '',
+        timeToPickup: timeToPickup ?? '',
+        partnerId: widget.partnerId,
+        mode: widget.mode,
+        bookingId: bookingId,
+        quotePrice: quotePrice,
+      )
+          : DriverAddressNotification(
+        firstName: widget.firstName,
+        lastName: widget.lastName,
+        token: widget.token,
+        id: widget.id,
+        distanceToPickup: pickUpDistance ?? 0.0,
+        timeToPickup: timeToPickup ?? '',
+        partnerId: widget.partnerId,
+        mode: widget.mode,
+        bookingId: bookingId,
+        quotePrice: quotePrice,
+      );
+
+      return SlideTransition(position: _slideAnimation, child: childWidget);
     }
     return Container();
   }
+
+
+
+
 }

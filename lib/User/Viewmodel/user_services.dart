@@ -76,26 +76,18 @@ class UserService{
         if (responseBody['errors'] != null && responseBody['errors'] is List) {
           for (var error in responseBody['errors']) {
             if (error['msg'] != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error['msg'])),
-              );
+              commonWidgets.showToast(error['msg']);
             }
           }
         } else {
           final message = responseBody['message'] ?? 'Registration failed';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         }
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -132,19 +124,13 @@ class UserService{
           );
         } else {
           final message = responseBody['message'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         }
       }
     }on SocketException {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-        );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred,Please try again.')),
-        );
+      commonWidgets.showToast('An error occurred,Please try again.');
       }
   }
 
@@ -165,23 +151,15 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -211,18 +189,12 @@ class UserService{
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -256,18 +228,12 @@ class UserService{
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -290,18 +256,12 @@ class UserService{
         commonWidgets.showToast('OTP Send Successfully');
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -350,9 +310,7 @@ class UserService{
                 ),
               );
               final message = responseBody['message'] ?? 'Login Failed';
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              );
+              commonWidgets.showToast(message);
               await saveUserData(firstName, lastName, token, id, email, accountType);
             }
           else{
@@ -369,32 +327,32 @@ class UserService{
               ),
             );
             final message = responseBody['message'] ?? 'Login Failed';
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message)),
-            );
+            commonWidgets.showToast(message);
             await saveUserData(firstName, lastName, token, id, email, accountType);
           }
 
         } else {
           final message = responseBody['message'] ?? 'Please try again';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         }
       } else {
         final message = responseBody['message'] ?? 'Login failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
+        if(message == 'User not verified')
+          {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => UserOTP(emailAddress: emailAddress,contactNumber: '')
+              ),
+            );
+          }
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.$e');
+      print(e);
     }
   }
 
@@ -412,82 +370,29 @@ class UserService{
     }
   }
 
-/*  Future<List<Vehicle>> fetchUserVehicle() async {
-    try {
-      final response = await http.get(Uri.parse('${baseUrl}vehicles'));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseBody = jsonDecode(response.body);
-        return responseBody.map((data) => Vehicle.fromJson(data)).toList();
-      } else {
-        return [];
-      }
-    } on SocketException {
-     commonWidgets.showToast('Please Check your Internet Connection..');
-      return [];
-    } catch (e) {
-     commonWidgets.showToast('An error occurred,Please try again.');
-      return [];
-    }
-  }*/
-
   Future<List<Buses>> fetchUserBuses() async {
     try{
-      final response = await http.get(Uri.parse('${baseUrl}buses'));
+      final String response = await rootBundle.loadString('assets/buses/buses.json');
 
-      if (response.statusCode == 200) {
-        final List<dynamic> responseBody = jsonDecode(response.body);
+        final List<dynamic> responseBody = jsonDecode(response);
         return responseBody.map((data) => Buses.fromJson(data)).toList();
-      } else {
-        return [];
-      }
-    } on SocketException {
-     commonWidgets.showToast('Please Check your Internet Connection..');
-      return [];
     } catch (e) {
-     commonWidgets.showToast('An error occurred,Please try again.');
+     commonWidgets.showToast('An error occurred,Please try again.$e');
       return [];
     }
   }
 
   Future<List<Special>> fetchUserSpecialUnits() async {
     try{
-      final response = await http.get(Uri.parse('${baseUrl}special-units'));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseBody = jsonDecode(response.body);
+      final String response = await rootBundle.loadString('assets/special/special.json');
+        final List<dynamic> responseBody = jsonDecode(response);
         return responseBody.map((data) => Special.fromJson(data)).toList();
-      } else {
-        return [];
-      }
-    } on SocketException {
-     commonWidgets.showToast('Please Check your Internet Connection..');
-      return [];
+
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
       return [];
     }
   }
-
-/*  Future<List<Equipment>> fetchUserEquipment() async {
-    try{
-      final response = await http.get(Uri.parse('${baseUrl}equipments'));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseBody = jsonDecode(response.body);
-        return responseBody.map((data) => Equipment.fromJson(data)).toList();
-      } else {
-       commonWidgets.showToast('Failed to load equipments');
-        return [];
-      }
-    } on SocketException {
-     commonWidgets.showToast('Please Check your Internet Connection..');
-      return [];
-    } catch (e) {
-     commonWidgets.showToast('An error occurred,Please try again.');
-      return [];
-    }
-  }*/
 
   Future<List<Equipment>> fetchUserEquipment() async {
     try {
@@ -550,16 +455,12 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking Created successful')),
-        );
+        commonWidgets.showToast('Booking Created successful');
         await saveBookingId(bookingId,token);
         return bookingId;
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -609,16 +510,12 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking Created successful')),
-        );
+        commonWidgets.showToast('Booking Created successful');
         await saveBookingId(bookingId,token);
         return bookingId;
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -674,16 +571,12 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking Created successful')),
-        );
+        commonWidgets.showToast('Booking Created successful');
         await saveBookingId(bookingId,token);
         return bookingId;
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -735,16 +628,12 @@ class UserService{
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Booking Created successful')),
-        );
+        commonWidgets.showToast('Booking Created successful');
         await saveBookingId(bookingId,token);
         return bookingId;
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -752,6 +641,69 @@ class UserService{
       return null;
     } catch (e) {
      commonWidgets.showToast('An error occurred,Please try again.');
+      return null;
+    }
+  }
+
+  Future<String?> userSharedCargoCreateBooking(
+      BuildContext context, {
+        required String name,
+        required String unitType,
+        required String typeName,
+        required String scale,
+        required String typeImage,
+        required String typeOfLoad,
+        required String date,
+        required String additionalLabour,
+        required String time,
+        required String productValue,
+        required String pickup,
+        required List dropPoints,
+        required String token,
+      }) async {
+    try{
+      final url = Uri.parse('${baseUrl}bookings');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'unitType': unitType,
+          'type':{
+            'typeName': typeName,
+            'scale': scale,
+            'typeImage': typeImage,
+            'typeOfLoad': typeOfLoad,
+          },
+          'date': date,
+          'additionalLabour': additionalLabour,
+          'time': time,
+          'productValue': productValue,
+          'pickup': pickup,
+          'dropPoints': dropPoints,
+        }),
+      );
+
+      final responseBody = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        String bookingId = responseBody['_id'] ?? 'No Booking ID Found';
+        commonWidgets.showToast('Booking Created successful');
+        await saveBookingId(bookingId,token);
+        return bookingId;
+      } else {
+        final message = responseBody['message'] ?? 'Please try again.';
+        commonWidgets.showToast(message);
+      }
+      return null;
+    } on SocketException {
+      commonWidgets.showToast('Please Check your Internet Connection..');
+      return null;
+    } catch (e) {
+      commonWidgets.showToast('An error occurred,Please try again.');
       return null;
     }
   }
@@ -800,9 +752,7 @@ class UserService{
         return vendors;
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -814,7 +764,7 @@ class UserService{
   }
 
 
-  Future<dynamic> updatePayment(String token,int amount, String status, String partnerId,String bookingId, int totalAmount,int oldQuotePrice) async {
+  Future<dynamic> updatePayment(String token,num amount, String status, String partnerId,String bookingId, num totalAmount,num oldQuotePrice) async {
     final url = Uri.parse('${baseUrl}bookings/$bookingId/payment');
     try {
       final response = await http.put(
@@ -917,7 +867,101 @@ class UserService{
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token,String bookingId) async {
+  // Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token,String bookingId) async {
+  //   try {
+  //     final response = await http.get(
+  //       Uri.parse('${baseUrl}partner/$partnerId'),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'Bearer $token',
+  //       },
+  //     );
+  //     if (response.statusCode == 200) {
+  //       final responseBody = jsonDecode(response.body);
+  //       print(response.body);
+  //       if (responseBody['data'] != null) {
+  //         final partnerData = responseBody['data'];
+  //         final partnerId = partnerData['_id'] ?? 'N/A';
+  //         final partnerName = partnerData['partnerName'] ?? 'N/A';
+  //         final type = partnerData['type'] ?? 'N/A';
+  //         final operators = partnerData['operators'] ?? [];
+  //
+  //         if (operators.isEmpty) {
+  //           return [];
+  //         }
+  //
+  //         final partnerDetails = <Map<String, dynamic>>[];
+  //
+  //
+  //         for (var operator in operators) {
+  //           if (operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty) {
+  //             final operatorDetails = operator['operatorsDetail'][0] ?? {};
+  //             final firstName = operatorDetails['firstName'] ?? 'N/A';
+  //             final lastName = operatorDetails['lastName'] ?? 'N/A';
+  //             final mode = operator['unitType'] ?? 'N/A';
+  //             final fullName = '$firstName $lastName';
+  //             final mobileNo = operatorDetails['mobileNo'] ?? 'N/A';
+  //             final operatorId = operatorDetails['_id'] ?? 'N/A';
+  //             final bookingRequests = partnerData['bookingRequest'] ?? [];
+  //             if (bookingRequests.isNotEmpty) {
+  //               for (var booking in bookingRequests) {
+  //                 if (booking['bookingId'] == bookingId) {
+  //                 final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
+  //                 final paymentStatus = booking['paymentStatus']?.toString() ?? 'Unknown Payment Status';
+  //                 final assignedOperator = booking['assignedOperator'] ?? {};
+  //                 final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
+  //                 final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
+  //
+  //                   partnerDetails.add({
+  //                     'type': type,
+  //                     'assignOperatorName': assignOperatorName,
+  //                     'assignOperatorMobileNo': assignOperatorMobileNo,
+  //                     'partnerId': partnerId,
+  //                     'partnerName': partnerName,
+  //                     'mobileNo': mobileNo,
+  //                     'operatorName': fullName,
+  //                     'lastName': lastName,
+  //                     'operatorId': operatorId,
+  //                     'mode': mode,
+  //                     'bookingId': bookingId,
+  //                     'paymentStatus': paymentStatus,
+  //                   });
+  //                 }
+  //               }
+  //             } else {
+  //               partnerDetails.add({
+  //                 'type': type,
+  //                 'partnerId': partnerId,
+  //                 'partnerName': partnerName,
+  //                 'mobileNo': mobileNo,
+  //                 'operatorName': fullName,
+  //                 'lastName': lastName,
+  //                 'mode': mode,
+  //                 'bookingId': 'No bookingId',
+  //                 'paymentStatus': 'No paymentStatus',
+  //               });
+  //             }
+  //           } else {
+  //             final message = responseBody['message'] ?? 'No Operator found';
+  //             commonWidgets.showToast(message);
+  //           }
+  //         }
+  //         return partnerDetails;
+  //       } else {
+  //         return [];
+  //       }
+  //     } else {
+  //       return [];
+  //     }
+  //   } on SocketException {
+  //     commonWidgets.showToast('Please Check your Internet Connection..');
+  //     return [];
+  //   } catch (e) {
+  //     return [];
+  //   }
+  // }
+
+  Future<List<Map<String, dynamic>>> getPartnerData(String partnerId, String token, String bookingId) async {
     try {
       final response = await http.get(
         Uri.parse('${baseUrl}partner/$partnerId'),
@@ -926,6 +970,7 @@ class UserService{
           'Authorization': 'Bearer $token',
         },
       );
+
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
 
@@ -936,45 +981,50 @@ class UserService{
           final type = partnerData['type'] ?? 'N/A';
           final operators = partnerData['operators'] ?? [];
 
-          if (operators.isEmpty) {
-            return [];
-          }
-
           final partnerDetails = <Map<String, dynamic>>[];
+          bool operatorAdded = false;
 
           for (var operator in operators) {
             if (operator['operatorsDetail'] != null && operator['operatorsDetail'].isNotEmpty) {
               final operatorDetails = operator['operatorsDetail'][0] ?? {};
-              final firstName = operatorDetails['firstName'] ?? 'N/A';
-              final lastName = operatorDetails['lastName'] ?? 'N/A';
-              final mode = operator['unitType'] ?? 'N/A';
-              final fullName = '$firstName $lastName';
+              final firstName = operatorDetails['firstName'] ?? '';
+              final lastName = operatorDetails['lastName'] ?? '';
+              final fullName = '$firstName $lastName'.trim();
               final mobileNo = operatorDetails['mobileNo'] ?? 'N/A';
+              final operatorId = operatorDetails['_id'] ?? 'N/A';
+              final mode = operator['unitType'] ?? 'N/A';
               final bookingRequests = partnerData['bookingRequest'] ?? [];
+
+              bool matchedBooking = false;
+
               if (bookingRequests.isNotEmpty) {
                 for (var booking in bookingRequests) {
                   if (booking['bookingId'] == bookingId) {
-                  final bookingId = booking['bookingId']?.toString() ?? 'Unknown Booking ID';
-                  final paymentStatus = booking['paymentStatus']?.toString() ?? 'Unknown Payment Status';
-                  final assignedOperator = booking['assignedOperator'] ?? {};
-                  final assignOperatorName = assignedOperator['operatorName']?.toString() ?? 'N/A';
-                  final assignOperatorMobileNo = assignedOperator['operatorMobileNo']?.toString() ?? 'N/A';
+                    final assignedOperator = booking['assignedOperator'] ?? {};
+
                     partnerDetails.add({
                       'type': type,
-                      'assignOperatorName': assignOperatorName,
-                      'assignOperatorMobileNo': assignOperatorMobileNo,
+                      'assignOperatorName': assignedOperator['operatorName'] ?? 'N/A',
+                      'assignOperatorMobileNo': assignedOperator['operatorMobileNo'] ?? 'N/A',
                       'partnerId': partnerId,
                       'partnerName': partnerName,
                       'mobileNo': mobileNo,
                       'operatorName': fullName,
                       'lastName': lastName,
+                      'operatorId': operatorId,
                       'mode': mode,
-                      'bookingId': bookingId,
-                      'paymentStatus': paymentStatus,
+                      'bookingId': booking['bookingId']?.toString() ?? 'N/A',
+                      'paymentStatus': booking['paymentStatus']?.toString() ?? 'N/A',
                     });
+
+                    matchedBooking = true;
+                    operatorAdded = true;
+                    break;
                   }
                 }
-              } else {
+              }
+
+              if (!matchedBooking) {
                 partnerDetails.add({
                   'type': type,
                   'partnerId': partnerId,
@@ -982,16 +1032,40 @@ class UserService{
                   'mobileNo': mobileNo,
                   'operatorName': fullName,
                   'lastName': lastName,
+                  'operatorId': operatorId,
                   'mode': mode,
                   'bookingId': 'No bookingId',
                   'paymentStatus': 'No paymentStatus',
+                  'assignOperatorName': 'N/A',
+                  'assignOperatorMobileNo': 'N/A',
                 });
+
+                operatorAdded = true;
               }
             } else {
               final message = responseBody['message'] ?? 'No Operator found';
               commonWidgets.showToast(message);
             }
           }
+
+          // Fallback if no operator info available at all
+          if (!operatorAdded) {
+            partnerDetails.add({
+              'type': type,
+              'partnerId': partnerId,
+              'partnerName': partnerName,
+              'mobileNo': partnerData['mobileNo'] ?? 'N/A',
+              'operatorName': 'N/A',
+              'lastName': 'N/A',
+              'operatorId': 'N/A',
+              'mode': 'N/A',
+              'bookingId': 'N/A',
+              'paymentStatus': 'N/A',
+              'assignOperatorName': 'N/A',
+              'assignOperatorMobileNo': 'N/A',
+            });
+          }
+
           return partnerDetails;
         } else {
           return [];
@@ -1023,9 +1097,7 @@ class UserService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? responseBody;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? 'Please try again';
@@ -1068,26 +1140,18 @@ class UserService{
       if (response.statusCode == 201) {
         try {
           final message = jsonDecode(responseBody)['message'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         } catch (e) {
           commonWidgets.showToast('An error occurred,Please try again.');
         }
       } else {
         final message = jsonDecode(responseBody)['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1125,6 +1189,38 @@ class UserService{
       return null;
     }
   }
+
+  Future<String?> getBookingByUserId(String userId, String token) async {
+    try {
+      final url = Uri.parse('${baseUrl}bookings/$userId');
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+        if (responseBody['data'] != null && responseBody['data'].isNotEmpty) {
+          final bookingData = responseBody['data'][0];
+          final bookingId = bookingData['_id'] ?? 'N/A';
+          final partnerId = bookingData['partner'] ?? 'N/A';
+
+          return bookingId;
+        }
+      } else {
+        return null;
+      }
+    } on SocketException {
+      return 'Please check your internet connection.';
+    } catch (e) {
+      return 'An error occurred. Please try again.';
+    }
+    return null;
+  }
+
 
   Future<List<Map<String, String>>> getNotifications(String userId) async {
     try {
@@ -1334,13 +1430,9 @@ class UserService{
          commonWidgets.showToast(message);
         }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -1362,9 +1454,7 @@ class UserService{
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? responseBody;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final responseBody = jsonDecode(response.body);
         final message = responseBody['message'] ?? 'Please try again';
@@ -1376,6 +1466,29 @@ class UserService{
       commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
+
+  Future<DriverLocation?> fetchDriverLocation(
+      String partnerId,
+      String operatorId,
+      ) async {
+    try {
+      final response = await http.get(Uri.parse('${baseUrl}driver-location/${partnerId}/${operatorId}'));
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return DriverLocation.fromJson(json);
+      } else {
+        return null;
+      }
+    } on SocketException {
+      commonWidgets.showToast('Please Check your Internet Connection..');
+      return null;
+    } catch (e) {
+      commonWidgets.showToast('An error occurred, Please try again.$e');
+      return null;
+    }
+  }
+
 
 
 }

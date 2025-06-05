@@ -58,15 +58,17 @@ class _TriggerBookingState extends State<TriggerBooking> {
   bool isMADATapped = false;
   bool isPayAdvance = false;
   String? selectedPartnerName;
-  int? selectedOldQuotePrice;
+  num? selectedOldQuotePrice;
   Map<String, String?> selectedVendors = {};
-  Map<String, int?> selectedQuotePrices = {};
-  Map<String, int?> selectedOldQuotePrices = {};
+  Map<String, num?> selectedQuotePrices = {};
+  Map<String, num?> selectedOldQuotePrices = {};
   int _selectedIndex = 4;
   String? checkOutId;
   String? integrityId;
   String? resultCode;
   String? paymentStatus;
+  Map<String, bool> isLoadingMap = {};
+  late WebViewController webViewController;
 
   @override
   void initState() {
@@ -120,6 +122,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: viewUtil.isTablet ? 24 :19),
                       ),
                     ),
@@ -174,9 +177,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting booking: $e')),
-      );
+      commonWidgets.showToast('Error deleting booking: $e');
     } finally {
       setState(() {
         isDeleting = false;
@@ -409,8 +410,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                         itemBuilder: (context, index) {
                                                           final vendor = vendors[index];
                                                           final partnerId = vendor['partnerId']?.toString() ?? '';
-                                                          final quotePrice = vendor['quotePrice']?.toString() ?? '0';
-                                                          final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? '0';
+                                                          final quotePrice = vendor['quotePrice'] ?? 0;
+                                                          final oldQuotePrice = vendor['oldQuotePrice'] ?? 0;
                                                           return Padding(
                                                             padding: const EdgeInsets.only(left: 20),
                                                             child: RadioListTile(
@@ -456,8 +457,8 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                                   );
                                                                 }
                                                                 setState(() {
-                                                                  selectedQuotePrices[booking['_id']] = int.tryParse(quotePrice);
-                                                                  selectedOldQuotePrices[booking['_id']] = int.tryParse(oldQuotePrice);
+                                                                  selectedQuotePrices[booking['_id']] = quotePrice;
+                                                                  selectedOldQuotePrices[booking['_id']] = oldQuotePrice;
                                                                 });
                                                               },
                                                             ),
@@ -478,24 +479,43 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                                           ),
                                                         ),
                                                         onPressed: selectedVendors[booking['_id'] ?? ""] != null
-                                                            ? () {
-                                                                int oldQuotePrice = selectedOldQuotePrices[booking['_id']] ?? 0;
-                                                                openPayOrAdvanceDialog(selectedVendors[booking['_id'] ?? ""] ?? "",
+                                                            ? () async {
+                                                          final bookingId = booking['_id'] ?? '';
+                                                          setState(() {
+                                                            isLoadingMap[bookingId] = true;
+                                                          });
+                                                                num oldQuotePrice = selectedOldQuotePrices[booking['_id']] ?? 0;
+                                                                await openPayOrAdvanceDialog(selectedVendors[booking['_id'] ?? ""] ?? "",
                                                                   widget.token,
                                                                   booking,
                                                                   oldQuotePrice,
                                                                 );
+                                                          if (mounted) {
+                                                            setState(() {
+                                                              isLoadingMap[bookingId] = false;
+                                                            });
+                                                          }
                                                               }
                                                             : null,
-                                                        child: Text(
-                                                          'PayNow'.tr(),
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: viewUtil.isTablet ?22:17,
-                                                            fontWeight: FontWeight.w500,
-                                                          ),
+                                                        child: isLoadingMap[booking['_id']] == true
+                                                        ? SizedBox(
+                                                        width: 20,
+                                                        height: 20,
+                                                        child: CircularProgressIndicator(
+                                                          color: Colors.white,
+                                                          strokeWidth: 2,
                                                         ),
-                                                      ),
+                                                      )
+                                                            : Text(
+                                                        'PayNow'.tr(),
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: viewUtil.isTablet ? 22 : 17,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+
+                                    ),
                                                     ),
                                                   ),
                                                   Padding(
@@ -654,7 +674,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     }
   }
 
-  void _onRadioButtonSelected(String bookingId, String partnerId,int? oldQuotePrice) {
+  void _onRadioButtonSelected(String bookingId, String partnerId,num? oldQuotePrice) {
     setState(() {
       selectedVendors[bookingId] = partnerId;
       if (oldQuotePrice != null) {
@@ -663,14 +683,15 @@ class _TriggerBookingState extends State<TriggerBooking> {
     });
   }
 
-  Future<void> openPayOrAdvanceDialog(String partnerId, String token, Map<String, dynamic> booking,int oldQuotePrice) async {Map<String, String> partnerDetails =
+  Future<void> openPayOrAdvanceDialog(String partnerId, String token, Map<String, dynamic> booking,num oldQuotePrice) async {
+    Map<String, String> partnerDetails =
         await fetchPartnerDetailsForBooking(partnerId, token);
     String partnerName = partnerDetails['partnerName'] ?? 'N/A';
     String mobileNo = partnerDetails['mobileNo'] ?? 'N/A';
     showPayOrPayAdvanceDialog(booking,oldQuotePrice,partnerId, partnerName: partnerName, mobileNo: mobileNo);
   }
 
-  void showPayOrPayAdvanceDialog(Map<String, dynamic> booking,int oldQuotePrice,String partnerId, {String? partnerName, String? mobileNo}) {
+  void showPayOrPayAdvanceDialog(Map<String, dynamic> booking,num oldQuotePrice,String partnerId, {String? partnerName, String? mobileNo}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -919,10 +940,10 @@ class _TriggerBookingState extends State<TriggerBooking> {
                                 onPressed: () async {
                                   Navigator.pop(context);
                                   isPayAdvance =true;
-                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]! ~/ 2,partnerId,oldQuotePrice,booking['_id']);
+                                  showSelectPaymentDialog(selectedQuotePrices[booking['_id']]! / 2,partnerId,oldQuotePrice,booking['_id']);
                                 },
                                 child: Text(
-                                  '${'Pay Advance :'.tr()} ${selectedQuotePrices[booking['_id']]! ~/ 2} SAR',
+                                  '${'Pay Advance :'.tr()} ${selectedQuotePrices[booking['_id']]! / 2} SAR',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Colors.white,
@@ -986,7 +1007,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  void showSelectPaymentDialog(int amount,String partnerId,int oldQuotePrice,String bookingId) {
+  void showSelectPaymentDialog(num amount,String partnerId,num oldQuotePrice,String bookingId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1092,7 +1113,7 @@ class _TriggerBookingState extends State<TriggerBooking> {
     );
   }
 
-  Future initiatePayment(String paymentBrand,int amount) async {
+  Future initiatePayment(String paymentBrand,num amount) async {
     setState(() {
       commonWidgets.loadingDialog(context, true);
     });
@@ -1121,13 +1142,11 @@ class _TriggerBookingState extends State<TriggerBooking> {
         paymentStatus = result['description'] ?? '';
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve payment status.')),
-      );
+      commonWidgets.showToast('Failed to retrieve payment status.');
     }
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, int oldQuotePrice, String bookingId) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, num amount, String partnerID, num oldQuotePrice, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -1222,8 +1241,19 @@ class _TriggerBookingState extends State<TriggerBooking> {
 ''';
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
-
-    WebViewController webViewController = WebViewController()
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Center(
+          child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20)
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+              child: CircularProgressIndicator())),
+    );
+    webViewController = WebViewController()
       ..setBackgroundColor(Colors.transparent)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel(
@@ -1281,31 +1311,37 @@ class _TriggerBookingState extends State<TriggerBooking> {
           }
         },
       )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            Navigator.of(context).pop();
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                  backgroundColor: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.42,
+                      child: WebViewWidget(controller: webViewController),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      )
       ..loadRequest(Uri.dataFromString(
         isMADATapped ? madaHtml : visaHtml,
         mimeType: 'text/html',
         encoding: Encoding.getByName('utf-8'),
       ));
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 10),
-          backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.42,
-              child: WebViewWidget(controller: webViewController),
-            ),
-          ),
-        );
-      },
-    );
   }
 
 }

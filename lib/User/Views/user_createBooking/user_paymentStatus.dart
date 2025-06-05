@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_svg/svg.dart';
@@ -15,6 +18,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
 
 class NewBooking extends StatefulWidget {
   final String token;
@@ -182,13 +186,72 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
   bool isLoading = true;
   List<Map<String, dynamic>>? partnerData;
   String currentPlace = '';
+  String? operatorId;
+  DriverLocation? driverLocation;
+  BitmapDescriptor? customArrowIcon;
+  Timer? _locationTimer;
 
   @override
   void initState() {
     fetchAddressCoordinates();
     fetchCoordinates();
-    fetchPartnerData();
+    _startDriverLocationUpdates();
+    _loadCustomMarker();
     super.initState();
+  }
+
+  void _startDriverLocationUpdates() async {
+    await fetchPartnerData();
+    await fetchDriverCoOrdinatesAndUpdateMarker();
+    _locationTimer = Timer.periodic(Duration(seconds: 10), (_) {
+      fetchDriverCoOrdinatesAndUpdateMarker();
+    });
+  }
+
+  Future<void> fetchDriverCoOrdinatesAndUpdateMarker() async {
+    try {
+      if (operatorId == null || operatorId!.isEmpty) return;
+
+      driverLocation = await userService.fetchDriverLocation(widget.partnerId, operatorId!);
+
+      if (driverLocation != null && customArrowIcon != null) {
+        LatLng target = LatLng(driverLocation!.latitude, driverLocation!.longitude);
+
+        setState(() {
+          markers.removeWhere((marker) => marker.markerId == MarkerId('driver'));
+
+          markers.add(
+            Marker(
+              markerId: MarkerId('driver'),
+              position: target,
+              infoWindow: InfoWindow(title: 'Driver Location'),
+              icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+            ),
+          );
+        });
+
+        mapController?.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+      }
+    } catch (e) {
+      commonWidgets.showToast('An error occurred, Please try again.');
+    }
+  }
+
+  void _loadCustomMarker() async {
+    final ByteData byteData = await rootBundle.load('assets/arrow.png');
+    final Uint8List markerImage = byteData.buffer.asUint8List();
+
+    img.Image? originalImage = img.decodeImage(markerImage);
+
+    if (originalImage != null) {
+      img.Image resizedImage = img.copyResize(originalImage, width: 200, height: 200);
+
+      final Uint8List resizedMarkerImage = Uint8List.fromList(img.encodePng(resizedImage));
+
+      customArrowIcon = BitmapDescriptor.fromBytes(resizedMarkerImage);
+
+      setState(() {});
+    }
   }
 
   Future<void> fetchPartnerData() async {
@@ -197,9 +260,11 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
       if (data.isNotEmpty) {
         setState(() {
           partnerData = data;
+          operatorId = partnerData?[0]['operatorId'] ?? 'N/A';
+
         });
       } else {
-      return;
+        return;
       }
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
@@ -221,25 +286,25 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
 
       // Fetch the user's current location
       Position currentPosition = await geo.Geolocator.getCurrentPosition(
-        desiredAccuracy: geo.LocationAccuracy.high,
+        desiredAccuracy: geo.LocationAccuracy.best,
       );
       LatLng currentLatLng =
       LatLng(currentPosition.latitude, currentPosition.longitude);
 
       // Add marker for the current location
-      setState(() {
-        markers.add(
-          Marker(
-            markerId: const MarkerId('currentLocation'),
-            position: currentLatLng,
-            infoWindow: InfoWindow(
-              snippet: currentPlace,
-              title: 'Current Location',
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          ),
-        );
-      });
+      // setState(() {
+      //   markers.add(
+      //     Marker(
+      //       markerId: const MarkerId('currentLocation'),
+      //       position: currentLatLng,
+      //       infoWindow: InfoWindow(
+      //         snippet: currentPlace,
+      //         title: 'Current Location',
+      //       ),
+      //       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      //     ),
+      //   );
+      // });
 
       // Fetch pickup coordinates
       String pickupUrl =
@@ -539,6 +604,12 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
   }
 
   @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     ViewUtil viewUtil = ViewUtil(context);
     return Directionality(
@@ -561,14 +632,14 @@ class _PaymentCompletedState extends State<PaymentCompleted> {
                 Stack(
                   children: [
                     Container(
-                      height: MediaQuery.sizeOf(context).height * 0.4,
+                      height: MediaQuery.sizeOf(context).height * 0.45,
                       child: GoogleMap(
                         onMapCreated: (GoogleMapController controller) {
                           mapController = controller;
                         },
                         initialCameraPosition: const CameraPosition(
                           target: LatLng(0, 0),
-                          zoom: 1,
+                          zoom: 5,
                         ),
                         markers: markers,
                         polylines: polylines,

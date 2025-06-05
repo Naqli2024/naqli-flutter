@@ -6,66 +6,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_interaction.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/user_home_page.dart';
 import 'dart:ui' as ui;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top]);
-  await EasyLocalization.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  if (!kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS)) {
-    try {
-      await InAppWebViewController.setWebContentsDebuggingEnabled(true);
-    } catch (e) {
-      CommonWidgets().showToast('An error occurred,Please try again.');
-    }
-  }
-  SystemChrome.setPreferredOrientations([
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-  ]).then((_) {
+  ]);
+  await Future.wait([
+    EasyLocalization.ensureInitialized(),
+    dotenv.load(fileName: ".env"),
+  ]);
     runApp(
       EasyLocalization(
-      supportedLocales: [
-        Locale('en', 'US'),
-        Locale('ar', 'SA'),
-        Locale('hi', 'IN'),
-      ],
-      path: 'assets/translations',
-      fallbackLocale: Locale('en', 'US'),
-      child: MyApp(),
-    ),
+        supportedLocales: [
+          Locale('en', 'US'),
+          Locale('ar', 'SA'),
+          Locale('hi', 'IN'),
+        ],
+        path: 'assets/translations',
+        fallbackLocale: Locale('en', 'US'),
+        child: const MyApp(),
+      ),
     );
-  });
+
+  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+    Future.microtask(() async {
+      try {
+        await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+      } catch (e) {
+        CommonWidgets().showToast('An error occurred,Please try again.');
+      }
+    });
+  }
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    ViewUtil viewUtil = ViewUtil(context);
-
     return MaterialApp(
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      title: 'Naqli',
+      title: 'Naqlee',
       builder: (context, child) {
+        ViewUtil viewUtil = ViewUtil(context);
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 0.95),
+          data: MediaQuery.of(context).copyWith(textScaleFactor: viewUtil.isTablet ? 1.3 : 0.87),
           child: child ?? const LoginScreen(),
         );
       },
@@ -73,9 +76,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff6A66D1)),
         useMaterial3: true,
-        textTheme: Theme.of(context).textTheme.apply(
-          fontSizeFactor: viewUtil.isTablet?1.3:0.95,
-        ),
       ),
       home: Directionality(
           textDirection: ui.TextDirection.ltr,
@@ -92,118 +92,80 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  @override
-  void initState() {
-    super.initState();
+  Future<Widget> _getHomeScreen() async {
+    Map<String, String?>? partnerData = await getSavedPartnerData();
+    if (partnerData != null &&
+        partnerData['partnerId']?.isNotEmpty == true &&
+        partnerData['partnerName']?.isNotEmpty == true &&
+        partnerData['token']?.isNotEmpty == true) {
+      return BookingDetails(
+        partnerName: partnerData['partnerName'] ?? '',
+        partnerId: partnerData['partnerId'] ?? '',
+        token: partnerData['token'] ?? '',
+        quotePrice: '',
+        paymentStatus: '',
+        email: partnerData['email'] ?? '',
+      );
+    }
+
+    Map<String, String?>? driverData = await getSavedDriverData();
+    if (driverData != null &&
+        driverData['id']?.isNotEmpty == true &&
+        driverData['token']?.isNotEmpty == true &&
+        driverData['partnerId']?.isNotEmpty == true) {
+      return DriverHomePage(
+        firstName: driverData['firstName'] ?? '',
+        lastName: driverData['lastName'] ?? '',
+        token: driverData['token'] ?? '',
+        id: driverData['id'] ?? '',
+        partnerId: driverData['partnerId'] ?? '',
+        mode: driverData['mode'] ?? '',
+      );
+    }
+
+    Map<String, String?>? userData = await getSavedUserData();
+    if (userData != null &&
+        userData['id']?.isNotEmpty == true &&
+        userData['token']?.isNotEmpty == true &&
+        userData['accountType']?.isNotEmpty == true) {
+      if (userData['accountType'] == 'Single User') {
+        return UserType(
+          firstName: userData['firstName'] ?? '',
+          lastName: userData['lastName'] ?? '',
+          token: userData['token'] ?? '',
+          id: userData['id'] ?? '',
+          email: userData['email'] ?? '',
+          accountType: userData['accountType'] ?? '',
+        );
+      } else {
+        return SuperUserHomePage(
+          firstName: userData['firstName'] ?? '',
+          lastName: userData['lastName'] ?? '',
+          token: userData['token'] ?? '',
+          id: userData['id'] ?? '',
+          email: userData['email'] ?? '',
+          accountType: userData['accountType'] ?? '',
+        );
+      }
+    }
+
+    return const UserHomePage();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<Map<String, String?>>(
-        future: getSavedPartnerData(),
-        builder: (context, partnerSnapshot) {
-          if (partnerSnapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder<Widget>(
+        future: _getHomeScreen(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (partnerSnapshot.hasData) {
-            final partnerData = partnerSnapshot.data;
-            if (partnerData != null) {
-              final partnerName = partnerData['partnerName'] ?? '';
-              final partnerId = partnerData['partnerId'] ?? '';
-              final token = partnerData['token'] ?? '';
-              final email = partnerData['email'] ?? '';
-              if (partnerId.isNotEmpty && token.isNotEmpty && partnerName.isNotEmpty) {
-                return BookingDetails(
-                  partnerName: partnerName,
-                  partnerId: partnerId,
-                  token: token,
-                  quotePrice: '',
-                  paymentStatus: '',
-                  email: email,
-                );
-              }
-            }
           }
-
-          return FutureBuilder<Map<String, String?>>(
-            future: getSavedDriverData(),
-            builder: (context, driverSnapshot) {
-              if (driverSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (driverSnapshot.hasData) {
-                final driverData = driverSnapshot.data;
-                if (driverData != null) {
-                  final firstName = driverData['firstName'] ?? '';
-                  final lastName = driverData['lastName'] ?? '';
-                  final mode = driverData['mode'] ?? '';
-                  final id = driverData['id'] ?? '';
-                  final token = driverData['token'] ?? '';
-                  final driverPartnerId = driverData['partnerId'] ?? '';
-                  if (id.isNotEmpty && token.isNotEmpty && driverPartnerId.isNotEmpty) {
-                    return DriverHomePage(
-                      firstName: firstName,
-                      lastName: lastName,
-                      token: token,
-                      id: id,
-                      partnerId: driverPartnerId,
-                      mode: mode,
-                    );
-                  }
-                }
-              }
-
-
-              return FutureBuilder<Map<String, String?>>(
-                future: getSavedUserData(),
-                builder: (context, userSnapshot) {
-                  if (userSnapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (userSnapshot.hasData) {
-                    final userData = userSnapshot.data;
-                    if (userData != null) {
-                      final firstName = userData['firstName'] ?? '';
-                      final lastName = userData['lastName'] ?? '';
-                      final token = userData['token'] ?? '';
-                      final id = userData['id'] ?? '';
-                      final email = userData['email'] ?? '';
-                      final accountType = userData['accountType'] ?? '';
-                      if(accountType == 'Single User') {
-                        if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
-                          return UserType(
-                            firstName: firstName,
-                            lastName: lastName,
-                            token: token,
-                            id: id,
-                            email: email,
-                            accountType: accountType,
-                          );
-                        }
-                      }
-                      else{
-                        if (id.isNotEmpty && token.isNotEmpty && accountType.isNotEmpty) {
-                          return SuperUserHomePage(
-                            firstName: firstName,
-                            lastName: lastName,
-                            token: token,
-                            id: id,
-                            email: email,
-                            accountType: accountType,
-                          );
-                        }
-                      }
-                    }
-                  }
-
-                  return const UserHomePage();
-                },
-              );
-            },
-          );
+          return snapshot.data ?? const UserHomePage();
         },
       ),
     );
   }
 }
 
-// --enable-software-rendering
 

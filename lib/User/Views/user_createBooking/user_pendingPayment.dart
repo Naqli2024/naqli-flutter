@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
+import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_makePayment.dart';
@@ -20,6 +23,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
 
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -43,10 +47,10 @@ class PendingPayment extends StatefulWidget {
   final String email;
   final String partnerName;
   final String partnerId;
-  final String oldQuotePrice;
+  final num oldQuotePrice;
   final String paymentStatus;
-  final String quotePrice;
-  final int advanceOrPay;
+  final num quotePrice;
+  final num advanceOrPay;
   final String bookingStatus;
 
   const PendingPayment({super.key, required this.bookingId, required this.unit, required this.unitType, required this.load, required this.size, required this.pickup, required this.dropPoints, required this.cityName, required this.address, required this.zipCode, required this.token, required this.firstName, required this.lastName, required this.selectedType, required this.unitTypeName, required this.id, required this.partnerName, required this.partnerId, required this.oldQuotePrice, required this.paymentStatus, required this.quotePrice, required this.advanceOrPay, required this.bookingStatus, required this.email});
@@ -63,8 +67,7 @@ class _PendingPaymentState extends State<PendingPayment> {
   String unit = 'unit';
   String operatorName = 'Operator Name';
   String mode = 'Mode';
-  int remainingBalance = 0;
-  int advanceOrPay = 0;
+  num advanceOrPay = 0;
   String bookingStatus = 'Booking status';
   String paymentStatus = 'payment Status';
   String pendingAmount = 'XXXXX SAR';
@@ -84,6 +87,11 @@ class _PendingPaymentState extends State<PendingPayment> {
   String? integrityId;
   String? resultCode;
   String? paymentResult;
+  String? operatorId;
+  DriverLocation? driverLocation;
+  BitmapDescriptor? customArrowIcon;
+  Timer? _locationTimer;
+  late WebViewController webViewController;
 
   @override
   void initState() {
@@ -91,7 +99,62 @@ class _PendingPaymentState extends State<PendingPayment> {
     fetchCoordinates();
     fetchPartnerData();
     fetchAndSetBookingDetails();
+    _startDriverLocationUpdates();
+    _loadCustomMarker();
     super.initState();
+  }
+
+  void _startDriverLocationUpdates() async {
+    await fetchPartnerData();
+    await fetchDriverCoOrdinatesAndUpdateMarker();
+    _locationTimer = Timer.periodic(Duration(seconds: 10), (_) {
+      fetchDriverCoOrdinatesAndUpdateMarker();
+    });
+  }
+
+  Future<void> fetchDriverCoOrdinatesAndUpdateMarker() async {
+    try {
+      if (operatorId == null || operatorId!.isEmpty) return;
+
+      driverLocation = await userService.fetchDriverLocation(widget.partnerId, operatorId!);
+      if (driverLocation != null && customArrowIcon != null) {
+        LatLng target = LatLng(driverLocation!.latitude, driverLocation!.longitude);
+
+        setState(() {
+          markers.removeWhere((marker) => marker.markerId == MarkerId('driver'));
+
+          markers.add(
+            Marker(
+              markerId: MarkerId('driver'),
+              position: target,
+              infoWindow: InfoWindow(title: 'Driver Location'),
+              icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+            ),
+          );
+        });
+
+        mapController?.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+      }
+    } catch (e) {
+      commonWidgets.showToast('An error occurred, Please try again.');
+    }
+  }
+
+  void _loadCustomMarker() async {
+    final ByteData byteData = await rootBundle.load('assets/arrow.png');
+    final Uint8List markerImage = byteData.buffer.asUint8List();
+
+    img.Image? originalImage = img.decodeImage(markerImage);
+
+    if (originalImage != null) {
+      img.Image resizedImage = img.copyResize(originalImage, width: 200, height: 200);
+
+      final Uint8List resizedMarkerImage = Uint8List.fromList(img.encodePng(resizedImage));
+
+      customArrowIcon = BitmapDescriptor.fromBytes(resizedMarkerImage);
+
+      setState(() {});
+    }
   }
 
   Future<void> fetchPartnerData() async {
@@ -100,6 +163,7 @@ class _PendingPaymentState extends State<PendingPayment> {
       if (data.isNotEmpty) {
         setState(() {
           partnerData = data;
+          operatorId = partnerData?[0]['operatorId'] ?? 'N/A';
         });
       } else {
         return;
@@ -432,37 +496,30 @@ class _PendingPaymentState extends State<PendingPayment> {
     String? bookingId = data['_id'];
     final String? token = data['token'];
 
-    if (bookingId == null || token == null) {
-      if (widget.id != null && token != null) {
-        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+    if (bookingId == null && widget.id != null && widget.token != null) {
+      bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
 
-        if (bookingId != null) {
-          // await saveBookingIdToPreferences(bookingId, token);
-        } else {
-          return null;
-        }
-      } else {
+      if (bookingId == null || bookingId.isEmpty) {
+        bookingId = await userService.getBookingByUserId(widget.id, widget.token);
+      }
+
+      if (bookingId == null || bookingId.isEmpty) {
         return null;
       }
     }
 
-    if (bookingId != null && token != null) {
-      return await userService.fetchBookingDetails(bookingId, token);
+    if (bookingId != null && widget.token != null) {
+      final bookingDetails = await userService.fetchBookingDetails(bookingId, widget.token);
+
+      if (bookingDetails != null) {
+        return bookingDetails;
+      } else {
+        print("Booking details returned null from API.");
+      }
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NewBooking(
-            token: token,
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            id: widget.id,
-            email: widget.email,
-          ),
-        ),
-      );
-      return null;
+      print("Either bookingId or token is null, cannot fetch details.");
     }
+    return null;
   }
 
   Future<void> fetchAndSetBookingDetails() async {
@@ -472,6 +529,12 @@ class _PendingPaymentState extends State<PendingPayment> {
         advanceOrPay = bookingDetails['remainingBalance'] ?? 0;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -508,24 +571,101 @@ class _PendingPaymentState extends State<PendingPayment> {
               physics: AlwaysScrollableScrollPhysics(),
               child: Stack(
                 children: [
-                  Container(
-                    height: MediaQuery.sizeOf(context).height * 0.4,
-                    child: GoogleMap(
-                      onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;
-                      },
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(0, 0), // Default position
-                        zoom: 1,
+                  Column(
+                    children: [
+                      Container(
+                        height: MediaQuery.sizeOf(context).height * 0.55,
+                        child: GoogleMap(
+                          onMapCreated: (GoogleMapController controller) {
+                            mapController = controller;
+                          },
+                          initialCameraPosition: const CameraPosition(
+                            target: LatLng(0, 0), // Default position
+                            zoom: 5,
+                          ),
+                          markers: markers,
+                          polylines: polylines,
+                          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                            Factory<OneSequenceGestureRecognizer>(
+                                  () => EagerGestureRecognizer(),
+                            ),
+                          },
+                        )
                       ),
-                      markers: markers,
-                      polylines: polylines,
-                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                        Factory<OneSequenceGestureRecognizer>(
-                              () => EagerGestureRecognizer(),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: Column(
+                          children: [
+                            widget.paymentStatus == 'Pending' || widget.paymentStatus == 'HalfPaid'
+                                ?Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(left: 50,right: 50,top: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Text(
+                                        'Pending Amount'.tr(),
+                                        style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Text(
+                                        '${widget.advanceOrPay} SAR',
+                                        style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,color: Color(0xff914F9D)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(top: 20,left: 10),
+                                  child: SizedBox(
+                                    height: MediaQuery.of(context).size.height * 0.06,
+                                    width: MediaQuery.of(context).size.width * 0.5,
+                                    child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xff6269FE),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                        ),
+                                        onPressed: (){
+                                          showSelectPaymentDialog(widget.advanceOrPay,widget.partnerId,widget.bookingId);
+                                        },
+                                        child: Text(
+                                          '${'Pay :'.tr()} ${widget.advanceOrPay} SAR',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: viewUtil.isTablet ? 24 : 17,
+                                              fontWeight: FontWeight.w500),
+                                        )),
+                                  ),
+                                ),
+                              ],
+                            )
+                                : Padding(
+                              padding: const EdgeInsets.only(top: 30),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_sharp,color: Colors.green,size: 30,),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8),
+                                    child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet ? 25 : 20,fontWeight: FontWeight.w500),),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
                         ),
-                      },
-                    )
+                      )
+                    ],
                   ),
                   Positioned(
                       top: 15,
@@ -587,244 +727,44 @@ class _PendingPaymentState extends State<PendingPayment> {
                           ],
                         ),
                       )),
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(
-                              top: MediaQuery.sizeOf(context).height * 0.25,
-                              left: viewUtil.isTablet?25 :15,
-                              right: viewUtil.isTablet?25 :15,
-                              bottom: 10
-                          ),
-                          child: Container(
-                            decoration: ShapeDecoration(
-                              color: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                side: const BorderSide(
-                                  color: Color(0xffE0E0E0), // Border color
-                                  width: 1, // Border width
-                                ),
-                              ),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(15),
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Vendor Name'.tr(),
-                                            style: TextStyle(
-                                                color: Color(0xff79797C),
-                                                fontSize:viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            partnerData?[0]['partnerName'] ?? 'N/A'.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Divider(),
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Operator Name'.tr(),
-                                            style: TextStyle(
-                                                color: Color(0xff79797C),
-                                                fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            partnerData != null && partnerData!.isNotEmpty
-                                                ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                                ? (partnerData?[0]['operatorName'] ?? 'N/A'.tr())
-                                                : (partnerData?[0]['assignOperatorName'] ?? 'N/A'.tr()))
-                                                : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Divider(),
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Operator Mobile'.tr(),
-                                            style: TextStyle(
-                                                color: Color(0xff79797C),
-                                                fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            partnerData != null && partnerData!.isNotEmpty
-                                                ? (partnerData?[0]['type'] == 'singleUnit + operator'
-                                                ? (partnerData?[0]['mobileNo'] ?? 'N/A'.tr())
-                                                : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'.tr()))
-                                                : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Divider(),
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Unit'.tr(),
-                                            style: TextStyle(
-                                                color: Color(0xff79797C),
-                                                fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            widget.unit.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Divider(),
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Booking Status'.tr(),
-                                            style: TextStyle(
-                                                color: Color(0xff79797C),
-                                                fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            widget.bookingStatus.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        widget.paymentStatus == 'Pending' || widget.paymentStatus == 'HalfPaid'
-                        ?Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 50,right: 50,top: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    'Pending Amount'.tr(),
-                                    style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 50,right: 50,bottom: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  Text(
-                                    '${widget.advanceOrPay} SAR',
-                                    style: TextStyle(fontSize: viewUtil.isTablet ? 24 : 21,color: Color(0xff914F9D)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.only(top: 20,left: 10),
-                              child: SizedBox(
-                                height: MediaQuery.of(context).size.height * 0.06,
-                                width: MediaQuery.of(context).size.width * 0.5,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xff6269FE),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                    onPressed: (){
-                                      showSelectPaymentDialog(widget.advanceOrPay,widget.partnerId,widget.bookingId);
-                                    },
-                                    child: Text(
-                                      '${'Pay :'.tr()} ${widget.advanceOrPay} SAR',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: viewUtil.isTablet ? 24 : 17,
-                                          fontWeight: FontWeight.w500),
-                                    )),
-                              ),
-                            ),
-                          ],
-                        )
-                         : Padding(
-                          padding: const EdgeInsets.only(top: 30),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.check_sharp,color: Colors.green,size: 30,),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: Text('Payment Successful!!'.tr() ,style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet ? 25 : 20,fontWeight: FontWeight.w500),),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-
                 ],
+              ),
+            ),
+          ),
+          bottomNavigationBar: Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 30),
+            child: Container(
+              width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height * 0.06,
+              child: FloatingActionButton(
+                backgroundColor: const Color(0xff6069FF),
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                onPressed: (){
+                  _showModalBottomSheet(context);
+                },child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20),
+                      child: Text('View Details'.tr(),
+                        textDirection: ui.TextDirection.ltr,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: viewUtil.isTablet ? 25 : 17),),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 20),
+                      child: Icon(Icons.arrow_forward,color: Colors.white,),
+                    )
+                  ],
+                ),
+              ),
               ),
             ),
           ),
@@ -833,7 +773,263 @@ class _PendingPaymentState extends State<PendingPayment> {
     );
   }
 
-  void showSelectPaymentDialog(int amount,String partnerId,String bookingId) {
+  void _showModalBottomSheet(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context,StateSetter setState){
+            return Directionality(
+              textDirection: ui.TextDirection.ltr,
+              child: Container(
+                width: MediaQuery.sizeOf(context).width,
+                child: DraggableScrollableSheet(
+                  expand: false,
+                  initialChildSize: 0.7,
+                  minChildSize: 0,
+                  maxChildSize: 0.8,
+                  builder: (BuildContext context, ScrollController scrollController) {
+                    return Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(16.0),
+                      width: MediaQuery.sizeOf(context).width,
+                      child: Stack(
+                        children: [
+                          SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Text("Booking Details".tr(),style: TextStyle(fontSize: viewUtil.isTablet? 25 : 20,fontWeight: FontWeight.w500)),
+                                Container(
+                                  margin: EdgeInsets.fromLTRB(
+                                      viewUtil.isTablet?25 :15,
+                                      viewUtil.isTablet?25 :20,
+                                      viewUtil.isTablet?25 :15,
+                                      10
+                                  ),
+                                  child: Container(
+                                    decoration: ShapeDecoration(
+                                      color: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        side: const BorderSide(
+                                          color: Color(0xffE0E0E0), // Border color
+                                          width: 1, // Border width
+                                        ),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(15),
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'Vendor Name'.tr(),
+                                                    style: TextStyle(
+                                                        color: Color(0xff79797C),
+                                                        fontSize:viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    partnerData?[0]['partnerName'] ?? 'N/A',
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Divider(),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'Operator Name'.tr(),
+                                                    style: TextStyle(
+                                                        color: Color(0xff79797C),
+                                                        fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    partnerData != null && partnerData!.isNotEmpty
+                                                        ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                                        ? (partnerData?[0]['operatorName'] ?? 'N/A'.tr())
+                                                        : (partnerData?[0]['assignOperatorName'] ?? 'N/A'.tr()))
+                                                        : 'no_data'.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Divider(),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'Operator Mobile'.tr(),
+                                                    style: TextStyle(
+                                                        color: Color(0xff79797C),
+                                                        fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    partnerData != null && partnerData!.isNotEmpty
+                                                        ? (partnerData?[0]['type'] == 'singleUnit + operator'
+                                                        ? (partnerData?[0]['mobileNo'] ?? 'N/A'.tr())
+                                                        : (partnerData?[0]['assignOperatorMobileNo'] ?? 'N/A'.tr()))
+                                                        : 'no_data'.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Divider(),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'Unit'.tr(),
+                                                    style: TextStyle(
+                                                        color: Color(0xff79797C),
+                                                        fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    widget.unit.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Divider(),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  flex: 3,
+                                                  child: Text(
+                                                    'Booking Status'.tr(),
+                                                    style: TextStyle(
+                                                        color: Color(0xff79797C),
+                                                        fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Text(
+                                                    widget.bookingStatus.tr(),
+                                                    style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(25, 20, 25, 20),
+                                  child: widget.pickup.isNotEmpty
+                                    ? Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_pin,color: Colors.green),
+                                          Text("Pickup Location".tr(),style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17,fontWeight: FontWeight.w500))
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 20),
+                                        child: Text(widget.pickup,style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17)),
+                                      ),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_pin,color: Colors.red),
+                                          Text("DropPoint Location".tr(),style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17,fontWeight: FontWeight.w500))
+                                        ],
+                                      ),
+                                      Text(widget.dropPoints.join(', '),style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17)),
+                                    ],
+                                  )
+                                      : Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.location_pin,color: Colors.blue),
+                                          Text("Address".tr(),style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17,fontWeight: FontWeight.w500))
+                                        ],
+                                      ),
+                                      Text(widget.cityName,style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17)),
+                                      Text(widget.address,style: TextStyle(fontSize: viewUtil.isTablet? 23 : 17)),
+                                    ],
+                                  )
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              alignment: Alignment.topRight,
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(Icons.cancel,color: Colors.grey,size: 25,),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showSelectPaymentDialog(num amount,String partnerId,String bookingId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -939,7 +1135,7 @@ class _PendingPaymentState extends State<PendingPayment> {
     );
   }
 
-  Future initiatePayment(String paymentBrand,int amount) async {
+  Future initiatePayment(String paymentBrand,num amount) async {
     setState(() {
       commonWidgets.loadingDialog(context, true);
     });
@@ -968,13 +1164,11 @@ class _PendingPaymentState extends State<PendingPayment> {
         paymentResult = result['description'] ?? '';
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve payment status.')),
-      );
+      commonWidgets.showToast('Failed to retrieve payment status.');
     }
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, String bookingId) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, num amount, String partnerID, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -1019,8 +1213,19 @@ class _PendingPaymentState extends State<PendingPayment> {
        ''';
 
   final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
-
-  WebViewController webViewController = WebViewController()
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Center(
+          child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20)
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+              child: CircularProgressIndicator())),
+    );
+    webViewController = WebViewController()
     ..setBackgroundColor(Colors.transparent)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..addJavaScriptChannel(
@@ -1129,7 +1334,7 @@ class _PendingPaymentState extends State<PendingPayment> {
                       partnerId: partnerID,
                       oldQuotePrice: widget.oldQuotePrice,
                       paymentStatus: widget.paymentStatus,
-                      quotePrice: amount.toString(),
+                      quotePrice: amount,
                       advanceOrPay: widget.advanceOrPay,
                       bookingStatus: bookingStatus??'',
                       email: widget.email,
@@ -1139,31 +1344,37 @@ class _PendingPaymentState extends State<PendingPayment> {
         }
       },
     )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            Navigator.of(context).pop();
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                  backgroundColor: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.42,
+                      child: WebViewWidget(controller: webViewController),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      )
     ..loadRequest(Uri.dataFromString(
       isMADATapped ? madaHtml : visaHtml,
       mimeType: 'text/html',
       encoding: Encoding.getByName('utf-8'),
     ));
-
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        insetPadding: EdgeInsets.symmetric(horizontal: 10),
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.42,
-            child: WebViewWidget(controller: webViewController),
-          ),
-        ),
-      );
-    },
-  );
 }
 
 }

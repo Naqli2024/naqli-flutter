@@ -37,6 +37,7 @@ class AuthService {
     required String bankName,
     required String companyName,
     required String ibanCode,
+    required String CRNumber,
   }) async {
     try{
       final url = Uri.parse('${baseUrl}register');
@@ -54,9 +55,10 @@ class AuthService {
           'password': password,
           'region': region,
           'city': city,
-          'bankName': bankName,
+          'bank': bankName,
           'company': companyName,
           'ibanNumber': ibanCode,
+          'CRNumber': CRNumber,
         }),
       );
       final responseBody = jsonDecode(response.body);
@@ -70,18 +72,12 @@ class AuthService {
         );
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -116,19 +112,13 @@ class AuthService {
           );
         } else {
           final message = responseBody['message'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         }
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -154,23 +144,15 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -202,18 +184,12 @@ class AuthService {
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -248,18 +224,12 @@ class AuthService {
         );
       } else {
         final message = responseBody['message'] ?? 'An error occurred,Please try again.. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -281,33 +251,22 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final message = responseBody['message'];
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
   Future<void> loginPartner(
       BuildContext context, {
         required String emailOrMobile,
-        required String mobileNo,
-        required String partnerName,
         required String password,
-        required String token,
       }) async {
     try{
       final url = Uri.parse('${baseUrl}login');
@@ -316,7 +275,6 @@ class AuthService {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
           'emailOrMobile': emailOrMobile,
@@ -340,31 +298,31 @@ class AuthService {
                   builder: (context) => BookingDetails(partnerName: partnerName, partnerId: partnerId, token: token, quotePrice: '', paymentStatus: '',email: email,)
               ),
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Login successful')),
-            );
+            final message = responseBody['message'];
+            commonWidgets.showToast(message);
             await getBookingData(partnerId,token);
             await savePartnerData(partnerId, token, partnerName,email);
           }
         else{
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Only "singleUnit + operator" Operator can allowed...')),
-          );
+          commonWidgets.showToast('Only "singleUnit + operator" Operator can allowed...');
         }
       } else {
         final message = responseBody['message'] ?? 'Login failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
+        if(message == 'Account not verified! Verify your account')
+        {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpScreen(mobileNo: '',partnerName: '',password: password, email: emailOrMobile,partnerId: '',),
+            ),
+          );
+        }
       }
     }on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -468,7 +426,7 @@ class AuthService {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LoginPage(partnerName: partnerName, mobileNo: mobileNo, password: '', token: token, partnerId: partnerId),
+            builder: (context) => LoginPage(),
           ),
         );
       } else {
@@ -484,13 +442,9 @@ class AuthService {
         );
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Network error. Please check your connection and try again.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -609,8 +563,10 @@ class AuthService {
         final region = partnerData['region'] ?? '';
         final city = partnerData['city'] ?? '';
         final bank = partnerData['bank'] ?? '';
+        final crNumber = partnerData['CRNumber'] ?? '';
         final company = partnerData['company'] ?? '';
         final ibanNumber = partnerData['ibanNumber'] ?? '';
+        final profileFileName = partnerData['partnerProfile']?['fileName'];
 
         final bookingIds = <Map<String, dynamic>>[];
         final companyDetails = (partnerData['companyDetails'] as List<dynamic>?)?.map((company) {
@@ -644,9 +600,11 @@ class AuthService {
               'region': region,
               'city': city,
               'bank': bank,
+              'crNumber': crNumber,
               'company': company,
               'ibanNumber': ibanNumber,
               'companyDetails': companyDetails,
+              'profileImage': profileFileName,
             });
           }
         } else {
@@ -658,10 +616,12 @@ class AuthService {
             'region': region,
             'city': city,
             'bank': bank,
+            'crNumber': crNumber,
             'company': company,
             'ibanNumber': ibanNumber,
             'companyDetails': companyDetails,
             'bookingRequests': [],
+            'profileImage': profileFileName,
           });
         }
 
@@ -816,14 +776,10 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
       commonWidgets.showToast('Please Check your Internet Connection..');
@@ -888,9 +844,7 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
@@ -915,9 +869,7 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }  else {
         commonWidgets.showToast('Something went wrong,Please try again');
       }
@@ -958,25 +910,17 @@ class AuthService {
       if (response.statusCode == 201) {
         try {
           final message = jsonDecode(responseBody)['message'];
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          commonWidgets.showToast(message);
         } catch (e) {
           commonWidgets.showToast('Something went wrong,Please try again');
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.statusCode} - $responseBody')),
-        );
+        commonWidgets.showToast('Error: ${response.statusCode} - $responseBody');
       }
     } on SocketException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error. Please check your connection and try again.')),
-      );
+      commonWidgets.showToast('Please Check your Internet Connection..');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred,Please try again.')),
-      );
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -994,6 +938,7 @@ class AuthService {
       String ibanNumber,
       String region,
       String bank,
+      String CRNumber,
       ) async {
     final String url = 'https://prod.naqlee.com:443/api/partner/edit-partner/$partnerId';
     try {
@@ -1011,6 +956,7 @@ class AuthService {
       request.fields['ibanNumber'] = ibanNumber;
       request.fields['region'] = region;
       request.fields['bank'] = bank;
+      request.fields['CRNumber'] = CRNumber;
 
       if (profileImage != null) {
         request.files.add(
@@ -1074,14 +1020,10 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         final message = responseBody['message'] ?? 'Send failed. Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
     }on SocketException {
       commonWidgets.showToast('Please Check your Internet Connection..');
@@ -1203,9 +1145,7 @@ class AuthService {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 200) {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       } else {
         commonWidgets.showToast('Something went wrong,Please try again');
       }

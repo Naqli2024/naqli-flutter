@@ -7,6 +7,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
+import 'package:flutter_naqli/User/vectorImage.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -106,7 +107,7 @@ class CommonWidgets {
                   child: PopupMenuButton<Locale>(
                     color: Colors.white,
                     offset: const Offset(0, 55),
-                    icon: Icon(Icons.language, color: Colors.blue,size: viewUtil.isTablet ? 35 : 25),
+                    icon: Icon(Icons.language, color: Color(0xff7f6bf6),size: viewUtil.isTablet ? 35 : 25),
                     onSelected: (Locale locale) {
                       if (onLocaleChanged != null) {
                         onLocaleChanged(locale);
@@ -263,7 +264,9 @@ class CommonWidgets {
   Drawer createDrawer(BuildContext context,
       String partnerId,
       String partnerName,
-      {VoidCallback? onEditProfilePressed,
+      {
+        String? profileImage,
+        VoidCallback? onEditProfilePressed,
         VoidCallback? onBookingPressed,
         VoidCallback? onPaymentPressed,
         VoidCallback? onReportPressed,
@@ -274,7 +277,14 @@ class CommonWidgets {
         children: <Widget>[
           ListTile(
             leading: CircleAvatar(
-              child: Icon(Icons.person,color: Colors.grey,size: 30),
+              radius: 25,
+              backgroundColor: Colors.grey[200],
+              backgroundImage: profileImage != null
+                  ? NetworkImage("https://prod.naqlee.com/api/image/$profileImage")
+                  : null,
+              child: profileImage == null
+                  ? Icon(Icons.person, color: Colors.grey, size: 30)
+                  : null,
             ),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -379,6 +389,7 @@ class CommonWidgets {
                   padding: EdgeInsets.only(top: 30, bottom: 10),
                   child: Text(
                     'are_you_sure_you_want_to_logout'.tr(),
+                    textAlign: TextAlign.center,
                     style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                   ),
                 ),
@@ -394,13 +405,7 @@ class CommonWidgets {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const LoginPage(
-                          partnerName: '',
-                          mobileNo: '',
-                          password: '',
-                          token: '',
-                          partnerId: '',
-                        )),
+                        const LoginPage()),
                   );
                 },
               ),
@@ -550,10 +555,6 @@ class CommonWidgets {
               if (value == null || value.isEmpty) {
                 return '${'Please enter'.tr()} $label';
               }
-              if ((label == 'Email ID' || label == 'Email Address') &&
-                  !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Please enter a valid email address';
-              }
               if ((label == 'Password' || label == 'Confirm Password') &&
                   value.length < 6) {
                 return 'Password must be at least 6 characters long';
@@ -567,16 +568,12 @@ class CommonWidgets {
                   !RegExp(r'^\d{10}$').hasMatch(value)) {
                 return 'ID number must be exactly 10 digits long';
               }
-              if (label == 'Istimara no' &&
+              if (label == 'Istimara No' &&
                   !RegExp(r'^\d{10}$').hasMatch(value)) {
                 return 'Istimara number must be exactly 10 digits long';
               }
               if (label == 'Iqama no' && !RegExp(r'^\d{10}$').hasMatch(value)) {
                 return 'Iqama number must be exactly 10 digits long';
-              }
-              if (label == 'Mobile no' &&
-                  !RegExp(r'^\d{10}$').hasMatch(value)) {
-                return 'Mobile number must be exactly 10 digits long';
               }
               return null;
             },
@@ -593,7 +590,7 @@ class CommonWidgets {
   }) {
     ViewUtil viewUtil = ViewUtil(context);
     return BottomAppBar(
-      height: MediaQuery.sizeOf(context).height * 0.1,
+      height: MediaQuery.sizeOf(context).height * 0.12,
       color: Colors.white,
       elevation: 20,
       shadowColor: Colors.black,
@@ -703,12 +700,27 @@ class CommonWidgets {
           alignment: Alignment.topLeft,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: isTablet ? 24 : 20,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: isTablet ? 24 : 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5),
+                  child: Text(
+                    '(Only PDF, DOC, DOCX allowed)',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xff808080)
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -731,7 +743,16 @@ class CommonWidgets {
                   type: FileType.custom,
                   allowedExtensions: ['pdf','docx','doc']
                 );
-                onFileSelected(result);
+                if (result != null) {
+                  PlatformFile file = result.files.first;
+
+                  if (file.size > 100 * 1024) { // 100 KB
+                    commonWidgets.showToast('File must be 100 KB or less');
+                    return;
+                  }
+
+                  onFileSelected(result);
+                }
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -765,4 +786,277 @@ class CommonWidgets {
       ],
     );
   }
+
+  Widget buildPictureFileUploadButton({
+    required BuildContext context,
+    required String title,
+    required Function(FilePickerResult?) onFileSelected,
+    String? fileName,
+    bool isTablet = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(30, 0, 40, 0),
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: isTablet ? 24 : 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 5),
+                  child: Text(
+                    '(Only JPG, PNG, JPEG, SVG allowed)',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xff808080)
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          alignment: Alignment.bottomLeft,
+          margin: const EdgeInsets.fromLTRB(40, 0, 40, 20),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.065,
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Colors.grey),
+                ),
+              ),
+              onPressed: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['png', 'jpg', 'jpeg', 'svg'],
+                );
+                if (result != null) {
+                  PlatformFile file = result.files.first;
+
+                  if (file.size > 100 * 1024) {
+                    commonWidgets.showToast('File must be 100 KB or less');
+                    return;
+                  }
+
+                  onFileSelected(result);
+                }
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Icon(
+                      Icons.file_upload_outlined,
+                      color: Colors.black,
+                      size: isTablet ? 30 : 25,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Text(
+                      fileName ?? 'Upload a file',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: isTablet ? 24 : 18,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildCarouselItem(BuildContext context, {
+    required Widget svgWidget,
+    required String text,
+    bool alignRight = false,
+  }) {
+    ViewUtil viewUtil = ViewUtil(context);
+    bool isTablet = viewUtil.isTablet;
+    return Stack(
+      children: [
+        Container(
+          height: isTablet
+              ? MediaQuery.sizeOf(context).height * 0.35
+              : MediaQuery.sizeOf(context).height * 0.22,
+          width: double.infinity,
+          child: svgWidget,
+        ),
+        Positioned(
+          top: isTablet ? 24 : 14,
+          left: alignRight ? null : (isTablet ? 24 : 16),
+          right: alignRight ? (isTablet ? 24 : 16) : null,
+          child: Text(
+            text,
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isTablet ? 20 : 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildDropdown({
+    required String label,
+    required String? selectedValue,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+    required bool isTablet,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: isTablet ? 24 : 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        DropdownButtonFormField<String>(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          value: selectedValue,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(
+              vertical: isTablet ? 20 : 14,
+              horizontal: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+          ),
+          onChanged: onChanged,
+          icon: Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Icon(Icons.keyboard_arrow_down, size: 25),
+          ),
+          hint: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Text('${'Select'.tr()} ${label.tr()}'),
+          ),
+          items: items.map((item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Directionality(
+                  textDirection: ui.TextDirection.ltr,
+                  child: Row(
+                    children: [
+                      Text(item.tr()),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+      ],
+    );
+  }
+
+  Widget buildCargoLabeledTextField({
+    required String label,
+    required TextEditingController controller,
+    required BuildContext context,
+    required bool isTablet,
+    required String selectedUnit,
+    required Function(String?) onUnitChanged,
+    String hintText = '',
+  }) {
+    final List<String> units = ['mm', 'cm', 'feet','inch'];
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              label.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: isTablet ? 24 : 16),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.06,
+              child: const VerticalDivider(
+                color: Colors.grey,
+                thickness: 1,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: TextFormField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: hintText.tr(),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedUnit,
+                items: units.map((unit) {
+                  return DropdownMenuItem<String>(
+                    value: unit,
+                    child: Text(unit),
+                  );
+                }).toList(),
+                onChanged: onUnitChanged,
+              ),
+            ),
+          ),
+          SizedBox(width: 10)
+        ],
+      ),
+    );
+  }
+
+
+
+
 }

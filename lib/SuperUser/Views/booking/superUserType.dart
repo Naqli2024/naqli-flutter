@@ -10,12 +10,14 @@ import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
+import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
+import 'package:flutter_naqli/User/vectorImage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui' as ui;
@@ -45,22 +47,89 @@ class _SuperUsertypeState extends State<SuperUsertype> {
   List<Map<String, dynamic>>? partnerData;
   String? partnerId;
   final List<Map<String, String>> cardData = [
-    {'title': 'Vehicle', 'asset': 'assets/vehicle.svg'},
-    {'title': 'Bus', 'asset': 'assets/bus.png'},
-    {'title': 'Equipment', 'asset': 'assets/equipment.svg'},
-    {'title': 'Special', 'asset': 'assets/special.svg'},
-    {'title': 'Others', 'asset': 'assets/others.svg'},
+    {'title': 'Vehicle', 'asset': 'vehicle.vg'},
+    {'title': 'Bus', 'asset': 'bus.vg'},
+    {'title': 'Equipment', 'asset': 'equipment.vg'},
+    {'title': 'Special', 'asset': 'special.vg'},
+    {'title': 'Shared Cargo', 'asset': 'sharedCargo.vg'},
+    {'title': 'Others', 'asset': 'others.vg'},
+  ];
+  final List<String> carouselAssets = [
+    'userHome1.vg',
+    'userHome2.vg',
+    'userHome3.vg',
   ];
   Locale currentLocale = Locale('en', 'US');
+  late Future<UserDataModel> userData;
+  final _cardBorder = RoundedRectangleBorder(
+    side: const BorderSide(color: Color(0xffACACAD), width: 0.5),
+    borderRadius: BorderRadius.circular(10),
+  );
+  final _dividerColor = const Color(0xffACACAD);
+  final _cardColor = const Color(0xffF7F6FF);
+  final _sizedBoxHeight7 = const SizedBox(height: 7);
+  final _paddingTop15 = const EdgeInsets.only(top: 5);
+  late final Widget userHome1;
+  late final Widget userHome2;
+  late final Widget userHome3;
+  Map<String, Widget> cachedSvgWidgets = {};
 
   @override
   void initState() {
     super.initState();
+    userData = userService.getUserData(widget.id, widget.token);
+    userHome1 = SvgPicture.asset('assets/userHome1.svg', fit: BoxFit.fill);
+    userHome2 = SvgPicture.asset('assets/userHome2.svg', fit: BoxFit.fill);
+    userHome3 = SvgPicture.asset('assets/userHome3.svg', fit: BoxFit.fill);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      preloadImages(context);
+    });
+    precacheSvgImages();
+  }
+
+  Future<void> precacheSvgImages() async {
+    final allAssets = [
+      'assets/userHome1.svg',
+      'assets/userHome2.svg',
+      'assets/userHome3.svg'];
+
+    for (var asset in allAssets) {
+      if (!cachedSvgWidgets.containsKey(asset)) {
+        await safePrecacheSvg(asset);
+        cachedSvgWidgets[asset] = SvgPicture.asset(
+          asset,
+          fit: BoxFit.contain,
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> safePrecacheSvg(String asset) async {
+    try {
+      final loader = SvgAssetLoader(asset);
+      await svg.cache.putIfAbsent(
+        loader.cacheKey(null),
+            () => loader.loadBytes(null),
+      );
+    } catch (e) {
+      debugPrint("Error precaching $asset: $e");
+    }
+  }
+
+  Future<void> preloadImages(BuildContext context) async {
+    for (var item in cardData) {
+      await MyVectorImage.preload(context, item['asset']!);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     ViewUtil viewUtil = ViewUtil(context);
+    final screenHeight = MediaQuery.sizeOf(context).height;
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Scaffold(
@@ -92,21 +161,43 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                   );
                 },
                 child: ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(Icons.person,color: Colors.grey,size: 30),
+                  leading: FutureBuilder<UserDataModel>(
+                    future: userData,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      } else if (snapshot.hasError || !snapshot.hasData || snapshot.data?.userProfile == null) {
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          child: Icon(Icons.person, color: Colors.grey, size: 30),
+                        );
+                      } else {
+                        final user = snapshot.data!;
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          backgroundImage: NetworkImage(
+                            "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
+                          ),
+                        );
+                      }
+                    },
                   ),
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(widget.firstName +' '+ widget.lastName,
-                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-                      Icon(Icons.edit,color: Colors.grey,size: 20),
-                    ],
+                  title: Text(
+                    widget.firstName +' '+ widget.lastName,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(widget.id,
-                    style: TextStyle(color: Color(0xff8E8D96),
-                    ),),
-                ),
+                  subtitle: Text(
+                    widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96)),
+                  ),
+                  trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
+                )
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -258,70 +349,52 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                     aspectRatio: 20 / 10,
                     autoPlayCurve: Curves.fastOutSlowIn,
                     enableInfiniteScroll: true,
-                    autoPlayAnimationDuration:
-                    const Duration(milliseconds: 800),
+                    autoPlayAnimationDuration: const Duration(milliseconds: 800),
                     viewportFraction: 1,
                   ),
                   items: [
-                    Container(
-                        width: MediaQuery.sizeOf(context).width * 1,
-                        child: currentLocale == Locale('ar', 'SA')
-                            ?SvgPicture.asset('assets/arabicUserHome2.svg', fit: BoxFit.fill)
-                            :SvgPicture.asset('assets/userHome2.svg', fit: BoxFit.fill)),
-                    Container(
-                        width: MediaQuery.sizeOf(context).width * 1,
-                        child: currentLocale == Locale('ar', 'SA')
-                            ?SvgPicture.asset('assets/arabicUserHome3.svg', fit: BoxFit.fill)
-                            :SvgPicture.asset('assets/userHome3.svg', fit: BoxFit.fill)),
-                    Container(
-                        width: MediaQuery.sizeOf(context).width * 1,
-                        child: currentLocale == Locale('ar', 'SA')
-                            ?SvgPicture.asset('assets/arabicUserHome4.svg', fit: BoxFit.fill)
-                            :SvgPicture.asset('assets/userHome4.svg', fit: BoxFit.fill)),
-                    Stack(
-                      children: [
-                        Container(
-                            child: SvgPicture.asset(
-                              'assets/userHome1.svg',
-                              fit: BoxFit.fill,
-                            )),
-                        Positioned(
-                          left: MediaQuery.sizeOf(context).width * 0.3,
-                          top: MediaQuery.sizeOf(context).height * 0.08,
-                          child: Text(
-                            '${'Drive Your Business Forward'.tr()} \n${'with Seamless Vehicle Booking!'.tr()}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: viewUtil.isTablet ? 30 : 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
+                    commonWidgets.buildCarouselItem(
+                      context,
+                      svgWidget: userHome1,
+                      text: '${'For Tough job,Trust Our Heavy Duty'.tr()}\n${'Trucks - Your First Choice'.tr()}',
+                      alignRight: true,
+                    ),
+                    commonWidgets.buildCarouselItem(
+                      context,
+                      svgWidget: userHome2,
+                      text: '${'The Best Bus Service Awaits'.tr()}\n${'Ride with us, Travel better'.tr()}',
+                    ),
+                    commonWidgets.buildCarouselItem(
+                      context,
+                      svgWidget: userHome3,
+                      text: '${'Choose us for Fast,'.tr()}\n${'Reliable freight Delivery,'.tr()}\n${'Every Time'.tr()}',
                     ),
                   ],
                 ),
                 Expanded(
                   child: Container(
-                    color: Colors.transparent,
                     padding: viewUtil.isTablet
-                        ? EdgeInsets.fromLTRB(20,20,20,MediaQuery.sizeOf(context).height * 0.13)
-                        : EdgeInsets.fromLTRB(12,5,12,MediaQuery.sizeOf(context).height * 0.13),
+                        ? EdgeInsets.fromLTRB(20, 20, 20, screenHeight * 0.13)
+                        : EdgeInsets.fromLTRB(12, 5, 12, screenHeight * 0.13),
                     child: GridView.builder(
                       itemCount: cardData.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 20.0,
                         mainAxisSpacing: 16.0,
-                        childAspectRatio: viewUtil.isTablet ? 3.5 / 3.2 : 2.8 / 3.2,
+                        childAspectRatio: viewUtil.isTablet ? 3.5 / 3.2 : 2.8 / 3,
                       ),
                       itemBuilder: (context, index) {
                         final item = cardData[index];
+                        final svgHeight = screenHeight * 0.11;
+                        final isTablet = viewUtil.isTablet;
+                        final dividerIndent = isTablet ? 15.0 : 7.0;
+                        final dividerThickness = isTablet ? 1.5 : 0.8;
+                        final titleFontSize = isTablet ? 25.0 : 16.0;
                         return GestureDetector(
                           onTap: () {
                             item['title'] != 'Others'
-                            ? Navigator.push(
+                                ? Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SuperUserBooking(
@@ -336,82 +409,44 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                                 ),
                               ),
                             )
-                            : Navigator.push(
+                                : Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => SuperUserMessageScreen(
-                                      id: widget.id,
-                                      firstName: widget.firstName,
-                                      lastName: widget.lastName,
-                                      token: widget.token,
-                                      Image: 'assets/others.svg',
-                                      title: 'Others',
-                                      subTitle: 'Sorry,the others section is currently unavailable')
+                                builder: (context) => SuperUserMessageScreen(
+                                  id: widget.id,
+                                  firstName: widget.firstName,
+                                  lastName: widget.lastName,
+                                  token: widget.token,
+                                  Image: 'assets/others.svg',
+                                  title: 'Others'.tr(),
+                                  subTitle: 'Sorry,the others section is currently unavailable'.tr(),
+                                ),
                               ),
                             );
                           },
                           child: Card(
                             elevation: 3,
-                            color: Color(0xffF7F6FF),
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(color: Color(0xffACACAD), width: 0.5),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            color: _cardColor,
+                            shape: _cardBorder,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                item['asset']!.endsWith('.svg')
-                                    ? SvgPicture.asset(
-                                  item['asset']!,
-                                  height: MediaQuery.sizeOf(context).height * 0.12,
-                                  placeholderBuilder: (context) =>
-                                      Container(
-                                          height: viewUtil.isTablet
-                                              ? MediaQuery.sizeOf(context).height * 0.1
-                                              : MediaQuery.sizeOf(context).height * 0.12,
-                                          child: Icon(Icons.image,size: 40,color: Colors.grey,)
-                                      )
-                                )
-                                    : Padding(
-                                  padding: EdgeInsets.only(bottom: viewUtil.isTablet ? 15 : 0),
-                                  child: FutureBuilder(
-                                    future: precacheImage(AssetImage(item['asset']!), context),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.done) {
-                                        return Image.asset(
-                                          item['asset']!,
-                                          height: viewUtil.isTablet
-                                              ? MediaQuery.sizeOf(context).height * 0.1
-                                              : MediaQuery.sizeOf(context).height * 0.12,
-                                          fit: BoxFit.contain,
-                                        );
-                                      } else {
-                                        return Container(
-                                          height: viewUtil.isTablet
-                                              ? MediaQuery.sizeOf(context).height * 0.1
-                                              : MediaQuery.sizeOf(context).height * 0.12,
-                                          alignment: Alignment.center,
-                                          child: Icon(Icons.image, size: 40, color: Colors.grey),
-                                        );
-                                      }
-                                    },
-                                  ),
+                                RepaintBoundary(
+                                    child:  MyVectorImage( name: item['asset']??'', height: svgHeight)
                                 ),
-                                SizedBox(height: 7),
+                                _sizedBoxHeight7,
                                 Divider(
-                                  indent: viewUtil.isTablet ? 15 : 7,
-                                  endIndent: viewUtil.isTablet ? 15 : 7,
-                                  color: Color(0xffACACAD),
-                                  thickness: viewUtil.isTablet ? 1.5 : 0.8,
+                                  indent: dividerIndent,
+                                  endIndent: dividerIndent,
+                                  color: _dividerColor,
+                                  thickness: dividerThickness,
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 15),
+                                  padding: _paddingTop15,
                                   child: Text(
                                     item['title']!.tr(),
-                                    textDirection: ui.TextDirection.ltr,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: viewUtil.isTablet ? 25 : 16),
+                                    style: TextStyle(fontSize: titleFontSize),
                                   ),
                                 ),
                               ],
@@ -432,7 +467,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                 width: MediaQuery.sizeOf(context).width,
                 height: MediaQuery.sizeOf(context).height * 0.08,
                 child: FloatingActionButton(
-                  backgroundColor: const Color(0xff6069FF),
+                  backgroundColor: const Color(0xff7f6bf6),
                   elevation: 5,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5),
@@ -651,7 +686,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                   : MediaQuery.of(context).size.width,
               height: viewUtil.isTablet
                   ? MediaQuery.of(context).size.height * 0.08
-                  : MediaQuery.of(context).size.height * 0.1,
+                  : MediaQuery.of(context).size.height * 0.12,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -659,6 +694,7 @@ class _SuperUsertypeState extends State<SuperUsertype> {
                     padding: EdgeInsets.only(top: 30,bottom: 10),
                     child: Text(
                       'are_you_sure_you_want_to_logout'.tr(),
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                     ),
                   ),

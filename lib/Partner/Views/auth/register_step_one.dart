@@ -117,9 +117,6 @@ class _RegisterState extends State<RegisterStepOne> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your Email ID'.tr();
                     }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email address'.tr();
-                    }
                     return null;
                   },
                 ),
@@ -185,7 +182,7 @@ class _RegisterState extends State<RegisterStepOne> {
                         }
                       },
                       child: Text(
-                        'Next'.tr(),
+                        'next'.tr(),
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: viewUtil.isTablet?27:18,

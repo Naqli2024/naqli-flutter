@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -23,14 +24,17 @@ import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
+import 'package:flutter_naqli/User/vectorImage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:permission_handler/permission_handler.dart'as permissionHandler;
+import 'package:permission_handler/permission_handler.dart'
+    as permissionHandler;
 import 'dart:ui' as ui;
 
 class SuperUserBooking extends StatefulWidget {
@@ -42,7 +46,16 @@ class SuperUserBooking extends StatefulWidget {
   final String email;
   final String? accountType;
   final String? isFromUserType;
-  const SuperUserBooking({super.key, required this.firstName, required this.lastName, required this.selectedType, required this.token, required this.id, required this.email, this.accountType, this.isFromUserType});
+  const SuperUserBooking(
+      {super.key,
+      required this.firstName,
+      required this.lastName,
+      required this.selectedType,
+      required this.token,
+      required this.id,
+      required this.email,
+      this.accountType,
+      this.isFromUserType});
 
   @override
   State<SuperUserBooking> createState() => _SuperUserBookingState();
@@ -57,10 +70,14 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   final TextEditingController cityNameController = TextEditingController();
   final TextEditingController zipCodeController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController lengthController = TextEditingController();
+  final TextEditingController breadthController = TextEditingController();
+  final TextEditingController heightController = TextEditingController();
+  final TextEditingController weightController = TextEditingController();
   final FocusNode productValueFocusNode = FocusNode();
   int _currentStep = 1;
   String? selectedLoad;
-  TimeOfDay _selectedFromTime =  TimeOfDay.now();
+  TimeOfDay _selectedFromTime = TimeOfDay.now();
   TimeOfDay _selectedToTime = TimeOfDay.now();
   DateTime _selectedDate = DateTime.now();
   bool isChecked = false;
@@ -97,6 +114,25 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   String currentPlace = '';
   int typeCount = 0;
   bool isLocating = false;
+  late Future<UserDataModel> userData;
+  Timer? _debounce;
+  String? selectedShipmentType;
+  String? selectedShipmentCondition;
+  final List<String> shipmentTypeItems = [
+    "Food",
+    "Building Materials",
+    "Auto parts",
+    "Tools and Equipment's",
+    "Perfumes and Cosmetics",
+    "Fodder",
+    "Container 20",
+    "Medicinal products",
+    "Scrap",
+    "Steel",
+    "Other",
+  ];
+  final List<String> shipmentConditionItems = ['Refrigerator', 'Dry Storage'];
+  String selectedUnit = 'mm';
 
 
   @override
@@ -108,6 +144,21 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     _futureSpecial = userService.fetchUserSpecialUnits();
     fetchLoadsForSelectedType(selectedTypeName ?? '');
     _requestPermissions();
+    userData = userService.getUserData(widget.id, widget.token);
+    preloadImages(context);
+  }
+
+  Future<void> preloadImages(BuildContext context) async {
+    _futureBuses.then((buses) {
+      for (var bus in buses) {
+        MyVectorImage.preload(context, bus.image);
+      }
+    });
+    _futureSpecial.then((specials) {
+      for (var special in specials) {
+        MyVectorImage.preload(context, special.image);
+      }
+    });
   }
 
   @override
@@ -119,7 +170,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
           context,
-          User: widget.firstName +' '+ widget.lastName,
+          User: widget.firstName + ' ' + widget.lastName,
           userId: widget.id,
           showLeading: true,
           showLanguage: true,
@@ -137,31 +188,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   children: [
                     Text(
                       widget.isFromUserType != null
-                          ?'createBooking'.tr()
-                          :'Get an estimate'.tr(),
+                          ? 'createBooking'.tr()
+                          : 'Get an estimate'.tr(),
                       textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?27: 22),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: viewUtil.isTablet ? 27 : 22),
                     ),
                     Text(
                       widget.isFromUserType != null
-                          ?'${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
-                          :'${'step'.tr()} $_currentStep ${'of 3'.tr()}',
-                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?22: 17),
+                          ? '${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
+                          : '${'step'.tr()} $_currentStep ${'of 3'.tr()}',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: viewUtil.isTablet ? 22 : 17),
                     ),
                   ],
                 ),
               ),
               leading: IconButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> SuperUsertype(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SuperUsertype(
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                token: widget.token,
+                                id: widget.id,
+                                email: widget.email,
+                              )));
                 },
                 icon: Icon(
                   Icons.arrow_back_sharp,
                   color: Colors.white,
-                  size: viewUtil.isTablet?27: 24,
+                  size: viewUtil.isTablet ? 27 : 24,
                 ),
               ),
             ),
@@ -172,47 +233,89 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           child: ListView(
             children: <Widget>[
               GestureDetector(
-                onTap: (){
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfile(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ListTile(
+                    leading: FutureBuilder<UserDataModel>(
+                      future: userData,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        } else if (snapshot.hasError ||
+                            !snapshot.hasData ||
+                            snapshot.data?.userProfile == null) {
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            child: Icon(Icons.person,
+                                color: Colors.grey, size: 30),
+                          );
+                        } else {
+                          final user = snapshot.data!;
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            backgroundImage: NetworkImage(
+                              "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
+                            ),
+                          );
+                        }
+                      },
                     ),
-                  );
-                },
-                child: ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(Icons.person,color: Colors.grey,size: 30),
-                  ),
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(widget.firstName +' '+ widget.lastName,
-                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-                      Icon(Icons.edit,color: Colors.grey,size: 20),
-                    ],
-                  ),
-                  subtitle: Text(widget.id,
-                    style: TextStyle(color: Color(0xff8E8D96),
-                    ),),
-                ),
-              ),
+                    title: Text(
+                      widget.firstName + ' ' + widget.lastName,
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      widget.id,
+                      style: TextStyle(color: Color(0xff8E8D96)),
+                    ),
+                    trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
+                  )),
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Divider(),
               ),
               ListTile(
-                leading: Icon(Icons.home,size: 30,),
+                leading: Icon(
+                  Icons.home,
+                  size: 30,
+                ),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('Home'.tr(),style: TextStyle(fontSize: 25),),
+                  child: Text(
+                    'Home'.tr(),
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => SuperUserHomePage(firstName: widget.firstName, lastName: widget.lastName, token: widget.token, id: widget.id, email: widget.email)
-                    ),
+                        builder: (context) => SuperUserHomePage(
+                            firstName: widget.firstName,
+                            lastName: widget.lastName,
+                            token: widget.token,
+                            id: widget.id,
+                            email: widget.email)),
                   );
                 },
               ),
@@ -223,9 +326,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           : MediaQuery.of(context).size.height * 0.035),
                   title: Padding(
                     padding: EdgeInsets.only(left: 5),
-                    child: Text('Trigger Booking'.tr(),style: TextStyle(fontSize: 25),),
+                    child: Text(
+                      'Trigger Booking'.tr(),
+                      style: TextStyle(fontSize: 25),
+                    ),
                   ),
-                  onTap: (){
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => TriggerBooking(
@@ -233,19 +339,20 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             lastName: widget.lastName,
                             token: widget.token,
                             id: widget.id,
-                            email: widget.email
-                        ),
+                            email: widget.email),
                       ),
                     );
-                  }
-              ),
+                  }),
               ListTile(
                   leading: SvgPicture.asset('assets/booking_manager.svg'),
                   title: Padding(
                     padding: EdgeInsets.only(left: 10),
-                    child: Text('Booking Manager'.tr(),style: TextStyle(fontSize: 25),),
+                    child: Text(
+                      'Booking Manager'.tr(),
+                      style: TextStyle(fontSize: 25),
+                    ),
                   ),
-                  onTap: (){
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => BookingManager(
@@ -253,17 +360,18 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             lastName: widget.lastName,
                             token: widget.token,
                             id: widget.id,
-                            email: widget.email
-                        ),
+                            email: widget.email),
                       ),
                     );
-                  }
-              ),
+                  }),
               ListTile(
                 leading: SvgPicture.asset('assets/payment.svg'),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('Payments'.tr(),style: TextStyle(fontSize: 25),),
+                  child: Text(
+                    'Payments'.tr(),
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
                 onTap: () {
                   Navigator.of(context).push(
@@ -273,35 +381,54 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           lastName: widget.lastName,
                           token: widget.token,
                           id: widget.id,
-                          email: widget.email
-                      ),
+                          email: widget.email),
                     ),
                   );
                 },
               ),
               ListTile(
-                  leading: Icon(Icons.account_balance_outlined,size: 35,),
-                  title: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
-                  onTap: (){
+                  leading: Icon(
+                    Icons.account_balance_outlined,
+                    size: 35,
+                  ),
+                  title: Text(
+                    'Invoice'.tr(),
+                    style: TextStyle(fontSize: 25),
+                  ),
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UserInvoice(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                        builder: (context) => UserInvoice(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email,
+                        ),
                       ),
                     );
-                  }
-              ),
+                  }),
               ListTile(
                 leading: SvgPicture.asset('assets/report_logo.svg'),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
+                  child: Text(
+                    'report'.tr(),
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
+                      builder: (context) => UserSubmitTicket(
+                        firstName: widget.firstName,
+                        lastName: widget.lastName,
+                        token: widget.token,
+                        id: widget.id,
+                        email: widget.email,
+                      ),
                     ),
                   );
                 },
@@ -310,24 +437,35 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 leading: SvgPicture.asset('assets/help_logo.svg'),
                 title: Padding(
                   padding: EdgeInsets.only(left: 7),
-                  child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
+                  child: Text(
+                    'help'.tr(),
+                    style: TextStyle(fontSize: 25),
+                  ),
                 ),
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserHelp(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      )));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => UserHelp(
+                              firstName: widget.firstName,
+                              lastName: widget.lastName,
+                              token: widget.token,
+                              id: widget.id,
+                              email: widget.email)));
                 },
               ),
               ListTile(
-                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
+                leading: Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                  size: 30,
+                ),
                 title: Padding(
                   padding: EdgeInsets.only(left: 10),
-                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
+                  child: Text(
+                    'logout'.tr(),
+                    style: TextStyle(fontSize: 25, color: Colors.red),
+                  ),
                 ),
                 onTap: () {
                   showLogoutDialog();
@@ -363,7 +501,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         bottomNavigationBar: BottomAppBar(
           height: MediaQuery.sizeOf(context).height * 0.11,
           color: Colors.white,
-          child:  Padding(
+          child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -388,14 +526,15 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         'back'.tr(),
                         style: TextStyle(
                             color: Color(0xff6269FE),
-                            fontSize: viewUtil.isTablet ?26:18,
+                            fontSize: viewUtil.isTablet ? 26 : 18,
                             fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
                 if (_currentStep < 3)
                   Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
+                    padding:
+                        const EdgeInsets.only(right: 10, bottom: 5, top: 5),
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.055,
                       width: MediaQuery.of(context).size.width * 0.3,
@@ -406,34 +545,40 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () async{
+                        onPressed: () async {
                           setState(() {
                             if (widget.selectedType == 'vehicle') {
                               if (_currentStep == 1) {
                                 if (selectedTypeName == null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
+                                  commonWidgets.showToast(
+                                      'Please select an option'.tr());
                                 } else {
                                   _currentStep++;
                                 }
-                              }else if (_currentStep == 2) {
+                              } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null ||
                                     productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
-                                  fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                    if (loadTypes.isEmpty || selectedLoad !=null) {
-
+                                  fetchLoadsForSelectedType(
+                                          selectedTypeName ?? '')
+                                      .then((loadTypes) {
+                                    if (loadTypes.isEmpty ||
+                                        selectedLoad != null) {
                                       setState(() {
                                         _currentStep++;
                                       });
                                     } else {
                                       if (loadTypes.isNotEmpty) {
-                                        commonWidgets.showToast('Please select Load type'.tr());
+                                        commonWidgets.showToast(
+                                            'Please select Load type'.tr());
                                       }
                                     }
                                   }).catchError((error) {
-                                    commonWidgets.showToast('Error fetching load types');
+                                    commonWidgets
+                                        .showToast('Error fetching load types');
                                   });
                                 }
                               }
@@ -441,7 +586,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             if (widget.selectedType == 'bus') {
                               if (_currentStep == 1) {
                                 if (selectedBus == null) {
-                                  commonWidgets.showToast('Please select Bus'.tr());
+                                  commonWidgets
+                                      .showToast('Please select Bus'.tr());
                                 } else {
                                   _currentStep++;
                                 }
@@ -449,7 +595,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null ||
                                     productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
                                   _currentStep++;
                                 }
@@ -457,31 +604,55 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                             }
                             if (widget.selectedType == 'equipment') {
                               if (_currentStep == 1) {
-                                if (selectedTypeName ==null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
+                                if (selectedTypeName == null) {
+                                  commonWidgets.showToast(
+                                      'Please select an option'.tr());
                                 } else {
                                   _currentStep++;
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
                                   _currentStep++;
                                 }
                               }
                             }
-                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                            if (widget.selectedType == 'shared cargo') {
                               if (_currentStep == 1) {
-                                if (selectedSpecial ==null) {
-                                  commonWidgets.showToast('Please select Special/Other Units'.tr());
+                                if (selectedShipmentType == null || selectedShipmentCondition == null ||
+                                lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
+                                  commonWidgets.showToast(
+                                      'Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null || productController.text.isEmpty || weightController.text.isEmpty) {
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'special' ||
+                                widget.selectedType == 'others') {
+                              if (_currentStep == 1) {
+                                if (selectedSpecial == null) {
+                                  commonWidgets.showToast(
+                                      'Please select Special/Other Units'.tr());
                                 } else {
                                   _currentStep++;
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
                                   _currentStep++;
                                 }
@@ -493,7 +664,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           'next'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet ?26:18,
+                              fontSize: viewUtil.isTablet ? 26 : 18,
                               fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -521,7 +692,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                           'createBooking'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet?26: 18,
+                              fontSize: viewUtil.isTablet ? 26 : 18,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -535,7 +706,3563 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     );
   }
 
-  void showLogoutDialog(){
+  Widget _buildStep(int step) {
+    bool isActive = step == _currentStep;
+    ViewUtil viewUtil = ViewUtil(context);
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: isActive ? const Color(0xff6A66D1) : const Color(0xffACACAD),
+            width: 1),
+      ),
+      child: CircleAvatar(
+        radius: viewUtil.isTablet ? 30 : 20,
+        backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
+        child: Text(
+          step.toString(),
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLine() {
+    return Container(
+      width: 40,
+      height: 2,
+      color: Colors.grey,
+    );
+  }
+
+  Widget _buildStepContent(int step) {
+    switch (step) {
+      case 1:
+        return buildStepOneContent(widget.selectedType);
+      case 2:
+        return buildStepTwoContent(widget.selectedType);
+      case 3:
+        return buildStepThreeContent(widget.selectedType);
+      default:
+        return Container();
+    }
+  }
+
+  Widget buildStepOneContent(String selectedType) {
+    switch (selectedType) {
+      case 'vehicle':
+        return vehicleContent();
+      case 'bus':
+        return busContent();
+      case 'equipment':
+        return equipmentContent();
+      case 'special':
+        return specialContent();
+      case 'shared cargo':
+        return sharedCargoContent();
+      case 'others':
+        return specialContent();
+      default:
+        return defaultContent();
+    }
+  }
+
+  Widget buildStepTwoContent(String selectedType) {
+    switch (selectedType) {
+      case 'vehicle':
+        return UserVehicleStepTwo(selectedTypeName ?? '', selectedName ?? '',
+            typeImage ?? '', scale ?? '');
+      case 'bus':
+        return UserBusStepTwo();
+      case 'equipment':
+        return UserEquipmentStepTwo();
+      case 'special':
+        return UserSpecialStepTwo();
+      case 'shared cargo':
+        return UserSharedCargoStepTwo();
+      case 'others':
+        return UserSpecialStepTwo();
+      default:
+        return defaultContent();
+    }
+  }
+
+  Widget buildStepThreeContent(String selectedType) {
+    switch (selectedType) {
+      case 'vehicle':
+        return UserVehicleStepThree(
+            selectedTypeName ?? '',
+            selectedName ?? '',
+            typeImage ?? '',
+            scale ?? '',
+            _selectedDate.toString(),
+            _selectedFromTime.toString(),
+            productController.text,
+            selectedLoad ?? '',
+            selectedLabour.toString());
+      case 'bus':
+        return UserBusStepThree();
+      case 'equipment':
+        return UserEquipmentStepThree();
+      case 'special':
+        return UserSpecialStepThree();
+      case 'shared cargo':
+        return UserSharedCargoStepThree();
+      case 'others':
+        return UserSpecialStepThree();
+      default:
+        return defaultContent();
+    }
+  }
+
+  Widget vehicleContent() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return FutureBuilder<List<Vehicle>>(
+      future: _futureVehicles,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No vehicles available'));
+        } else {
+          final vehicles = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
+                child: Text(
+                  'available_vehicle_units'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: vehicles.length,
+                  itemBuilder: (context, index) {
+                    final vehicle = vehicles[index];
+                    final selectedType =
+                        _selectedSubClassification[vehicle.name] ?? '';
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: SvgPicture.asset(
+                                  'assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet ? 50 : 35),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: Text(
+                                vehicle.name.tr(),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ? 20 : 15,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.06,
+                                child: const VerticalDivider(
+                                  color: Colors.grey,
+                                  thickness: 1,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 7,
+                              child: Directionality(
+                                textDirection: ui.TextDirection.ltr,
+                                child: Container(
+                                  height: 50,
+                                  width: double.infinity,
+                                  child: PopupMenuButton<String>(
+                                    elevation: 5,
+                                    constraints: BoxConstraints(
+                                      minWidth: viewUtil.isTablet
+                                          ? MediaQuery.sizeOf(context).width *
+                                              0.92
+                                          : 350,
+                                      maxWidth: viewUtil.isTablet
+                                          ? MediaQuery.sizeOf(context).width *
+                                              0.92
+                                          : 350,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    offset: Offset(0, 55),
+                                    padding: EdgeInsets.zero,
+                                    color: Colors.white,
+                                    onSelected: (newValue) {
+                                      setState(() {
+                                        _selectedSubClassification[
+                                            vehicle.name] = newValue;
+                                        selectedTypeName = newValue;
+                                        selectedName = vehicle.name;
+                                        var selectedTypeObj = vehicle.types
+                                            ?.firstWhere((type) =>
+                                                type.typeName == newValue);
+                                        scale = selectedTypeObj?.scale;
+                                        typeImage = selectedTypeObj?.typeImage;
+                                      });
+                                    },
+                                    itemBuilder: (context) {
+                                      return vehicle.types?.map((type) {
+                                            return PopupMenuItem<String>(
+                                              value: type.typeName,
+                                              child: Row(
+                                                children: [
+                                                  SizedBox(
+                                                    child: Image.asset(
+                                                      type.typeImage,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.15,
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.06,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 15),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(type.typeName.tr(),
+                                                          style: TextStyle(
+                                                              fontSize: viewUtil
+                                                                      .isTablet
+                                                                  ? 22
+                                                                  : 16)),
+                                                      Text(type.scale,
+                                                          style: TextStyle(
+                                                              fontSize: viewUtil
+                                                                      .isTablet
+                                                                  ? 20
+                                                                  : 14)),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }).toList() ??
+                                          [];
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              selectedType.isEmpty
+                                                  ? 'select'.tr()
+                                                  : selectedType.tr(),
+                                              style: TextStyle(
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 16),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Icon(Icons.arrow_drop_down,
+                                              size:
+                                                  viewUtil.isTablet ? 25 : 20),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget busContent() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return FutureBuilder<List<Buses>>(
+      future: _futureBuses,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No Buses available'));
+        } else {
+          final buses = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
+                child: Text(
+                  'available_bus_units'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 0,
+                    mainAxisSpacing: 0,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: buses.length,
+                  itemBuilder: (context, index) {
+                    final bus = buses[index];
+                    final isBusSelected = selectedBus == index;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 27),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.sizeOf(context).width * 0.39,
+                            height: MediaQuery.sizeOf(context).height * 0.21,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedName = bus.name;
+                                  typeImage = bus.image;
+                                  if (isBusSelected) {
+                                    selectedBus = null;
+                                  } else {
+                                    selectedBus = index;
+                                  }
+                                });
+                              },
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      color: isBusSelected
+                                          ? Color(
+                                              0xff6A66D1,
+                                            )
+                                          : Color(0xffACACAD),
+                                      width: isBusSelected ? 2 : 1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: viewUtil.isTablet
+                                          ? EdgeInsets.only(
+                                              top: MediaQuery.sizeOf(context)
+                                                      .width *
+                                                  0.08,
+                                              bottom: 10)
+                                          : EdgeInsets.only(
+                                              top: 45, bottom: 10),
+                                      child: MyVectorImage(
+                                        name: bus.image,
+                                        height: viewUtil.isTablet ? 70 : 40,
+                                      ),
+                                    ),
+                                    SizedBox(height: 7),
+                                    Divider(
+                                      indent: viewUtil.isTablet ? 15 : 7,
+                                      endIndent: viewUtil.isTablet ? 15 : 7,
+                                      color: Color(0xffACACAD),
+                                      thickness: 1,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 15),
+                                      child: Text(
+                                        bus.name,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget equipmentContent() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return FutureBuilder<List<Equipment>>(
+      future: _futureEquipment,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No vehicles available'));
+        } else {
+          final equipment = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
+                child: Text(
+                  'available_equipments_units'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: equipment.length,
+                  itemBuilder: (context, index) {
+                    final equipments = equipment[index];
+                    final selectedType =
+                        _selectedSubClassification[equipments.name] ?? '';
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SvgPicture.asset(
+                                  'assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet ? 50 : 35),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                equipments.name.tr(),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ? 20 : 15,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.06,
+                                child: const VerticalDivider(
+                                  color: Colors.grey,
+                                  thickness: 1,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 7,
+                              child: Container(
+                                height: 50,
+                                width: double.infinity,
+                                child: PopupMenuButton<String>(
+                                  elevation: 5,
+                                  constraints: BoxConstraints(
+                                    minWidth: viewUtil.isTablet
+                                        ? MediaQuery.sizeOf(context).width *
+                                            0.92
+                                        : 350,
+                                    maxWidth: viewUtil.isTablet
+                                        ? MediaQuery.sizeOf(context).width *
+                                            0.92
+                                        : 350,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  offset: const Offset(0, 55),
+                                  padding: EdgeInsets.zero,
+                                  color: Colors.white,
+                                  onSelected: (newValue) {
+                                    setState(() {
+                                      _selectedSubClassification[
+                                          equipments.name] = newValue;
+                                      selectedTypeName = newValue;
+                                      selectedName = equipments.name;
+                                      typeImage = equipments.types
+                                          ?.firstWhere((type) =>
+                                              type.typeName == newValue)
+                                          .typeImage;
+                                    });
+                                  },
+                                  itemBuilder: (context) {
+                                    return equipments.types?.map((type) {
+                                          return PopupMenuItem<String>(
+                                            value: type.typeName,
+                                            child: Directionality(
+                                              textDirection:
+                                                  ui.TextDirection.ltr,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(15),
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      child: Image.asset(
+                                                        type.typeImage,
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.15,
+                                                        height: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height *
+                                                            0.04,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 15),
+                                                    Text(type.typeName.tr(),
+                                                        style: TextStyle(
+                                                            fontSize: viewUtil
+                                                                    .isTablet
+                                                                ? 22
+                                                                : 16)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList() ??
+                                        [];
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    width: double.infinity,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            selectedType.isEmpty
+                                                ? 'select'.tr()
+                                                : selectedType.isNotEmpty
+                                                    ? selectedType.tr()
+                                                    : equipments.types
+                                                                ?.isNotEmpty ==
+                                                            true
+                                                        ? equipments.types!
+                                                            .first.typeName
+                                                        : 'no_data'.tr(),
+                                            style: TextStyle(
+                                                fontSize: viewUtil.isTablet
+                                                    ? 20
+                                                    : 16),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Icon(Icons.arrow_drop_down,
+                                            size: viewUtil.isTablet ? 25 : 20),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget specialContent() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return FutureBuilder<List<Special>>(
+      future: _futureSpecial,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No Equipment available'));
+        } else {
+          final special = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
+                child: Text(
+                  'available_special_others_units'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 0,
+                    mainAxisSpacing: 0,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: special.length,
+                  itemBuilder: (context, index) {
+                    final specials = special[index];
+                    final isSpecialSelected = selectedSpecial == index;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 27),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.sizeOf(context).width * 0.39,
+                            height: MediaQuery.sizeOf(context).height * 0.21,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedName = specials.name;
+                                  typeImage = specials.image;
+                                  if (isSpecialSelected) {
+                                    selectedSpecial = null;
+                                  } else {
+                                    selectedSpecial = index;
+                                  }
+                                });
+                              },
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 4,
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                      color: isSpecialSelected
+                                          ? Color(
+                                              0xff6A66D1,
+                                            )
+                                          : Color(0xffACACAD),
+                                      width: isSpecialSelected ? 2 : 1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: viewUtil.isTablet
+                                          ? EdgeInsets.only(
+                                              top: MediaQuery.sizeOf(context)
+                                                      .width *
+                                                  0.08,
+                                              bottom: 10)
+                                          : EdgeInsets.only(
+                                              top: 45, bottom: 10),
+                                      child: MyVectorImage(
+                                        name: specials.image,
+                                        height: viewUtil.isTablet ? 70 : 40,
+                                      ),
+                                    ),
+                                    SizedBox(height: 7),
+                                    Divider(
+                                      indent: viewUtil.isTablet ? 15 : 7,
+                                      endIndent: viewUtil.isTablet ? 15 : 7,
+                                      color: Color(0xffACACAD),
+                                      thickness: 1,
+                                    ),
+                                    Text(
+                                      specials.name.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize:
+                                              viewUtil.isTablet ? 20 : 15),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget sharedCargoContent() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return Directionality(
+      textDirection: ui.TextDirection.ltr,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                alignment: Alignment.topLeft,
+                margin: const EdgeInsets.only(top: 20, bottom: 30),
+                child: Text(
+                  'Cost for Shared Shipping'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 18,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              commonWidgets.buildDropdown(
+                label: 'Shipment Type'.tr(),
+                selectedValue: selectedShipmentType,
+                items: shipmentTypeItems,
+                isTablet: viewUtil.isTablet,
+                onChanged: (newValue) {
+                  setState(() {
+                    selectedShipmentType = newValue;
+                  });
+                },
+              ),
+              SizedBox(height:20),
+              commonWidgets.buildDropdown(
+                label: 'Shipping Condition'.tr(),
+                selectedValue: selectedShipmentCondition,
+                items: shipmentConditionItems,
+                isTablet: viewUtil.isTablet,
+                onChanged: (newValue) {
+                  setState(() {
+                    selectedShipmentCondition = newValue;
+                  });
+                },
+              ),
+              SizedBox(height:20),
+              commonWidgets.buildCargoLabeledTextField(
+                label: 'Length',
+                controller: lengthController,
+                context: context,
+                isTablet: viewUtil.isTablet,
+                hintText: 'Length',
+                selectedUnit: selectedUnit,
+                onUnitChanged: (value) {
+                  setState(() {
+                    selectedUnit = value!;
+                  });
+                },
+              ),
+              SizedBox(height:20),
+              commonWidgets.buildCargoLabeledTextField(
+                label: 'Breadth',
+                controller: breadthController,
+                context: context,
+                isTablet: viewUtil.isTablet,
+                hintText: 'Breadth',
+                selectedUnit: selectedUnit,
+                onUnitChanged: (value) {
+                  setState(() {
+                    selectedUnit = value!;
+                  });
+                },
+              ),
+              SizedBox(height:20),
+              commonWidgets.buildCargoLabeledTextField(
+                label: 'Height',
+                controller: heightController,
+                context: context,
+                isTablet: viewUtil.isTablet,
+                hintText: 'Height',
+                selectedUnit: selectedUnit,
+                onUnitChanged: (value) {
+                  setState(() {
+                    selectedUnit = value!;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget othersContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Others Content',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget defaultContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Text('please_select_a_type_to_see_content'.tr(),
+          style: TextStyle(fontSize: 18)),
+    );
+  }
+
+  Widget UserVehicleStepTwo(
+    String selectedTypeName,
+    String name,
+    String typeImage,
+    String scale,
+  ) {
+    ViewUtil viewUtil = ViewUtil(context);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Directionality(
+        textDirection: ui.TextDirection.ltr,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Time'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectTime(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectTime(context),
+                      icon: Icon(
+                        FontAwesomeIcons.clock,
+                        color: const Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
+                    ),
+                    Container(
+                      height: viewUtil.isTablet ? 60 : 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _selectTime(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Date'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectDate(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectDate(context),
+                      icon: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
+                    ),
+                    Container(
+                      height: viewUtil.isTablet ? 60 : 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _selectDate(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('$formattedDate',
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet ? 20 : 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "${'valueOfProduct'.tr()} (SAR)",
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                focusNode: productValueFocusNode,
+                controller: productController,
+                decoration: InputDecoration(
+                  hintStyle:
+                      const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'loadType'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
+              child: LoadTypeDropdown(
+                selectedName: selectedTypeName,
+                selectedLoad: selectedLoad,
+                onLoadChanged: (newValue) async {
+                  setState(() {
+                    selectedLoad = newValue;
+                  });
+                  await Future.delayed(Duration(milliseconds: -1));
+                  if (productValueFocusNode.hasFocus) {
+                    productValueFocusNode.unfocus();
+                  }
+                },
+                fetchLoadsForSelectedType: fetchLoadsForSelectedType,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: isChecked,
+                    onChanged: _onCheckboxChanged,
+                    checkColor: Colors.white,
+                    activeColor: const Color(0xff6A66D1),
+                    side: BorderSide(color: Colors.grey),
+                  ),
+                  Container(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'needAdditionalLabour'.tr(),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 20 : 16,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isChecked)
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Column(
+                  children: [
+                    RadioListTile(
+                      title: const Text('1'),
+                      value: 1,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: const Text('2'),
+                      value: 2,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                    RadioListTile(
+                      title: const Text('3'),
+                      value: 3,
+                      groupValue: selectedLabour,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLabour = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget UserBusStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Time'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Date'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(FontAwesomeIcons.calendar,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                "${'valueOfProduct'.tr()} (SAR)",
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+            child: TextFormField(
+              onTapOutside: (event) {
+                FocusScope.of(context).unfocus();
+              },
+              controller: productController,
+              decoration: const InputDecoration(
+                hintStyle: TextStyle(color: Color(0xffCCCCCC)),
+                border: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC),
+                    width: 1.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  borderSide: const BorderSide(
+                    color: Color(0xffBCBCBC),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isChecked,
+                  onChanged: _onCheckboxChanged,
+                  checkColor: Colors.white,
+                  activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
+                ),
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'needAdditionalLabour'.tr(),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isChecked)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: const Text('1'),
+                    value: 1,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('2'),
+                    value: 2,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('3'),
+                    value: 3,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserEquipmentStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'fromTime'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'toTime'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectToTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectToTime(context),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectToTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'startingDate'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(FontAwesomeIcons.calendar,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isChecked,
+                  onChanged: _onCheckboxChanged,
+                  checkColor: Colors.white,
+                  activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
+                ),
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'needAdditionalLabour'.tr(),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isChecked)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: const Text('1'),
+                    value: 1,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('2'),
+                    value: 2,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('3'),
+                    value: 3,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserSpecialStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'fromTime'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectTime(context),
+                    icon: Icon(
+                      FontAwesomeIcons.clock,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'toTime'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectToTime(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectToTime(context),
+                    icon: Icon(
+                      FontAwesomeIcons.clock,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectToTime(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 22),
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'startingDate'.tr(),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              _selectDate(context);
+            },
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xffBCBCBC)),
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => _selectDate(context),
+                    icon: Icon(
+                      FontAwesomeIcons.calendar,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
+                  ),
+                  Container(
+                    height: viewUtil.isTablet ? 60 : 50,
+                    child: const VerticalDivider(
+                      color: Colors.grey,
+                      thickness: 1.2,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _selectDate(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: isChecked,
+                  onChanged: _onCheckboxChanged,
+                  checkColor: Colors.white,
+                  activeColor: const Color(0xff6A66D1),
+                  side: BorderSide(color: Colors.grey),
+                ),
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'needAdditionalLabour'.tr(),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isChecked)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Column(
+                children: [
+                  RadioListTile(
+                    title: const Text('1'),
+                    value: 1,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('2'),
+                    value: 2,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile(
+                    title: const Text('3'),
+                    value: 3,
+                    groupValue: selectedLabour,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedLabour = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget UserSharedCargoStepTwo() {
+    ViewUtil viewUtil = ViewUtil(context);
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    return SingleChildScrollView(
+      child: Directionality(
+        textDirection: ui.TextDirection.ltr,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Shipping Time'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectTime(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectTime(context),
+                      icon: Icon(
+                        FontAwesomeIcons.clock,
+                        color: const Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
+                    ),
+                    Container(
+                      height: viewUtil.isTablet ? 60 : 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _selectTime(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                          TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Shipping Date'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectDate(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () => _selectDate(context),
+                      icon: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
+                    ),
+                    Container(
+                      height: viewUtil.isTablet ? 60 : 50,
+                      child: const VerticalDivider(
+                        color: Colors.grey,
+                        thickness: 1.2,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        _selectDate(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('$formattedDate',
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet ? 20 : 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "${'Shipment Value'.tr()} (SAR)",
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                focusNode: productValueFocusNode,
+                controller: productController,
+                decoration: InputDecoration(
+                  hintStyle:
+                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "${'Shipment Weight'.tr()} (Kg)",
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                controller: weightController,
+                decoration: InputDecoration(
+                  hintStyle:
+                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget UserVehicleStepThree(
+    String selectedTypeName,
+    String name,
+    String typeImage,
+    String scale,
+    String selectedDate,
+    String selectedTime,
+    String valueOfProduct,
+    String selectedLoad,
+    String additionalLabour,
+  ) {
+    ViewUtil viewUtil = ViewUtil(context);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _dismissSuggestions();
+        });
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Stack(
+            children: [
+              Container(
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.9
+                    : MediaQuery.of(context).size.height * 0.6,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0),
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+              Positioned(
+                top: 15,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: viewUtil.isTablet
+                      ? EdgeInsets.only(left: 45, right: 45)
+                      : EdgeInsets.only(left: 30, right: 30),
+                  child: Column(
+                    children: [
+                      Card(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 17, 10, 10),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xff009E10),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: viewUtil.isTablet ? 60 : 40,
+                                    padding: viewUtil.isTablet
+                                        ? EdgeInsets.only(right: 8, top: 10)
+                                        : EdgeInsets.only(right: 3, top: 0),
+                                    child: TextFormField(
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      onChanged: (value) =>
+                                          _fetchSuggestions(value, -1, true),
+                                      controller: pickUpController,
+                                      decoration: InputDecoration(
+                                        suffixIcon: Tooltip(
+                                          message:
+                                              'Locate Current Location'.tr(),
+                                          child: IconButton(
+                                              onPressed: () async {
+                                                FocusScope.of(context)
+                                                    .unfocus();
+                                                await locateCurrentPosition();
+                                              },
+                                              icon: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 7),
+                                                child: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                ),
+                                              )),
+                                        ),
+                                        hintText: 'Pick Up'.tr(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_pickUpSuggestions.isNotEmpty &&
+                                pickUpController.text.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                height: 200,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ListView.builder(
+                                  itemCount: _pickUpSuggestions.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.my_location_outlined,
+                                              color: Colors.blue,
+                                              size: 20,
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 13,
+                                                  right:
+                                                      MediaQuery.sizeOf(context)
+                                                              .width *
+                                                          0.27),
+                                              child:
+                                                  Text('Current Location'.tr()),
+                                            ),
+                                            isLocating
+                                                ? Container(
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : Container()
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          await currentPositionSuggestion();
+                                        },
+                                      );
+                                    } else {
+                                      return ListTile(
+                                        title:
+                                            Text(_pickUpSuggestions[index - 1]),
+                                        onTap: () => _onSuggestionTap(
+                                            _pickUpSuggestions[index - 1],
+                                            pickUpController,
+                                            true),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            const Divider(
+                              indent: 5,
+                              endIndent: 5,
+                            ),
+                            ..._dropPointControllers
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              int i = entry.key;
+                              TextEditingController controller = entry.value;
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 5, 10),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color(0xffE20808),
+                                          minRadius: 6,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: viewUtil.isTablet ? 60 : 43,
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextFormField(
+                                            textCapitalization:
+                                                TextCapitalization.sentences,
+                                            onChanged: (value) =>
+                                                _fetchSuggestions(
+                                                    value, i, false),
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              hintText:
+                                                  '${'Drop Point'.tr()} ${i + 1}',
+                                              hintStyle: TextStyle(
+                                                  color: Color(0xff707070),
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 15),
+                                              border: InputBorder.none,
+                                              suffixIcon: i ==
+                                                      _dropPointControllers
+                                                              .length -
+                                                          1
+                                                  ? Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right:
+                                                              viewUtil.isTablet
+                                                                  ? 10
+                                                                  : 10),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          if (_dropPointControllers
+                                                                  .length >
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap: () =>
+                                                                  _removeTextField(
+                                                                      i),
+                                                              child: Icon(
+                                                                  Icons
+                                                                      .cancel_outlined,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: viewUtil
+                                                                          .isTablet
+                                                                      ? 25
+                                                                      : 20),
+                                                            ),
+                                                          if (_dropPointControllers
+                                                                  .length ==
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap:
+                                                                  _addTextField,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .add_circle_outline_sharp,
+                                                                size: viewUtil
+                                                                        .isTablet
+                                                                    ? 25
+                                                                    : 20,
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_dropPointSuggestions[i] != null &&
+                                      _dropPointSuggestions[i]!.isNotEmpty &&
+                                      controller.text.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      height: 200,
+                                      child: ListView.builder(
+                                        itemCount:
+                                            _dropPointSuggestions[i]!.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_dropPointSuggestions[
+                                                i]![index]),
+                                            onTap: () => _onSuggestionTap(
+                                                _dropPointSuggestions[i]![
+                                                    index],
+                                                controller,
+                                                false),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (i < _dropPointControllers.length - 1)
+                                    Divider(
+                                      indent: 5,
+                                      endIndent: 5,
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff6A66D1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _fetchCoordinates();
+                            },
+                            child: Text(
+                              'getDirection'.tr(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: viewUtil.isTablet ? 23 : 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget UserBusStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _dismissSuggestions();
+        });
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Stack(
+            children: [
+              Container(
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.9
+                    : MediaQuery.of(context).size.height * 0.6,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0),
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+              Positioned(
+                top: 15,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: const EdgeInsets.only(left: 30, right: 30),
+                  child: Column(
+                    children: [
+                      Card(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 17, 10, 10),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xff009E10),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: viewUtil.isTablet ? 60 : 40,
+                                    padding: viewUtil.isTablet
+                                        ? EdgeInsets.only(right: 8, top: 10)
+                                        : EdgeInsets.only(right: 3, top: 0),
+                                    child: TextFormField(
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      onChanged: (value) =>
+                                          _fetchSuggestions(value, -1, true),
+                                      controller: pickUpController,
+                                      decoration: InputDecoration(
+                                        suffixIcon: Tooltip(
+                                          message:
+                                              'Locate Current Location'.tr(),
+                                          child: Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 7),
+                                            child: IconButton(
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
+                                          ),
+                                        ),
+                                        hintText: 'Pick Up'.tr(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_pickUpSuggestions.isNotEmpty &&
+                                pickUpController.text.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                height: 200,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ListView.builder(
+                                  itemCount: _pickUpSuggestions.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.my_location_outlined,
+                                              color: Colors.blue,
+                                              size: 20,
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 13,
+                                                  right:
+                                                      MediaQuery.sizeOf(context)
+                                                              .width *
+                                                          0.27),
+                                              child:
+                                                  Text('Current Location'.tr()),
+                                            ),
+                                            isLocating
+                                                ? Container(
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : Container()
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          await currentPositionSuggestion();
+                                        },
+                                      );
+                                    } else {
+                                      return ListTile(
+                                        title:
+                                            Text(_pickUpSuggestions[index - 1]),
+                                        onTap: () => _onSuggestionTap(
+                                            _pickUpSuggestions[index - 1],
+                                            pickUpController,
+                                            true),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            const Divider(
+                              indent: 5,
+                              endIndent: 5,
+                            ),
+                            ..._dropPointControllers
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              int i = entry.key;
+                              TextEditingController controller = entry.value;
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 5, 10),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color(0xffE20808),
+                                          minRadius: 6,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: viewUtil.isTablet ? 60 : 43,
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextFormField(
+                                            textCapitalization:
+                                                TextCapitalization.sentences,
+                                            onChanged: (value) =>
+                                                _fetchSuggestions(
+                                                    value, i, false),
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              hintText:
+                                                  '${'Drop Point'.tr()} ${i + 1}',
+                                              hintStyle: TextStyle(
+                                                  color: Color(0xff707070),
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 15),
+                                              border: InputBorder.none,
+                                              suffixIcon: i ==
+                                                      _dropPointControllers
+                                                              .length -
+                                                          1
+                                                  ? Padding(
+                                                      padding: EdgeInsets.only(
+                                                          right:
+                                                              viewUtil.isTablet
+                                                                  ? 10
+                                                                  : 10),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          if (_dropPointControllers
+                                                                  .length >
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap: () =>
+                                                                  _removeTextField(
+                                                                      i),
+                                                              child: Icon(
+                                                                  Icons
+                                                                      .cancel_outlined,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: viewUtil
+                                                                          .isTablet
+                                                                      ? 25
+                                                                      : 20),
+                                                            ),
+                                                          if (_dropPointControllers
+                                                                  .length ==
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap:
+                                                                  _addTextField,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .add_circle_outline_sharp,
+                                                                size: viewUtil
+                                                                        .isTablet
+                                                                    ? 25
+                                                                    : 20,
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_dropPointSuggestions[i] != null &&
+                                      _dropPointSuggestions[i]!.isNotEmpty &&
+                                      controller.text.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      height: 200,
+                                      child: ListView.builder(
+                                        itemCount:
+                                            _dropPointSuggestions[i]!.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_dropPointSuggestions[
+                                                i]![index]),
+                                            onTap: () => _onSuggestionTap(
+                                                _dropPointSuggestions[i]![
+                                                    index],
+                                                controller,
+                                                false),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (i < _dropPointControllers.length - 1)
+                                    Divider(
+                                      indent: 5,
+                                      endIndent: 5,
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff6A66D1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _fetchCoordinates();
+                            },
+                            child: Text(
+                              'getDirection'.tr(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: viewUtil.isTablet ? 23 : 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget UserEquipmentStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return GestureDetector(
+      onTap: () {
+        _dismissAddressSuggestions();
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding: viewUtil.isTablet
+                    ? EdgeInsets.only(left: 45, right: 45)
+                    : EdgeInsets.only(left: 30, right: 30),
+                child: Column(
+                  children: [
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0),
+                          width: 1,
+                        ),
+                      ),
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 8, 15, 5),
+                                    child: SvgPicture.asset('assets/search.svg',
+                                        height: viewUtil.isTablet ? 20 : 14)),
+                                Expanded(
+                                  child: Container(
+                                    height: viewUtil.isTablet ? 40 : 30,
+                                    child: TextFormField(
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      controller: cityNameController,
+                                      onChanged: (value) =>
+                                          _fetchAddressSuggestions(
+                                              value, 'city'),
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        suffixIcon: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: Tooltip(
+                                            message:
+                                                'Locate Current Location'.tr(),
+                                            child: IconButton(
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
+                                          ),
+                                        ),
+                                        hintText: 'enterCityName'.tr(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 23 : 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_cityNameSuggestions.isNotEmpty &&
+                              cityNameController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _cityNameSuggestions.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return ListTile(
+                                      title: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.my_location_outlined,
+                                            color: Colors.blue,
+                                            size: 20,
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                left: 13,
+                                                right:
+                                                    MediaQuery.sizeOf(context)
+                                                            .width *
+                                                        0.27),
+                                            child:
+                                                Text('Current Location'.tr()),
+                                          ),
+                                          isLocating
+                                              ? Container(
+                                                  height: 15,
+                                                  width: 15,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : Container()
+                                        ],
+                                      ),
+                                      onTap: () async {
+                                        await currentPositionSuggestionForCity();
+                                      },
+                                    );
+                                  } else {
+                                    return ListTile(
+                                      title:
+                                          Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(
+                                          _cityNameSuggestions[index - 1],
+                                          cityNameController,
+                                          'city'),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          const Divider(indent: 5, endIndent: 5),
+                          Row(
+                            children: [
+                              Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 8, 15, 10),
+                                  child: SvgPicture.asset('assets/address.svg',
+                                      height: viewUtil.isTablet ? 23 : 15)),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(bottom: 5),
+                                  height: viewUtil.isTablet ? 40 : 33,
+                                  child: TextFormField(
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    controller: addressController,
+                                    onChanged: (value) =>
+                                        _fetchAddressSuggestions(
+                                            value, 'address'),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      hintText: 'enterYourAddress'.tr(),
+                                      hintStyle: TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize:
+                                              viewUtil.isTablet ? 22 : 15),
+                                      border: InputBorder.none,
+                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_addressSuggestions.isNotEmpty &&
+                              addressController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _addressSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_addressSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(
+                                        _addressSuggestions[index],
+                                        addressController,
+                                        'address'),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6A66D1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            _fetchAddressCoordinates();
+                          },
+                          child: Text(
+                            'getDirection'.tr(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: viewUtil.isTablet ? 23 : 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.7
+                    : MediaQuery.of(context).size.height * 0.45,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    _requestPermissions();
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0), // Default position
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget UserSpecialStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return GestureDetector(
+      onTap: () {
+        _dismissAddressSuggestions();
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding: viewUtil.isTablet
+                    ? EdgeInsets.only(left: 45, right: 45)
+                    : EdgeInsets.only(left: 30, right: 30),
+                child: Column(
+                  children: [
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0), // Border color
+                          width: 1, // Border width
+                        ),
+                      ),
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 8, 15, 5),
+                                    child: SvgPicture.asset('assets/search.svg',
+                                        height: viewUtil.isTablet ? 20 : 14)),
+                                Expanded(
+                                  child: Container(
+                                    height: viewUtil.isTablet ? 40 : 30,
+                                    child: TextFormField(
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      controller: cityNameController,
+                                      onChanged: (value) =>
+                                          _fetchAddressSuggestions(
+                                              value, 'city'),
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        suffixIcon: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: Tooltip(
+                                            message:
+                                                'Locate Current Location'.tr(),
+                                            child: IconButton(
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
+                                                  await locateCurrentPosition();
+                                                },
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
+                                          ),
+                                        ),
+                                        hintText: 'enterCityName'.tr(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 23 : 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_cityNameSuggestions.isNotEmpty &&
+                              cityNameController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _cityNameSuggestions.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return ListTile(
+                                      title: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.my_location_outlined,
+                                            color: Colors.blue,
+                                            size: 20,
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                left: 13,
+                                                right:
+                                                    MediaQuery.sizeOf(context)
+                                                            .width *
+                                                        0.27),
+                                            child:
+                                                Text('Current Location'.tr()),
+                                          ),
+                                          isLocating
+                                              ? Container(
+                                                  height: 15,
+                                                  width: 15,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : Container()
+                                        ],
+                                      ),
+                                      onTap: () async {
+                                        await currentPositionSuggestionForCity();
+                                      },
+                                    );
+                                  } else {
+                                    return ListTile(
+                                      title:
+                                          Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(
+                                          _cityNameSuggestions[index - 1],
+                                          cityNameController,
+                                          'city'),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          const Divider(indent: 5, endIndent: 5),
+                          Row(
+                            children: [
+                              Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 8, 15, 10),
+                                  child: SvgPicture.asset('assets/address.svg',
+                                      height: viewUtil.isTablet ? 23 : 15)),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(bottom: 5),
+                                  height: viewUtil.isTablet ? 40 : 33,
+                                  child: TextFormField(
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    controller: addressController,
+                                    onChanged: (value) =>
+                                        _fetchAddressSuggestions(
+                                            value, 'address'),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      hintText: 'enterYourAddress'.tr(),
+                                      hintStyle: TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize:
+                                              viewUtil.isTablet ? 22 : 15),
+                                      border: InputBorder.none,
+                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_addressSuggestions.isNotEmpty &&
+                              addressController.text.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              height: 200,
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ListView.builder(
+                                itemCount: _addressSuggestions.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(_addressSuggestions[index]),
+                                    onTap: () => _onAddressSuggestionTap(
+                                        _addressSuggestions[index],
+                                        addressController,
+                                        'address'),
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.05,
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6A66D1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            FocusScope.of(context).unfocus();
+                            _fetchAddressCoordinates();
+                          },
+                          child: Text(
+                            'getDirection'.tr(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: viewUtil.isTablet ? 23 : 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.7
+                    : MediaQuery.of(context).size.height * 0.45,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    _requestPermissions();
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0), // Default position
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget UserSharedCargoStepThree() {
+    ViewUtil viewUtil = ViewUtil(context);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _dismissSuggestions();
+        });
+      },
+      child: SingleChildScrollView(
+        child: Center(
+          child: Stack(
+            children: [
+              Container(
+                height: viewUtil.isTablet
+                    ? MediaQuery.of(context).size.height * 0.9
+                    : MediaQuery.of(context).size.height * 0.6,
+                child: GoogleMap(
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(0, 0),
+                    zoom: 1,
+                  ),
+                  markers: markers,
+                  polylines: polylines,
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<OneSequenceGestureRecognizer>(
+                          () => EagerGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+              Positioned(
+                top: 15,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: viewUtil.isTablet
+                      ? EdgeInsets.only(left: 45, right: 45)
+                      : EdgeInsets.only(left: 30, right: 30),
+                  child: Column(
+                    children: [
+                      Card(
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Padding(
+                                  padding:
+                                  const EdgeInsets.fromLTRB(10, 17, 10, 10),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xff009E10),
+                                    minRadius: 6,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: viewUtil.isTablet ? 60 : 40,
+                                    padding: viewUtil.isTablet
+                                        ? EdgeInsets.only(right: 8, top: 10)
+                                        : EdgeInsets.only(right: 3, top: 0),
+                                    child: TextFormField(
+                                      textCapitalization:
+                                      TextCapitalization.sentences,
+                                      onChanged: (value) =>
+                                          _fetchSuggestions(value, -1, true),
+                                      controller: pickUpController,
+                                      decoration: InputDecoration(
+                                        suffixIcon: Tooltip(
+                                          message:
+                                          'Locate Current Location'.tr(),
+                                          child: IconButton(
+                                              onPressed: () async {
+                                                FocusScope.of(context)
+                                                    .unfocus();
+                                                await locateCurrentPosition();
+                                              },
+                                              icon: Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 7),
+                                                child: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                ),
+                                              )),
+                                        ),
+                                        hintText: 'Pick Up'.tr(),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                            viewUtil.isTablet ? 20 : 15),
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_pickUpSuggestions.isNotEmpty &&
+                                pickUpController.text.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                height: 200,
+                                width: MediaQuery.of(context).size.width * 0.9,
+                                child: ListView.builder(
+                                  itemCount: _pickUpSuggestions.length + 1,
+                                  itemBuilder: (context, index) {
+                                    if (index == 0) {
+                                      return ListTile(
+                                        title: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.my_location_outlined,
+                                              color: Colors.blue,
+                                              size: 20,
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 13,
+                                                  right:
+                                                  MediaQuery.sizeOf(context)
+                                                      .width *
+                                                      0.27),
+                                              child:
+                                              Text('Current Location'.tr()),
+                                            ),
+                                            isLocating
+                                                ? Container(
+                                              height: 15,
+                                              width: 15,
+                                              child:
+                                              CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                                : Container()
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          await currentPositionSuggestion();
+                                        },
+                                      );
+                                    } else {
+                                      return ListTile(
+                                        title:
+                                        Text(_pickUpSuggestions[index - 1]),
+                                        onTap: () => _onSuggestionTap(
+                                            _pickUpSuggestions[index - 1],
+                                            pickUpController,
+                                            true),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            const Divider(
+                              indent: 5,
+                              endIndent: 5,
+                            ),
+                            ..._dropPointControllers
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              int i = entry.key;
+                              TextEditingController controller = entry.value;
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 5, 10),
+                                        child: CircleAvatar(
+                                          backgroundColor: Color(0xffE20808),
+                                          minRadius: 6,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          height: viewUtil.isTablet ? 60 : 43,
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextFormField(
+                                            textCapitalization:
+                                            TextCapitalization.sentences,
+                                            onChanged: (value) =>
+                                                _fetchSuggestions(
+                                                    value, i, false),
+                                            controller: controller,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              hintText:
+                                              '${'Drop Point'.tr()} ${i + 1}',
+                                              hintStyle: TextStyle(
+                                                  color: Color(0xff707070),
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 15),
+                                              border: InputBorder.none,
+                                              suffixIcon: i ==
+                                                  _dropPointControllers
+                                                      .length -
+                                                      1
+                                                  ? Padding(
+                                                padding: EdgeInsets.only(
+                                                    right:
+                                                    viewUtil.isTablet
+                                                        ? 10
+                                                        : 10),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .end,
+                                                  mainAxisSize:
+                                                  MainAxisSize.min,
+                                                  children: [
+                                                    if (_dropPointControllers
+                                                        .length >
+                                                        1)
+                                                      GestureDetector(
+                                                        onTap: () =>
+                                                            _removeTextField(
+                                                                i),
+                                                        child: Icon(
+                                                            Icons
+                                                                .cancel_outlined,
+                                                            color: Colors
+                                                                .red,
+                                                            size: viewUtil
+                                                                .isTablet
+                                                                ? 25
+                                                                : 20),
+                                                      ),
+                                                    if (_dropPointControllers
+                                                        .length ==
+                                                        1)
+                                                      GestureDetector(
+                                                        onTap:
+                                                        _addTextField,
+                                                        child: Icon(
+                                                          Icons
+                                                              .add_circle_outline_sharp,
+                                                          size: viewUtil
+                                                              .isTablet
+                                                              ? 25
+                                                              : 20,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              )
+                                                  : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (_dropPointSuggestions[i] != null &&
+                                      _dropPointSuggestions[i]!.isNotEmpty &&
+                                      controller.text.isNotEmpty)
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      height: 200,
+                                      child: ListView.builder(
+                                        itemCount:
+                                        _dropPointSuggestions[i]!.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_dropPointSuggestions[
+                                            i]![index]),
+                                            onTap: () => _onSuggestionTap(
+                                                _dropPointSuggestions[i]![
+                                                index],
+                                                controller,
+                                                false),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  if (i < _dropPointControllers.length - 1)
+                                    Divider(
+                                      indent: 5,
+                                      endIndent: 5,
+                                    ),
+                                ],
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.05,
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xff6A66D1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _fetchCoordinates();
+                            },
+                            child: Text(
+                              'getDirection'.tr(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: viewUtil.isTablet ? 23 : 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void showLogoutDialog() {
     ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
@@ -554,15 +4281,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   : MediaQuery.of(context).size.width,
               height: viewUtil.isTablet
                   ? MediaQuery.of(context).size.height * 0.08
-                  : MediaQuery.of(context).size.height * 0.1,
+                  : MediaQuery.of(context).size.height * 0.12,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: 30,bottom: 10),
+                    padding: EdgeInsets.only(top: 30, bottom: 10),
                     child: Text(
                       'are_you_sure_you_want_to_logout'.tr(),
-                      style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 27 : 19),
                     ),
                   ),
                 ],
@@ -570,8 +4298,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             ),
             actions: <Widget>[
               TextButton(
-                child: Text('yes'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
+                child: Text(
+                  'yes'.tr(),
+                  style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16),
+                ),
                 onPressed: () async {
                   await clearUserData();
                   Navigator.push(
@@ -582,7 +4312,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               ),
               TextButton(
                 child: Text('no'.tr(),
-                    style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
+                    style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -611,7 +4341,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   void _removeTextField(int index) {
     setState(() {
-      _dropPointSuggestions.remove(index); // Remove entry by index
+      _dropPointSuggestions.remove(index);
       _dropPointControllers.removeAt(index);
     });
   }
@@ -635,10 +4365,22 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Future<void> locateCurrentPosition() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: geo.LocationAccuracy.high,
+        desiredAccuracy: geo.LocationAccuracy.best,
       );
 
       LatLng currentLocation = LatLng(position.latitude, position.longitude);
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      String place = 'Unknown location';
+      if (placemarks.isNotEmpty) {
+        final Placemark placemark = placemarks[0];
+        place =
+            "${placemark.name}, ${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
+      }
 
       if (mapController != null) {
         mapController!.animateCamera(
@@ -647,6 +4389,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       }
 
       setState(() {
+        pickUpController.text = place;
+        cityNameController.text = place;
         markers.clear();
         markers.add(
           Marker(
@@ -656,7 +4400,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               title: 'your_location'.tr(),
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueBlue,
+              BitmapDescriptor.hueGreen,
             ),
           ),
         );
@@ -671,7 +4415,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       isLocating = true;
     });
     Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.high,
+      desiredAccuracy: geo.LocationAccuracy.best,
     );
 
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
@@ -696,21 +4440,19 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           markers.add(
             Marker(
               markerId: const MarkerId('current_location'),
-              position: LatLng(currentPosition.latitude, currentPosition.longitude),
+              position:
+                  LatLng(currentPosition.latitude, currentPosition.longitude),
               infoWindow: InfoWindow(
                 title: 'Current Location',
                 snippet: formattedAddress,
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
             ),
           );
         });
-      } else {
-
-      }
-    } else {
-
-    }
+      } else {}
+    } else {}
   }
 
   Future<void> currentPositionSuggestionForCity() async {
@@ -718,7 +4460,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       isLocating = true;
     });
     Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.high,
+      desiredAccuracy: geo.LocationAccuracy.best,
     );
 
     // Convert the coordinates into a human-readable address (Reverse Geocoding)
@@ -746,21 +4488,19 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           markers.add(
             Marker(
               markerId: const MarkerId('current_location'),
-              position: LatLng(currentPosition.latitude, currentPosition.longitude),
+              position:
+                  LatLng(currentPosition.latitude, currentPosition.longitude),
               infoWindow: InfoWindow(
                 title: 'Current Location',
                 snippet: formattedAddress,
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
             ),
           );
         });
-      } else {
-
-      }
-    } else {
-
-    }
+      } else {}
+    } else {}
   }
 
   Future<void> _fetchCoordinates() async {
@@ -769,7 +4509,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
       String pickupPlace = pickUpController.text;
       List<String> dropPlaces =
-      _dropPointControllers.map((controller) => controller.text).toList();
+          _dropPointControllers.map((controller) => controller.text).toList();
 
       setState(() {
         markers.clear();
@@ -789,14 +4529,14 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       }).toList();
 
       final List<http.Response> dropResponsesList =
-      await Future.wait(dropResponses);
+          await Future.wait(dropResponses);
 
       if (pickupResponse.statusCode == 200) {
         final pickupData = json.decode(pickupResponse.body);
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-          pickupData['results']?[0]['geometry']?['location'];
+              pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -821,12 +4561,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               polylines.clear();
               _dropLatLngs.clear();
             });
-          } else {
-
-          }
-        } else {
-
-        }
+          } else {}
+        } else {}
         List<LatLng> waypoints = [];
         for (int i = 0; i < dropResponsesList.length; i++) {
           final dropResponse = dropResponsesList[i];
@@ -835,12 +4571,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
             if (dropData != null && dropData['status'] == 'OK') {
               final dropLocation =
-              dropData['results']?[0]['geometry']?['location'];
+                  dropData['results']?[0]['geometry']?['location'];
               final dropAddress = dropData['results']?[0]['formatted_address'];
 
               if (dropLocation != null) {
                 LatLng dropLatLng =
-                LatLng(dropLocation['lat'], dropLocation['lng']);
+                    LatLng(dropLocation['lat'], dropLocation['lng']);
 
                 setState(() {
                   markers.add(
@@ -860,15 +4596,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   _dropLatLngs.add(dropLatLng);
                   waypoints.add(dropLatLng);
                 });
-              } else {
-
-              }
-            } else {
-
-            }
-          } else {
-
-          }
+              } else {}
+            } else {}
+          } else {}
         }
 
         // Fetch route with Directions API
@@ -899,12 +4629,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   );
                 });
               }
-            } else {
-
-            }
-          } else {
-
-          }
+            } else {}
+          } else {}
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -912,9 +4638,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             _moveCameraToFitAllMarkers();
           }
         });
-      } else {
-
-      }
+      } else {}
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }
@@ -929,12 +4653,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       String zipCode = zipCodeController.text.trim();
 
       if (cityName.isEmpty || address.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Please enter both city name and address to locate the place.'),
-          ),
-        );
+        commonWidgets.showToast(
+            'Please enter both city name and address to locate the place.');
         return;
       }
 
@@ -959,7 +4679,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-          pickupData['results']?[0]['geometry']?['location'];
+              pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -996,15 +4716,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 _moveCameraToFitAllMarkers();
               }
             });
-          } else {
-
-          }
-        } else {
-
-        }
-      } else {
-
-      }
+          } else {}
+        } else {}
+      } else {}
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }
@@ -1064,8 +4778,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
           zoom: 5,
         )), // Padding in pixels
       );
-    } else {
-    }
+    } else {}
   }
 
   LatLngBounds _calculateBounds() {
@@ -1104,30 +4817,38 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       return;
     }
 
-    final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
 
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final predictions = data['predictions'] as List<dynamic>;
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
 
-        setState(() {
-          if (isPickUp) {
-            _pickUpSuggestions = predictions.map((p) => p['description'] as String).toList();
-          } else {
-            _dropPointSuggestions[index] = predictions.map((p) => p['description'] as String).toList();
-          }
-        });
-      } else {
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final predictions = data['predictions'] as List<dynamic>;
 
+          setState(() {
+            if (isPickUp) {
+              _pickUpSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
+            } else {
+              _dropPointSuggestions[index] =
+                  predictions.map((p) => p['description'] as String).toList();
+            }
+          });
+        } else {
+          return;
+        }
+      } catch (e) {
+        commonWidgets.showToast('An error occurred, Please try again.');
       }
-    } catch (e) {
-      commonWidgets.showToast('An error occurred,Please try again.');
-    }
+    });
   }
 
-  void _onSuggestionTap(String suggestion, TextEditingController controller, bool isPickUp) {
+  void _onSuggestionTap(
+      String suggestion, TextEditingController controller, bool isPickUp) {
     setState(() {
       controller.text = suggestion;
       if (isPickUp) {
@@ -1155,33 +4876,41 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final predictions = data['predictions'] as List<dynamic>;
-
-        setState(() {
-          if (type == 'city') {
-            _cityNameSuggestions = predictions.map((p) => p['description'] as String).toList();
-          } else if (type == 'address') {
-            _addressSuggestions = predictions.map((p) => p['description'] as String).toList();
-          } else if (type == 'zipCode') {
-            _zipCodeSuggestions = predictions.map((p) => p['description'] as String).toList();
-          }
-        });
-      } else {
-
-      }
-    } catch (e) {
-      commonWidgets.showToast('An error occurred,Please try again.');
+    if (_debounce?.isActive ?? false) {
+      _debounce?.cancel();
     }
+
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final predictions = data['predictions'] as List<dynamic>;
+
+          setState(() {
+            if (type == 'city') {
+              _cityNameSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
+            } else if (type == 'address') {
+              _addressSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
+            } else if (type == 'zipCode') {
+              _zipCodeSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
+            }
+          });
+        } else {}
+      } catch (e) {
+        commonWidgets.showToast('An error occurred, Please try again.');
+      }
+    });
   }
 
-  void _onAddressSuggestionTap(String suggestion, TextEditingController controller, String type) {
+  void _onAddressSuggestionTap(
+      String suggestion, TextEditingController controller, String type) {
     setState(() {
       controller.text = suggestion;
       if (type == 'city') {
@@ -1194,21 +4923,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     });
   }
 
-  Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
+  Future<List<LoadType>> fetchLoadsForSelectedType(
+      String selectedTypeName) async {
     try {
-      List<Vehicle> vehicles =
-      await userService.fetchUserVehicle();
+      List<Vehicle> vehicles = await userService.fetchUserVehicle();
 
-      var selectedType = vehicles
-          .expand((vehicle) => vehicle.types)
-          .firstWhere(
+      var selectedType = vehicles.expand((vehicle) => vehicle.types).firstWhere(
             (type) => type.typeName == selectedTypeName,
-        orElse: () => VehicleType(
-            typeName: '',
-            typeOfLoad: [],
-            typeImage: '',
-            scale: ''),
-      );
+            orElse: () => VehicleType(
+                typeName: '', typeOfLoad: [], typeImage: '', scale: ''),
+          );
       return selectedType.typeOfLoad;
     } catch (e) {
       return [];
@@ -1291,13 +5015,176 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     String formattedTime = _formatTimeOfDay(_selectedFromTime);
     String formattedToTime = _formatTimeOfDay(_selectedToTime);
-    List<String> dropPlaces = _dropPointControllers.map((controller) => controller.text).toList();
+    List<String> dropPlaces =
+        _dropPointControllers.map((controller) => controller.text).toList();
 
     if (widget.selectedType == 'vehicle') {
-      if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
+      if (pickUpController.text.isEmpty ||
+          dropPlaces.contains('') ||
+          dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
         String? bookingId = await userService.userVehicleCreateBooking(
+          context,
+          name: selectedName.toString(),
+          unitType: widget.selectedType,
+          typeName: selectedTypeName.toString(),
+          scale: scale.toString(),
+          typeImage: typeImage.toString(),
+          typeOfLoad: selectedLoad.toString(),
+          date: formattedDate,
+          additionalLabour: selectedLabour.toString(),
+          time: formattedTime,
+          productValue: productController.text,
+          pickup: pickUpController.text,
+          dropPoints: dropPlaces,
+          token: widget.token,
+        );
+
+        setState(() {
+          if (bookingId != null) {
+            CommonWidgets()
+                .showBookingDialog(context: context, bookingId: bookingId);
+            Future.delayed(const Duration(seconds: 2), () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SuperUserHomePage(
+                    firstName: widget.firstName,
+                    lastName: widget.lastName,
+                    token: widget.token,
+                    id: widget.id,
+                    email: widget.email,
+                    accountType: widget.accountType,
+                  ),
+                ),
+              );
+            });
+          }
+        });
+      }
+    }
+    if (widget.selectedType == 'bus') {
+      if (pickUpController.text.isEmpty ||
+          dropPlaces.contains('') ||
+          dropPlaces.isEmpty) {
+        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
+      } else {
+        String? bookingId = await userService.userBusCreateBooking(context,
+            name: selectedName.toString(),
+            unitType: widget.selectedType,
+            image: typeImage.toString(),
+            date: formattedDate,
+            additionalLabour: selectedLabour.toString(),
+            time: formattedTime,
+            productValue: productController.text,
+            pickup: pickUpController.text,
+            dropPoints: dropPlaces,
+            token: widget.token);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SuperUserHomePage(
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  id: widget.id,
+                  email: widget.email,
+                  accountType: widget.accountType,
+                ),
+              ),
+            );
+          });
+        }
+      }
+    }
+    if (widget.selectedType == 'equipment') {
+      if (cityNameController.text.isEmpty || addressController.text.isEmpty) {
+        commonWidgets.showToast('Choose City name and Address'.tr());
+      } else {
+        String? bookingId = await userService.userEquipmentCreateBooking(
+            context,
+            name: selectedName.toString(),
+            unitType: widget.selectedType,
+            typeName: selectedTypeName.toString(),
+            typeImage: typeImage.toString(),
+            date: formattedDate,
+            additionalLabour: selectedLabour.toString(),
+            fromTime: formattedTime,
+            toTime: formattedToTime,
+            cityName: cityNameController.text,
+            address: addressController.text,
+            zipCode: zipCodeController.text,
+            token: widget.token);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SuperUserHomePage(
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  id: widget.id,
+                  email: widget.email,
+                  accountType: widget.accountType,
+                ),
+              ),
+            );
+          });
+        }
+      }
+    }
+    if (widget.selectedType == 'special') {
+      if (cityNameController.text.isEmpty || addressController.text.isEmpty) {
+        commonWidgets.showToast('Choose City name and Address'.tr());
+      } else {
+        String? bookingId = await userService.userSpecialCreateBooking(context,
+            name: selectedName.toString(),
+            unitType: widget.selectedType,
+            image: typeImage.toString(),
+            date: formattedDate,
+            additionalLabour: selectedLabour.toString(),
+            fromTime: formattedTime,
+            toTime: formattedToTime,
+            cityName: cityNameController.text,
+            address: addressController.text,
+            zipCode: zipCodeController.text,
+            token: widget.token);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SuperUserHomePage(
+                  firstName: widget.firstName,
+                  lastName: widget.lastName,
+                  token: widget.token,
+                  id: widget.id,
+                  email: widget.email,
+                  accountType: widget.accountType,
+                ),
+              ),
+            );
+          });
+        }
+      }
+    }
+    if (widget.selectedType == 'shared cargo') {
+      if (pickUpController.text.isEmpty ||
+          dropPlaces.contains('') ||
+          dropPlaces.isEmpty) {
+        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
+      } else {
+        String? bookingId = await userService.userSharedCargoCreateBooking(
           context,
           name: selectedName.toString(),
           unitType: widget.selectedType,
@@ -1336,2225 +5223,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         });
       }
     }
-    if(widget.selectedType=='bus') {
-      if (pickUpController.text.isEmpty ||
-          dropPlaces.contains('') ||
-          dropPlaces.isEmpty) {
-        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
-      }
-      else {
-        String? bookingId = await userService.userBusCreateBooking(
-            context,
-            name: selectedName.toString(),
-            unitType: widget.selectedType,
-            image: typeImage.toString(),
-            date: formattedDate,
-            additionalLabour: selectedLabour.toString(),
-            time: formattedTime,
-            productValue: productController.text,
-            pickup: pickUpController.text,
-            dropPoints: dropPlaces,
-            token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
-          Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SuperUserHomePage(
-                  firstName: widget.firstName,
-                  lastName: widget.lastName,
-                  token: widget.token,
-                  id: widget.id,
-                  email: widget.email,
-                  accountType: widget.accountType,
-                ),
-              ),
-            );
-          });
-        }
-      }
-    }
-    if(widget.selectedType=='equipment') {
-      if (cityNameController.text.isEmpty ||
-          addressController.text.isEmpty) {
-        commonWidgets.showToast('Choose City name and Address'.tr());
-      }
-      else {
-        String? bookingId = await userService.userEquipmentCreateBooking(
-            context,
-            name: selectedName.toString(),
-            unitType: widget.selectedType,
-            typeName: selectedTypeName.toString(),
-            typeImage: typeImage.toString(),
-            date: formattedDate,
-            additionalLabour: selectedLabour.toString(),
-            fromTime: formattedTime,
-            toTime: formattedToTime,
-            cityName: cityNameController.text,
-            address: addressController.text,
-            zipCode: zipCodeController.text,
-            token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
-          Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SuperUserHomePage(
-                  firstName: widget.firstName,
-                  lastName: widget.lastName,
-                  token: widget.token,
-                  id: widget.id,
-                  email: widget.email,
-                  accountType: widget.accountType,
-                ),
-              ),
-            );
-          });
-        }
-      }
-    }
-    if(widget.selectedType=='special') {
-      if (cityNameController.text.isEmpty ||
-          addressController.text.isEmpty) {
-        commonWidgets.showToast('Choose City name and Address'.tr());
-      }
-      else {
-        String? bookingId = await userService.userSpecialCreateBooking(
-            context,
-            name: selectedName.toString(),
-            unitType: widget.selectedType,
-            image: typeImage.toString(),
-            date: formattedDate,
-            additionalLabour: selectedLabour.toString(),
-            fromTime: formattedTime,
-            toTime: formattedToTime,
-            cityName: cityNameController.text,
-            address: addressController.text,
-            zipCode: zipCodeController.text,
-            token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
-          Future.delayed(const Duration(seconds: 2), () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SuperUserHomePage(
-                  firstName: widget.firstName,
-                  lastName: widget.lastName,
-                  token: widget.token,
-                  id: widget.id,
-                  email: widget.email,
-                  accountType: widget.accountType,
-                ),
-              ),
-            );
-          });
-        }
-      }
-    }
   }
 
   void onCreateBookingPressed() {
     createBooking();
-  }
-
-  Future<Map<String, dynamic>?> _fetchBookingDetails() async {
-    final data = await getSavedBookingId();
-    String? bookingId = data['_id'];
-    final String? token = data['token'];
-
-    if (bookingId == null || token == null) {
-      if (widget.id != null && token != null) {
-        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
-
-        if (bookingId != null) {
-          // await saveBookingIdToPreferences(bookingId, token);
-        } else {
-          return null;
-        }
-      } else {
-        return null;
-      }
-    }
-
-    if (bookingId != null && token != null) {
-      return await userService.fetchBookingDetails(bookingId, token);
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NewBooking(
-            token: token,
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            id: widget.id,
-            email: widget.email,
-          ),
-        ),
-      );
-      return null;
-    }
-  }
-
-  Widget _buildStep(int step) {
-    bool isActive = step == _currentStep;
-    ViewUtil viewUtil = ViewUtil(context);
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-            color: isActive ? const Color(0xff6A66D1) : const Color(0xffACACAD),
-            width: 1),
-      ),
-      child: CircleAvatar(
-        radius: viewUtil.isTablet?30: 20,
-        backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
-        child: Text(
-          step.toString(),
-          style: TextStyle(
-            color: isActive ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepContent(int step) {
-    switch (step) {
-      case 1:
-        return buildStepOneContent(widget.selectedType);
-      case 2:
-        return buildStepTwoContent(widget.selectedType);
-      case 3:
-        return buildStepThreeContent(widget.selectedType);
-      default:
-        return Container();
-    }
-  }
-
-  Widget buildStepOneContent(String selectedType) {
-    switch (selectedType) {
-      case 'vehicle':
-        return vehicleContent();
-      case 'bus':
-        return busContent();
-      case 'equipment':
-        return equipmentContent();
-      case 'special':
-        return specialContent();
-      case 'others':
-        return specialContent();
-      default:
-        return defaultContent();
-    }
-  }
-
-  Widget buildStepTwoContent(String selectedType) {
-    switch (selectedType) {
-      case 'vehicle':
-        return UserVehicleStepTwo(
-            selectedTypeName??'',
-            selectedName??'',
-            typeImage??'',
-            scale??''
-        );
-      case 'bus':
-        return UserBusStepTwo();
-      case 'equipment':
-        return UserEquipmentStepTwo();
-      case 'special':
-        return UserSpecialStepTwo();
-      case 'others':
-        return UserSpecialStepTwo();
-      default:
-        return defaultContent();
-    }
-  }
-
-  Widget buildStepThreeContent(String selectedType) {
-    switch (selectedType) {
-      case 'vehicle':
-        return UserVehicleStepThree(
-            selectedTypeName??'',
-            selectedName??'',
-            typeImage??'',
-            scale??'',
-            _selectedDate .toString(),
-            _selectedFromTime.toString(),
-            productController.text,
-            selectedLoad??'',
-            selectedLabour.toString()
-        );
-      case 'bus':
-        return UserBusStepThree();
-      case 'equipment':
-        return UserEquipmentStepThree();
-      case 'special':
-        return UserSpecialStepThree();
-      case 'others':
-        return UserSpecialStepThree();
-      default:
-        return defaultContent();
-    }
-  }
-
-  Widget vehicleContent() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return FutureBuilder<List<Vehicle>>(
-      future: _futureVehicles,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No vehicles available'));
-        } else {
-          final vehicles = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_vehicle_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: vehicles.length,
-                  itemBuilder: (context, index) {
-                    final vehicle = vehicles[index];
-                    final selectedType = _selectedSubClassification[vehicle.name] ?? '';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset('assets/delivery-truck.svg',
-                                  height: viewUtil.isTablet?50: 35),
-                            ),
-                            Expanded(
-                              flex: 6,
-                              child: Text(
-                                vehicle.name.tr(),
-                                style: TextStyle(
-                                    fontSize: viewUtil.isTablet?20: 15,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                height:
-                                MediaQuery.of(context).size.height * 0.06,
-                                child: const VerticalDivider(
-                                  color: Colors.grey,
-                                  thickness: 1,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 7,
-                              child: Directionality(
-                                textDirection: ui.TextDirection.ltr,
-                                child: Container(
-                                  height: 50,
-                                  width: double.infinity,
-                                  child: PopupMenuButton<String>(
-                                    elevation: 5,
-                                    constraints: BoxConstraints(
-                                      minWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
-                                      maxWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
-                                    ),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    offset: Offset(0, 55),
-                                    padding: EdgeInsets.zero,
-                                    color: Colors.white,
-                                    onSelected: (newValue) {
-                                      setState(() {
-                                        _selectedSubClassification[vehicle.name] = newValue;
-                                        selectedTypeName = newValue;
-                                        selectedName = vehicle.name;
-                                        var selectedTypeObj = vehicle.types?.firstWhere((type) => type.typeName == newValue);
-                                        scale = selectedTypeObj?.scale;
-                                        typeImage = selectedTypeObj?.typeImage;
-                                      });
-                                    },
-                                    itemBuilder: (context) {
-                                      return vehicle.types?.map((type) {
-                                        return PopupMenuItem<String>(
-                                          value: type.typeName,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(
-                                                child: Image.asset(
-                                                  type.typeImage,
-                                                  width: MediaQuery.of(context).size.width * 0.15,
-                                                  height: MediaQuery.of(context).size.height * 0.06,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 15),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(type.typeName.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16)),
-                                                  Text(type.scale, style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList() ?? [];
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              selectedType.isEmpty ? 'select'.tr() : selectedType.tr(),
-                                              style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Icon(Icons.arrow_drop_down, size: viewUtil.isTablet ? 25 : 20),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget busContent() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return FutureBuilder<List<Buses>>(
-      future: _futureBuses,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Buses available'));
-        } else {
-          final buses = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_bus_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 0,
-                    mainAxisSpacing: 0,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: buses.length,
-                  itemBuilder: (context, index) {
-                    final bus = buses[index];
-                    final isBusSelected = selectedBus == index;
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 27),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.21,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedName = bus.name;
-                                  typeImage = bus.image;
-                                  if (isBusSelected) {
-                                    selectedBus = null;
-                                  } else {
-                                    selectedBus = index;
-                                  }
-                                });
-                              },
-                              child: Card(
-                                color: Colors.white,
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                      color: isBusSelected
-                                          ? Color(
-                                        0xff6A66D1,
-                                      )
-                                          : Color(0xffACACAD),
-                                      width: isBusSelected ? 2 : 1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: viewUtil.isTablet
-                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
-                                          :EdgeInsets.only(top: 45, bottom: 10),
-                                      child: SvgPicture.asset(
-                                        bus.image,
-                                        width: viewUtil.isTablet?50:30,
-                                        height: viewUtil.isTablet?70:40,
-                                      ),
-                                    ),
-                                    SizedBox(height: 7),
-                                    Divider(
-                                      indent: viewUtil.isTablet ? 15 : 7,
-                                      endIndent: viewUtil.isTablet ? 15 : 7,
-                                      color: Color(0xffACACAD),
-                                      thickness: 1,
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 15),
-                                      child: Text(
-                                        bus.name,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            fontSize: viewUtil.isTablet?20: 15),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget equipmentContent() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return FutureBuilder<List<Equipment>>(
-      future: _futureEquipment,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No vehicles available'));
-        } else {
-          final equipment = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_equipments_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: equipment.length,
-                  itemBuilder: (context, index) {
-                    final equipments = equipment[index];
-                    final selectedType = _selectedSubClassification[equipments.name] ?? '';
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset('assets/delivery-truck.svg',
-                                  height: viewUtil.isTablet?50: 35),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                equipments.name.tr(),
-                                style: TextStyle(
-                                    fontSize: viewUtil.isTablet?20: 15,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                height: MediaQuery.of(context).size.height * 0.06,
-                                child: const VerticalDivider(
-                                  color: Colors.grey,
-                                  thickness: 1,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 7,
-                              child: Container(
-                                height: 50,
-                                width: double.infinity,
-                                child: PopupMenuButton<String>(
-                                  elevation: 5,
-                                  constraints: BoxConstraints(
-                                    minWidth:viewUtil.isTablet
-                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
-                                    maxWidth:viewUtil.isTablet
-                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  offset: const Offset(0, 55),
-                                  padding: EdgeInsets.zero,
-                                  color: Colors.white,
-                                  onSelected: (newValue) {
-                                    setState(() {
-                                      _selectedSubClassification[
-                                      equipments.name] = newValue;
-                                      selectedTypeName = newValue;
-                                      selectedName = equipments.name;
-                                      typeImage = equipments.types
-                                          ?.firstWhere((type) => type.typeName == newValue)
-                                          .typeImage;
-                                    });
-                                  },
-                                  itemBuilder: (context) {
-                                    return equipments.types?.map((type) {
-                                      return PopupMenuItem<String>(
-                                        value: type.typeName,
-                                        child: Directionality(
-                                          textDirection: ui.TextDirection.ltr,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(15),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  child: Image.asset(
-                                                    type.typeImage,
-                                                    width: MediaQuery.of(context).size.width * 0.15,
-                                                    height: MediaQuery.of(context).size.height * 0.04,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 15),
-                                                Text(type.typeName.tr(),
-                                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList() ??
-                                        [];
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    width: double.infinity,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            selectedType.isEmpty
-                                                ? 'select'.tr()
-                                                : selectedType.isNotEmpty
-                                                ? selectedType.tr()
-                                                : equipments.types?.isNotEmpty == true
-                                                ? equipments.types!.first.typeName
-                                                : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet?20: 16),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?25: 20),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget specialContent() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return FutureBuilder<List<Special>>(
-      future: _futureSpecial,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No Equipment available'));
-        } else {
-          final special = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.topLeft,
-                margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
-                child: Text(
-                  'available_special_others_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Two columns
-                    crossAxisSpacing: 0, // Space between columns
-                    mainAxisSpacing: 0, // Space between rows
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: special.length,
-                  itemBuilder: (context, index) {
-                    final specials = special[index];
-                    final isSpecialSelected = selectedSpecial == index;
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 27),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: MediaQuery.sizeOf(context).width * 0.39,
-                            height: MediaQuery.sizeOf(context).height * 0.21,
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedName = specials.name;
-                                  typeImage = specials.image;
-                                  if (isSpecialSelected) {
-                                    selectedSpecial = null;
-                                  } else {
-                                    selectedSpecial = index;
-                                  }
-                                });
-                              },
-                              child: Card(
-                                color: Colors.white,
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  side: BorderSide(
-                                      color: isSpecialSelected
-                                          ? Color(0xff6A66D1,)
-                                          : Color(0xffACACAD),
-                                      width: isSpecialSelected ? 2 : 1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: viewUtil.isTablet
-                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
-                                          :EdgeInsets.only(top: 45, bottom: 10),
-                                      child: SvgPicture.asset(
-                                        specials.image,
-                                        width: viewUtil.isTablet?50:30,
-                                        height: viewUtil.isTablet?70:40,
-                                      ),
-                                    ),
-                                    SizedBox(height: 7),
-                                    Divider(
-                                      indent: viewUtil.isTablet ? 15 : 7,
-                                      endIndent: viewUtil.isTablet ? 15 : 7,
-                                      color: Color(0xffACACAD),
-                                      thickness: 1,
-                                    ),
-                                    Text(
-                                      specials.name.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                          fontSize: viewUtil.isTablet?20: 15),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        }
-      },
-    );
-  }
-
-  Widget othersContent() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Others Content',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget defaultContent() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Text('please_select_a_type_to_see_content'.tr(),
-          style: TextStyle(fontSize: 18)),
-    );
-  }
-
-  Widget UserVehicleStepTwo(
-      String selectedTypeName,
-      String name,
-      String typeImage,
-      String scale,
-      ) {
-    ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return SingleChildScrollView(
-      child: Directionality(
-        textDirection: ui.TextDirection.ltr,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Time'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                _selectTime(context);
-              },
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xffBCBCBC)),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: Icon(FontAwesomeIcons.clock,color: const Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                    ),
-                    Container(
-                      height: viewUtil.isTablet ?60:50,
-                      child: const VerticalDivider(
-                        color: Colors.grey,
-                        thickness: 1.2,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: (){
-                        _selectTime(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16),),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Date'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                _selectDate(context);
-              },
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xffBCBCBC)),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                    ),
-                    Container(
-                      height: viewUtil.isTablet ?60:50,
-                      child: const VerticalDivider(
-                        color: Colors.grey,
-                        thickness: 1.2,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: (){
-                        _selectDate(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'valueOfProduct'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              child: TextFormField(
-                onTapOutside: (event) {
-                  FocusScope.of(context).unfocus();
-                },
-                focusNode: productValueFocusNode,
-                controller: productController,
-                decoration: InputDecoration(
-                  hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    borderSide: const BorderSide(
-                      color: Color(0xffBCBCBC),
-                      width: 1.0, // Border width
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    borderSide: const BorderSide(
-                      color: Color(0xffBCBCBC),
-                      width: 1.0, // Border width
-                    ),
-                  ),
-                ),keyboardType: TextInputType.number,
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 22),
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'loadType'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 0),
-              child: LoadTypeDropdown(
-                selectedName: selectedTypeName,
-                selectedLoad: selectedLoad,
-                onLoadChanged: (newValue) async {
-                  setState(() {
-                    selectedLoad = newValue;
-                  });
-                  await Future.delayed(Duration(milliseconds: -1));
-                  if (productValueFocusNode.hasFocus) {
-                    productValueFocusNode.unfocus();
-                  }
-                },
-                fetchLoadsForSelectedType: fetchLoadsForSelectedType,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: isChecked,
-                    onChanged: _onCheckboxChanged,
-                    checkColor: Colors.white,
-                    activeColor: const Color(0xff6A66D1),
-                    side: BorderSide(color: Colors.grey),
-                  ),
-                  Container(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        'needAdditionalLabour'.tr(),
-                        style:
-                        TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isChecked)
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Column(
-                  children: [
-                    RadioListTile(
-                      title: const Text('1'),
-                      value: 1,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('2'),
-                      value: 2,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                    RadioListTile(
-                      title: const Text('3'),
-                      value: 3,
-                      groupValue: selectedLabour,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLabour = value!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget UserBusStepTwo() {
-    ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Time'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Date'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectDate(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'valueOfProduct'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            child: TextFormField(
-              onTapOutside: (event) {
-                FocusScope.of(context).unfocus();
-              },
-              controller: productController,
-              decoration: const InputDecoration(
-                hintStyle: TextStyle(color: Color(0xffCCCCCC)),
-                border: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: isChecked,
-                  onChanged: _onCheckboxChanged,
-                  checkColor: Colors.white,
-                  activeColor: const Color(0xff6A66D1),
-                  side: BorderSide(color: Colors.grey),
-                ),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isChecked)
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
-                children: [
-                  RadioListTile(
-                    title: const Text('1'),
-                    value: 1,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('2'),
-                    value: 2,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('3'),
-                    value: 3,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget UserEquipmentStepTwo() {
-    ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'fromTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'toTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectToTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectToTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'startingDate'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectDate(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: isChecked,
-                  onChanged: _onCheckboxChanged,
-                  checkColor: Colors.white,
-                  activeColor: const Color(0xff6A66D1),
-                  side: BorderSide(color: Colors.grey),
-                ),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isChecked)
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
-                children: [
-                  RadioListTile(
-                    title: const Text('1'),
-                    value: 1,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('2'),
-                    value: 2,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('3'),
-                    value: 3,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget UserSpecialStepTwo() {
-    ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'fromTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'toTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectToTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectToTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'startingDate'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: (){
-              _selectDate(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
-                  ),
-                  Container(
-                    height: viewUtil.isTablet ?60:50,
-                    child: const VerticalDivider(
-                      color: Colors.grey,
-                      thickness: 1.2,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: (){
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              children: [
-                Checkbox(
-                  value: isChecked,
-                  onChanged: _onCheckboxChanged,
-                  checkColor: Colors.white,
-                  activeColor: const Color(0xff6A66D1),
-                  side: BorderSide(color: Colors.grey),
-                ),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isChecked)
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
-                children: [
-                  RadioListTile(
-                    title: const Text('1'),
-                    value: 1,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('2'),
-                    value: 2,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile(
-                    title: const Text('3'),
-                    value: 3,
-                    groupValue: selectedLabour,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedLabour = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget UserVehicleStepThree(
-      String selectedTypeName,
-      String name,
-      String typeImage,
-      String scale,
-      String selectedDate,
-      String selectedTime,
-      String valueOfProduct,
-      String selectedLoad,
-      String additionalLabour,
-      ) {
-    ViewUtil viewUtil = ViewUtil(context);
-    return  GestureDetector(
-      onTap: () {
-        setState(() {
-          _dismissSuggestions();
-        });
-      },
-      child: SingleChildScrollView(
-        child: Center(
-          child: Stack(
-            children: [
-              Container(
-                height: viewUtil.isTablet
-                    ? MediaQuery.of(context).size.height * 0.9
-                    : MediaQuery.of(context).size.height * 0.6,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0),
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                    ),
-                  },
-                ),
-              ),
-              Positioned(
-                top: 15,
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  padding:  viewUtil.isTablet
-                      ?EdgeInsets.only(left: 45, right: 45)
-                      :EdgeInsets.only(left: 30, right: 30),
-                  child: Column(
-                    children: [
-                      Card(
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
-                                  child: CircleAvatar(
-                                    backgroundColor: Color(0xff009E10),
-                                    minRadius: 6,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: viewUtil.isTablet?60:40,
-                                    padding: viewUtil.isTablet
-                                        ?EdgeInsets.only(right: 8,top: 10)
-                                        :EdgeInsets.only(right: 3,top: 0),
-                                    child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
-                                      controller: pickUpController,
-                                      decoration: InputDecoration(
-                                        suffixIcon: Tooltip(
-                                          message: 'Locate Current Location'.tr(),
-                                          child: IconButton(
-                                              onPressed: ()async{
-                                                FocusScope.of(context).unfocus();
-                                                await locateCurrentPosition();
-                                              },
-                                              icon: Padding(
-                                                padding: const EdgeInsets.only(top: 7),
-                                                child: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),),
-                                              )),
-                                        ),
-                                        hintText: 'Pick Up'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                height: 200,
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                child: ListView.builder(
-                                  itemCount: _pickUpSuggestions.length + 1,
-                                  itemBuilder: (context, index) {
-                                    if (index == 0) {
-                                      return ListTile(
-                                        title: Row(
-                                          children: [
-                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                              child: Text('Current Location'.tr()),
-                                            ),
-                                            isLocating ? Container(
-                                              height: 15,
-                                              width: 15,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ):Container()
-                                          ],
-                                        ),
-                                        onTap: () async {
-                                          await currentPositionSuggestion();
-                                        },
-                                      );
-                                    } else {
-                                      return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),
-                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            const Divider(
-                              indent: 5,
-                              endIndent: 5,
-                            ),
-                            ..._dropPointControllers.asMap().entries.map((entry) {
-                              int i = entry.key;
-                              TextEditingController controller = entry.value;
-                              return Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
-                                        child: CircleAvatar(
-                                          backgroundColor: Color(0xffE20808),
-                                          minRadius: 6,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          height: viewUtil.isTablet?60:43,
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: TextFormField(
-                                            textCapitalization: TextCapitalization.sentences,
-                                            onChanged: (value) => _fetchSuggestions(value, i, false),
-                                            controller: controller,
-                                            decoration: InputDecoration(
-                                              isDense: true,
-                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
-                                              border: InputBorder.none,
-                                              suffixIcon: i == _dropPointControllers.length - 1
-                                                  ? Padding(
-                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (_dropPointControllers.length > 1)
-                                                      GestureDetector(
-                                                        onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
-                                                      ),
-                                                    if (_dropPointControllers.length == 1)
-                                                      GestureDetector(
-                                                        onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
-                                                  : null,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
-                                    Container(
-                                      padding: EdgeInsets.all(8),
-                                      height: 200,
-                                      child: ListView.builder(
-                                        itemCount: _dropPointSuggestions[i]!.length,
-                                        itemBuilder: (context, index) {
-                                          return ListTile(
-                                            title: Text(_dropPointSuggestions[i]![index]),
-                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  if (i < _dropPointControllers.length - 1)
-                                    Divider(
-                                      indent: 5,
-                                      endIndent: 5,
-                                    ),
-                                ],
-                              );
-                            }).toList(),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05,
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff6A66D1),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: () {
-                              FocusScope.of(context).unfocus();
-                              _fetchCoordinates();
-                            },
-                            child: Text(
-                              'getDirection'.tr(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: viewUtil.isTablet?23:16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget UserBusStepThree() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _dismissSuggestions();
-        });
-      },
-      child: SingleChildScrollView(
-        child: Center(
-          child: Stack(
-            children: [
-              Container(
-                height: viewUtil.isTablet
-                    ? MediaQuery.of(context).size.height * 0.9
-                    : MediaQuery.of(context).size.height * 0.6,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0),
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                    ),
-                  },
-                ),
-              ),
-              Positioned(
-                top: 15,
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.only(left: 30, right: 30),
-                  child: Column(
-                    children: [
-                      Card(
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
-                                  child: CircleAvatar(
-                                    backgroundColor: Color(0xff009E10),
-                                    minRadius: 6,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: viewUtil.isTablet?60:40,
-                                    padding: viewUtil.isTablet
-                                        ?EdgeInsets.only(right: 8,top: 10)
-                                        :EdgeInsets.only(right: 3,top: 0),
-                                    child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
-                                      controller: pickUpController,
-                                      decoration: InputDecoration(
-                                        suffixIcon: Tooltip(
-                                          message: 'Locate Current Location'.tr(),
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(top: 7),
-                                            child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
-                                                  await locateCurrentPosition();
-                                                },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),)),
-                                          ),
-                                        ),
-                                        hintText: 'Pick Up'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                height: 200,
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                child: ListView.builder(
-                                  itemCount: _pickUpSuggestions.length + 1,
-                                  itemBuilder: (context, index) {
-                                    if (index == 0) {
-                                      return ListTile(
-                                        title: Row(
-                                          children: [
-                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                              child: Text('Current Location'.tr()),
-                                            ),
-                                            isLocating ? Container(
-                                              height: 15,
-                                              width: 15,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ):Container()
-                                          ],
-                                        ),
-                                        onTap: () async {
-                                          await currentPositionSuggestion();
-                                        },
-                                      );
-                                    } else {
-                                      return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),
-                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            const Divider(
-                              indent: 5,
-                              endIndent: 5,
-                            ),
-                            ..._dropPointControllers.asMap().entries.map((entry) {
-                              int i = entry.key;
-                              TextEditingController controller = entry.value;
-                              return Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
-                                        child: CircleAvatar(
-                                          backgroundColor: Color(0xffE20808),
-                                          minRadius: 6,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          height: viewUtil.isTablet?60:43,
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: TextFormField(
-                                            textCapitalization: TextCapitalization.sentences,
-                                            onChanged: (value) => _fetchSuggestions(value, i, false),
-                                            controller: controller,
-                                            decoration: InputDecoration(
-                                              isDense: true,
-                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
-                                              border: InputBorder.none,
-                                              suffixIcon: i == _dropPointControllers.length - 1
-                                                  ? Padding(
-                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (_dropPointControllers.length > 1)
-                                                      GestureDetector(
-                                                        onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
-                                                      ),
-                                                    if (_dropPointControllers.length == 1)
-                                                      GestureDetector(
-                                                        onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
-                                                  : null,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
-                                    Container(
-                                      padding: EdgeInsets.all(8),
-                                      height: 200,
-                                      child: ListView.builder(
-                                        itemCount: _dropPointSuggestions[i]!.length,
-                                        itemBuilder: (context, index) {
-                                          return ListTile(
-                                            title: Text(_dropPointSuggestions[i]![index]),
-                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  if (i < _dropPointControllers.length - 1)
-                                    Divider(
-                                      indent: 5,
-                                      endIndent: 5,
-                                    ),
-                                ],
-                              );
-                            }).toList(),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.05,
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff6A66D1),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            onPressed: () {
-                              FocusScope.of(context).unfocus();
-                              _fetchCoordinates();
-                            },
-                            child: Text(
-                              'getDirection'.tr(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: viewUtil.isTablet?23:16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _dismissAddressSuggestions() {
@@ -3564,434 +5236,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       _zipCodeSuggestions.clear();
     });
   }
-
-  Widget UserEquipmentStepThree() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return GestureDetector(
-      onTap: (){
-        _dismissAddressSuggestions();
-      },
-      child: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:  viewUtil.isTablet
-                    ?EdgeInsets.only(left: 45, right: 45)
-                    :EdgeInsets.only(left: 30, right: 30),
-                child: Column(
-                  children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                        side: const BorderSide(
-                          color: Color(0xffE0E0E0),
-                          width: 1,
-                        ),
-                      ),
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
-                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
-                                Expanded(
-                                  child: Container(
-                                    height: viewUtil.isTablet?40:30,
-                                    child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
-                                      decoration: InputDecoration(
-                                        isDense: true,
-                                        suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
-                                            child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
-                                                  await locateCurrentPosition();
-                                                },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
-                                          ),
-                                        ),
-                                        hintText: 'enterCityName'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return ListTile(
-                                      title: Row(
-                                        children: [
-                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'.tr()),
-                                          ),
-                                          isLocating ? Container(
-                                            height: 15,
-                                            width: 15,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          ):Container()
-                                        ],
-                                      ),
-                                      onTap: () async {
-                                        await currentPositionSuggestionForCity();
-                                      },
-                                    );
-                                  } else {
-                                    return ListTile(
-                                      title: Text(_cityNameSuggestions[index - 1]),
-                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(bottom: 5),
-                                  height: viewUtil.isTablet?40:33,
-                                  child: TextFormField(
-                                    textCapitalization: TextCapitalization.sentences,
-                                    controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
-                                      border: InputBorder.none,
-                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _addressSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            _fetchAddressCoordinates();
-                          },
-                          child: Text(
-                            'getDirection'.tr(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: viewUtil.isTablet?23:16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                height: viewUtil.isTablet
-                    ? MediaQuery.of(context).size.height * 0.7
-                    : MediaQuery.of(context).size.height * 0.45,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                    _requestPermissions();
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0), // Default position
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                    ),
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget UserSpecialStepThree() {
-    ViewUtil viewUtil = ViewUtil(context);
-    return GestureDetector(
-      onTap: (){
-        _dismissAddressSuggestions();
-      },
-      child: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding: viewUtil.isTablet
-                    ?EdgeInsets.only(left: 45, right: 45)
-                    :EdgeInsets.only(left: 30, right: 30),
-                child: Column(
-                  children: [
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                        side: const BorderSide(
-                          color: Color(0xffE0E0E0), // Border color
-                          width: 1, // Border width
-                        ),
-                      ),
-                      color: Colors.white,
-                      child:Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
-                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
-                                Expanded(
-                                  child: Container(
-                                    height: viewUtil.isTablet?40:30,
-                                    child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
-                                      decoration: InputDecoration(
-                                        isDense: true,
-                                        suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8),
-                                          child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
-                                            child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
-                                                  await locateCurrentPosition();
-                                                },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
-                                          ),
-                                        ),
-                                        hintText: 'enterCityName'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _cityNameSuggestions.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return ListTile(
-                                      title: Row(
-                                        children: [
-                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.27),
-                                            child: Text('Current Location'.tr()),
-                                          ),
-                                          isLocating ? Container(
-                                            height: 15,
-                                            width: 15,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          ):Container()
-                                        ],
-                                      ),
-                                      onTap: () async {
-                                        await currentPositionSuggestionForCity();
-                                      },
-                                    );
-                                  } else {
-                                    return ListTile(
-                                      title: Text(_cityNameSuggestions[index - 1]),
-                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          const Divider(indent: 5, endIndent: 5),
-                          Row(
-                            children: [
-                              Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(bottom: 5),
-                                  height: viewUtil.isTablet?40:33,
-                                  child: TextFormField(
-                                    textCapitalization: TextCapitalization.sentences,
-                                    controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
-                                    decoration: InputDecoration(
-                                      isDense: true,
-                                      hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
-                                      border: InputBorder.none,
-                                      // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              height: 200,
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              child: ListView.builder(
-                                itemCount: _addressSuggestions.length,
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.05,
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A66D1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            _fetchAddressCoordinates();
-                          },
-                          child: Text(
-                            'getDirection'.tr(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: viewUtil.isTablet?23:16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                height: viewUtil.isTablet
-                    ? MediaQuery.of(context).size.height * 0.7
-                    : MediaQuery.of(context).size.height * 0.45,
-                child: GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                    _requestPermissions();
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(0, 0), // Default position
-                    zoom: 1,
-                  ),
-                  markers: markers,
-                  polylines: polylines,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                    ),
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLine() {
-    return Container(
-      width: 40,
-      height: 2,
-      color: Colors.grey,
-    );
-  }
-}
-
-Future<void> _loadSvg(String asset) async {
-  await Future.delayed(const Duration(milliseconds: 500));
 }
 
 class LoadTypeDropdown extends StatefulWidget {
@@ -4017,7 +5261,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
   @override
   void initState() {
     super.initState();
-    _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+    _loadTypesFuture =
+        widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
   }
 
   @override
@@ -4025,7 +5270,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedName != oldWidget.selectedName) {
       setState(() {
-        _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+        _loadTypesFuture =
+            widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
       });
     }
   }
@@ -4043,7 +5289,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
         } else if (snapshot.hasData) {
           List<LoadType> loadItems = snapshot.data ?? [];
           return Container(
-            padding: EdgeInsets.symmetric(vertical: viewUtil.isTablet?17:14,horizontal: 10),
+            padding: EdgeInsets.symmetric(
+                vertical: viewUtil.isTablet ? 17 : 14, horizontal: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8.0),
@@ -4059,7 +5306,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                 color: Colors.white,
                 constraints: BoxConstraints.tightFor(
                     width: viewUtil.isTablet
-                        ?MediaQuery.sizeOf(context).width * 0.92 :350),
+                        ? MediaQuery.sizeOf(context).width * 0.92
+                        : 350),
                 // offset: const Offset(0, -280),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -4068,9 +5316,10 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                       (widget.selectedLoad?.isNotEmpty ?? false)
                           ? widget.selectedLoad!
                           : 'loadType'.tr(),
-                      style: TextStyle(fontSize: viewUtil.isTablet ?20:16),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                     ),
-                    Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?30: 26),
+                    Icon(Icons.arrow_drop_down,
+                        size: viewUtil.isTablet ? 30 : 26),
                   ],
                 ),
                 itemBuilder: (BuildContext context) {
@@ -4081,7 +5330,9 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                         enabled: false,
                         child: Text(
                           'No Load Type Available',
-                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16,color: Colors.black),
+                          style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16,
+                              color: Colors.black),
                         ),
                       ),
                     ];
@@ -4094,7 +5345,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                         child: Row(
                           children: [
                             Text(load.load.tr(),
-                                style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ? 20 : 16)),
                           ],
                         ),
                       ),

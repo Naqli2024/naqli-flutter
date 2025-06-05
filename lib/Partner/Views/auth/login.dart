@@ -15,12 +15,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:ui' as ui;
 
 class LoginPage extends StatefulWidget {
-final String partnerName;
-final String mobileNo;
-final String password;
-final String token;
-final String partnerId;
-  const LoginPage({super.key, required this.partnerName, required this.mobileNo, required this.password, required this.token, required this.partnerId});
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -52,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void login() async{
     if (_formKey.currentState!.validate()) {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -59,11 +55,8 @@ class _LoginPageState extends State<LoginPage> {
         context,
         emailOrMobile: emailOrMobileController.text,
         password: passwordController.text,
-        partnerName: widget.partnerName,
-        mobileNo: emailOrMobileController.text,
-        token: widget.token,
       );
-
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
@@ -85,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
         )
         : WillPopScope(
             onWillPop: () async {
-              Navigator.push(context, MaterialPageRoute(builder:  (context) => PartnerHomePage(mobileNo: '', partnerName: '', password: '', partnerId: '', token: '')));
+              Navigator.push(context, MaterialPageRoute(builder:  (context) => PartnerHomePage()));
               return false;
             },
           child: Directionality(
@@ -122,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const PartnerHomePage(mobileNo: '', partnerName: '', password: '',partnerId: '', token: '',),
+                                  builder: (context) => const PartnerHomePage(),
                                 ),
                               );
                             },

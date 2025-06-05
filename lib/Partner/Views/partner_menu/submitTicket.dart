@@ -172,12 +172,7 @@ class _SubmitTicketState extends State<SubmitTicket> {
                 top: 20,
                 child: GestureDetector(
                     onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => BookingDetails(partnerName: widget.firstName, partnerId: widget.partnerId, token: widget.token, quotePrice: '', paymentStatus: '', email: widget.email)
-                        ),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>BookingDetails(partnerName: widget.firstName, partnerId: widget.partnerId, token: widget.token, quotePrice: '', paymentStatus: '', email: widget.email)));
                     },
                     child: const CircleAvatar(child: Icon(FontAwesomeIcons.arrowLeft,size: 20,))))
           ],

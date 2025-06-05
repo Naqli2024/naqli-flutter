@@ -10,6 +10,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/SuperUser/Viewmodel/superUser_services.dart';
+import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
@@ -89,16 +90,16 @@ class _ChooseVendorState extends State<ChooseVendor> {
   final List<LatLng> _dropLatLngs = [];
   List<Map<String, dynamic>> vendors = [];
   String? selectedVendorId;
-  int fullAmount = 0;
-  int advanceAmount = 0;
+  num fullAmount = 0;
+  num advanceAmount = 0;
   bool isLoading = true;
   bool isDeleting = false;
   bool isFetching = false;
   Timer? timer;
   Map<String, dynamic>? paymentIntent;
   bool isTimeout = false;
-  int fullPayAmount = 0;
-  int advancePayAmount = 0;
+  num fullPayAmount = 0;
+  num advancePayAmount = 0;
   Future<Map<String, dynamic>?>? booking;
   Timer? _refreshTimer;
   Timer? _fetchTimer;
@@ -106,8 +107,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
   bool isPayAdvance = false;
   String? selectedPartnerName;
   String? selectedPartnerId;
-  int? selectedOldQuotePrice;
-  int? selectedQuotePrice;
+  num? selectedOldQuotePrice;
+  num? selectedQuotePrice;
   String? updatedPaymentStatus;
   String? bookingStatus;
   Timer? _cycleTimer;
@@ -122,6 +123,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
   String? paymentResult;
   bool isOtherCardTapped = false;
   bool isMADATapped = false;
+  late Future<UserDataModel> userData;
+  late WebViewController webViewController;
 
   @override
   void initState() {
@@ -130,6 +133,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     fetchAddressCoordinates();
     fetchCoordinates();
     booking = _fetchBookingDetails();
+    userData = userService.getUserData(widget.id,widget.token);
     super.initState();
   }
 
@@ -229,11 +233,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
   }
 
   Future<void> fetchPaymentData(
-      int amount,
+      num amount,
       String paymentStatus,
       String partnerId,
       String bookingId,
-      int oldQuotePrice) async {
+      num oldQuotePrice) async {
     try {
 
       final response = await userService.updatePayment(
@@ -593,37 +597,30 @@ class _ChooseVendorState extends State<ChooseVendor> {
     String? bookingId = data['_id'];
     final String? token = data['token'];
 
-    if (bookingId == null || token == null) {
-      if (widget.id != null && token != null) {
-        bookingId = await userService.getPaymentPendingBooking(widget.id, token);
+    if (bookingId == null && widget.id != null && widget.token != null) {
+      bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
 
-        if (bookingId != null) {
-          // await saveBookingIdToPreferences(bookingId, token);
-        } else {
-          return null;
-        }
-      } else {
+      if (bookingId == null || bookingId.isEmpty) {
+        bookingId = await userService.getBookingByUserId(widget.id, widget.token);
+      }
+
+      if (bookingId == null || bookingId.isEmpty) {
         return null;
       }
     }
 
-    if (bookingId != null && token != null) {
-      return await userService.fetchBookingDetails(bookingId, token);
+    if (bookingId != null && widget.token != null) {
+      final bookingDetails = await userService.fetchBookingDetails(bookingId, widget.token);
+
+      if (bookingDetails != null) {
+        return bookingDetails;
+      } else {
+        print("Booking details returned null from API.");
+      }
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => NewBooking(
-            token: token,
-            firstName: widget.firstName,
-            lastName: widget.lastName,
-            id: widget.id,
-            email: widget.email,
-          ),
-        ),
-      );
-      return null;
+      print("Either bookingId or token is null, cannot fetch details.");
     }
+    return null;
   }
 
   Future<void> handleDeleteBooking() async {
@@ -644,9 +641,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting booking: $e')),
-      );
+      commonWidgets.showToast('Error deleting booking: $e');
     } finally {
       setState(() {
         isDeleting = false;
@@ -676,6 +671,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: viewUtil.isTablet ? 22 :17),
                       ),
                     ),
@@ -793,21 +789,43 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     );
                   },
                   child: ListTile(
-                    leading: CircleAvatar(
-                      child: Icon(Icons.person,color: Colors.grey,size: 30),
+                    leading: FutureBuilder<UserDataModel>(
+                      future: userData,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        } else if (snapshot.hasError || !snapshot.hasData || snapshot.data?.userProfile == null) {
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            child: Icon(Icons.person, color: Colors.grey, size: 30),
+                          );
+                        } else {
+                          final user = snapshot.data!;
+                          return CircleAvatar(
+                            backgroundColor: Colors.grey[200],
+                            radius: 24,
+                            backgroundImage: NetworkImage(
+                              "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(widget.firstName +' '+ widget.lastName,
-                          style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-                        Icon(Icons.edit,color: Colors.grey,size: 20),
-                      ],
+                    title: Text(
+                      widget.firstName +' '+ widget.lastName,
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(widget.id,
-                      style: TextStyle(color: Color(0xff8E8D96),
-                      ),),
-                  ),
+                    subtitle: Text(
+                      widget.id,
+                      style: TextStyle(color: Color(0xff8E8D96)),
+                    ),
+                    trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
+                  )
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -838,9 +856,22 @@ class _ChooseVendorState extends State<ChooseVendor> {
                       ),
                     ),
                     onTap: () async {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => Center(
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20)
+                                ),
+                                padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+                                child: CircularProgressIndicator())),
+                      );
                       try {
                         final bookingData = await booking;
                         if (bookingData != null) {
+                          Navigator.pop(context);
                           bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus']== 'NotPaid'
                               ? Navigator.push(
                                   context,
@@ -921,10 +952,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                                 id: widget.id,
                                             partnerName: '',
                                             partnerId: bookingData['partner'] ?? '',
-                                            oldQuotePrice: '',
+                                            oldQuotePrice: 0,
                                             paymentStatus: bookingData['paymentStatus'] ?? '',
-                                            quotePrice: '',
-                                              advanceOrPay: bookingData['remainingBalance'] ?? 0,
+                                            quotePrice: 0,
+                                              advanceOrPay: bookingData['remainingBalance']??0,
                                             bookingStatus: bookingData['bookingStatus'] ?? '',
                                             email: widget.email,
                                               )),
@@ -979,6 +1010,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                               )),
                                     );
                         } else {
+                          Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -990,11 +1022,8 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           );
                         }
                       } catch (e) {
-                        // Handle errors here
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Error fetching booking details: $e')),
-                        );
+                        Navigator.pop(context);
+                        commonWidgets.showToast('Error fetching booking details: $e');
                       }
                     }),
                 ListTile(
@@ -1136,7 +1165,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                   : MediaQuery.of(context).size.width,
                               height: viewUtil.isTablet
                                   ? MediaQuery.of(context).size.height * 0.08
-                                  : MediaQuery.of(context).size.height * 0.1,
+                                  : MediaQuery.of(context).size.height * 0.12,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1144,6 +1173,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                     padding: EdgeInsets.only(top: 30,bottom: 10),
                                     child: Text(
                                       'are_you_sure_you_want_to_logout'.tr(),
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                                     ),
                                   ),
@@ -1190,9 +1220,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
               } else {
                 fetchCoordinates();
               }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Swipe to refresh will be enabled after 3 minutes'.tr())),
-              );
+              commonWidgets.showToast('Swipe to refresh will be enabled after 3 minutes'.tr());
             },
             child: SingleChildScrollView(
               physics: AlwaysScrollableScrollPhysics(),
@@ -1444,9 +1472,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 itemBuilder: (context, index) {
                                   final vendor = vendors[index];
                                   final partnerId = vendor['partnerId']?.toString() ?? '';
-                                  final oldQuotePrice = vendor['oldQuotePrice']?.toString() ?? '';
+                                  final oldQuotePrice = vendor['oldQuotePrice'] ?? 0;
                                   final partnerName = vendor['partnerName']?.toString() ?? '';
-                                  final quotePrice = vendor['quotePrice']?.toString() ?? '0';
+                                  final quotePrice = vendor['quotePrice'] ?? 0;
                                   return Padding(
                                     padding: const EdgeInsets.only(left: 5),
                                     child: RadioListTile<String>(
@@ -1481,11 +1509,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                         setState(() {
                                           selectedPartnerName = partnerName;
                                           selectedPartnerId = partnerId;
-                                          selectedQuotePrice = int.tryParse(quotePrice);
-                                          selectedOldQuotePrice = int.tryParse(oldQuotePrice);
+                                          selectedQuotePrice = quotePrice;
+                                          selectedOldQuotePrice = oldQuotePrice;
                                           selectedVendorId = value;
-                                          fullAmount = int.tryParse(quotePrice)!;
-                                          advanceAmount = (int.tryParse(quotePrice) ?? 0) ~/ 2;
+                                          fullAmount = quotePrice;
+                                          advanceAmount = quotePrice / 2;
                                           try {
                                             fullPayAmount = fullAmount;
                                             advancePayAmount = advanceAmount;
@@ -1538,11 +1566,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 : () {
                               isPayAdvance =true;
                               showSelectPaymentDialog(
-                                  selectedQuotePrice!,
-                                  selectedPartnerId!,
-                                  selectedOldQuotePrice!,
+                                  selectedQuotePrice??0,
+                                  selectedPartnerId??'',
+                                  selectedOldQuotePrice??0,
                                   widget.bookingId,
-                                  selectedPartnerName!,
+                                  selectedPartnerName??'',
                                   advanceAmount
                               );
                             },
@@ -1579,11 +1607,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
                                 : () async {
                               isPayAdvance =false;
                               showSelectPaymentDialog(
-                                  selectedQuotePrice!,
-                                  selectedPartnerId!,
-                                  selectedOldQuotePrice!,
+                                  selectedQuotePrice??0,
+                                  selectedPartnerId??'',
+                                  selectedOldQuotePrice??0,
                                   widget.bookingId,
-                                  selectedPartnerName!,
+                                  selectedPartnerName??'',
                                   advanceAmount
                               );
                             },
@@ -1608,7 +1636,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     );
   }
 
-  void showSelectPaymentDialog(int amount,String partnerId,int oldQuotePrice,String bookingId,String partnerName,int advanceAmount) {
+  void showSelectPaymentDialog(num amount,String partnerId,num oldQuotePrice,String bookingId,String partnerName,num advanceAmount) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1650,8 +1678,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             Navigator.pop(context);
                           });
                           await initiatePayment('MADA', amount,advanceAmount);
-                          showPaymentDialog(checkOutId??'', integrityId??'', true, amount, partnerId, oldQuotePrice, bookingId, partnerName, advanceAmount
-                          );
+                          showPaymentDialog(checkOutId??'', integrityId??'', true, amount, partnerId, oldQuotePrice, bookingId, partnerName, advanceAmount);
                           },
                         child: Container(
                           color: isMADATapped
@@ -1715,7 +1742,7 @@ class _ChooseVendorState extends State<ChooseVendor> {
     );
   }
 
-  Future initiatePayment(String paymentBrand,int amount,int advanceAmount) async {
+  Future initiatePayment(String paymentBrand,num amount,num advanceAmount) async {
     setState(() {
       commonWidgets.loadingDialog(context, true);
     });
@@ -1744,13 +1771,11 @@ class _ChooseVendorState extends State<ChooseVendor> {
         paymentResult = result['description'] ?? '';
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve payment status.')),
-      );
+      commonWidgets.showToast('Failed to retrieve payment status.');
     }
   }
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, int oldQuotePrice, String bookingId, String partnerName, int advanceAmount) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, num amount, String partnerID, num oldQuotePrice, String bookingId, String partnerName, num advanceAmount) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -1795,8 +1820,19 @@ class _ChooseVendorState extends State<ChooseVendor> {
         ''';
 
   final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
-
-  WebViewController webViewController = WebViewController()
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Center(
+          child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20)
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+              child: CircularProgressIndicator())),
+    );
+    webViewController = WebViewController()
     ..setBackgroundColor(Colors.transparent)
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..addJavaScriptChannel(
@@ -1833,9 +1869,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                           id: widget.id,
                           partnerName: partnerName,
                           partnerId: partnerID,
-                          oldQuotePrice: oldQuotePrice.toString(),
+                          oldQuotePrice: oldQuotePrice,
                           paymentStatus: updatedPaymentStatus.toString(),
-                          quotePrice: amount.toString(),
+                          quotePrice: amount,
                           advanceOrPay: advanceAmount,
                           bookingStatus: bookingStatus??'',
                           email: widget.email,
@@ -1867,9 +1903,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                     id: widget.id,
                     partnerName: partnerName,
                     partnerId: partnerID,
-                    oldQuotePrice: oldQuotePrice.toString(),
+                    oldQuotePrice: oldQuotePrice,
                     paymentStatus: updatedPaymentStatus.toString(),
-                    quotePrice: amount.toString(),
+                    quotePrice: amount,
                     advanceOrPay: advanceAmount,
                     bookingStatus: bookingStatus??'',
                     email: widget.email,
@@ -1905,11 +1941,10 @@ class _ChooseVendorState extends State<ChooseVendor> {
                             id: widget.id,
                             partnerName: partnerName,
                             partnerId: partnerID,
-                            oldQuotePrice: oldQuotePrice
-                                .toString(),
+                            oldQuotePrice: oldQuotePrice,
                             paymentStatus: updatedPaymentStatus
                                 .toString(),
-                            quotePrice: amount.toString(),
+                            quotePrice: amount,
                             advanceOrPay: advanceAmount,
                             bookingStatus: bookingStatus ??
                                 '',
@@ -1938,9 +1973,9 @@ class _ChooseVendorState extends State<ChooseVendor> {
                               id: widget.id,
                               partnerName: partnerName,
                               partnerId: partnerID,
-                              oldQuotePrice: oldQuotePrice.toString(),
+                              oldQuotePrice: oldQuotePrice,
                               paymentStatus: updatedPaymentStatus.toString(),
-                              quotePrice: amount.toString(),
+                              quotePrice: amount,
                               advanceOrPay: advanceAmount,
                               bookingStatus: bookingStatus??'',
                               email: widget.email,
@@ -1983,35 +2018,41 @@ class _ChooseVendorState extends State<ChooseVendor> {
         }
       },
     )
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onPageFinished: (url) {
+          Navigator.of(context).pop();
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                backgroundColor: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.42,
+                    child: WebViewWidget(controller: webViewController),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    )
     ..loadRequest(Uri.dataFromString(
       isMADATapped ? madaHtml : visaHtml,
       mimeType: 'text/html',
       encoding: Encoding.getByName('utf-8'),
     ));
-
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        insetPadding: EdgeInsets.symmetric(horizontal: 10),
-        backgroundColor: Colors.transparent,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.42,
-            child: WebViewWidget(controller: webViewController),
-          ),
-        ),
-      );
-    },
-  );
 }
 
 
-  void advancePaymentSuccessDialog(int amount) {
+  void advancePaymentSuccessDialog(num amount) {
     ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,

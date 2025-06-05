@@ -13,6 +13,7 @@ import 'package:flutter_naqli/SuperUser/Views/booking/superUserType.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/superUser_payment.dart';
 import 'package:flutter_naqli/SuperUser/Views/booking/trigger_booking.dart';
 import 'package:flutter_naqli/SuperUser/Views/profile/user_profile.dart';
+import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
@@ -83,6 +84,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   LineChartData? pendingChartData;
   LineChartData? allChartData;
   int _selectedIndex = 0;
+  late Future<UserDataModel> userData;
 
   @override
   void initState() {
@@ -93,6 +95,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
     completedChartData = completedData(date);
     pendingChartData = pendingData(pendingBookingDate);
     allChartData = mainData(date,pendingBookingDate);
+    userData = userService.getUserData(widget.id,widget.token);
   }
 
 
@@ -151,21 +154,43 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   );
                 },
                 child: ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(Icons.person,color: Colors.grey,size: 30),
+                  leading: FutureBuilder<UserDataModel>(
+                    future: userData,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        );
+                      } else if (snapshot.hasError || !snapshot.hasData || snapshot.data?.userProfile == null) {
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          child: Icon(Icons.person, color: Colors.grey, size: 30),
+                        );
+                      } else {
+                        final user = snapshot.data!;
+                        return CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          radius: 24,
+                          backgroundImage: NetworkImage(
+                            "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
+                          ),
+                        );
+                      }
+                    },
                   ),
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(widget.firstName +' '+ widget.lastName,
-                        style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
-                      Icon(Icons.edit,color: Colors.grey,size: 20),
-                    ],
+                  title: Text(
+                    widget.firstName +' '+ widget.lastName,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(widget.id,
-                    style: TextStyle(color: Color(0xff8E8D96),
-                    ),),
-                ),
+                  subtitle: Text(
+                    widget.id,
+                    style: TextStyle(color: Color(0xff8E8D96)),
+                  ),
+                  trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
+                )
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -339,6 +364,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                             Padding(
                               padding: const EdgeInsets.only(top: 12),
                               child: Text('Total Bookings'.tr(),
+                                textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
                             ),
                           ],
@@ -1000,6 +1026,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                     padding: EdgeInsets.only(top: 30),
                     child: Text(
                       'Are you sure you want to delete this account?'.tr(),
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                     ),
                   ),
@@ -1131,7 +1158,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                   : MediaQuery.of(context).size.width,
               height: viewUtil.isTablet
                   ? MediaQuery.of(context).size.height * 0.08
-                  : MediaQuery.of(context).size.height * 0.1,
+                  : MediaQuery.of(context).size.height * 0.12,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1139,6 +1166,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
                     padding: EdgeInsets.only(top: 30,bottom: 10),
                     child: Text(
                       'are_you_sure_you_want_to_logout'.tr(),
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: viewUtil.isTablet?27:19),
                     ),
                   ),

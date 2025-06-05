@@ -34,7 +34,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   carousel_slider: ^5.0.0
-  flutter_svg: ^2.0.16
+  flutter_svg: ^2.0.17
   file_picker: ^9.0.0
   http: ^1.2.2
   shared_preferences: ^2.1.0
@@ -70,15 +70,19 @@ dependencies:
   http_parser: ^4.0.2
   dio: ^5.3.2
   open_file: ^3.3.2
+  vector_graphics: ^1.1.18
 
   flutter_localizations:
     sdk: flutter
   easy_localization: ^3.0.7
 
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  vector_graphics_compiler: ^1.1.7
+  build_runner: ^2.4.0
 
 flutter_launcher_icons:
   android: "launcher_icons"
@@ -125,7 +129,7 @@ flutter:
     - assets/report_logo.svg
     - assets/help_logo.svg
     - assets/vehicle.svg
-    - assets/bus.png
+    - assets/bus.svg
     - assets/special.svg
     - assets/equipment.svg
     - assets/others.svg
@@ -170,14 +174,9 @@ flutter:
     - assets/edit.svg
     - assets/Mada_Logo.svg
     - assets/visa-mastercard.svg
-    - assets/userHome.svg
     - assets/userHome1.svg
-    - assets/arabicUserHome2.svg
     - assets/userHome2.svg
-    - assets/arabicUserHome3.svg
     - assets/userHome3.svg
-    - assets/arabicUserHome4.svg
-    - assets/userHome4.svg
     - assets/partnerHome.svg
     - assets/images/bus 15 pax.svg
     - assets/images/bus +30 pax.svg
@@ -191,6 +190,8 @@ flutter:
     - assets/translations/
     - assets/vehicles/vehicles.json
     - assets/equipments/equipments.json
+    - assets/buses/buses.json
+    - assets/special/special.json
     - assets/vehicles/short-sides.png
     - assets/vehicles/curtain.png
     - assets/vehicles/refrigerator.png
@@ -229,6 +230,7 @@ flutter:
     - assets/equipments/dump truck.png
     - assets/equipments/fork lift.png
     - assets/equipments/scissor lift.png
+    - assets/vectors/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
@@ -245,11 +247,12 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+
+  fonts:
+     - family: Poppins
+       fonts:
+         - asset: assets/fonts/Poppins-Regular.ttf
+         - asset: assets/fonts/Poppins-Bold.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:

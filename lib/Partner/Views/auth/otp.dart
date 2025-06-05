@@ -130,7 +130,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const PartnerHomePage(partnerName: '',mobileNo: '',password: '',token: '',partnerId: '',)),
+                    MaterialPageRoute(builder: (context) => const PartnerHomePage()),
                   );
                 },
                 child: Align(

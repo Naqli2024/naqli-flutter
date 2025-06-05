@@ -548,7 +548,7 @@ class _EditOperatorState extends State<EditOperator> {
                     }
                   },
                   fileName: istimaraCardName),
-              commonWidgets.buildFileUploadButton(
+              commonWidgets.buildPictureFileUploadButton(
                   context: context,
                   title: 'Picture of Vehicle',
                   onFileSelected: (FilePickerResult? result) {

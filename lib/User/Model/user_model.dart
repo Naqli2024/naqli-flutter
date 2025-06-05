@@ -182,14 +182,31 @@ class UserDataModel{
   final String accountType;
   final String govtId;
   final int idNumber;
+  final Profile? userProfile;
 
-  UserDataModel({required this.firstName, required this.lastName, required this.emailAddress, required this.password, required this.confirmPassword, required this.contactNumber, required this.alternateNumber, required this.address1, required this.address2, required this.city, required this.accountType, required this.govtId, required this.idNumber});
+  UserDataModel({required this.firstName, required this.lastName, required this.emailAddress, required this.password, required this.confirmPassword, required this.contactNumber, required this.alternateNumber, required this.address1, required this.address2, required this.city, required this.accountType, required this.govtId, required this.idNumber, required this.userProfile,});
 
   factory UserDataModel.fromJson(Map<String,dynamic> json){
-    return UserDataModel(firstName: json['firstName']??'', lastName: json['lastName']??'', emailAddress: json['emailAddress']??'', password: json['password']??'', confirmPassword: json['confirmPassword']??'', contactNumber: json['contactNumber']??0, alternateNumber: json['alternateNumber']??'', address1: json['address1']??'', address2: json['address2']??'', city: json['city']??'', accountType: json['accountType']??'', govtId: json['govtId']??'', idNumber: json['idNumber']??0);
+    return UserDataModel(firstName: json['firstName']??'', lastName: json['lastName']??'', emailAddress: json['emailAddress']??'', password: json['password']??'', confirmPassword: json['confirmPassword']??'', contactNumber: json['contactNumber']??0, alternateNumber: json['alternateNumber']??'', address1: json['address1']??'', address2: json['address2']??'', city: json['city']??'', accountType: json['accountType']??'', govtId: json['govtId']??'', idNumber: json['idNumber']??0,
+      userProfile: json['userProfile'] != null
+          ? Profile.fromJson(json['userProfile'])
+          : null,);
   }
 }
 
+class Profile {
+  final String contentType;
+  final String fileName;
+
+  Profile({required this.contentType, required this.fileName});
+
+  factory Profile.fromJson(Map<String, dynamic> json) {
+    return Profile(
+      fileName: json['fileName'] ?? '',
+      contentType: json['contentType'] ?? '',
+    );
+  }
+}
 
 class UserInvoiceModel {
   final bool success;
@@ -257,3 +274,22 @@ class Invoice {
     );
   }
 }
+
+class DriverLocation {
+  final double latitude;
+  final double longitude;
+
+  DriverLocation({required this.latitude, required this.longitude});
+
+  static DriverLocation? fromJson(Map<String, dynamic>? json) {
+    if (json == null || json['latitude'] == null || json['longitude'] == null) {
+      return null;
+    }
+
+    return DriverLocation(
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+    );
+  }
+}
+

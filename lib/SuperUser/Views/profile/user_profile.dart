@@ -57,6 +57,7 @@ class _UserProfileState extends State<UserProfile> {
   late Future<UserDataModel> userData;
   bool isPasswordObscured = true;
   bool isConfirmPasswordObscured = true;
+  String? profileImageUrl;
 
   @override
   void initState() {
@@ -73,6 +74,12 @@ class _UserProfileState extends State<UserProfile> {
       cityController.text = data.city;
       accountTypeController.text = data.accountType;
       idNoController.text = data.idNumber.toString();
+      if (data.userProfile?.fileName != null) {
+        profileImageUrl =
+        'https://prod.naqlee.com/api/image/${data.userProfile!.fileName}';
+      }
+
+      setState(() {});
     }).catchError((e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     });
@@ -174,12 +181,14 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                               child: CircleAvatar(
                                 backgroundColor: Colors.white,
-                                maxRadius: viewUtil.isTablet?60:50,
+                                maxRadius: viewUtil.isTablet ? 60 : 50,
                                 backgroundImage: _profileImage != null
                                     ? FileImage(_profileImage!)
-                                    : null,
-                                child: _profileImage == null
-                                    ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet?70:60)
+                                    : (profileImageUrl != null
+                                    ? NetworkImage(profileImageUrl!) as ImageProvider
+                                    : null),
+                                child: (_profileImage == null && profileImageUrl == null)
+                                    ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet ? 70 : 60)
                                     : null,
                               ),
                             ),

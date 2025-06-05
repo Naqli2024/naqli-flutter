@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 
@@ -230,7 +231,7 @@ class SuperUserServices {
       BuildContext context, {
         required String userId,
         required String paymentBrand,
-        required int amount,
+        required num amount,
       }) async {
     try {
       final url = Uri.parse('${baseUrl}create-payment');
@@ -260,9 +261,7 @@ class SuperUserServices {
         }
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {
@@ -300,9 +299,7 @@ class SuperUserServices {
         };
       } else {
         final message = responseBody['message'] ?? 'Please try again.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        commonWidgets.showToast(message);
       }
       return null;
     } on SocketException {

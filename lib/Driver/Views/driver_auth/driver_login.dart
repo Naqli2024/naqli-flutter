@@ -42,6 +42,7 @@ class _DriverLoginState extends State<DriverLogin> {
 
   void driverLogin() async{
     if (_formKey.currentState!.validate()) {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -50,6 +51,7 @@ class _DriverLoginState extends State<DriverLogin> {
         email: emailController.text,
         password: passwordController.text,
       );
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });

@@ -70,6 +70,7 @@ class _BookingManagerState extends State<BookingManager> {
   String? integrityId;
   String? resultCode;
   String? paymentStatus;
+  late WebViewController webViewController;
 
   @override
   void initState() {
@@ -243,7 +244,7 @@ class _BookingManagerState extends State<BookingManager> {
             showLeading: false,
             showLanguage: true,
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(150.0),
+              preferredSize: const Size.fromHeight(160.0),
               child: Column(
                 children: [
                   AppBar(
@@ -1089,6 +1090,7 @@ class _BookingManagerState extends State<BookingManager> {
                       padding: EdgeInsets.only(top: 30, bottom: 10),
                       child: Text(
                         'Are you sure you want to cancel this booking?'.tr(),
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: viewUtil.isTablet ? 24 :17),
                       ),
                     ),
@@ -1143,9 +1145,7 @@ class _BookingManagerState extends State<BookingManager> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting booking: $e')),
-      );
+      commonWidgets.showToast('Error deleting booking: $e');
     } finally {
       setState(() {
         isDeleting = false;
@@ -1153,7 +1153,7 @@ class _BookingManagerState extends State<BookingManager> {
     }
   }
 
-  void showSelectPaymentDialog(int amount,String partnerId,String bookingId) {
+  void showSelectPaymentDialog(num amount,String partnerId,String bookingId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1259,7 +1259,7 @@ class _BookingManagerState extends State<BookingManager> {
     );
   }
 
-  Future initiatePayment(String paymentBrand,int amount) async {
+  Future initiatePayment(String paymentBrand,num amount) async {
     setState(() {
       commonWidgets.loadingDialog(context, true);
     });
@@ -1288,14 +1288,12 @@ class _BookingManagerState extends State<BookingManager> {
         paymentStatus = result['description'] ?? '';
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to retrieve payment status.')),
-      );
+      commonWidgets.showToast('Failed to retrieve payment status.');
     }
   }
 
 
-  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, int amount, String partnerID, String bookingId) {
+  void showPaymentDialog(String checkOutId, String integrity, bool isMADATapped, num amount, String partnerID, String bookingId) {
     if (checkOutId.isEmpty || integrity.isEmpty) {
       return;
     }
@@ -1377,7 +1375,19 @@ class _BookingManagerState extends State<BookingManager> {
 
     final String madaHtml = visaHtml.replaceAll("VISA MASTER AMEX", "MADA");
 
-    WebViewController webViewController = WebViewController()
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Center(
+          child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20)
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
+              child: CircularProgressIndicator())),
+    );
+    webViewController = WebViewController()
       ..setBackgroundColor(Colors.transparent)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel(
@@ -1427,30 +1437,36 @@ class _BookingManagerState extends State<BookingManager> {
           }
         },
       )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            Navigator.of(context).pop();
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  insetPadding: EdgeInsets.symmetric(horizontal: 10),
+                  backgroundColor: Colors.transparent,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.42,
+                      child: WebViewWidget(controller: webViewController),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      )
       ..loadRequest(Uri.dataFromString(
         isMADATapped ? madaHtml : visaHtml,
         mimeType: 'text/html',
         encoding: Encoding.getByName('utf-8'),
       ));
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          insetPadding: EdgeInsets.symmetric(horizontal: 10),
-          backgroundColor: Colors.transparent,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.42,
-              child: WebViewWidget(controller: webViewController),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

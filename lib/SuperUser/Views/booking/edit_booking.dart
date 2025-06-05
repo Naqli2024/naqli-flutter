@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -70,6 +71,7 @@ class _EditBookingState extends State<EditBooking> {
   int typeCount = 0;
   bool isLocating = false;
   int _selectedIndex = 1;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -121,39 +123,36 @@ class _EditBookingState extends State<EditBooking> {
         if (isPickUp) {
           _pickUpSuggestions = [];
         } else {
-          if (index < _dropPointSuggestions.length) {
-            _dropPointSuggestions[index] = [];
-          }
+          _dropPointSuggestions[index] = [];
         }
       });
       return;
     }
 
-    final url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
 
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final predictions = data['predictions'] as List<dynamic>;
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final predictions = data['predictions'] as List<dynamic>;
 
-        setState(() {
-          if (isPickUp) {
-            _pickUpSuggestions = predictions.map((p) => p['description'] as String).toList();
-          } else {
-            while (_dropPointSuggestions.length <= index) {
-              _dropPointSuggestions.add([]);
+          setState(() {
+            if (isPickUp) {
+              _pickUpSuggestions = predictions.map((p) => p['description'] as String).toList();
+            } else {
+              _dropPointSuggestions[index] = predictions.map((p) => p['description'] as String).toList();
             }
-            _dropPointSuggestions[index] = predictions.map((p) => p['description'] as String).toList();
-          }
-        });
-      } else {
-
+          });
+        } else {
+          return;
+        }
+      } catch (e) {
+        commonWidgets.showToast('An error occurred, Please try again.');
       }
-    } catch (e) {
-      commonWidgets.showToast('An error occurred,Please try again.');
-    }
+    });
   }
 
   Future<void> currentPositionSuggestion() async {
@@ -161,7 +160,7 @@ class _EditBookingState extends State<EditBooking> {
       isLocating = true;
     });
     Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.high,
+      desiredAccuracy: geo.LocationAccuracy.best,
     );
 
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
@@ -208,7 +207,7 @@ class _EditBookingState extends State<EditBooking> {
       isLocating = true;
     });
     Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.high,
+      desiredAccuracy: geo.LocationAccuracy.best,
     );
 
     String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';

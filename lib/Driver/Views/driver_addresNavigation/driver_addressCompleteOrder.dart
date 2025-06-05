@@ -1,8 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_profile.dart';
 import 'package:flutter_naqli/Driver/driver_home_page.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,6 +25,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:location/location.dart' as location_package;
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:slide_to_act/slide_to_act.dart';
 class AddressCompleteOrder extends StatefulWidget {
@@ -43,22 +48,18 @@ class AddressCompleteOrder extends StatefulWidget {
 class _AddressCompleteOrderState extends State<AddressCompleteOrder> with SingleTickerProviderStateMixin{
   final CommonWidgets commonWidgets = CommonWidgets();
   final DriverService driverService = DriverService();
-  GoogleMapController? mapController;
-  final Set<Marker> markers = {};
   final Set<Polyline> polylines = {};
-  LatLng? pickupLatLng;
   LatLng? dropPointLatLng;
   final List<LatLng> dropLatLngs = [];
   String? distance;
   LatLng? currentLocation;
   double pickUpDistance = 0;
   List<double> dropPointsDistance = [];
-  bool isLoading = true;
+  bool isLoading = false;
   bool isCompleting = false;
   String? timeToPickup;
   String? timeToDrop;
   String ? feet;
-  LatLng currentLatLng = LatLng(37.7749, -122.4194);
   String? firstName;
   String? lastName;
   List<Map<String, dynamic>> nearbyPlaces = [];
@@ -83,16 +84,32 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
   bool completeOrder = true;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  Timer? _animationTimer;
+  GoogleMapController? mapController;
+  LatLng? currentLatLng;
+  LatLng? pickupLatLng;
+  Polyline? routePolyline;
+  Set<Marker> markers = {};
+  bool isFetching = false;
+  Timer? _recenterTimer;
+  LatLng? previousLatLng;
+  Timer? _pickupCheckTimer;
+  LatLng? _cachedPickupLatLng;
+  List<LatLng>? _cachedPolylinePoints;
+  DateTime? _lastPolylineRequestTime;
+  Timer? _debounceTimer;
+  int _seconds = 120;
+  Timer? _timer;
+  final List<TextEditingController> otpController = List.generate(4, (_) => TextEditingController());
 
   @override
   void initState() {
     super.initState();
-    fetchCoordinates();
-    _initializePickupLocation();
-    startLocationUpdates();
-    loadCustomArrowIcon();
-    _initLocationListener();
+    _updatePolyline();
+    _getCurrentLocation();
+    _loadCustomMarker();
+    _loadData();
+    _startRecenterTimer();
+    _startPickupCheckTimer();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -102,609 +119,342 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     );
   }
 
-  Future<void> startLocationUpdates() async {
-    LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 1,
-      timeLimit: Duration(milliseconds: 200),
-    );
-
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) async {
-      LatLng newLocation = LatLng(position.latitude, position.longitude);
-      double heading = position.heading;
-
-      if (currentLatLng == null || newLocation != currentLatLng) {
-        // Move marker smoothly
-        animateMarkerAlongPolyline(currentLatLng ?? newLocation, newLocation, heading);
-
-        setState(() {
-          currentLatLng = newLocation;
-        });
-
-        // Move camera dynamically
-        mapController?.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: newLocation,
-              zoom: 18,
-              bearing: heading,
-              tilt: 30,
-            ),
-          ),
-        );
-
-        // Fetch new route dynamically
-        await updateRouteDetails(newLocation);
-      }
-    });
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pickupCheckTimer?.cancel();
+    _recenterTimer?.cancel();
+    _debounceTimer?.cancel();
+    positionStream?.cancel();
+    super.dispose();
   }
 
-  void animateMarkerAlongPolyline(LatLng oldPos, LatLng newPos, double heading) {
-    const int steps = 10;
-    const duration = Duration(milliseconds: 500);
-    int tick = 0;
 
-    _animationTimer?.cancel(); // Cancel any existing timer before starting a new one
+  Future<void> _loadData() async {
+    await _getPickupCoordinates();
+    _trackUserLocation();
+  }
 
-    _animationTimer = Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
-      if (tick > steps || !mounted) { // Check if widget is mounted
-        timer.cancel();
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
         return;
       }
+    }
 
-      double lat = lerp(oldPos.latitude, newPos.latitude, tick / steps);
-      double lng = lerp(oldPos.longitude, newPos.longitude, tick / steps);
-      LatLng interpolatedPos = LatLng(lat, lng);
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.best,
+    );
 
-      if (mounted) {
+    LatLng current = LatLng(position.latitude, position.longitude);
+
+    setState(() {
+      currentLatLng = current;
+      _updateMarkers();
+      _updateDistanceAndTime();
+    });
+    await _getAddressFromCoordinates(current.latitude, current.longitude);
+  }
+
+  Future<void> _getAddressFromCoordinates(double lat, double lng) async {
+    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+    String url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'OK' && data['results'].isNotEmpty) {
+        String address = data['results'][0]['formatted_address'];
+
         setState(() {
-          currentLocationMarker = Marker(
-            markerId: const MarkerId('current_location'),
-            position: interpolatedPos,
-            icon: customArrowIcon!,
-            rotation: heading,
-            anchor: const Offset(0.5, 0.5),
+          currentPlace = address;
+        });
+      } else {
+        print('No address found for coordinates.');
+      }
+    } else {
+      print('Failed to fetch address.');
+    }
+  }
+
+  Future<void> _getPickupCoordinates() async {
+    if (_cachedPickupLatLng != null) {
+      setState(() {
+        pickupLatLng = _cachedPickupLatLng;
+        _updateMarkers();
+      });
+      return;
+    }
+
+    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+    String url = 'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(widget.pickUp)}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'OK') {
+        LatLng newPickupLatLng = LatLng(
+          data['results'][0]['geometry']['location']['lat'],
+          data['results'][0]['geometry']['location']['lng'],
+        );
+        setState(() {
+          pickupLatLng = newPickupLatLng;
+          _cachedPickupLatLng = newPickupLatLng;
+          _updateMarkers();
+        });
+        await driverService.driverCurrentCoordinates(context,partnerId: widget.partnerId,operatorId: widget.id,latitude: pickupLatLng!.latitude,longitude: pickupLatLng!.longitude);
+      }
+    }
+  }
+
+  Future<void> _updatePolyline() async {
+    if (currentLatLng == null || pickupLatLng == null) return;
+
+    // Throttle API calls: Only request if 5 sec has passed since the last request
+    if (_lastPolylineRequestTime != null &&
+        DateTime.now().difference(_lastPolylineRequestTime!).inSeconds < 5) {
+      return;
+    }
+
+    _lastPolylineRequestTime = DateTime.now();
+
+    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+    String url = 'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng!.latitude},${currentLatLng!.longitude}&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'OK') {
+        List<LatLng> polylineCoordinates = _decodePolyline(data['routes'][0]['overview_polyline']['points']);
+
+        setState(() {
+          routePolyline = Polyline(
+            polylineId: const PolylineId('route'),
+            color: Colors.blue,
+            width: 5,
+            points: polylineCoordinates,
           );
         });
       }
+    }
+  }
 
-      tick++;
+  void _startRecenterTimer() {
+    _recenterTimer = Timer.periodic(const Duration(seconds: 10), (Timer timer) {
+      if (currentLatLng != null && mapController != null) {
+        mapController!.animateCamera(
+          CameraUpdate.newLatLng(currentLatLng!),
+        );
+      }
     });
   }
 
-  double lerp(double start, double end, double t) {
-    return start + (end - start) * t;
-  }
+  void _handleNewLocation(Position position) async {
+    LatLng newLatLng = LatLng(position.latitude, position.longitude);
 
-  Future<void> fetchCoordinates() async {
-    try {
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      setState(() {
-        isLoading = true;
-      });
-      String pickupPlace = widget.pickUp;
-
-      Position currentPosition = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      LatLng currentLatLng =
-      LatLng(currentPosition.latitude, currentPosition.longitude);
-
-      setState(() {
-        markers.clear();
-        polylines.clear();
-      });
-
-      String pickupUrl =
-          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupPlace)}&key=$apiKey';
-      final pickupResponse = await http.get(Uri.parse(pickupUrl));
-
-      if (pickupResponse.statusCode == 200) {
-        final pickupData = json.decode(pickupResponse.body);
-
-        if (pickupData != null && pickupData['status'] == 'OK') {
-          final pickupLocation = pickupData['results']?[0]['geometry']?['location'];
-          final pickupAddress = pickupData['results']?[0]['formatted_address'];
-
-          if (pickupLocation != null) {
-            LatLng pickupLatLng =
-            LatLng(pickupLocation['lat'], pickupLocation['lng']);
-            double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
-
-            BitmapDescriptor customIcon = await BitmapDescriptor.fromAssetImage(
-              const ImageConfiguration(size: Size(100, 48)),
-              'assets/carDirection.png',
-            );
-
-            setState(() {
-              markers.add(
-                Marker(
-                    markerId: const MarkerId('currentLocation'),
-                    position: currentLatLng,
-                    infoWindow: InfoWindow(
-                      title: 'Current Location'.tr(),
-                      snippet: '${'Distance to Pickup:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
-                    ),
-                    icon: customIcon),
-              );
-
-              markers.add(
-                Marker(
-                  markerId: const MarkerId('pickup'),
-                  position: pickupLatLng,
-                  infoWindow: InfoWindow(
-                    title: 'Pickup Point'.tr(),
-                    snippet: '$pickupAddress - ${'Distance:'.tr()} ${distanceToPickup.toStringAsFixed(2)} km',
-                  ),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed),
-                ),
-              );
-            });
-
-            String directionsUrlFromCurrentToPickup =
-                'https://maps.googleapis.com/maps/api/directions/json?origin=${currentLatLng.latitude},${currentLatLng.longitude}&destination=${pickupLatLng.latitude},${pickupLatLng.longitude}&key=$apiKey';
-            final directionsResponseFromCurrentToPickup =
-            await http.get(Uri.parse(directionsUrlFromCurrentToPickup));
-
-            if (directionsResponseFromCurrentToPickup.statusCode == 200) {
-              final directionsData =
-              json.decode(directionsResponseFromCurrentToPickup.body);
-              if (directionsData['status'] == 'OK') {
-                final polylinePoints =
-                directionsData['routes'][0]['overview_polyline']['points'];
-                List<LatLng> routePoints = _decodePolyline(polylinePoints);
-
-                setState(() {
-                  polylines.add(Polyline(
-                    polylineId: const PolylineId('currentToPickup'),
-                    color: Colors.blue,
-                    width: 5,
-                    points: routePoints,
-                  ));
-                });
-                double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng);
-                pickUpDistance = distanceToPickup;
-                final durationToPickup =
-                directionsData['routes'][0]['legs'][0]['duration']['text'];
-                timeToPickup = durationToPickup;
-                mapController?.animateCamera(CameraUpdate.newLatLngZoom(
-                    LatLng(
-                        (currentLatLng.latitude + pickupLatLng.latitude) / 2,
-                        (currentLatLng.longitude + pickupLatLng.longitude) / 2),
-                    10));
-              }
-            }
-
-            setState(() {
-              isLoading = false;
-            });
-          }
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+    // Skip update if movement is small (within 10 meters)
+    if (currentLatLng != null &&
+        Geolocator.distanceBetween(
+            currentLatLng!.latitude, currentLatLng!.longitude,
+            newLatLng.latitude, newLatLng.longitude) < 10) {
+      return;
     }
-  }
 
-  Future<List<LatLng>> fetchDirections(LatLng start, LatLng destination) async {
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    final String url = 'https://maps.googleapis.com/maps/api/directions/json'
-        '?origin=${start.latitude},${start.longitude}'
-        '&destination=${destination.latitude},${destination.longitude}'
-        '&key=$apiKey';
+    setState(() {
+      currentLatLng = newLatLng;
+      _updateMarkers();
+      _updateDistanceAndTime();
+    });
 
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      List<LatLng> points = [];
-      if (data['routes'].isNotEmpty) {
-        final polylinePoints = data['routes'][0]['overview_polyline']['points'];
-        points = _decodePolyline(polylinePoints);
-      }
-      return points;
-    } else {
-      throw Exception('Failed to fetch directions');
-    }
-  }
-
-  String formatDistance(double? distanceInKm) {
-    if (distanceInKm == null || distanceInKm <= 0) {
-      return '0 ft';
-    }
-    double distanceInFeet = distanceInKm * 3280.84;
-    double distanceInMiles = distanceInFeet / 5280;
-    if (distanceInMiles < 1) {
-      return '${distanceInFeet.toStringAsFixed(0)} ft';
-    } else {
-      int miles = distanceInMiles.floor();
-      double remainingFeet = distanceInFeet - (miles * 5280);
-      return '${miles} mi ${remainingFeet.toStringAsFixed(0)} ft';
-    }
-  }
-
-  Future<void> recenterMap() async {
-    try {
-      Position currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      LatLng currentLatLng = LatLng(
-        currentPosition.latitude,
-        currentPosition.longitude,
-      );
-      double heading = currentPosition.heading;
-
-      // Ensure mapController is available
-      if (mapController == null) return;
-
-      // Move camera to the current location first
-      await mapController!.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: currentLatLng,
-          zoom: 18.5, // Adjust zoom level for better visibility
-          tilt: 25,   // Slight tilt for a 3D effect
-          bearing: heading, // Rotate based on user heading
-        ),
-      ));
-
-      // If there's no pickup location, return
-      if (pickupLatLng == null) return;
-
-      LatLng pickUpLocation = LatLng(
-        pickupLatLng!.latitude,
-        pickupLatLng!.longitude,
+    await _updatePolyline();
+    // Debounce polyline update (avoid unnecessary API calls)
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(seconds: 5), () async {
+      await driverService.driverCurrentCoordinates(
+        context,
+        partnerId: widget.partnerId,
+        operatorId: widget.id,
+        latitude: currentLatLng!.latitude,
+        longitude: currentLatLng!.longitude,
       );
 
-      // Fetch route points
-      List<LatLng> routePoints = await fetchDirections(
-        currentLatLng,
-        pickUpLocation,
-      );
+    });
 
-      if (routePoints.isNotEmpty) {
-        setState(() {
-          polylines.clear(); // Clear existing route before adding new one
-          polylines.add(Polyline(
-            polylineId: const PolylineId('route'),
-            points: routePoints,
-            color: Colors.blue,
-            width: 8,
-            endCap: Cap.roundCap,
-            startCap: Cap.roundCap,
-            jointType: JointType.round,
-          ));
-        });
-
-        // Adjust camera to fit both points
-        LatLngBounds bounds = LatLngBounds(
-          southwest: LatLng(
-            routePoints.map((point) => point.latitude).reduce((a, b) => a < b ? a : b),
-            routePoints.map((point) => point.longitude).reduce((a, b) => a < b ? a : b),
-          ),
-          northeast: LatLng(
-            routePoints.map((point) => point.latitude).reduce((a, b) => a > b ? a : b),
-            routePoints.map((point) => point.longitude).reduce((a, b) => a > b ? a : b),
-          ),
-        );
-
-        // Animate camera to fit the route
-        await mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred. Please try again.')),
-        );
-      }
+    if (mapController != null) {
+      mapController!.animateCamera(CameraUpdate.newLatLng(currentLatLng!));
     }
+
   }
 
-  double _haversineDistance(LatLng start, LatLng end) {
-    const double R = 6371;
-    double dLat = _degToRad(end.latitude - start.latitude);
-    double dLon = _degToRad(end.longitude - start.longitude);
-    double a =
-        sin(dLat / 2) * sin(dLat / 2) +
-            cos(_degToRad(start.latitude)) * cos(_degToRad(end.latitude)) *
-                sin(dLon / 2) * sin(dLon / 2);
+  void _trackUserLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        return;
+      }
+    }
+
+    positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 5, // Update only if moved more than 10 meters
+      ),
+    ).listen((Position position) {
+      _handleNewLocation(position);
+    });
+  }
+
+  void _updateDistanceAndTime() {
+    if (currentLatLng == null || pickupLatLng == null) return;
+
+    double distanceMeters = Geolocator.distanceBetween(
+      currentLatLng!.latitude, currentLatLng!.longitude,
+      pickupLatLng!.latitude, pickupLatLng!.longitude,
+    );
+
+    double distanceKm = distanceMeters / 1000;
+    double distanceFeet = distanceMeters * 3.281;
+
+    String feetDisplayValue = distanceFeet >= 5280
+        ? "${(distanceFeet / 5280).toStringAsFixed(1)} mi ${(distanceFeet % 5280).round()} ft"
+        : "${distanceFeet.toStringAsFixed(0)} ft";
+
+    int timeInMinutes = ((distanceKm / 40.0) * 60).ceil();
+    String timeDisplay = timeInMinutes < 1
+        ? "${((distanceKm / 40.0) * 3600).toStringAsFixed(0)} sec"
+        : "$timeInMinutes min";
+
+    setState(() {
+      pickUpDistance = distanceKm;
+      feet = feetDisplayValue;
+      timeToPickup = timeDisplay;
+    });
+  }
+
+  static double _haversineDistance(LatLng start, LatLng end) {
+    const double R = 6371; // Earth radius in KM
+    double lat1 = start.latitude * pi / 180;
+    double lon1 = start.longitude * pi / 180;
+    double lat2 = end.latitude * pi / 180;
+    double lon2 = end.longitude * pi / 180;
+
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+
+    double a = pow(sin(dLat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R * c;
+
+    double distance = R * c; // Distance in KM
+    return distance; // Distance in KM
   }
 
-  double _degToRad(double deg) {
-    return deg * (pi / 180);
+  double _calculateBearing(LatLng start, LatLng end) {
+    double lat1 = start.latitude * pi / 180;
+    double lat2 = end.latitude * pi / 180;
+    double deltaLon = (end.longitude - start.longitude) * pi / 180;
+
+    double y = sin(deltaLon) * cos(lat2);
+    double x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon);
+    double bearing = atan2(y, x);
+
+    return (bearing * 180 / pi + 360) % 360; // Convert to degrees
   }
 
-  List<LatLng> _decodePolyline(String polyline) {
-    List<LatLng> points = [];
-    int index = 0;
-    int len = polyline.length;
-    int lat = 0;
-    int lng = 0;
+  void _updateMarkers() {
+    if (currentLatLng == null || pickupLatLng == null) return;
+
+    markers.clear();
+
+    double bearing = _calculateBearing(previousLatLng ?? currentLatLng!, currentLatLng!);
+    previousLatLng = currentLatLng;  // Store the last known position
+
+    markers.add(Marker(
+      markerId: const MarkerId('currentLocation'),
+      position: currentLatLng!,
+      icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+      infoWindow: const InfoWindow(title: 'Your Location'),
+      rotation: bearing, // Rotate arrow towards movement direction
+    ));
+
+    markers.add(Marker(
+      markerId: const MarkerId('pickupLocation'),
+      position: pickupLatLng!,
+      infoWindow: InfoWindow(title: 'Pickup Location: ${widget.pickUp}'),
+    ));
+  }
+
+  void recenterMap() {
+    if (currentLatLng == null || pickupLatLng == null || mapController == null) return;
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        min(currentLatLng!.latitude, pickupLatLng!.latitude),
+        min(currentLatLng!.longitude, pickupLatLng!.longitude),
+      ),
+      northeast: LatLng(
+        max(currentLatLng!.latitude, pickupLatLng!.latitude),
+        max(currentLatLng!.longitude, pickupLatLng!.longitude),
+      ),
+    );
+
+    mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80)); // Padding for better view
+  }
+
+  void _loadCustomMarker() async {
+    final ByteData byteData = await rootBundle.load('assets/arrow.png');
+    final Uint8List markerImage = byteData.buffer.asUint8List();
+
+    img.Image? originalImage = img.decodeImage(markerImage);
+
+    if (originalImage != null) {
+      img.Image resizedImage = img.copyResize(originalImage, width: 200, height: 200);
+
+      final Uint8List resizedMarkerImage = Uint8List.fromList(img.encodePng(resizedImage));
+
+      customArrowIcon = BitmapDescriptor.fromBytes(resizedMarkerImage);
+
+      setState(() {});
+    }
+  }
+
+  List<LatLng> _decodePolyline(String encoded) {
+    List<LatLng> polylineCoordinates = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
 
     while (index < len) {
-      int shift = 0;
-      int result = 0;
-      int b;
+      int shift = 0, result = 0;
+      int byte;
       do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1F) << shift;
         shift += 5;
-      } while (b >= 0x20);
-      int dlat = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lat += dlat;
+      } while (byte >= 0x20);
+      int deltaLat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += deltaLat;
 
       shift = 0;
       result = 0;
       do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
+        byte = encoded.codeUnitAt(index++) - 63;
+        result |= (byte & 0x1F) << shift;
         shift += 5;
-      } while (b >= 0x20);
-      int dlng = (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
-      lng += dlng;
+      } while (byte >= 0x20);
+      int deltaLng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += deltaLng;
 
-      points.add(LatLng(lat / 1E5, lng / 1E5));
+      polylineCoordinates.add(LatLng(lat / 1E5, lng / 1E5));
     }
 
-    return points;
+    return polylineCoordinates;
   }
 
-  String calculateFeet(Position position) {
-    double distanceInMeters = position.accuracy;
-    return (distanceInMeters * 3.28084).toStringAsFixed(0);
-  }
-
-  @override
-  void dispose() {
-    positionStreamSubscription?.cancel();
-    positionStream.cancel();
-    _locationTimer?.cancel();
-    _animationTimer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> loadCustomArrowIcon() async {
-    final Uint8List markerIcon = await getBytesFromAsset('assets/arrow.png', 140);
-    customArrowIcon = BitmapDescriptor.fromBytes(markerIcon);
-  }
-
-  Future<Uint8List> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
-  }
-
-  void _initLocationListener() async {
-    location_package.Location location = location_package.Location();
-    location_package.PermissionStatus permission = await location.requestPermission();
-
-    if (permission == location_package.PermissionStatus.granted) {
-      location.onLocationChanged.listen((location_package.LocationData newLocation) {
-        currentLatLng = LatLng(newLocation.latitude!, newLocation.longitude!);
-        _updateRealTimeData(currentLatLng);
-      });
-    } else {
-      return;
-    }
-  }
-
-  void _initializePickupLocation() async {
-    String cleanedPickup = widget.pickUp.trim();
-
-    if (cleanedPickup.isNotEmpty) {
-      LatLng? latLng = await getLatLngFromAddress(cleanedPickup);
-
-      if (latLng != null) {
-        pickupLatLng = latLng;
-      } else {
-        return;
-      }
-    } else {
-      return;
-    }
-  }
-
-  Future<LatLng?> getLatLngFromAddress(String address) async {
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    String url = 'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$apiKey';
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['status'] == 'OK') {
-        double lat = data['results'][0]['geometry']['location']['lat'];
-        double lng = data['results'][0]['geometry']['location']['lng'];
-        return LatLng(lat, lng);
-      } else {
-
-      }
-    } else {
-
-    }
-    return null;
-  }
-
-  Future<void> _updateRealTimeData(LatLng currentLatLng) async {
-    try {
-      if (!mounted || pickupLatLng == null) return;
-
-      double distanceToPickup = _haversineDistance(currentLatLng, pickupLatLng!);
-      String updatedFeet = formatDistance(distanceToPickup);
-
-      // Fetch route points
-      List<LatLng> updatedRoutePoints = await fetchDirections(currentLatLng, pickupLatLng!);
-      await fetchNearbyPlaces(currentLatLng);
-
-      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      String reverseGeocodeUrl =
-          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentLatLng.latitude},${currentLatLng.longitude}&key=$apiKey';
-      final reverseGeocodeResponse = await http.get(Uri.parse(reverseGeocodeUrl));
-
-      String currentLocationName = 'Unknown Location';
-
-      if (reverseGeocodeResponse.statusCode == 200) {
-        final reverseGeocodeData = json.decode(reverseGeocodeResponse.body);
-
-        if (reverseGeocodeData['status'] == 'OK') {
-          final currentAddress = reverseGeocodeData['results']?[0]['formatted_address'];
-          currentPlace = currentAddress;
-          if (currentAddress != null) {
-            currentLocationName = currentAddress;
-          }
-        }
-      }
-      String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?'
-          'origin=${currentLatLng.latitude},${currentLatLng.longitude}'
-          '&destination=${pickupLatLng!.latitude},${pickupLatLng!.longitude}'
-          '&mode=driving&key=$apiKey';
-
-      final directionsResponse = await http.get(Uri.parse(directionsUrl));
-
-      if (!mounted) return;
-
-      if (directionsResponse.statusCode == 200) {
-        final directionsData = json.decode(directionsResponse.body);
-        if (directionsData['status'] == 'OK') {
-          final durationToPickup = directionsData['routes'][0]['legs'][0]['duration']['text'];
-          final placeName = directionsData['routes'][0]['legs'][0]['end_address'];
-
-          setState(() {
-            pickUpDistance = distanceToPickup;
-            timeToPickup = durationToPickup;
-            feet = updatedFeet;
-
-            polylines.clear();
-            polylines.add(Polyline(
-              polylineId: const PolylineId('currentToPickup'),
-              color: Colors.blue,
-              width: 8,
-              points: updatedRoutePoints,
-              endCap: Cap.roundCap,
-              startCap: Cap.roundCap,
-              jointType: JointType.round,
-            ));
-
-            // Update user marker
-            markers.removeWhere((m) => m.markerId == const MarkerId('currentLocation'));
-            markers.add(Marker(
-              markerId: const MarkerId('currentLocation'),
-              position: currentLatLng,
-              infoWindow: InfoWindow(
-                title: placeName,
-                snippet: 'Distance to Pickup: ${distanceToPickup.toStringAsFixed(2)} km\nFeet: $feet\nTime: $timeToPickup',
-              ),
-              icon: customArrowIcon!,
-            ));
-          });
-
-          // 🗺 Update camera to focus on user's current location
-          if (mapController != null) {
-            mapController!.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 15.5));
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred. Please try again.')),
-        );
-      }
-    }
-  }
-
-  void updateLocationMarker(LatLng position, double heading) {
-    if (mapController != null && customArrowIcon != null) {
-      setState(() {
-        currentLocationMarker = Marker(
-          markerId: MarkerId('current_location'),
-          position: position,
-          icon: customArrowIcon!,
-          rotation: heading, // Rotates according to movement direction
-          anchor: Offset(0.5, 0.5),
-        );
-      });
-
-      mapController?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: position,
-            zoom: 16,  // Adjust zoom level
-            bearing: heading, // Rotate map smoothly
-            tilt: 30,  // Slight tilt for 3D effect
-          ),
-        ),
-      );
-    }
-  }
-
-  void updateCameraPosition(LatLng newLocation) {
-    mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: newLocation,
-          zoom: 17.0,
-          bearing: 45,
-          tilt: 30,
-        ),
-      ),
-    );
-  }
-
-  Future<void> updateRouteDetails(LatLng newLocation) async {
-    if (pickupLatLng == null) return;
-
-    List<LatLng> newRoute = await fetchDirections(newLocation, pickupLatLng!);
-    setState(() {
-      polylines.clear();
-      polylines.add(Polyline(
-        polylineId: const PolylineId('dynamicRoute'),
-        color: Colors.blue,
-        width: 8,
-        points: newRoute,
-      ));
-    });
-  }
-
-  Future<void> fetchNearbyPlaces(LatLng currentLatLng) async {
-    setState(() {
-      isLoading = true;
-    });
-
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    String nearbyPlacesUrl =
-        'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${currentLatLng.latitude},${currentLatLng.longitude}&radius=1500&type=restaurant&key=$apiKey';
-
-    final response = await http.get(Uri.parse(nearbyPlacesUrl));
-
-    if (response.statusCode == 200) {
-      final nearbyPlacesData = json.decode(response.body);
-
-      setState(() {
-        nearbyPlaces = [];
-      });
-
-      if (nearbyPlacesData['status'] == 'OK') {
-        for (var place in nearbyPlacesData['results']) {
-          nearbyPlaces.add({
-            'name': place['name'],
-            'address': place['vicinity'],
-          });
-        }
-        setState(() {
-          currentIndex = 0;
-        });
-      } else {
-
-      }
-    } else {
-
-    }
-
-    setState(() {
-      isLoading = false;
+  void _startPickupCheckTimer() {
+    _pickupCheckTimer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
+      _updateDistanceAndTime();
     });
   }
 
@@ -722,7 +472,350 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     return latLngList;
   }
 
+  void resendOtp() async {
+    for (var controller in otpController) {
+      controller.clear();
+    }
+    await driverService.driverStartTripOTP(
+      context,
+      bookingId: widget.bookingId,
+    );
+  }
 
+  void verifyOtp() async {
+    String otp = otpController.map((controller) => controller.text).join();
+
+    if (otp.isEmpty || otp.length < otpController.length) {
+      CommonWidgets().showToast('please_enter_otp'.tr());
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    bool isVerified = await driverService.driverVerifyOTP(
+      context,
+      bookingId: widget.bookingId,
+      otp: otp,
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+    if (isVerified != true) {
+      CommonWidgets().showToast('Please enter correct OTP'.tr());
+      return;
+    }
+    Navigator.pop(context);
+   await showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        Future.delayed(Duration(seconds: 3), () {
+          if (dialogContext.mounted) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+        ViewUtil viewUtil = ViewUtil(context);
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: AlertDialog(
+            shadowColor: Colors.black,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.white,
+            contentPadding: EdgeInsets.fromLTRB(20, 30, 20, 20),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: viewUtil.isTablet
+                  ? MediaQuery.of(context).size.height * 0.4
+                  :MediaQuery.of(context).size.height * 0.35,
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Center(
+                        child: SvgPicture.asset(
+                          'assets/payment_success.svg',
+                          width: MediaQuery.of(context).size.width,
+                          height: viewUtil.isTablet
+                              ? MediaQuery.of(context).size.height * 0.25
+                              : MediaQuery.of(context).size.height * 0.2,
+                        ),
+                      ),
+                      Positioned(
+                        top: -15,
+                        right: -15,
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(FontAwesomeIcons.multiply, size: viewUtil.isTablet ? 30 : 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                    child: Text(
+                      'OTP Verified'.tr(),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 30:25, fontWeight: FontWeight.bold,color: Colors.green),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Text(
+                      'Your trip is Starting'.tr(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 25:20,fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('driverAddressInteractionActive', false);
+    await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+        firstName: widget.firstName,
+        lastName: widget.lastName,
+        token: widget.token,
+        id: widget.id,
+        partnerId: widget.partnerId,
+        mode: 'online')));
+  }
+
+  void showOTPDialog() {
+    ViewUtil viewUtil = ViewUtil(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              void _startTimer() {
+                _timer?.cancel(); // Cancel any existing timer
+                _seconds = 120; // Reset timer
+                _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                  setState(() {
+                    if (_seconds > 0) {
+                      _seconds--;
+                    } else {
+                      _timer?.cancel();
+                    }
+                  });
+                });
+              }
+
+              String _formattedTime() {
+                final minutes = _seconds ~/ 60;
+                final seconds = _seconds % 60;
+                return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+              }
+
+              if (_timer == null) {
+                _startTimer();
+              }
+
+              return Center(
+                child: SingleChildScrollView(
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    backgroundColor: Colors.white,
+                    contentPadding: const EdgeInsets.all(20),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('otp_verification'.tr(),
+                              style: TextStyle(fontSize: viewUtil.isTablet ?24 :20, fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            "Please enter the OTP sent to the customer".tr(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: viewUtil.isTablet ?23 :16),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: List.generate(4, (index) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: SizedBox(
+                                  width: viewUtil.isTablet ? 60 : 50,
+                                  child: TextField(
+                                    controller: otpController[index],
+                                    maxLength: 1,
+                                    textAlign: TextAlign.center,
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                    decoration: InputDecoration(
+                                      counterText: '',
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xffBCBCBC),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      if (value.length == 1 && index < 5) {
+                                        FocusScope.of(context).nextFocus();
+                                      } else if (value.isEmpty && index > 0) {
+                                        FocusScope.of(context).previousFocus();
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: RichText(
+                              text: TextSpan(
+                                text: "Remaining time:".tr(),
+                                style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet ? 20 : 15),
+                                children: <TextSpan>[
+                                  TextSpan(
+                                    text: _formattedTime(),
+                                    style: TextStyle(color: Colors.blue, fontSize: viewUtil.isTablet ? 20 : 15),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                resendOtp();
+                                _startTimer();
+                              });
+                            },
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: RichText(
+                                text: TextSpan(
+                                  text: "didn't_receive_otp".tr(),
+                                  style: TextStyle(color: Colors.black, fontSize: viewUtil.isTablet ? 20 : 15),
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                      text: 'resend'.tr(),
+                                      style: TextStyle(color: Colors.blue, fontSize: viewUtil.isTablet ? 20 : 15),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 30, 8, 8),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xff6A66D1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              onPressed: () {
+                                verifyOtp();
+                              },
+                              child: isLoading
+                                  ? Container(
+                                height: 10,
+                                width: 10,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                                  : Text(
+                                'Verify'.tr(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: viewUtil.isTablet ?23 :18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            width: MediaQuery.of(context).size.width,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    side: BorderSide(color: Color(0xff6A66D1) )
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text(
+                                'Cancel'.tr(),
+                                style: TextStyle(
+                                  color: Color(0xff6A66D1),
+                                  fontSize: viewUtil.isTablet ?23 :18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ).then((_) {
+      _timer?.cancel();
+      _timer = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -733,8 +826,113 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
             context,
-            showLeading: false,
+            showLeading: true,
           User: widget.firstName +' '+ widget.lastName,
+        ),
+        drawer: Drawer(
+          backgroundColor: Colors.white,
+          child: ListView(
+            children: <Widget>[
+              ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SvgPicture.asset('assets/naqlee-logo.svg',
+                        height: MediaQuery.of(context).size.height * 0.05),
+                    GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                        },
+                        child: const CircleAvatar(child: Icon(FontAwesomeIcons.multiply)))
+                  ],
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(Icons.person,size: 30,),
+                ),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('Profile'.tr(),style: TextStyle(fontSize: 25),),
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                      DriverProfile(firstName: widget.firstName,lastName: widget.lastName,operatorId: widget.id, partnerId: widget.partnerId,)
+                  ));
+                },
+              ),
+              ListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Icon(Icons.logout,color: Colors.red,size: 30,),
+                ),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 15),
+                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Directionality(
+                        textDirection: ui.TextDirection.ltr,
+                        child: AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          backgroundColor: Colors.white,
+                          contentPadding: const EdgeInsets.all(20),
+                          content: Container(
+                            width: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.width * 0.6
+                                : MediaQuery.of(context).size.width,
+                            height: viewUtil.isTablet
+                                ? MediaQuery.of(context).size.height * 0.08
+                                : MediaQuery.of(context).size.height * 0.12,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(top: 30,bottom: 10),
+                                  child: Text(
+                                    'are_you_sure_you_want_to_logout'.tr(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('yes'.tr(),
+                                style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
+                              onPressed: () async {
+                                await clearDriverData();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => DriverLogin()),
+                                );
+                              },
+                            ),
+                            TextButton(
+                              child: Text('no'.tr(),
+                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -747,13 +945,20 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                       mapType: MapType.normal,
                       onMapCreated: (GoogleMapController controller) {
                         mapController = controller;
+                        Future.delayed(Duration(milliseconds: 500), () {
+                          if (currentLatLng != null) {
+                            mapController!.animateCamera(
+                              CameraUpdate.newLatLngZoom(currentLatLng!, 16),
+                            );
+                          }
+                        });
                       },
                       initialCameraPosition: const CameraPosition(
                         target: LatLng(0, 0),
-                        zoom: 5,
+                        zoom: 10,
                       ),
-                      markers: Set<Marker>.of(markers),
-                      polylines: Set<Polyline>.of(polylines),
+                      markers: markers,
+                      polylines: routePolyline != null ? {routePolyline!} : {},
                       myLocationEnabled: false,
                       myLocationButtonEnabled: true,
                       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
@@ -891,18 +1096,12 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                                           fontSize: viewUtil.isTablet?26:18,
                                           fontWeight: FontWeight.w500,
                                         ),
-                                        onSubmit: () async{
+                                        onSubmit: () async {
                                           setState(() {
                                             isCompleting =true;
                                           });
-                                          await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                              firstName: widget.firstName,
-                                              lastName: widget.lastName,
-                                              token: widget.token,
-                                              id: widget.id,
-                                              partnerId: widget.partnerId,
-                                              mode: 'online')));
+                                          resendOtp();
+                                          showOTPDialog();
                                           setState(() {
                                             isCompleting =false;
                                           });

@@ -98,10 +98,7 @@ class _BookingHistoryState extends State<BookingHistory> {
               ),
               leading: IconButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserType(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName, token: widget.token, id: widget.id,email: widget.email,)));
+                  Navigator.pop(context);
                 },
                 icon: Icon(
                   Icons.arrow_back_sharp,

@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_naqli/Driver/Viewmodel/driver_services.dart';
 import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_interaction.dart';
+import 'package:flutter_naqli/Driver/Views/driver_pickupDropNavigation/driver_notified.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_svg/flutter_svg.dart';
@@ -17,6 +19,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderAccept extends StatefulWidget {
   final String firstName;
@@ -74,7 +77,7 @@ class _OrderAcceptState extends State<OrderAccept> {
       });
       String pickupPlace = widget.pickUp;
       List dropPlaces = widget.dropPoints;
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
 
       setState(() {
@@ -229,7 +232,7 @@ class _OrderAcceptState extends State<OrderAccept> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('An error occurred. Please try again.')));
+      commonWidgets.showToast('An error occurred,Please try again.');
     }
   }
 
@@ -308,7 +311,7 @@ class _OrderAcceptState extends State<OrderAccept> {
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
@@ -482,7 +485,19 @@ class _OrderAcceptState extends State<OrderAccept> {
                                                   borderRadius: BorderRadius.circular(10),
                                                 ),
                                               ),
-                                              onPressed: () {
+                                              onPressed: () async {
+                                                await saveDriverInteractionData(
+                                                  bookingId: widget.bookingId,
+                                                  firstName: widget.firstName,
+                                                  lastName: widget.lastName,
+                                                  token: widget.token,
+                                                  id: widget.id,
+                                                  partnerId: widget.partnerId,
+                                                  pickUp: widget.pickUp,
+                                                  dropPoints: widget.dropPoints.map((e) => e.toString()).toList(),
+                                                  quotePrice: widget.quotePrice,
+                                                  userId: widget.userId,
+                                                );
                                                 Navigator.push(context,
                                                     MaterialPageRoute(builder: (context) => DriverInteraction(
                                                       firstName: widget.firstName,

@@ -4,6 +4,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:ui' as ui;
 
 class RegisterStepTwo extends StatefulWidget {
   final String name;
@@ -24,6 +25,7 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
   final TextEditingController bankController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
   final TextEditingController ibinController = TextEditingController();
+  final TextEditingController CRNumberController = TextEditingController();
   final AuthService _authService = AuthService();
   bool isLoading = false;
   bool isPasswordObscured = true;
@@ -43,7 +45,8 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
         city: cityController.text,
         bankName: bankController.text,
         companyName: companyController.text,
-        ibanCode: ibinController.text
+        ibanCode: ibinController.text,
+        CRNumber: CRNumberController.text
     );
     setState(() {
       isLoading = false;
@@ -53,154 +56,168 @@ class _RegisterStepTwoState extends State<RegisterStepTwo> {
   @override
   Widget build(BuildContext context) {
     ViewUtil viewUtil = ViewUtil(context);
-    return isLoading
-        ? Center(child: CircularProgressIndicator())
-        : Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        toolbarHeight: MediaQuery.of(context).size.height * 0.31,
-        title: Stack(
-          children: [
-            Container(
-                margin: const EdgeInsets.only(top: 20, bottom: 20),
-                alignment: Alignment.center,
-                child: SvgPicture.asset(
-                  'assets/register_stepTwo.svg',
-                  fit: BoxFit.contain,
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height * 0.25,
-                )),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: Container(
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shadows: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          spreadRadius: 2,
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(60),
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: Color(0xffFFFFFF),
-                      child: Icon(
-                        Icons.clear,
-                        color: Colors.black,
-                        size: viewUtil.isTablet?26: 20,
-                      ),
-                    ),
-                  )),
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
+    return Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: Scaffold(
+                backgroundColor: Colors.white,
+                appBar: AppBar(
+          scrolledUnderElevation: 0,
+          backgroundColor: Colors.white,
+          centerTitle: false,
+          automaticallyImplyLeading: false,
+          toolbarHeight: MediaQuery.of(context).size.height * 0.31,
+          title: Stack(
             children: [
-              _buildTextField(
-                textCapitalization: TextCapitalization.sentences,
-                context: context,
-                controller: regionController,
-                label: 'Region'.tr(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your region'.tr();
-                  }
-                  return null;
-                },
-              ),
-              _buildTextField(
-                context: context,
-                controller: cityController,
-                label: 'City'.tr(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your city'.tr();
-                  }
-                  return null;
-                },
-              ),
-              _buildTextField(
-                context: context,
-                controller: bankController,
-                label: 'Bank Name'.tr(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your bank name'.tr();
-                  }
-                  return null;
-                },
-              ),
-              _buildTextField(
-                context: context,
-                controller: companyController,
-                label: 'Company Name'.tr(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your bank name'.tr();
-                  }
-                  return null;
-                },
-              ),
-              _buildTextField(
-                context: context,
-                controller: ibinController,
-                label: 'IBAN Code'.tr(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your iban code'.tr();
-                  }
-                  return null;
-                },
-              ),
               Container(
-                margin: EdgeInsets.only(bottom: 20),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.07,
-                  width: MediaQuery.of(context).size.width * 0.8,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xff6269FE),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  margin: const EdgeInsets.only(top: 20, bottom: 20),
+                  alignment: Alignment.center,
+                  child: SvgPicture.asset(
+                    'assets/register_stepTwo.svg',
+                    fit: BoxFit.contain,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height * 0.25,
+                  )),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      decoration: ShapeDecoration(
+                        color: Colors.white,
+                        shadows: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            spreadRadius: 2,
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(60),
+                        ),
                       ),
-                    ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _submitForm();
-                      }
-                    },
-                    child: Text(
-                      'Register'.tr(),
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: viewUtil.isTablet?27:18,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ),
+                      child: CircleAvatar(
+                        backgroundColor: Color(0xffFFFFFF),
+                        child: Icon(
+                          Icons.clear,
+                          color: Colors.black,
+                          size: viewUtil.isTablet?26: 20,
+                        ),
+                      ),
+                    )),
               ),
             ],
           ),
-        ),
-      ),
-    );
+                ),
+                body: SingleChildScrollView(
+          child: isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildTextField(
+                  textCapitalization: TextCapitalization.sentences,
+                  context: context,
+                  controller: regionController,
+                  label: 'Region'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your region'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  context: context,
+                  controller: cityController,
+                  label: 'City'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your city'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  context: context,
+                  controller: bankController,
+                  label: 'Bank Name'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your bank name'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  context: context,
+                  controller: companyController,
+                  label: 'Company Name'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your bank name'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  context: context,
+                  controller: ibinController,
+                  label: 'IBAN Code'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your iban code'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                _buildTextField(
+                  context: context,
+                  controller: CRNumberController,
+                  label: 'ID/CR Number'.tr(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your ID/CR number'.tr();
+                    }
+                    return null;
+                  },
+                ),
+                Container(
+                  margin: EdgeInsets.only(bottom: 20),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.07,
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff6269FE),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _submitForm();
+                        }
+                      },
+                      child: Text(
+                        'Register'.tr(),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: viewUtil.isTablet?27:18,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+                ),
+              ),
+        );
   }
 }
 

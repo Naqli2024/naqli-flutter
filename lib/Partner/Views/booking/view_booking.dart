@@ -6,6 +6,7 @@ import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/booking/booking_details.dart';
 import 'package:flutter_naqli/Partner/Views/booking/view_map.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/partnerEditProfile.dart';
+import 'package:flutter_naqli/Partner/Views/partner_menu/partnerHelp.dart';
 import 'package:flutter_naqli/Partner/Views/partner_menu/submitTicket.dart';
 import 'package:flutter_naqli/Partner/Views/payment/payment_details.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -56,38 +57,19 @@ class _ViewBookingState extends State<ViewBooking> {
   final CommonWidgets commonWidgets = CommonWidgets();
   String? paymentStatus;
   String? bookingStatus;
+  String? partnerProfileImage;
 
   @override
   void initState() {
     super.initState();
     fetchBookingDetails();
     fetchUserName();
+    fetchPartnerProfile();
     quotePriceController = TextEditingController(
       text: widget.quotePrice != 'null' && widget.quotePrice.isNotEmpty ? widget.quotePrice : '',
     );
     // quotePriceController = TextEditingController(text: widget.quotePrice??'');
   }
-
-  // Future<void> fetchBookingDetails() async {
-  //   try {
-  //     final details = await _authService.getBookingId(widget.bookingId, widget.token,widget.paymentStatus,widget.quotePrice);
-  //
-  //
-  //     setState(() {
-  //       isLoading = false;
-  //       if (details != null && details.isNotEmpty) {
-  //         bookingDetails = details;
-  //       } else {
-  //         errorMessage = 'No booking details found for the selected ID.';
-  //       }
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       isLoading = false;
-  //       errorMessage = 'Error fetching booking details: $e';
-  //     });
-  //   }
-  // }
 
   Future<void> fetchBookingDetails() async {
     setState(() {
@@ -121,6 +103,25 @@ class _ViewBookingState extends State<ViewBooking> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchPartnerProfile() async {
+    try {
+      final bookingIds = await _authService.getBookingData(
+          widget.partnerId, widget.token);
+
+      if (bookingIds.isEmpty) {
+        return [];
+      }
+      final bookingDetails = <Map<String, dynamic>>[];
+      for (var booking in bookingIds) {
+        final profileImage = booking['profileImage'];
+        partnerProfileImage = profileImage;
+        return bookingDetails;
+      }
+      return bookingDetails;
+    }catch (e) {
+      return [];
+    }
+  }
 
   Future<void> fetchUserName() async {
     try {
@@ -181,6 +182,7 @@ class _ViewBookingState extends State<ViewBooking> {
         drawer: commonWidgets.createDrawer(context,
             widget.partnerId,
             widget.partnerName,
+            profileImage: partnerProfileImage,
             onEditProfilePressed: (){
               Navigator.push(
                 context,
@@ -210,6 +212,14 @@ class _ViewBookingState extends State<ViewBooking> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => SubmitTicket(firstName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
+                ),
+              );
+            },
+            onHelpPressed: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PartnerHelp(partnerName: widget.partnerName,token: widget.token,partnerId: widget.partnerId,email: widget.email,),
                 ),
               );
             }
@@ -359,7 +369,7 @@ class _ViewBookingState extends State<ViewBooking> {
                               children: [
                                 Expanded(flex:6,child: Text('valueOfProduct'.tr(),
                                     style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
-                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()} SAR',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
                               ],
                             ),
                           ],

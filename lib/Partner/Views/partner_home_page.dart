@@ -14,28 +14,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui' as ui;
 
 class PartnerHomePage extends StatefulWidget {
-  final String mobileNo;
-  final String partnerName;
-  final String password;
-  final String partnerId;
-  final String token;
-  const PartnerHomePage({super.key, required this.mobileNo, required this.partnerName, required this.password, required this.partnerId, required this.token});
+
+  const PartnerHomePage({super.key});
 
   @override
   State<PartnerHomePage> createState() => _PartnerHomePageState();
 }
 
-class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: Duration(seconds: 15),
-      vsync: this,
-    )..repeat();
-  }
+class _PartnerHomePageState extends State<PartnerHomePage> {
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +76,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
               child: PopupMenuButton<Locale>(
                 color: Colors.white,
                 offset: const Offset(0, 55),
-                icon: Icon(Icons.language, color: Colors.blue,size: viewUtil.isTablet ? 35 : 25),
+                icon: Icon(Icons.language, color: Color(0xff7f6bf6),size: viewUtil.isTablet ? 35 : 25),
                 onSelected: (Locale locale) {
                   context.setLocale(locale);
                 },
@@ -161,19 +147,35 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
               ),
               const Divider(),
               ListTile(
-                leading: Icon(FontAwesomeIcons.userGroup),
+                leading: Icon(Icons.person,size: 30),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 15,top: 5),
+                  padding: EdgeInsets.only(left: 7),
                   child: Text('User'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=> UserHomePage()));
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> UserHomePage()));
                 },
               ),
+              Container(
+                color: Color(0xffE5EBF8),
+                child: ListTile(
+                  leading: Icon(Icons.people,size: 30),
+                  title: Padding(
+                    padding: EdgeInsets.only(left: 7),
+                    child: Text(
+                      'Partner'.tr(),
+                      style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
               ListTile(
-                leading: Icon(FontAwesomeIcons.car),
+                leading: Icon(Icons.drive_eta_rounded,size: 30),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 15,top: 5),
+                  padding: EdgeInsets.only(left: 7),
                   child: Text('Driver'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
@@ -181,27 +183,17 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                 },
               ),
               ListTile(
-                leading: Icon(FontAwesomeIcons.phone),
+                leading: Icon(Icons.help_outline,size: 30),
                 title: Padding(
-                  padding: EdgeInsets.only(left: 15,top: 5),
-                  child: Text('Contact us'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
-                ),
-                onTap: () {
-
-                },
-              ),
-              ListTile(
-                leading: SvgPicture.asset('assets/help_logo.svg'),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 13,top: 5),
+                  padding: EdgeInsets.only(left: 7),
                   child: Text('Help'.tr(),style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
                 ),
                 onTap: () {
-                  Navigator.push(context,
+                  Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (context)=> PartnerHelp(
-                          partnerName: widget.partnerName,
-                          token: widget.token,
-                          partnerId: widget.partnerId,
+                          partnerName: '',
+                          token: '',
+                          partnerId: '',
                           email: '',
                       )));
                 },
@@ -214,24 +206,29 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
             children: [
               Stack(
                 children: [
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: AnimatedBuilder(
-                      animation: _animationController,
-                      builder: (context, child) {
-                        double scrollPosition = MediaQuery.sizeOf(context).width * _animationController.value;
-                        return Transform.translate(
-                          offset: Offset(-scrollPosition, 0),
-                          child: SvgPicture.asset(
-                            'assets/partnerHome.svg',
-                            height: viewUtil.isTablet
-                                ? MediaQuery.sizeOf(context).height * 0.35
-                                : MediaQuery.sizeOf(context).height * 0.25,
-                            width: 1242,
-                            fit: BoxFit.contain,
-                          ),
-                        );
-                      },
+                  Container(
+                    height: viewUtil.isTablet
+                        ? MediaQuery.sizeOf(context).height * 0.35
+                        : MediaQuery.sizeOf(context).height * 0.25,
+                    width: double.infinity,
+                    child: SvgPicture.asset(
+                      'assets/partnerHome.svg',
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                  Positioned(
+                    top: viewUtil.isTablet ? 24 : 16,
+                    right: viewUtil.isTablet ? 24 : 16,
+                    child: Container(
+                      child: Text(
+                        '${'Partner with Naqlee.'.tr()}\n${'Make money on your schedule.'.tr()}',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -281,7 +278,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => LoginPage(partnerName: widget.partnerName,mobileNo: widget.mobileNo,password: widget.password,token: widget.token, partnerId: widget.partnerId,)));
+                            builder: (context) => LoginPage()));
                   },
                   child: Container(
                     color: Colors.transparent,
@@ -316,7 +313,7 @@ class _PartnerHomePageState extends State<PartnerHomePage> with TickerProviderSt
                 child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Driving with naqli'.tr(),
+                      'Driving with naqlee'.tr(),
                       style: TextStyle(
                           color: Color(0xff5D5151),
                           fontSize: viewUtil.isTablet?35:30,

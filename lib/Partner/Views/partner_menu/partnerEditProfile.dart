@@ -30,6 +30,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
   String? partnerIban;
   String? partnerRegion;
   String? partnerBank;
+  String? partnerCrNumber;
   String? partnerCompanyName;
   String? partnerLegalName;
   String? partnerPhoneNo;
@@ -49,6 +50,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
   final TextEditingController IBANController = TextEditingController();
   final TextEditingController regionController = TextEditingController();
   final TextEditingController bankNameController = TextEditingController();
+  final TextEditingController crNoController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
   final TextEditingController legalNameController = TextEditingController();
   final TextEditingController phoneNoController = TextEditingController();
@@ -64,6 +66,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
   bool isConfirmPasswordObscured = true;
   final AuthService authService = AuthService();
   bool isLoading = false;
+  String? partnerProfileImage;
 
   @override
   void initState() {
@@ -77,6 +80,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
       companyController.text = partnerCompany??'';
       IBANController.text = partnerIban??'';
       bankNameController.text = partnerBank??'';
+      crNoController.text = partnerCrNumber??'';
       regionController.text = partnerRegion??'';
       companyNameController.text = partnerCompanyName??'';
       legalNameController.text = partnerLegalName??'';
@@ -87,6 +91,8 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
       zipcodeController.text = partnerZipCode??'';
       companyTypeController.text = partnerCompanyType??'';
       companyIdController.text = partnerCompanyId??'';
+      partnerProfileImage = data.isNotEmpty ? data.first['partnerProfileImage'] : null;
+      setState(() {});
     }).catchError((e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     });
@@ -110,7 +116,9 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
         final iban = booking['ibanNumber'] ?? '';
         final region = booking['region'] ?? '';
         final bank = booking['bank'] ?? '';
+        final crNumber = booking['crNumber'] ?? '';
         final companyDetails = booking['companyDetails'] ?? [];
+        final profileImage = booking['profileImage'];
 
         partnerName = name;
         partnerMobileNo = mobileNo;
@@ -120,6 +128,8 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
         partnerIban = iban;
         partnerRegion = region;
         partnerBank = bank;
+        partnerCrNumber = crNumber;
+        partnerProfileImage = profileImage;
 
         for (var companyDetail in companyDetails) {
           partnerCompanyName = companyDetail['companyName'] ?? '';
@@ -141,6 +151,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
             'partnerIban': partnerIban,
             'partnerRegion': partnerRegion,
             'partnerBank': partnerBank,
+            'crNumber': partnerCrNumber,
             'companyName': partnerCompanyName,
             'legalName': partnerLegalName,
             'phoneNo': partnerPhoneNo,
@@ -150,6 +161,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
             'zipCode': partnerZipCode,
             'companyType': partnerCompanyType,
             'companyId': partnerCompanyId,
+            'partnerProfileImage': partnerProfileImage,
           });
         }
 
@@ -163,6 +175,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
             'partnerIban': partnerIban,
             'partnerRegion': partnerRegion,
             'partnerBank': partnerBank,
+            'partnerCrNumber': partnerCrNumber,
           });
         }
       }
@@ -250,12 +263,14 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
                             ),
                             child: CircleAvatar(
                               backgroundColor: Colors.white,
-                              maxRadius: viewUtil.isTablet?60:50,
+                              maxRadius: viewUtil.isTablet ? 60 : 50,
                               backgroundImage: _profileImage != null
                                   ? FileImage(_profileImage!)
-                                  : null,
-                              child: _profileImage == null
-                                  ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet?70:60)
+                                  : (partnerProfileImage != null
+                                  ? NetworkImage("https://prod.naqlee.com/api/image/$partnerProfileImage")
+                                  : null),
+                              child: _profileImage == null && partnerProfileImage == null
+                                  ? Icon(Icons.person, color: Color(0xff6A66D1), size: viewUtil.isTablet ? 70 : 60)
                                   : null,
                             ),
                           ),
@@ -323,6 +338,7 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
                         commonWidgets.buildTextField('IBAN'.tr(), IBANController,context: context),
                         commonWidgets.buildTextField('Region'.tr(), regionController,context: context),
                         commonWidgets.buildTextField('Bank Name'.tr(), bankNameController,context: context),
+                        commonWidgets.buildTextField('CR Number'.tr(), crNoController,context: context),
                         Container(
                           margin: const EdgeInsets.only(top:20,bottom: 20),
                           child: SizedBox(
@@ -352,7 +368,8 @@ class _PartnerEditProfileState extends State<PartnerEditProfile> with SingleTick
                                       companyController.text,
                                       IBANController.text,
                                       regionController.text,
-                                      bankNameController.text
+                                      bankNameController.text,
+                                      crNoController.text,
                                   );
                                   setState(() {
                                     isLoading = false;
