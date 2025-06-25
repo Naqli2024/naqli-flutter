@@ -36,8 +36,8 @@ android {
         applicationId = "com.app.naqlee"
         minSdk = 21
         targetSdk = 34
-        versionCode = 15
-        versionName = "1.0.7"
+        versionCode = 19
+        versionName = "1.0.8"
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
 
         ndk {

@@ -428,10 +428,8 @@
   "Contact Us For Estimate Details": "Contact Us For Estimate Details",
   "Mobile no": "Mobile no",
   "Email Id": "Email Id",
-  "Naqlee is an online portal that specializes in logistics, machinery rentals, and transportation services. It connects businesses and individuals to freight and machinery services, allowing for efficient shipping and delivery.":
-  "Naqlee is an online portal that specializes in logistics, machinery rentals, and transportation services. It connects businesses and individuals to freight and machinery services, allowing for efficient shipping and delivery.",
-  "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.":
-  "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.",
+  "Naqlee is an online portal that specializes in logistics, machinery rentals, and transportation services. It connects businesses and individuals to freight and machinery services, allowing for efficient shipping and delivery.": "Naqlee is an online portal that specializes in logistics, machinery rentals, and transportation services. It connects businesses and individuals to freight and machinery services, allowing for efficient shipping and delivery.",
+  "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.": "The 'Exclusive Quote on Request' feature provides consumers with personalized pricing depending on their specific transportation requirements, resulting in tailored solutions rather than fixed rates. This functionality is advantageous to firms who want personalized logistical services.",
   "Are you sure you want to delete this account?": "Are you sure you want to delete this account?",
   "Delete Account": "Delete Account",
   "Bank Details": "Bank Details",
@@ -493,5 +491,11 @@
   "Refrigerator": "Refrigerator",
   "Dry Storage": "Dry Storage",
   "Select": "Select",
-  "Shared Cargo": "Shared Cargo"
+  "shared-cargo": "Shared-Cargo",
+  "Cargo Dimension(LxBxH)": "Cargo Dimension(LxBxH)",
+  "Vendor MobileNo": "Vendor MobileNo",
+  "Operator": "Operator",
+  "Operator MobileNo": "Operator MobileNo",
+  "Pending": "Pending",
+  "User MobileNo": "User MobileNo"
 }

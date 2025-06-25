@@ -134,7 +134,7 @@ class _DriverHomePageState extends State<DriverHomePage>
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best);
+        desiredAccuracy: LocationAccuracy.bestForNavigation);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });
@@ -146,7 +146,7 @@ class _DriverHomePageState extends State<DriverHomePage>
 
   Future<void> fetchCoordinates() async {
     try {
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
 
       setState(() {

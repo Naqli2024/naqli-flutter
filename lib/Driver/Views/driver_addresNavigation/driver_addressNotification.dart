@@ -84,7 +84,7 @@ class _DriverAddressNotificationState extends State<DriverAddressNotification> {
         isCalculating = true;
       });
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
       String currentLocation = '${position.latitude},${position.longitude}';
 
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';

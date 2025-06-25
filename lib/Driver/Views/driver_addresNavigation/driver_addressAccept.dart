@@ -74,7 +74,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
       String pickupPlace = widget.pickUp;
 
       Position currentPosition = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best);
+          desiredAccuracy: LocationAccuracy.bestForNavigation);
       LatLng currentLatLng =
       LatLng(currentPosition.latitude, currentPosition.longitude);
 
@@ -249,7 +249,7 @@ class _AcceptAddressOrderState extends State<AcceptAddressOrder> {
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best);
+        desiredAccuracy: LocationAccuracy.bestForNavigation);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });

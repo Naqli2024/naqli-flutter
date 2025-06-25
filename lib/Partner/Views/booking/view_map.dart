@@ -27,6 +27,7 @@ class ViewMap extends StatefulWidget {
   final String partnerName;
   final String userName;
   final String userId;
+  final String contactNumber;
   final String email;
   final String mode;
   final String bookingStatus;
@@ -59,7 +60,7 @@ class ViewMap extends StatefulWidget {
     required this.paymentStatus,
     required this.cityName,
     required this.address,
-    required this.zipCode, required this.email,
+    required this.zipCode, required this.email, required this.contactNumber,
   });
 
   @override
@@ -800,7 +801,7 @@ class _ViewMapState extends State<ViewMap> {
                                                 Expanded(
                                                   flex: 3,
                                                   child: Text(
-                                                    'User id'.tr(),
+                                                    'User MobileNo'.tr(),
                                                     style: TextStyle(
                                                         color: Color(0xff79797C),
                                                         fontSize: viewUtil.isTablet?22:16),
@@ -809,7 +810,7 @@ class _ViewMapState extends State<ViewMap> {
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text(
-                                                    widget.userId,
+                                                    widget.contactNumber,
                                                     style: TextStyle(fontSize: viewUtil.isTablet?22:16),
                                                   ),
                                                 ),

@@ -696,7 +696,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                 }
                               }
                             }
-                            if (widget.selectedType == 'shared cargo') {
+                            if (widget.selectedType == 'shared-cargo') {
                               if (_currentStep == 1) {
                                 if (selectedShipmentType == null || selectedShipmentCondition == null ||
                                     lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
@@ -834,7 +834,7 @@ class _CreateBookingState extends State<CreateBooking> {
         return equipmentContent();
       case 'special':
         return specialContent();
-      case 'shared cargo':
+      case 'shared-cargo':
         return sharedCargoContent();
       case 'others':
         return specialContent();
@@ -858,7 +858,7 @@ class _CreateBookingState extends State<CreateBooking> {
         return UserEquipmentStepTwo();
       case 'special':
         return UserSpecialStepTwo();
-      case 'shared cargo':
+      case 'shared-cargo':
         return UserSharedCargoStepTwo();
       case 'others':
         return UserSpecialStepTwo();
@@ -887,7 +887,7 @@ class _CreateBookingState extends State<CreateBooking> {
         return UserEquipmentStepThree();
       case 'special':
         return UserSpecialStepThree();
-      case 'shared cargo':
+      case 'shared-cargo':
         return UserSharedCargoStepThree();
       case 'others':
         return UserSpecialStepThree();
@@ -4837,22 +4837,24 @@ class _CreateBookingState extends State<CreateBooking> {
         }
       }
     }
-    if (widget.selectedType == 'shared cargo') {
+    if (widget.selectedType == 'shared-cargo') {
       if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
         String? bookingId = await userService.userSharedCargoCreateBooking(
           context,
-          name: selectedName.toString(),
+          name: '',
           unitType: widget.selectedType,
-          typeName: selectedTypeName.toString(),
-          scale: scale.toString(),
-          typeImage: typeImage.toString(),
-          typeOfLoad: selectedLoad.toString(),
+          shipmentType: selectedShipmentType.toString(),
+          shippingCondition: selectedShipmentCondition.toString(),
+          cargoLength: lengthController.text,
+          cargoBreadth: breadthController.text,
+          cargoHeight: heightController.text,
+          cargoUnit: selectedUnit,
           date: formattedDate,
-          additionalLabour: selectedLabour.toString(),
           time: formattedTime,
           productValue: productController.text,
+          shipmentWeight: weightController.text,
           pickup: pickUpController.text,
           dropPoints: dropPlaces,
           token: widget.token,
@@ -4867,11 +4869,11 @@ class _CreateBookingState extends State<CreateBooking> {
                 MaterialPageRoute(
                   builder: (context) => ChooseVendor(
                     bookingId: bookingId,
-                    size: scale.toString(),
+                    size: '',
                     unitType: widget.selectedType,
-                    unitTypeName: selectedTypeName.toString(),
-                    load: selectedLoad.toString(),
-                    unit: selectedName.toString(),
+                    unitTypeName: '',
+                    load: '',
+                    unit: '',
                     pickup: pickUpController.text,
                     dropPoints: dropPlaces,
                     token: widget.token,

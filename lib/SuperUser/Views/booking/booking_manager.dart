@@ -78,6 +78,7 @@ class _BookingManagerState extends State<BookingManager> {
     _fetchAndSetBookingDetails();
     fetchBookingsAndPartnerNames(widget.id,widget.token);
     _filteredBookings = List.from(bookings);
+    _updateFilter('Hold');
   }
 
   Future<void> fetchBookingsAndPartnerNames(String userId, String token) async {
@@ -86,14 +87,16 @@ class _BookingManagerState extends State<BookingManager> {
       final bookings = bookingsData['bookings'] as List<Map<String, dynamic>>? ?? [];
       final partnerIds = bookings.map((booking) => booking['partner']).whereType<String>().toSet().toList();
 
-      Map<String, String> partnerIdToNameMap = {};
+      Map<String, Map<String, String>> partnerIdToNameMap = {};
       if (partnerIds.isNotEmpty) {
         partnerIdToNameMap = await superUserServices.getPartnerNames(partnerIds, token);
       }
       List<Map<String, dynamic>> updatedBookings = bookings.map((booking) {
         String partnerId = booking['partner'] ?? '';
-        String partnerName = partnerIdToNameMap[partnerId] ?? 'N/A';
+        String partnerName = partnerIdToNameMap[partnerId]?['partnerName'] ?? 'N/A';
+        String mobileNo = partnerIdToNameMap[partnerId]?['mobileNo'] ?? 'N/A';
         booking['partnerName'] = partnerName;
+        booking['mobileNo'] = mobileNo;
 
         return booking;
       }).toList();
@@ -216,19 +219,26 @@ class _BookingManagerState extends State<BookingManager> {
     });
   }
 
-  Future<String> fetchPartnerNameForBooking(String partnerId, String token) async {
+  Future<Map<String, String>> fetchPartnerInfoForBooking(String partnerId, String token) async {
     try {
       final partnerNameData = await superUserServices.getPartnerNames([partnerId], token);
 
-      if (partnerNameData is Map && partnerNameData.containsKey(partnerId)) {
-        return partnerNameData[partnerId] ?? 'N/A';
+      if (partnerNameData.containsKey(partnerId)) {
+        return partnerNameData[partnerId]!;
       } else {
-        return 'N/A';
+        return {
+          'partnerName': 'N/A',
+          'mobileNo': 'N/A',
+        };
       }
     } catch (e) {
-      return 'N/A';
+      return {
+        'partnerName': 'N/A',
+        'mobileNo': 'N/A',
+      };
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -593,8 +603,8 @@ class _BookingManagerState extends State<BookingManager> {
                               itemCount: _filteredBookings.length,
                               itemBuilder: (context, index) {
                                 final booking = _filteredBookings[index];
-                                return FutureBuilder<String>(
-                                  future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
+                                return FutureBuilder<Map<String, String>>(
+                                  future: fetchPartnerInfoForBooking(booking['partner']??'null', widget.token),
                                   builder: (context, snapshot) {
                                     // if (snapshot.connectionState == ConnectionState.waiting) {
                                     //   return Center(child: CircularProgressIndicator());
@@ -605,7 +615,10 @@ class _BookingManagerState extends State<BookingManager> {
                                     }
 
                                     if (snapshot.hasData) {
-                                      final partnerName = snapshot.data ?? 'N/A';
+                                      final partnerName = snapshot.data?['partnerName'] ?? 'N/A';
+                                      final partnerMobileNo = snapshot.data?['mobileNo'] ?? 'N/A';
+                                      final operatorName = '${snapshot.data?['operatorFirstName'] ?? 'N/A'}' +' '+ '${snapshot.data?['operatorLastName'] ?? 'N/A'}';
+                                      final operatorMobileNo = snapshot.data?['operatorMobileNo'] ?? 'N/A';
                                       String paymentStatus = booking['paymentStatus']??'N/A';
                                       String unitType = booking['unitType']??'N/A';
                                       return Padding(
@@ -723,7 +736,29 @@ class _BookingManagerState extends State<BookingManager> {
                                                                   Expanded(
                                                                     flex: 2,
                                                                     child: Text(
-                                                                      isLoading ? 'Loading...'.tr() :partnerName ?? 'Loading...',
+                                                                      isLoading ? 'Loading...'.tr() :partnerName,
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            Padding(
+                                                              padding: const EdgeInsets.only(left: 20,top: 15),
+                                                              child: Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      'Vendor MobileNo'.tr(),
+                                                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
+                                                                    ),
+                                                                  ),
+                                                                  Expanded(
+                                                                    flex: 2,
+                                                                    child: Text(
+                                                                      isLoading ? 'Loading...'.tr() :partnerMobileNo,
                                                                       style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
                                                                     ),
                                                                   ),
@@ -818,7 +853,7 @@ class _BookingManagerState extends State<BookingManager> {
                                                           ),
                                                         ),
                                                         onPressed: () {
-                                                          showBookingDialog(context,booking,bookingPartnerName: partnerName);
+                                                          showBookingDialog(context,booking,bookingOperatorName: operatorName,bookingOperatorMobileNo: operatorMobileNo);
                                                         },
                                                         child: Text(
                                                           'View Booking'.tr(),
@@ -907,7 +942,7 @@ class _BookingManagerState extends State<BookingManager> {
     }
   }
 
-  void showBookingDialog(BuildContext context, Map<String, dynamic> booking,{String? bookingPartnerName}) {
+  void showBookingDialog(BuildContext context, Map<String, dynamic> booking,{String? bookingOperatorName,String? bookingOperatorMobileNo}) {
     ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
@@ -980,8 +1015,19 @@ class _BookingManagerState extends State<BookingManager> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Vendor'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
-                                  Text('${bookingPartnerName??'N/A'}', style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text('Operator'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text('${bookingOperatorName??'N/A'}', style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                ],
+                              ),
+                            ),
+                            Divider(indent: 5, endIndent: 5),
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Operator MobileNo'.tr(), style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
+                                  Text('${bookingOperatorMobileNo??'N/A'}', style: TextStyle(fontSize: viewUtil.isTablet ?22:16)),
                                 ],
                               ),
                             ),

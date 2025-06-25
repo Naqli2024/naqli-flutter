@@ -49,6 +49,7 @@ class _ViewBookingState extends State<ViewBooking> {
   Map<String, dynamic>? bookingDetails;
   String? firstName;
   String? lastName;
+  String? contactNumber;
   bool isLoading = true;
   bool isSending = false;
   String errorMessage = '';
@@ -63,12 +64,11 @@ class _ViewBookingState extends State<ViewBooking> {
   void initState() {
     super.initState();
     fetchBookingDetails();
-    fetchUserName();
+    fetchUserName(widget.userId);
     fetchPartnerProfile();
     quotePriceController = TextEditingController(
       text: widget.quotePrice != 'null' && widget.quotePrice.isNotEmpty ? widget.quotePrice : '',
     );
-    // quotePriceController = TextEditingController(text: widget.quotePrice??'');
   }
 
   Future<void> fetchBookingDetails() async {
@@ -123,17 +123,19 @@ class _ViewBookingState extends State<ViewBooking> {
     }
   }
 
-  Future<void> fetchUserName() async {
+  Future<void> fetchUserName(String userId) async {
     try {
-      final fetchedFirstName = await _authService.getUserName(widget.userId, widget.token);
-      setState(() {
-        firstName = fetchedFirstName;
-        lastName = fetchedFirstName;
-        isLoading = false;
-      });
+      final userInfo = await _authService.getUserName(userId, widget.token);
+      if (userInfo != null) {
+        setState(() {
+          firstName = userInfo['fullName'] ?? 'N/A';
+          contactNumber = userInfo['contactNumber'] ?? 'N/A';
+        });
+      }
     } catch (e) {
       setState(() {
-        isLoading = false;
+        firstName = 'N/A';
+        contactNumber = 'N/A';
       });
     }
   }
@@ -191,15 +193,15 @@ class _ViewBookingState extends State<ViewBooking> {
                 ),
               );
             },
-          onPaymentPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
-            ),
-          );
-        },
-          onBookingPressed: (){
+            onPaymentPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PaymentDetails(token: widget.token,partnerId: widget.partnerId,partnerName: widget.partnerName, quotePrice: widget.quotePrice,paymentStatus: widget.paymentStatus,email: widget.email,)
+              ),
+            );
+          },
+            onBookingPressed: (){
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -245,6 +247,7 @@ class _ViewBookingState extends State<ViewBooking> {
                         partnerName: widget.partnerName,
                         userName: firstName != null?'$firstName':''+ '${lastName != null ?'$lastName':''}',
                         userId: widget.userId,
+                        contactNumber:'${bookingDetails?['contactNumber'] ?? ''}',
                         mode: '${bookingDetails?['name'] ?? 'No name available'}'+' '+'${bookingDetails?['typeName'] ?? ''}',
                         bookingStatus: widget.bookingStatus,
                         pickupPoint: '${bookingDetails?['pickup'] ?? ''}',
@@ -303,7 +306,99 @@ class _ViewBookingState extends State<ViewBooking> {
                         ],
                       ),
                     ),
-                    Card(
+                    bookingDetails?['unitType'] == 'shared-cargo'
+                    ? Card(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        side: const BorderSide(
+                          color: Color(0xffE0E0E0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Unit type'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['unitType'] ?? 'N/A'}'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14))),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Shipment Type'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['shipmentType'] ?? 'N/A'.tr()}'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Shipping Condition'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['shippingCondition'] ?? 'N/A'.tr()}'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Shipment Weight'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['shipmentWeight'] ?? 'N/A'.tr()} Kg'.tr(),style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:3,child: Text('Cargo Dimension(LxBxH)'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['cargoLength'] ?? 'N/A'} ${bookingDetails?['cargoUnit'] ?? 'N/A'} x ${bookingDetails?['cargoBreadth'] ?? 'N/A'} ${bookingDetails?['cargoUnit'] ?? 'N/A'} x ${bookingDetails?['cargoHeight'] ?? 'N/A'}${bookingDetails?['cargoUnit'] ?? 'N/A'}',
+                                  style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Date'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['date'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('Time'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                bookingDetails?['time'] == null
+                                ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
+                                : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),))
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(flex:6,child: Text('valueOfProduct'.tr(),
+                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
+                                Expanded(flex:2,child: Text('${bookingDetails?['productValue'] ?? 'N/A'.tr()} SAR',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    : Card(
                       color: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
@@ -350,8 +445,8 @@ class _ViewBookingState extends State<ViewBooking> {
                                 Expanded(flex:6,child: Text('Time'.tr(),
                                     style: TextStyle(fontSize: viewUtil.isTablet?22: 14))),
                                 bookingDetails?['time'] == null
-                                ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
-                                : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),))
+                                    ? Expanded(flex:2,child: Text('${bookingDetails?['fromTime'] ?? ''} - ${bookingDetails?['toTime'] ?? ''}',style: TextStyle(color: Color(0xff79797C)),))
+                                    : Expanded(flex:2,child: Text('${bookingDetails?['time'] ?? 'N/A'}',style: TextStyle(color: Color(0xff79797C),fontSize: viewUtil.isTablet?22: 14),))
                               ],
                             ),
                             const Divider(),

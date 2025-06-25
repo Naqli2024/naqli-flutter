@@ -106,16 +106,23 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     });
   }
 
-  Future<String> fetchPartnerNameForBooking(String partnerId, String token) async {
+  Future<Map<String, String>> fetchPartnerInfoForBooking(String partnerId, String token) async {
     try {
       final partnerNameData = await superUserServices.getPartnerNames([partnerId], token);
-      if (partnerNameData is Map && partnerNameData.containsKey(partnerId)) {
-        return partnerNameData[partnerId] ?? 'N/A';
+
+      if (partnerNameData.containsKey(partnerId)) {
+        return partnerNameData[partnerId]!;
       } else {
-        return 'N/A';
+        return {
+          'partnerName': 'N/A',
+          'mobileNo': 'N/A',
+        };
       }
     } catch (e) {
-      return 'N/A';
+      return {
+        'partnerName': 'N/A',
+        'mobileNo': 'N/A',
+      };
     }
   }
 
@@ -357,8 +364,8 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                               bookingTime = booking['time']??'N/A';
                               fromTime = booking['fromTime']??'N/A';
                               toTime = booking['toTime']??'N/A';
-                              return FutureBuilder<String>(
-                                future: fetchPartnerNameForBooking(booking['partner']??'null', widget.token),
+                              return FutureBuilder<Map<String, String>>(
+                                future: fetchPartnerInfoForBooking(booking['partner']??'null', widget.token),
                                 builder: (context, snapshot) {
                                   // if (snapshot.connectionState == ConnectionState.waiting) {
                                   //   return Center(child: CircularProgressIndicator());
@@ -367,7 +374,8 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                                     return Center(child: Text('Error Loading'));
                                   }
                                   if (snapshot.hasData) {
-                                    final partnerNames = snapshot.data ?? 'N/A';
+                                    final partnerNames = snapshot.data?['partnerName'] ?? 'N/A';
+                                    final partnerMobileNo = snapshot.data?['mobileNo'] ?? 'N/A';
                                     return Container(
                                       margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                                       child: Card(
@@ -398,7 +406,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                                                   ),
                                                 ),
                                                 onPressed: () {
-                                                  showBookingDialog(context,booking,bookingPartnerName: partnerNames);
+                                                  showBookingDialog(context,booking,bookingPartnerName: partnerNames,bookingPartnerMobileNo: partnerMobileNo);
                                                 },
                                                 child: Text(
                                                   'View'.tr(),
@@ -440,7 +448,7 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
     );
   }
 
-  void showBookingDialog(BuildContext context, Map<String, dynamic> booking,{String? bookingPartnerName}) {
+  void showBookingDialog(BuildContext context, Map<String, dynamic> booking,{String? bookingPartnerName,String? bookingPartnerMobileNo}) {
     ViewUtil viewUtil = ViewUtil(context);
     showDialog(
       context: context,
@@ -518,6 +526,29 @@ class _SuperUserPaymentState extends State<SuperUserPayment> {
                                     flex: 2,
                                     child: Text(
                                       '${bookingPartnerName??'N/A'}',
+                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16,color: Color(0xff79797C)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Divider(),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(
+                                      'Vendor MobileNo'.tr(),
+                                      style: TextStyle(fontSize: viewUtil.isTablet ?22:16),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      '${bookingPartnerMobileNo??'N/A'}',
                                       style: TextStyle(fontSize: viewUtil.isTablet ?22:16,color: Color(0xff79797C)),
                                     ),
                                   ),

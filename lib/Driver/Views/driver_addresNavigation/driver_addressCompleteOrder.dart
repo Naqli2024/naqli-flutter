@@ -106,7 +106,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     super.initState();
     _updatePolyline();
     _getCurrentLocation();
-    _loadCustomMarker();
+    // _loadCustomMarker();
     _loadData();
     _startRecenterTimer();
     _startPickupCheckTimer();
@@ -371,13 +371,13 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     double bearing = _calculateBearing(previousLatLng ?? currentLatLng!, currentLatLng!);
     previousLatLng = currentLatLng;  // Store the last known position
 
-    markers.add(Marker(
-      markerId: const MarkerId('currentLocation'),
-      position: currentLatLng!,
-      icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
-      infoWindow: const InfoWindow(title: 'Your Location'),
-      rotation: bearing, // Rotate arrow towards movement direction
-    ));
+    // markers.add(Marker(
+    //   markerId: const MarkerId('currentLocation'),
+    //   position: currentLatLng!,
+    //   icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+    //   infoWindow: const InfoWindow(title: 'Your Location'),
+    //   rotation: bearing, // Rotate arrow towards movement direction
+    // ));
 
     markers.add(Marker(
       markerId: const MarkerId('pickupLocation'),
@@ -403,7 +403,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
     mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80)); // Padding for better view
   }
 
-  void _loadCustomMarker() async {
+/*  void _loadCustomMarker() async {
     final ByteData byteData = await rootBundle.load('assets/arrow.png');
     final Uint8List markerImage = byteData.buffer.asUint8List();
 
@@ -418,7 +418,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
 
       setState(() {});
     }
-  }
+  }*/
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylineCoordinates = [];
@@ -508,7 +508,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
       return;
     }
     Navigator.pop(context);
-   await showDialog(
+    await showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         Future.delayed(Duration(seconds: 3), () {
@@ -825,8 +825,8 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
-            context,
-            showLeading: true,
+          context,
+          showLeading: true,
           User: widget.firstName +' '+ widget.lastName,
         ),
         drawer: Drawer(
@@ -959,7 +959,7 @@ class _AddressCompleteOrderState extends State<AddressCompleteOrder> with Single
                       ),
                       markers: markers,
                       polylines: routePolyline != null ? {routePolyline!} : {},
-                      myLocationEnabled: false,
+                      myLocationEnabled: true,
                       myLocationButtonEnabled: true,
                       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(

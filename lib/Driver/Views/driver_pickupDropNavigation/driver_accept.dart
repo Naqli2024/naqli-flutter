@@ -77,7 +77,7 @@ class _OrderAcceptState extends State<OrderAccept> {
       });
       String pickupPlace = widget.pickUp;
       List dropPlaces = widget.dropPoints;
-      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      Position currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
       LatLng currentLatLng = LatLng(currentPosition.latitude, currentPosition.longitude);
 
       setState(() {
@@ -311,7 +311,7 @@ class _OrderAcceptState extends State<OrderAccept> {
     }
 
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best);
+        desiredAccuracy: LocationAccuracy.bestForNavigation);
     setState(() {
       currentLocation = LatLng(position.latitude, position.longitude);
     });

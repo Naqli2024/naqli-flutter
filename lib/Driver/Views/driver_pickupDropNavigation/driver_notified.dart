@@ -285,12 +285,12 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
             currentPlace = address;
 
             markers.removeWhere((marker) => marker.markerId == const MarkerId('currentLocation'));
-            markers.add(Marker(
-              markerId: const MarkerId('currentLocation'),
-              position: newLatLng,
-              icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
-              infoWindow: InfoWindow(title: 'Your Location', snippet: address),
-            ));
+            // markers.add(Marker(
+            //   markerId: const MarkerId('currentLocation'),
+            //   position: newLatLng,
+            //   icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+            //   infoWindow: InfoWindow(title: 'Your Location', snippet: address),
+            // ));
           });
         }
       } catch (e) {
@@ -358,12 +358,12 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
 
     markers.clear();
 
-    markers.add(Marker(
-      markerId: const MarkerId('currentLocation'),
-      position: currentLatLng!,
-      icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
-      infoWindow: const InfoWindow(title: 'Your Location'),
-    ));
+    // markers.add(Marker(
+    //   markerId: const MarkerId('currentLocation'),
+    //   position: currentLatLng!,
+    //   icon: customArrowIcon ?? BitmapDescriptor.defaultMarker,
+    //   infoWindow: const InfoWindow(title: 'Your Location'),
+    // ));
 
     for (int i = 0; i < dropLatLngs.length; i++) {
       markers.add(Marker(
@@ -392,7 +392,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
     mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80)); // Padding for better view
   }
 
-  void _loadCustomMarker() async {
+/*  void _loadCustomMarker() async {
     final ByteData byteData = await rootBundle.load('assets/arrow.png');
     final Uint8List markerImage = byteData.buffer.asUint8List();
 
@@ -409,7 +409,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
 
       setState(() {});
     }
-  }
+  }*/
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylineCoordinates = [];
@@ -583,7 +583,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
         );
       },
     );
-    _loadCustomMarker();
+    // _loadCustomMarker();
     await _loadData();
     _startRecenterTimer();
     recenterMap();
@@ -769,7 +769,7 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
                                   strokeWidth: 2,
                                 ),
                               )
-                              : Text(
+                                  : Text(
                                 'Verify'.tr(),
                                 style: TextStyle(
                                   color: Colors.white,
@@ -830,8 +830,8 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
-            context,
-            showLeading: true,
+          context,
+          showLeading: true,
           User: widget.firstName +' '+ widget.lastName,
         ),
         drawer: Drawer(
@@ -945,474 +945,474 @@ class _CustomerNotifiedState extends State<CustomerNotified> with SingleTickerPr
           child: Column(
             children: [
               Stack(
-                children: [
-                  Container(
-                    height: MediaQuery.sizeOf(context).height * 0.93,
-                    child: GoogleMap(
-                      mapType: MapType.normal,
-                      onMapCreated: (GoogleMapController controller) {
-                        setState(() {
-                          mapController = controller;
-                        });
-                      },
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(0, 0),
-                        zoom: 5,
-                      ),
-                      markers: markers,
-                      polylines: routePolylines,
-                      buildingsEnabled: false,
-                      compassEnabled: false,
-                      myLocationEnabled: false,
-                      myLocationButtonEnabled: true,
-                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                        Factory<OneSequenceGestureRecognizer>(
-                              () => EagerGestureRecognizer(),
+                  children: [
+                    Container(
+                      height: MediaQuery.sizeOf(context).height * 0.93,
+                      child: GoogleMap(
+                        mapType: MapType.normal,
+                        onMapCreated: (GoogleMapController controller) {
+                          setState(() {
+                            mapController = controller;
+                          });
+                        },
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(0, 0),
+                          zoom: 5,
                         ),
-                      },
-                    ),),
-                  Visibility(
-                    visible: isMoveClicked,
-                    child: Positioned(
-                      top: MediaQuery.sizeOf(context).height * 0.02,
-                      child: isAtDropLocation
-                        ? Container(
-                        margin: EdgeInsets.only(left: 20),
-                        width: MediaQuery.sizeOf(context).width * 0.92,
-                        child: Card(
-                          color: Colors.white,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
+                        markers: markers,
+                        polylines: routePolylines,
+                        buildingsEnabled: false,
+                        compassEnabled: false,
+                        myLocationEnabled: true,
+                        myLocationButtonEnabled: true,
+                        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                          Factory<OneSequenceGestureRecognizer>(
+                                () => EagerGestureRecognizer(),
+                          ),
+                        },
+                      ),),
+                    Visibility(
+                      visible: isMoveClicked,
+                      child: Positioned(
+                          top: MediaQuery.sizeOf(context).height * 0.02,
+                          child: isAtDropLocation
+                              ? Container(
+                            margin: EdgeInsets.only(left: 20),
+                            width: MediaQuery.sizeOf(context).width * 0.92,
+                            child: Card(
+                              color: Colors.white,
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
+                                          child: Column(
+                                            children: [
+                                              Icon(Icons.location_on,color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: viewUtil.isTablet?26:16,color: Color(0xff676565))),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                              : Container(
+                            margin: EdgeInsets.only(left: 20),
+                            width: MediaQuery.sizeOf(context).width * 0.92,
+                            child: Card(
+                              color: Colors.white,
+                              child: dropPointsFeet.isNotEmpty
+                                  ? Column(
+                                children: [
+                                  for (int i = 0; i < widget.dropPoints.length; i++)
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 50,right: 30,top: 0),
-                                      child: Column(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Icon(Icons.location_on,color: Color(0xff6069FF),size: viewUtil.isTablet?30:20),
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 15, right: 10),
+                                            child: Column(
+                                              children: [
+                                                SvgPicture.asset('assets/upArrow.svg'),
+                                                Text(
+                                                  dropPointsFeet.isNotEmpty ? dropPointsFeet[i] : '0 ft',
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.w500,
+                                                      fontSize: viewUtil.isTablet ? 26 : 18,
+                                                      color: Color(0xff676565)),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Text("Drop Point ${i + 1}".tr(),
+                                                    style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: viewUtil.isTablet ? 26 : 16)),
+                                                Text(widget.dropPoints[i],
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                        fontSize: viewUtil.isTablet ? 26 : 16)),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(currentPlace,textAlign: TextAlign.start,style: TextStyle(fontSize: viewUtil.isTablet?26:16,color: Color(0xff676565))),
-                                          ],
+                                ],
+                              )
+                                  : Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text('Fetching DropPoint Location...'.tr(),
+                                          style: TextStyle(
+                                              fontSize: viewUtil.isTablet ? 26 : 16)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                      ),
+                    ),
+                    Visibility(
+                      visible: isAtDropLocation,
+                      child: Positioned(
+                        bottom: 50,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 15, right: 30),
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width * 0.93,
+                            child: Card(
+                              color: Colors.white,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: SvgPicture.asset('assets/person.svg'),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            dropPointsDistance.isNotEmpty
+                                                ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
+                                                : 'Calculating...'.tr(),
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Divider(
+                                      indent: 15,
+                                      endIndent: 15,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        widget.userName,
+                                        style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15, top: 20),
+                                      child: SizedBox(
+                                        height: MediaQuery.of(context).size.height * 0.07,
+                                        width: MediaQuery.of(context).size.width * 0.62,
+                                        child: SlideAction(
+                                          borderRadius: 12,
+                                          elevation: 0,
+                                          submittedIcon: Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: viewUtil.isTablet?30:26,
+                                          ),
+                                          innerColor: Color(0xff6069FF),
+                                          outerColor: Color(0xff6069FF),
+                                          sliderButtonIcon: AnimatedBuilder(
+                                            animation: _animation,
+                                            builder: (context, child) {
+                                              return Transform.translate(
+                                                offset: Offset(_animation.value, 0),
+                                                child: Icon(
+                                                  Icons.arrow_forward_outlined,
+                                                  color: Colors.white,
+                                                  size: viewUtil.isTablet?30:26,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          text: "Complete Order".tr(),
+                                          textStyle: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: viewUtil.isTablet?26:18,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          onSubmit: () async {
+                                            setState(() {
+                                              isCompleting =true;
+                                            });
+                                            SharedPreferences prefs = await SharedPreferences.getInstance();
+                                            await prefs.setBool('driverInteractionActive', false);
+                                            await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
+                                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
+                                                firstName: widget.firstName,
+                                                lastName: widget.lastName,
+                                                token: widget.token,
+                                                id: widget.id,
+                                                partnerId: widget.partnerId,
+                                                mode: 'online')));
+                                            setState(() {
+                                              isCompleting =false;
+                                            });
+                                          },
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      )
-                        : Container(
-                        margin: EdgeInsets.only(left: 20),
-                        width: MediaQuery.sizeOf(context).width * 0.92,
-                        child: Card(
-                          color: Colors.white,
-                          child: dropPointsFeet.isNotEmpty
-                              ? Column(
-                            children: [
-                              for (int i = 0; i < widget.dropPoints.length; i++)
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 15, right: 10),
-                                        child: Column(
-                                          children: [
-                                            SvgPicture.asset('assets/upArrow.svg'),
-                                            Text(
-                                              dropPointsFeet.isNotEmpty ? dropPointsFeet[i] : '0 ft',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: viewUtil.isTablet ? 26 : 18,
-                                                  color: Color(0xff676565)),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Text("Drop Point ${i + 1}".tr(),
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: viewUtil.isTablet ? 26 : 16)),
-                                            Text(widget.dropPoints[i],
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                    fontSize: viewUtil.isTablet ? 26 : 16)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          )
-                              : Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 3,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text('Fetching DropPoint Location...'.tr(),
-                                      style: TextStyle(
-                                          fontSize: viewUtil.isTablet ? 26 : 16)),
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      )
+                      ),
                     ),
-                  ),
-                  Visibility(
-                    visible: isAtDropLocation,
-                    child: Positioned(
-                      bottom: 50,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 30),
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width * 0.93,
-                          child: Card(
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                              child: Column(
-                                children: [
-                                  Row(
+                    if (!isAtDropLocation)...[
+                      Visibility(
+                        visible: !isMoveClicked,
+                        replacement: Positioned(
+                            bottom: MediaQuery.sizeOf(context).height * 0.3,
+                            right: 20,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Tooltip(
+                                message: 'Re-centre',
+                                child: CircleAvatar(
+                                  radius: viewUtil.isTablet ? 30 : 20,
+                                  backgroundColor: Colors.white,
+                                  child: IconButton(
+                                      onPressed: recenterMap,
+                                      icon: Icon(Icons.my_location)),
+                                ),
+                              ),
+                            )),
+                        child: Positioned(
+                          bottom: MediaQuery.sizeOf(context).height * 0.27,
+                          child: GestureDetector(
+                            onTap: () {
+                              resendOtp();
+                              showOTPDialog();
+                            },
+                            child: Container(
+                              width: MediaQuery.sizeOf(context).width,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: Color(0xff6069FF),
+                                  width: 6,
+                                ),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  minRadius: viewUtil.isTablet ? 60 : 50,
+                                  backgroundColor: Color(0xff6069FF),
+                                  child: Text(
+                                    'Start Trip'.tr(),
+                                    style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Visibility(
+                        visible: isMoveClicked,
+                        replacement: Positioned(
+                          bottom: 50,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 15, right: 30),
+                            child: Container(
+                              width: MediaQuery.sizeOf(context).width * 0.93,
+                              child: Card(
+                                color: Colors.white,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
+                                  child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
-                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                          'Notify Customer'.tr(),
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: SvgPicture.asset('assets/person.svg'),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          dropPointsDistance.isNotEmpty
-                                              ? '${dropPointsDistance[0].toStringAsFixed(2)} km'
-                                              : 'Calculating...'.tr(),
-                                          style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
+                                          widget.userName,
+                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  Divider(
-                                    indent: 15,
-                                    endIndent: 15,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      widget.userName,
-                                      style: TextStyle(fontSize: viewUtil.isTablet?26:20, color: Color(0xff676565)),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 15, top: 20),
-                                    child: SizedBox(
-                                      height: MediaQuery.of(context).size.height * 0.07,
-                                      width: MediaQuery.of(context).size.width * 0.62,
-                                      child: SlideAction(
-                                        borderRadius: 12,
-                                        elevation: 0,
-                                        submittedIcon: Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: viewUtil.isTablet?30:26,
-                                        ),
-                                        innerColor: Color(0xff6069FF),
-                                        outerColor: Color(0xff6069FF),
-                                        sliderButtonIcon: AnimatedBuilder(
-                                          animation: _animation,
-                                          builder: (context, child) {
-                                            return Transform.translate(
-                                              offset: Offset(_animation.value, 0),
-                                              child: Icon(
-                                                Icons.arrow_forward_outlined,
-                                                color: Colors.white,
-                                                size: viewUtil.isTablet?30:26,
-                                              ),
-                                            );
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            await commonWidgets.makePhoneCall(widget.contactNo);
                                           },
-                                        ),
-                                        text: "Complete Order".tr(),
-                                        textStyle: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: viewUtil.isTablet?26:18,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        onSubmit: () async {
-                                          setState(() {
-                                            isCompleting =true;
-                                          });
-                                          SharedPreferences prefs = await SharedPreferences.getInstance();
-                                          await prefs.setBool('driverInteractionActive', false);
-                                          await driverService.driverCompleteOrder(context, bookingId: widget.bookingId, status: completeOrder, token: widget.token);
-                                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverHomePage(
-                                              firstName: widget.firstName,
-                                              lastName: widget.lastName,
-                                              token: widget.token,
-                                              id: widget.id,
-                                              partnerId: widget.partnerId,
-                                              mode: 'online')));
-                                          setState(() {
-                                            isCompleting =false;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (!isAtDropLocation)...[
-                  Visibility(
-          visible: !isMoveClicked,
-          replacement: Positioned(
-              bottom: MediaQuery.sizeOf(context).height * 0.3,
-              right: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Tooltip(
-                  message: 'Re-centre',
-                  child: CircleAvatar(
-                    radius: viewUtil.isTablet ? 30 : 20,
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                        onPressed: recenterMap,
-                        icon: Icon(Icons.my_location)),
-                  ),
-                ),
-              )),
-          child: Positioned(
-            bottom: MediaQuery.sizeOf(context).height * 0.27,
-            child: GestureDetector(
-              onTap: () {
-                resendOtp();
-                showOTPDialog();
-              },
-              child: Container(
-                width: MediaQuery.sizeOf(context).width,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Color(0xff6069FF),
-                    width: 6,
-                  ),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2,
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    minRadius: viewUtil.isTablet ? 60 : 50,
-                    backgroundColor: Color(0xff6069FF),
-                    child: Text(
-                      'Start Trip'.tr(),
-                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet ? 26 : 20),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-                  Visibility(
-                    visible: isMoveClicked,
-                    replacement: Positioned(
-                      bottom: 50,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 30),
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width * 0.93,
-                          child: Card(
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      'Notify Customer'.tr(),
-                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      widget.userName,
-                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 24, color: Color(0xff676565)),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        await commonWidgets.makePhoneCall(widget.contactNo);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                        decoration: BoxDecoration(
-                                            color: Color(0xff6069FF),
-                                            borderRadius: BorderRadius.circular(30)
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                          child: Container(
+                                            padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                            decoration: BoxDecoration(
+                                                color: Color(0xff6069FF),
+                                                borderRadius: BorderRadius.circular(30)
                                             ),
-                                          ],),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    child: Positioned(
-                      bottom: 50,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 30),
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width * 0.93,
-                          child: Card(
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
-                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: SvgPicture.asset('assets/person.svg'),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(
-                                          dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(), // Display distance for first drop point
-                                          style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
+                                                Padding(
+                                                  padding: const EdgeInsets.all(8.0),
+                                                  child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                                ),
+                                              ],),
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 20),
-                                    child: Text(
-                                      'Dropping of Product'.tr(),
-                                      style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: GestureDetector(
-                                      onTap: () async {
-                                        await commonWidgets.makePhoneCall(widget.contactNo);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                        decoration: BoxDecoration(
-                                            color: Color(0xff6069FF),
-                                            borderRadius: BorderRadius.circular(30)
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
-                                            Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
-                                            ),
-                                          ],),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        )
+                        ),
+                        child: Positioned(
+                          bottom: 50,
+                          child: Padding(
+                              padding: const EdgeInsets.only(left: 15, right: 30),
+                              child: Container(
+                                width: MediaQuery.sizeOf(context).width * 0.93,
+                                child: Card(
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 10, right: 10, top: 5),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                dropPointsTime.isNotEmpty ? dropPointsTime[0] : 'Calculating...'.tr(),
+                                                style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: SvgPicture.asset('assets/person.svg'),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                dropPointsDistance.isNotEmpty ? '${dropPointsDistance[0].toStringAsFixed(2)} km' : 'Calculating...'.tr(), // Display distance for first drop point
+                                                style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 20),
+                                          child: Text(
+                                            'Dropping of Product'.tr(),
+                                            style: TextStyle(fontSize: viewUtil.isTablet ? 26 : 20, color: Color(0xff676565)),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: GestureDetector(
+                                            onTap: () async {
+                                              await commonWidgets.makePhoneCall(widget.contactNo);
+                                            },
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                              decoration: BoxDecoration(
+                                                  color: Color(0xff6069FF),
+                                                  borderRadius: BorderRadius.circular(30)
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
+                                                  Padding(
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                                  ),
+                                                ],),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-    ]
-                ]
+                    ]
+                  ]
               ),
             ],
           ),

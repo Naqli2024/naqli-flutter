@@ -96,7 +96,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
   void initState() {
     super.initState();
     fetchUserName();
-    _loadCustomMarker();
+    // _loadCustomMarker();
     _loadData();
     _startRecenterTimer();
     _startPickupCheckTimer();
@@ -309,13 +309,13 @@ class _DriverInteractionState extends State<DriverInteraction> {
     double bearing = _calculateBearing(previousLatLng ?? currentLatLng!, currentLatLng!);
     previousLatLng = currentLatLng;  // Store the last known position
 
-    markers.add(Marker(
-      markerId: const MarkerId('currentLocation'),
-      position: currentLatLng!,
-      icon: customArrowIcon ?? BitmapDescriptor.defaultMarker, // Use arrow icon if available
-      infoWindow: const InfoWindow(title: 'Your Location'),
-      rotation: bearing, // Rotate arrow towards movement direction
-    ));
+    // markers.add(Marker(
+    //   markerId: const MarkerId('currentLocation'),
+    //   position: currentLatLng!,
+    //   icon: customArrowIcon ?? BitmapDescriptor.defaultMarker, // Use arrow icon if available
+    //   infoWindow: const InfoWindow(title: 'Your Location'),
+    //   rotation: bearing, // Rotate arrow towards movement direction
+    // ));
 
     markers.add(Marker(
       markerId: const MarkerId('pickupLocation'),
@@ -341,7 +341,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
     mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80)); // Padding for better view
   }
 
-  void _loadCustomMarker() async {
+/*  void _loadCustomMarker() async {
     final ByteData byteData = await rootBundle.load('assets/arrow.png');
     final Uint8List markerImage = byteData.buffer.asUint8List();
 
@@ -356,7 +356,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
 
       setState(() {});
     }
-  }
+  }*/
 
   List<LatLng> _decodePolyline(String encoded) {
     List<LatLng> polylineCoordinates = [];
@@ -468,30 +468,6 @@ class _DriverInteractionState extends State<DriverInteraction> {
     }
   }
 
-  LatLng _findClosestPointOnPolyline(LatLng currentLocation, List<LatLng> polylinePoints) {
-    LatLng closestPoint = polylinePoints.first;
-    double closestDistance = Geolocator.distanceBetween(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      closestPoint.latitude,
-      closestPoint.longitude,
-    );
-
-    for (LatLng point in polylinePoints) {
-      double distance = Geolocator.distanceBetween(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        point.latitude,
-        point.longitude,
-      );
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestPoint = point;
-      }
-    }
-    return closestPoint;
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -501,9 +477,9 @@ class _DriverInteractionState extends State<DriverInteraction> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
-            context,
-            showLeading: true,
-            User: widget.firstName +' '+ widget.lastName,
+          context,
+          showLeading: true,
+          User: widget.firstName +' '+ widget.lastName,
         ),
         drawer: Drawer(
           backgroundColor: Colors.white,
@@ -630,7 +606,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       polylines: routePolyline != null ? {routePolyline!} : {},
                       buildingsEnabled: false,
                       compassEnabled: false,
-                      myLocationEnabled: false,
+                      myLocationEnabled: true,
                       myLocationButtonEnabled: true,
                       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                         Factory<OneSequenceGestureRecognizer>(
@@ -650,46 +626,46 @@ class _DriverInteractionState extends State<DriverInteraction> {
                       child: Card(
                         color: Colors.white,
                         child: feet != null
-                          ? Column(
+                            ? Column(
                           children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 15, right: 10),
-                                      child: Column(
-                                        children: [
-                                          SvgPicture.asset('assets/upArrow.svg'),
-                                          Text(
-                                            feet == null?'0 ft':'$feet',
-                                            style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:18, color: Color(0xff676565)),
-                                          ),
-                                        ],
-                                      ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 15, right: 10),
+                                    child: Column(
+                                      children: [
+                                        SvgPicture.asset('assets/upArrow.svg'),
+                                        Text(
+                                          feet == null?'0 ft':'$feet',
+                                          style: TextStyle(fontWeight: FontWeight.w500,fontSize: viewUtil.isTablet?26:18, color: Color(0xff676565)),
+                                        ),
+                                      ],
                                     ),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text("Pickup Location".tr(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
-                                          Text(widget.pickUp,textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
-                                         /***Commented for removing Nearby location***/
-                                         /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text("Pickup Location".tr(),style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
+                                        Text(widget.pickUp,textAlign: TextAlign.center,style: TextStyle(fontSize: viewUtil.isTablet?26:16)),
+                                        /***Commented for removing Nearby location***/
+                                        /* Text(nearbyPlaces[currentIndex]['name'] ?? '',
                                             style: TextStyle(fontSize: viewUtil.isTablet?26:16),),
                                           Text('Towards'.tr(), style: TextStyle(fontWeight: FontWeight.bold,fontSize: viewUtil.isTablet?26:16)),
                                           Text(nearbyPlaces[currentIndex]['address'] ?? '', textAlign: TextAlign.center,
                                               style: TextStyle(fontSize: viewUtil.isTablet?26:16)),*/
-                                        ],
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
+                            ),
                           ],
                         )
-                          : Padding(
+                            : Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -713,7 +689,7 @@ class _DriverInteractionState extends State<DriverInteraction> {
                     ),
                   ),
                   isMoveClicked
-                  ? Positioned(
+                      ? Positioned(
                       bottom: MediaQuery.sizeOf(context).height * 0.25,
                       right: 20,
                       child: Container(
@@ -739,17 +715,17 @@ class _DriverInteractionState extends State<DriverInteraction> {
                           ),
                         ),
                       ))
-                  : Visibility(
+                      : Visibility(
                     visible: feet!=null,
                     child: Positioned(
                       bottom: MediaQuery.sizeOf(context).height * 0.27,
                       child: GestureDetector(
                         onTap: (){
-                           setState(() {
-                             isMoveClicked = true;
-                             recenterMap();
-                             // _loadData();
-                           });
+                          setState(() {
+                            isMoveClicked = true;
+                            recenterMap();
+                            // _loadData();
+                          });
                         },
                         child: Container(
                           width: MediaQuery.sizeOf(context).width,
@@ -793,66 +769,66 @@ class _DriverInteractionState extends State<DriverInteraction> {
                   Positioned(
                     bottom: 20,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 15, right: 30),
-                      child: Container(
-                        width: MediaQuery.sizeOf(context).width * 0.93,
-                    child: Card(
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
+                        padding: const EdgeInsets.only(left: 15, right: 30),
+                        child: Container(
+                          width: MediaQuery.sizeOf(context).width * 0.93,
+                          child: Card(
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10, right: 10, top: 15),
+                              child: Column(
                                 children: [
-                                  Expanded(child: SvgPicture.asset('assets/person.svg')),
-                                  Center(
-                                    child: Text(
-                                      firstName != null || lastName!= null
-                                          ? '$firstName'+' '+ '$lastName'
-                                          : '',
-                                      style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(child: SvgPicture.asset('assets/person.svg')),
+                                        Center(
+                                          child: Text(
+                                            firstName != null || lastName!= null
+                                                ? '$firstName'+' '+ '$lastName'
+                                                : '',
+                                            style: TextStyle(fontSize: viewUtil.isTablet?26:24, color: Color(0xff676565)),
+                                          ),
+                                        ),
+                                        Spacer(),
+                                      ],
                                     ),
                                   ),
-                                  Spacer(),
+                                  Text(
+                                    timeToPickup ==null ?'Calculating...'.tr():'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
+                                    style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565)),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await commonWidgets.makePhoneCall(contactNo??'');
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                        decoration: BoxDecoration(
+                                            color: Color(0xff6069FF),
+                                            borderRadius: BorderRadius.circular(30)
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
+                                            ),
+                                          ],),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                            Text(
-                                timeToPickup ==null ?'Calculating...'.tr():'$timeToPickup (${pickUpDistance?.toStringAsFixed(2)} km)',
-                              style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Color(0xff676565)),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await commonWidgets.makePhoneCall(contactNo??'');
-                                },
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                  decoration: BoxDecoration(
-                                      color: Color(0xff6069FF),
-                                      borderRadius: BorderRadius.circular(30)
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.call, color: Colors.white,size: viewUtil.isTablet?30:20),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text('Call'.tr(), style: TextStyle(fontSize: viewUtil.isTablet?26:17, color: Colors.white)),
-                                      ),
-                                    ],),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
+                          ),
+                        )
                     ),
                   ),
                 ],

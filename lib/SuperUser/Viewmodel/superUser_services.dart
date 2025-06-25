@@ -161,8 +161,8 @@ class SuperUserServices {
   }
 
 
-  Future<Map<String, String>> getPartnerNames(List<String> partnerIds, String token) async {
-    Map<String, String> partnerIdToNameMap = {};
+  Future<Map<String, Map<String, String>>> getPartnerNames(List<String> partnerIds, String token) async {
+    Map<String, Map<String, String>> partnerInfoMap = {};
 
     for (String partnerId in partnerIds) {
       try {
@@ -176,19 +176,60 @@ class SuperUserServices {
 
         if (response.statusCode == 200) {
           final responseBody = jsonDecode(response.body);
-          final partnerName = responseBody['data']?['partnerName'] ?? 'N/A';
-          final mobileNo= responseBody['data']?['mobileNo'] ?? 'N/A';
-          partnerIdToNameMap[partnerId] = partnerName;
+          final data = responseBody['data'];
+
+          final partnerName = data?['partnerName'] ?? 'N/A';
+          final partnerMobileNo = data?['mobileNo'] ?? 'N/A';
+
+          // Default values
+          String operatorFirstName = 'N/A';
+          String operatorLastName = 'N/A';
+          String operatorMobileNo = 'N/A';
+
+          // Try to extract the first operator's details
+          final operators = data?['operators'];
+          if (operators != null && operators is List && operators.isNotEmpty) {
+            final firstOperator = operators[0];
+            final operatorDetails = firstOperator['operatorsDetail'];
+            if (operatorDetails != null && operatorDetails is List && operatorDetails.isNotEmpty) {
+              final firstDetail = operatorDetails[0];
+              operatorFirstName = firstDetail['firstName'] ?? 'N/A';
+              operatorLastName = firstDetail['lastName'] ?? 'N/A';
+              operatorMobileNo = firstDetail['mobileNo'] ?? 'N/A';
+            }
+          }
+
+          partnerInfoMap[partnerId] = {
+            'partnerName': partnerName,
+            'mobileNo': partnerMobileNo,
+            'operatorFirstName': operatorFirstName,
+            'operatorLastName': operatorLastName,
+            'operatorMobileNo': operatorMobileNo,
+          };
         } else {
-          partnerIdToNameMap[partnerId] = 'N/A';
+          partnerInfoMap[partnerId] = {
+            'partnerName': 'N/A',
+            'mobileNo': 'N/A',
+            'operatorFirstName': 'N/A',
+            'operatorLastName': 'N/A',
+            'operatorMobileNo': 'N/A',
+          };
         }
       } catch (e) {
-        partnerIdToNameMap[partnerId] = 'N/A';
+        partnerInfoMap[partnerId] = {
+          'partnerName': 'N/A',
+          'mobileNo': 'N/A',
+          'operatorFirstName': 'N/A',
+          'operatorLastName': 'N/A',
+          'operatorMobileNo': 'N/A',
+        };
       }
     }
 
-    return partnerIdToNameMap;
+    return partnerInfoMap;
   }
+
+
 
 
   Future<void> updateBooking(String token,String bookingId,String date,String pickup,List dropPoints,int additionalLabour) async {

@@ -94,7 +94,7 @@ class _DriverNotificationState extends State<DriverNotification> {
         isCalculating = true;
       });
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
       String currentLocation = '${position.latitude},${position.longitude}';
 
       String url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins=${currentLocation}&destinations=${pickupAddress}|${dropPointsAddresses.join('|')}&key=$apiKey';

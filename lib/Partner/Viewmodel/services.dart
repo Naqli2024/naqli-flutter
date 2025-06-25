@@ -674,6 +674,14 @@ class AuthService {
         await getUserName(userId, token);
         return {
           '_id': data['_id'],
+          'unitType': data['unitType'],
+          'shipmentType': data['shipmentType'],
+          'shippingCondition': data['shippingCondition'],
+          'cargoLength': data['cargoLength'],
+          'cargoBreadth': data['cargoBreadth'],
+          'cargoHeight': data['cargoHeight'],
+          'cargoUnit': data['cargoUnit'],
+          'shipmentWeight': data['shipmentWeight'],
           'date': data['date'],
           'time': data['time'],
           'productValue': data['productValue'],
@@ -710,8 +718,8 @@ class AuthService {
     }
   }
 
-  Future<String?> getUserName(String userId, String token) async {
-    try{
+  Future<Map<String, String?>?> getUserName(String userId, String token) async {
+    try {
       final response = await http.get(
         Uri.parse('https://prod.naqlee.com:443/api/users/$userId'),
         headers: {
@@ -725,31 +733,36 @@ class AuthService {
         if (responseBody != null) {
           final firstName = responseBody['firstName'] ?? '';
           final lastName = responseBody['lastName'] ?? '';
+          final contactNumber = responseBody['contactNumber'].toString() ?? '';
 
-          if (firstName.isNotEmpty && lastName.isNotEmpty) {
-            return '$firstName $lastName';
-          } else {
-            return null;
+          String? fullName;
+          if (firstName.isNotEmpty || lastName.isNotEmpty) {
+            fullName = '$firstName $lastName'.trim();
           }
+
+          return {
+            'fullName': fullName,
+            'contactNumber': contactNumber,
+          };
         } else {
-          final responseBody = jsonDecode(response.body);
-          final message = responseBody['message']??'Please try again';
+          final message = responseBody['message'] ?? 'Please try again';
           commonWidgets.showToast(message);
           return null;
         }
       } else {
         final responseBody = jsonDecode(response.body);
-        final message = responseBody['message']??'Please try again';
+        final message = responseBody['message'] ?? 'Please try again';
         commonWidgets.showToast(message);
         return null;
       }
-    }on SocketException {
+    } on SocketException {
       commonWidgets.showToast('Please Check your Internet Connection..');
       return null;
     } catch (e) {
       return null;
     }
   }
+
 
   Future<void> sendQuotePrice(
       BuildContext context, {

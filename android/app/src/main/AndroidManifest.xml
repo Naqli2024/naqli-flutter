@@ -40,7 +40,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCWMr3-rDWx3ax_u2jP4lPffspdyA9Lyvw" />
+            android:value="AIzaSyC3KoM-amWTljDPpfX4DOmTneX8ntJ9K9I" />
     </application>
     <queries>
         <!-- Phone Call Support -->

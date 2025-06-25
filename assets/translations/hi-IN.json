@@ -522,5 +522,11 @@
   "Select condition": "स्थिति चुनें",
   "Dry Storage": "सूखा भंडारण",
   "Select": "चुनना",
-  "Shared Cargo": "साझा कार्गो"
+  "shared-cargo": "साझा-कार्गो",
+  "Cargo Dimension(LxBxH)": "कार्गो आयाम (LxBxH)",
+  "Vendor MobileNo": "विक्रेता का मोबाइल नं",
+  "Operator": "संचालिका",
+  "Operator MobileNo": "संचालक मोबाइल नं",
+  "Pending": "लंबित",
+  "User MobileNo": "उपयोगकर्ता का मोबाइल नंबर"
 }

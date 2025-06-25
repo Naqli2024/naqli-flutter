@@ -530,5 +530,11 @@
   "Select condition": "اختر الحالة",
   "Dry Storage": "تخزين جاف",
   "Select": "يختار",
-  "Shared Cargo": "البضائع المشتركة"
+  "shared-cargo": "البضائع المشتركة",
+  "Cargo Dimension(LxBxH)": "أبعاد الحمولة (الطول × العرض × الارتفاع)",
+  "Vendor MobileNo": "رقم جوال البائع",
+  "Operator": "المشغل",
+  "Operator MobileNo": "رقم جوال المشغل",
+  "Pending": "قيد الانتظار",
+  "User MobileNo": "رقم جوال المستخدم"
 }

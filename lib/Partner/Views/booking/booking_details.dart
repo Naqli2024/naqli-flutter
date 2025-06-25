@@ -34,6 +34,7 @@ class _BookingDetailsState extends State<BookingDetails> {
   String errorMessage = '';
   String? firstName;
   String? lastName;
+  String? contactNumber;
   String? payment;
   String? paymentData;
   int? balance;
@@ -97,17 +98,22 @@ class _BookingDetailsState extends State<BookingDetails> {
 
   Future<void> fetchUserName(String userId) async {
     try {
-      final fetchedFirstName = await _authService.getUserName(userId, widget.token);
-      setState(() {
-        firstName = fetchedFirstName;
-        lastName = fetchedFirstName;
-      });
+      final userInfo = await _authService.getUserName(userId, widget.token);
+      if (userInfo != null) {
+        setState(() {
+          firstName = userInfo['fullName'] ?? 'N/A';
+          contactNumber = userInfo['contactNumber'] ?? 'N/A';
+        });
+      }
     } catch (e) {
+      print(e);
       setState(() {
+        firstName = 'N/A';
+        contactNumber = 'N/A';
       });
-
     }
   }
+
 
   Future<void> fetchPaymentType(String bookingId) async {
     setState(() {
@@ -344,6 +350,7 @@ class _BookingDetailsState extends State<BookingDetails> {
                                                 address: address,
                                                 zipCode: zipCode,
                                                 email: widget.email,
+                                                contactNumber: contactNumber??'',
                                               )
                                           ),
                                         );

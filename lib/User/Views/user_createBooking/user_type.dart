@@ -56,7 +56,7 @@ class _UserTypeState extends State<UserType> {
     {'title': 'Bus', 'asset': 'bus.vg'},
     {'title': 'Equipment', 'asset': 'equipment.vg'},
     {'title': 'Special', 'asset': 'special.vg'},
-    {'title': 'Shared Cargo', 'asset': 'sharedCargo.vg'},
+    {'title': 'shared-cargo', 'asset': 'sharedCargo.vg'},
     {'title': 'Others', 'asset': 'others.vg'},
   ];
   final List<String> carouselAssets = [

@@ -620,7 +620,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                 }
                               }
                             }
-                            if (widget.selectedType == 'shared cargo') {
+                            if (widget.selectedType == 'shared-cargo') {
                               if (_currentStep == 1) {
                                 if (selectedShipmentType == null || selectedShipmentCondition == null ||
                                 lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
@@ -761,7 +761,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         return equipmentContent();
       case 'special':
         return specialContent();
-      case 'shared cargo':
+      case 'shared-cargo':
         return sharedCargoContent();
       case 'others':
         return specialContent();
@@ -781,7 +781,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         return UserEquipmentStepTwo();
       case 'special':
         return UserSpecialStepTwo();
-      case 'shared cargo':
+      case 'shared-cargo':
         return UserSharedCargoStepTwo();
       case 'others':
         return UserSpecialStepTwo();
@@ -809,7 +809,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         return UserEquipmentStepThree();
       case 'special':
         return UserSpecialStepThree();
-      case 'shared cargo':
+      case 'shared-cargo':
         return UserSharedCargoStepThree();
       case 'others':
         return UserSpecialStepThree();
@@ -5178,7 +5178,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         }
       }
     }
-    if (widget.selectedType == 'shared cargo') {
+    if (widget.selectedType == 'shared-cargo') {
       if (pickUpController.text.isEmpty ||
           dropPlaces.contains('') ||
           dropPlaces.isEmpty) {
@@ -5186,16 +5186,18 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       } else {
         String? bookingId = await userService.userSharedCargoCreateBooking(
           context,
-          name: selectedName.toString(),
+          name: '',
           unitType: widget.selectedType,
-          typeName: selectedTypeName.toString(),
-          scale: scale.toString(),
-          typeImage: typeImage.toString(),
-          typeOfLoad: selectedLoad.toString(),
+          shipmentType: selectedShipmentType.toString(),
+          shippingCondition: selectedShipmentCondition.toString(),
+          cargoLength: lengthController.text,
+          cargoBreadth: breadthController.text,
+          cargoHeight: heightController.text,
+          cargoUnit: selectedUnit,
           date: formattedDate,
-          additionalLabour: selectedLabour.toString(),
           time: formattedTime,
           productValue: productController.text,
+          shipmentWeight: weightController.text,
           pickup: pickUpController.text,
           dropPoints: dropPlaces,
           token: widget.token,
