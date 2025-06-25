@@ -2884,7 +2884,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   right:
                                                       MediaQuery.sizeOf(context)
                                                               .width *
-                                                          0.27),
+                                                          0.25),
                                               child:
                                                   Text('Current Location'.tr()),
                                             ),
@@ -3214,7 +3214,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   right:
                                                       MediaQuery.sizeOf(context)
                                                               .width *
-                                                          0.27),
+                                                          0.25),
                                               child:
                                                   Text('Current Location'.tr()),
                                             ),
@@ -3527,7 +3527,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 right:
                                                     MediaQuery.sizeOf(context)
                                                             .width *
-                                                        0.27),
+                                                        0.25),
                                             child:
                                                 Text('Current Location'.tr()),
                                           ),
@@ -3782,7 +3782,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                 right:
                                                     MediaQuery.sizeOf(context)
                                                             .width *
-                                                        0.27),
+                                                        0.25),
                                             child:
                                                 Text('Current Location'.tr()),
                                           ),
@@ -4056,7 +4056,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                                   right:
                                                   MediaQuery.sizeOf(context)
                                                       .width *
-                                                      0.27),
+                                                      0.25),
                                               child:
                                               Text('Current Location'.tr()),
                                             ),
@@ -4364,6 +4364,21 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
 
   Future<void> locateCurrentPosition() async {
     try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          commonWidgets.showToast('Location permission denied.');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        commonWidgets.showToast('Location permanently denied. Please enable it in settings.');
+        await Geolocator.openAppSettings();
+        return;
+      }
+
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.best,
       );
@@ -4378,8 +4393,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       String place = 'Unknown location';
       if (placemarks.isNotEmpty) {
         final Placemark placemark = placemarks[0];
-        place =
-            "${placemark.name}, ${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
+        place = "${placemark.name}, ${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
       }
 
       if (mapController != null) {
@@ -4406,7 +4420,8 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         );
       });
     } catch (e) {
-      commonWidgets.showToast('An error occurred,Please try again.');
+      print("Error locating position: $e");
+      commonWidgets.showToast('An error occurred. Please try again.');
     }
   }
 
@@ -4414,94 +4429,131 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     setState(() {
       isLocating = true;
     });
-    Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.best,
-    );
 
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    String reverseGeocodeUrl =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() => isLocating = false);
+          return;
+        }
+      }
 
-    final response = await http.get(Uri.parse(reverseGeocodeUrl));
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => isLocating = false);
+        await Geolocator.openAppSettings();
+        return;
+      }
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.best,
+      );
 
-      if (data != null && data['status'] == 'OK') {
-        final formattedAddress = data['results'][0]['formatted_address'];
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+      String reverseGeocodeUrl =
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
 
-        setState(() {
-          pickUpController.text = formattedAddress;
-          isLocating = false;
-          _pickUpSuggestions = [];
-        });
+      final response = await http.get(Uri.parse(reverseGeocodeUrl));
 
-        setState(() {
-          markers.add(
-            Marker(
-              markerId: const MarkerId('current_location'),
-              position:
-                  LatLng(currentPosition.latitude, currentPosition.longitude),
-              infoWindow: InfoWindow(
-                title: 'Current Location',
-                snippet: formattedAddress,
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data != null && data['status'] == 'OK') {
+          final formattedAddress = data['results'][0]['formatted_address'];
+
+          setState(() {
+            pickUpController.text = formattedAddress;
+            isLocating = false;
+            _pickUpSuggestions = [];
+            markers.add(
+              Marker(
+                markerId: const MarkerId('current_location'),
+                position: LatLng(currentPosition.latitude, currentPosition.longitude),
+                infoWindow: InfoWindow(
+                  title: 'Current Location',
+                  snippet: formattedAddress,
+                ),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen),
-            ),
-          );
-        });
-      } else {}
-    } else {}
+            );
+          });
+        } else {
+          setState(() => isLocating = false);
+        }
+      } else {
+        setState(() => isLocating = false);
+      }
+    } catch (e) {
+      setState(() => isLocating = false);
+    }
   }
 
   Future<void> currentPositionSuggestionForCity() async {
     setState(() {
       isLocating = true;
     });
-    Position currentPosition = await Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.best,
-    );
 
-    // Convert the coordinates into a human-readable address (Reverse Geocoding)
-    String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
-    String reverseGeocodeUrl =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() => isLocating = false);
+          return;
+        }
+      }
 
-    final response = await http.get(Uri.parse(reverseGeocodeUrl));
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => isLocating = false);
+        await Geolocator.openAppSettings();
+        return;
+      }
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      Position currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.best,
+      );
 
-      if (data != null && data['status'] == 'OK') {
-        final formattedAddress = data['results'][0]['formatted_address'];
+      String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
+      String reverseGeocodeUrl =
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${currentPosition.latitude},${currentPosition.longitude}&key=$apiKey';
 
-        // Update the pickup controller with the current location address
-        setState(() {
-          cityNameController.text = formattedAddress;
-          isLocating = false;
-          _cityNameSuggestions = [];
-        });
+      final response = await http.get(Uri.parse(reverseGeocodeUrl));
 
-        // Optionally, place a marker for the current location on the map
-        setState(() {
-          markers.add(
-            Marker(
-              markerId: const MarkerId('current_location'),
-              position:
-                  LatLng(currentPosition.latitude, currentPosition.longitude),
-              infoWindow: InfoWindow(
-                title: 'Current Location',
-                snippet: formattedAddress,
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data != null && data['status'] == 'OK') {
+          final formattedAddress = data['results'][0]['formatted_address'];
+
+          setState(() {
+            cityNameController.text = formattedAddress;
+            isLocating = false;
+            _cityNameSuggestions = [];
+            markers.add(
+              Marker(
+                markerId: const MarkerId('current_location'),
+                position: LatLng(currentPosition.latitude, currentPosition.longitude),
+                infoWindow: InfoWindow(
+                  title: 'Current Location',
+                  snippet: formattedAddress,
+                ),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
               ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen),
-            ),
-          );
-        });
-      } else {}
-    } else {}
+            );
+          });
+        } else {
+          setState(() => isLocating = false);
+        }
+      } else {
+        setState(() => isLocating = false);
+      }
+
+    } catch (e) {
+      setState(() => isLocating = false);
+    }
   }
+
 
   Future<void> _fetchCoordinates() async {
     try {

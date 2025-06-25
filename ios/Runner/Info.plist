@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Naqli</string>
+	<string>Naqlee</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,9 +48,11 @@
 	<key>io.flutter.embedded_views_preview</key>
     <true/>
     <key>GMSApiKey</key>
-    <string>AIzaSyC3KoM-amWTljDPpfX4DOmTneX8ntJ9K9I</string>
+    <string>AIzaSyBrmirQZj-I9VFe_LQRPuUTv2pVBXjsDRo</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Allow access to your location to use maps.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>We need your location to track your journey and show accurate results.</string>
     <key>NSDocumentsFolderUsageDescription</key>
     <string>This app requires access to documents folder for printing.</string>
     <key>FLTEnableImpeller</key>
