@@ -1,0 +1,13 @@
+
+”
+;
+android*http://schemas.android.com/apk/res/androidshape"H
+*http://schemas.android.com/apk/res/androidshapeoval"(šƒ„2:0*¸
+¯solid"¥
+*http://schemas.android.com/apk/res/androidcolor-@color/stripe_card_widget_progress_background"(¥ƒ„28
+6¬†”ø,color/stripe_card_widget_progress_background0L*È
+¿size"š
+*http://schemas.android.com/apk/res/androidheight'@dimen/stripe_card_widget_progress_size"(Õ‚„22
+0Ì†˜ø&dimen/stripe_card_widget_progress_size0@"™
+*http://schemas.android.com/apk/res/androidwidth'@dimen/stripe_card_widget_progress_size"(Ù‚„22
+0Ì†˜ø&dimen/stripe_card_widget_progress_size0@D

@@ -1,0 +1,11 @@
+
+
+;
+android*http://schemas.android.com/apk/res/android*FrameLayout"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightmatch_parent"(õ„2:0ÿÿÿÿÿÿÿÿÿ*ı
+ô,com.stripe.android.view.PaymentFlowViewPager"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"	(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightmatch_parent"	(õ„2:0ÿÿÿÿÿÿÿÿÿ"
+*http://schemas.android.com/apk/res/androidid@+id/shipping_flow_viewpager"	(Ğ„2&
+$«„ øid/shipping_flow_viewpager0	0*

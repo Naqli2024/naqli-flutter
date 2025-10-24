@@ -288,3 +288,38 @@ Future<void> clearUserData() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.clear();
 }
+
+
+Future<bool> saveLocalBookingDataWithoutLogin(String bookingData) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bookingData', bookingData);
+    return true;
+  } catch (e) {
+    CommonWidgets().showToast('An error occurred, please try again.');
+    return false;
+  }
+}
+
+
+Future<Map<String, String?>> getSavedLocalBookingDataWithoutLogin() async {
+  final prefs = await SharedPreferences.getInstance();
+  return {
+    'bookingData': prefs.getString('bookingData'),
+  };
+}
+
+Future<void> clearSavedLocalBookingDataWithoutLogin() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+}
+
+Future<void> restoreBookingData() async {
+  final data = await getSavedLocalBookingDataWithoutLogin();
+  if (data['bookingData'] != null) {
+    final Map<String, dynamic> booking = jsonDecode(data['bookingData']!);
+    // Use booking['pickup'], booking['dropPoints'], etc.
+    print("Restored booking: $booking");
+  }
+}
+

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
+import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_forgotPassword.dart';
@@ -52,7 +53,6 @@ class _UserLoginState extends State<UserLogin> {
       setState(() {
         isLoading = true;
       });
-
       await userService.userLogin(
         context,
         emailAddress: emailAddressController.text,

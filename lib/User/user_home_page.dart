@@ -10,6 +10,8 @@ import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/Partner/Views/auth/stepOne.dart';
 import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
+import 'package:flutter_naqli/User/Views/user_auth/user_success.dart';
+import 'package:flutter_naqli/User/Views/user_createBooking/user_booking.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/vectorImage.dart';
@@ -163,7 +165,7 @@ class _UserHomePageState extends State<UserHomePage> {
                   size: viewUtil.isTablet ? 25 : 15,
                 ),
                 IconButton(
-                    onPressed: () {},
+                    onPressed: ()  {},
                     icon: Icon(
                       Icons.person,
                       color: Color(0xff5D5151),
@@ -386,7 +388,35 @@ class _UserHomePageState extends State<UserHomePage> {
                         final titleFontSize = isTablet ? 25.0 : 16.0;
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => const UserLogin()));
+                            item['title'] != 'Others'
+                                ? Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CreateBooking(
+                                  firstName: "",
+                                  lastName: "",
+                                  selectedType: item['title']!.toLowerCase(),
+                                  token: "",
+                                  id: "",
+                                  email: "",
+                                  isFromUserType: 'isFromUserType',
+                                  accountType: "",
+                                ),
+                              ),
+                            )
+                                : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SuccessScreen(
+                                      id: "",
+                                      firstName: "",
+                                      lastName: "",
+                                      token:"",
+                                      Image: 'assets/others.svg',
+                                      title: 'Others'.tr(),
+                                      subTitle: 'Sorry,the others section is currently unavailable'.tr())
+                              ),
+                            );
                           },
                           child: Card(
                             elevation: 3,

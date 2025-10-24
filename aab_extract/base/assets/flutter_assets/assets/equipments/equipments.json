@@ -1,0 +1,80 @@
+{
+  "equipment": [
+    {
+      "name": "Excavator",
+      "unitType": "equipment",
+      "type": [
+        {
+          "typeName": "Excavator",
+          "typeImage": "assets/equipments/excavator.png"
+        }
+      ],
+      "id": "339a"
+    },
+    {
+      "name": "Loaders",
+      "unitType": "equipment",
+      "type": [
+        {
+          "typeName": "Back hoe",
+          "typeImage": "assets/equipments/backhoe.png"
+        },
+        {
+          "typeName": "Front hoe",
+          "typeImage": "assets/equipments/front hoe.png"
+        },
+        {
+          "typeName": "Skid steer",
+          "typeImage": "assets/equipments/skid steer.png"
+        }
+      ],
+      "id": "9f4f"
+    },
+    {
+      "name": "Cranes",
+      "unitType": "equipment",
+      "type": [
+        {
+          "typeName": "Crawler crane",
+          "typeImage": "assets/equipments/crawler crane.png"
+        },
+        {
+          "typeName": "Mobile crane",
+          "typeImage": "assets/equipments/mobile crane.png"
+        }
+      ],
+      "id": "6d1c"
+    },
+    {
+      "name": "Others",
+      "unitType": "equipment",
+      "type": [
+        {
+          "typeName": "Compactors",
+          "typeImage": "assets/equipments/compactors.png"
+        },
+        {
+          "typeName": "Bulldozers",
+          "typeImage": "assets/equipments/bull dozers.png"
+        },
+        {
+          "typeName": "Graders",
+          "typeImage": "assets/equipments/graders.png"
+        },
+        {
+          "typeName": "Dump truck",
+          "typeImage": "assets/equipments/dump truck.png"
+        },
+        {
+          "typeName": "Forklift",
+          "typeImage": "assets/equipments/fork lift.png"
+        },
+        {
+          "typeName": "Scissorlift",
+          "typeImage": "assets/equipments/scissor lift.png"
+        }
+      ],
+      "id": "8af2"
+    }
+  ]
+}

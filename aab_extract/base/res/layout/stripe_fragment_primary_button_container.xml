@@ -1,0 +1,22 @@
+
+‰
+;
+android*http://schemas.android.com/apk/res/android*FrameLayout"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"a
+*http://schemas.android.com/apk/res/androidlayout_heightwrap_content"(õ„2:0þÿÿÿÿÿÿÿÿ*÷	
+î	0com.stripe.android.paymentsheet.ui.PrimaryButton"M
+*http://schemas.android.com/apk/res/android
+visibilitygone"(Ü„2:0"¼
+*http://schemas.android.com/apk/res/androidlayout_marginEnd3@dimen/stripe_paymentsheet_outer_spacing_horizontal"(¶‡„2>
+<ì†˜ø2dimen/stripe_paymentsheet_outer_spacing_horizontal0@"`
+*http://schemas.android.com/apk/res/androidlayout_widthmatch_parent"(ô„2:0ÿÿÿÿÿÿÿÿÿ"µ
+*http://schemas.android.com/apk/res/androidlayout_height0@dimen/stripe_paymentsheet_primary_button_height"(õ„2=
+;ô†˜ø/dimen/stripe_paymentsheet_primary_button_height0À€"¼
+*http://schemas.android.com/apk/res/androidlayout_marginTop3@dimen/stripe_paymentsheet_button_container_spacing"(ø„2>
+<Ü†˜ø2dimen/stripe_paymentsheet_button_container_spacing0@"¾
+*http://schemas.android.com/apk/res/androidlayout_marginStart3@dimen/stripe_paymentsheet_outer_spacing_horizontal"(µ‡„2>
+<ì†˜ø2dimen/stripe_paymentsheet_outer_spacing_horizontal0@"m
+*http://schemas.android.com/apk/res/androidid@+id/primary_button"(Ð„2
+óƒ øid/primary_button0"¢
+*http://schemas.android.com/apk/res/androidtext,@string/stripe_paymentsheet_pay_button_label"(Ï‚„27
+5ÉƒÀø+string/stripe_paymentsheet_pay_button_label0%*

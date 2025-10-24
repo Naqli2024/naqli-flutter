@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_naqli/Helper/helper.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
@@ -297,34 +298,28 @@ class UserService{
           final accountType = userData['accountType'] ?? '';
           if(accountType == 'Single User')
             {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => UserType(
-                    firstName: firstName,
-                    lastName: lastName,
-                    token: token,
-                    id: id,
-                    email: email,
-                    accountType: accountType,
-                  ),
-                ),
+              await restoreBookingDataAfterLogin(
+                context: context,
+                firstName: firstName,
+                lastName: lastName,
+                token: token,
+                id: id,
+                email: email,
+                accountType: accountType,
               );
               final message = responseBody['message'] ?? 'Login Failed';
               commonWidgets.showToast(message);
               await saveUserData(firstName, lastName, token, id, email, accountType);
             }
           else{
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => SuperUserHomePage(
-                    firstName: firstName,
-                    lastName: lastName,
-                    token: token,
-                    id: id,
-                    email: email,
-                    accountType: accountType,
-                ),
-              ),
+            await restoreSuperUserBookingDataAfterLogin(
+              context: context,
+              firstName: firstName,
+              lastName: lastName,
+              token: token,
+              id: id,
+              email: email,
+              accountType: accountType,
             );
             final message = responseBody['message'] ?? 'Login Failed';
             commonWidgets.showToast(message);

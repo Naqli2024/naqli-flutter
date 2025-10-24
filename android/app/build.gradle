@@ -1,15 +1,3 @@
-buildscript {
-    ext.kotlin_version = '1.9.10'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
 plugins {
     id "com.android.application"
     id "kotlin-android"
@@ -19,9 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.flutter_naqli"
-    compileSdk = 34
-
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 36
+    ndkVersion = "28.0.12433566"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -34,15 +21,28 @@ android {
 
     defaultConfig {
         applicationId = "com.app.naqlee"
-        minSdk = 21
-        targetSdk = 34
-        versionCode = 19
-        versionName = "1.0.8"
+        minSdkVersion = flutter.minSdkVersion
+        targetSdk = 36
+        versionCode = 26
+        versionName = "1.0.9"
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
 
         ndk {
-            debugSymbolLevel 'SYMBOL_TABLE'
+            abiFilters "armeabi-v7a", "arm64-v8a"
         }
+    }
+
+//    splits {
+//        abi {
+//            enable true
+//            reset()
+//            include 'armeabi-v7a', 'arm64-v8a'
+//            universalApk false
+//        }
+//    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     signingConfigs {
@@ -51,15 +51,6 @@ android {
             storePassword "naqli@123"
             keyAlias "upload"
             keyPassword "naqli@123"
-        }
-    }
-
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-            universalApk true
         }
     }
 
@@ -75,10 +66,20 @@ android {
         }
     }
 
-    dependencies {
-        implementation "com.google.android.gms:play-services-maps:19.0.0"
-        implementation 'com.stripe:stripe-android:20.48.6'
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging false
+        }
     }
+}
+dependencies {
+    implementation "com.google.android.gms:play-services-maps:19.0.0"
+    implementation 'com.stripe:stripe-android:20.48.6'
+
+    implementation 'androidx.core:core-ktx:1.13.1' // Latest for KTX
+    implementation 'androidx.appcompat:appcompat:1.7.0' // Latest stable appcompat
+    implementation 'androidx.fragment:fragment-ktx:1.7.1' // Latest fragment-ktx
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.0' // Latest lifecycle-ktx
 }
 
 flutter {

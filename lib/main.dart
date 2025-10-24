@@ -48,7 +48,6 @@ void main() async {
       try {
         await InAppWebViewController.setWebContentsDebuggingEnabled(true);
       } catch (e) {
-        CommonWidgets().showToast('An error occurred,Please try again.');
       }
     });
   }
@@ -66,10 +65,18 @@ class MyApp extends StatelessWidget {
       locale: context.locale,
       title: 'Naqlee',
       builder: (context, child) {
-        ViewUtil viewUtil = ViewUtil(context);
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: viewUtil.isTablet ? 1.3 : 0.87),
-          child: child ?? const LoginScreen(),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final mediaQuery = MediaQuery.of(context);
+            final viewUtil = ViewUtil(context);
+
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaleFactor: viewUtil.isTablet ? 1.3 : 0.87,
+              ),
+              child: child ?? const LoginScreen(),
+            );
+          },
         );
       },
       debugShowCheckedModeBanner: false,

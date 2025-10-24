@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "66fff6e07d4ab06fed295d78",
+    "name": "Concrete Mixer",
+    "unitType": "special",
+    "image": "concrete mixer.vg",
+    "__v": 0
+  },
+  {
+    "_id": "66fff6e07d4ab06fed295d79",
+    "name": "Concrete Pump Truck",
+    "unitType": "special",
+    "image": "concrete pump truck.vg",
+    "__v": 0
+  },
+  {
+    "_id": "66fff6e07d4ab06fed295d77",
+    "name": "Fuel Truck",
+    "unitType": "special",
+    "image": "fuel truck.vg",
+    "__v": 0
+  },
+  {
+    "_id": "66fff6e07d4ab06fed295d7b",
+    "name": "Power Generators",
+    "unitType": "special",
+    "image": "power generators.vg",
+    "__v": 0
+  },
+  {
+    "_id": "66fff6e07d4ab06fed295d7a",
+    "name": "Lorry Crane",
+    "unitType": "special",
+    "image": "lorry crane.vg",
+    "__v": 0
+  }
+]

@@ -7,9 +7,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naqli/Driver/Views/driver_auth/driver_login.dart';
+import 'package:flutter_naqli/Helper/helper.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/sharedPreferences.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
+import 'package:flutter_naqli/Partner/Views/partner_home_page.dart';
 import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
@@ -25,6 +28,7 @@ import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
+import 'package:flutter_naqli/User/user_home_page.dart';
 import 'package:flutter_naqli/User/vectorImage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -34,7 +38,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart' as geo;
-import 'package:permission_handler/permission_handler.dart'as permissionHandler;
+import 'package:permission_handler/permission_handler.dart'
+    as permissionHandler;
 import 'dart:ui' as ui;
 
 class CreateBooking extends StatefulWidget {
@@ -50,7 +55,12 @@ class CreateBooking extends StatefulWidget {
       {super.key,
       required this.firstName,
       required this.lastName,
-      required this.selectedType, required this.token, required this.id, required this.email, this.isFromUserType, this.accountType});
+      required this.selectedType,
+      required this.token,
+      required this.id,
+      required this.email,
+      this.isFromUserType,
+      this.accountType});
 
   @override
   State<CreateBooking> createState() => _CreateBookingState();
@@ -72,7 +82,7 @@ class _CreateBookingState extends State<CreateBooking> {
   final FocusNode productValueFocusNode = FocusNode();
   int _currentStep = 1;
   String? selectedLoad;
-  TimeOfDay _selectedFromTime =  TimeOfDay.now();
+  TimeOfDay _selectedFromTime = TimeOfDay.now();
   TimeOfDay _selectedToTime = TimeOfDay.now();
   DateTime _selectedDate = DateTime.now();
   bool isChecked = false;
@@ -142,7 +152,7 @@ class _CreateBookingState extends State<CreateBooking> {
     fetchLoadsForSelectedType(selectedTypeName ?? '');
     booking = _fetchBookingDetails();
     _requestPermissions();
-    userData = userService.getUserData(widget.id,widget.token);
+    userData = userService.getUserData(widget.id, widget.token);
     preloadImages(context);
   }
 
@@ -168,7 +178,7 @@ class _CreateBookingState extends State<CreateBooking> {
         backgroundColor: Colors.white,
         appBar: commonWidgets.commonAppBar(
           context,
-          User: widget.firstName +' '+ widget.lastName,
+          User: widget.firstName + ' ' + widget.lastName,
           userId: widget.id,
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(90.0),
@@ -184,382 +194,78 @@ class _CreateBookingState extends State<CreateBooking> {
                   children: [
                     Text(
                       widget.isFromUserType != null
-                          ?'createBooking'.tr()
-                          :'Get an estimate'.tr(),
+                          ? 'createBooking'.tr()
+                          : 'Get an estimate'.tr(),
                       textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?27: 22),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: viewUtil.isTablet ? 27 : 22),
                     ),
                     Text(
                       widget.isFromUserType != null
-                          ?'${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
-                          :'${'step'.tr()} $_currentStep ${'of 3'.tr()}',
-                      style: TextStyle(color: Colors.white, fontSize: viewUtil.isTablet?22: 17),
+                          ? '${'step'.tr()} $_currentStep ${'of 3 - booking'.tr()}'
+                          : '${'step'.tr()} $_currentStep ${'of 3'.tr()}',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: viewUtil.isTablet ? 22 : 17),
                     ),
                   ],
                 ),
               ),
-              leading: IconButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserType(
-                        firstName: widget.firstName,
-                        lastName: widget.lastName, token: widget.token,id: widget.id,email: widget.email,)));
+              leading: FutureBuilder<bool>(
+                future: hasToken(),
+                builder: (context, snapshot) {
+                  final bool hasUserToken = snapshot.data ?? false;
+
+                  return IconButton(
+                    onPressed: () {
+                      if (hasUserToken) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UserType(
+                                    firstName: widget.firstName,
+                                    lastName: widget.lastName,
+                                    token: widget.token,
+                                    id: widget.id,
+                                    email: widget.email,
+                                  )),
+                        );
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UserHomePage()),
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      Icons.arrow_back_sharp,
+                      color: Colors.white,
+                      size: viewUtil.isTablet ? 27 : 24,
+                    ),
+                  );
                 },
-                icon: Icon(
-                  Icons.arrow_back_sharp,
-                  color: Colors.white,
-                  size: viewUtil.isTablet?27: 24,
-                ),
               ),
             ),
           ),
         ),
-        drawer: Drawer(
-          backgroundColor: Colors.white,
-          child: ListView(
-            children: <Widget>[
-              GestureDetector(
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserEditProfile(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  },
-                  child: ListTile(
-                    leading: FutureBuilder<UserDataModel>(
-                      future: userData,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return CircleAvatar(
-                            backgroundColor: Colors.grey[200],
-                            radius: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          );
-                        } else if (snapshot.hasError || !snapshot.hasData || snapshot.data?.userProfile == null) {
-                          return CircleAvatar(
-                            backgroundColor: Colors.grey[200],
-                            radius: 24,
-                            child: Icon(Icons.person, color: Colors.grey, size: 30),
-                          );
-                        } else {
-                          final user = snapshot.data!;
-                          return CircleAvatar(
-                            backgroundColor: Colors.grey[200],
-                            radius: 24,
-                            backgroundImage: NetworkImage(
-                              "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    title: Text(
-                      widget.firstName +' '+ widget.lastName,
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      widget.id,
-                      style: TextStyle(color: Color(0xff8E8D96)),
-                    ),
-                    trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
-                  )
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Divider(),
-              ),
-              ListTile(
-                  leading: Icon(Icons.home,size: 30,color: Color(0xff707070)),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('Home'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserType(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/booking_logo.svg'),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('booking'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: ()async {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => Center(
-                          child: Container(
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20)
-                              ),
-                              padding: EdgeInsets.symmetric(horizontal: 30,vertical: 30),
-                              child: CircularProgressIndicator())),
-                    );
-                    try {
-                      final bookingData = await booking;
+        drawer: FutureBuilder<bool>(
+          future: hasToken(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Drawer(
+                backgroundColor: Colors.white,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-                      if (bookingData != null) {
-                        Navigator.pop(context);
-                        bookingData['paymentStatus']== 'Pending' || bookingData['paymentStatus'] == 'NotPaid'
-                            ? Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChooseVendor(
-                              id: widget.id,
-                              bookingId: bookingData['_id'] ?? '',
-                              size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                              unitType: bookingData['unitType'] ?? '',
-                              unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                              load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                              unit: bookingData['name'] ?? '',
-                              pickup: bookingData['pickup'] ?? '',
-                              dropPoints: bookingData['dropPoints'] ?? [],
-                              token: widget.token,
-                              firstName: widget.firstName,
-                              lastName: widget.lastName,
-                              selectedType: widget.selectedType,
-                              cityName: bookingData['cityName'] ?? '',
-                              address: bookingData['address'] ?? '',
-                              zipCode: bookingData['zipCode'] ?? '',
-                              email: widget.email,
-                              accountType: widget.accountType,
-                            ),
-                          ),
-                        )
-                            : bookingData['paymentStatus']== 'HalfPaid'
-                            ? Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PendingPayment(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: widget.selectedType,
-                                token: widget.token,
-                                unit: bookingData['name'] ?? '',
-                                load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                                size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                                bookingId: bookingData['_id'] ?? '',
-                                unitType: bookingData['unitType'] ?? '',
-                                pickup: bookingData['pickup'] ?? '',
-                                dropPoints: bookingData['dropPoints'] ?? [],
-                                cityName: bookingData['cityName'] ?? '',
-                                address: bookingData['address'] ?? '',
-                                zipCode: bookingData['zipCode'] ?? '',
-                                unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                                id: widget.id,
-                                partnerName: '',
-                                partnerId: bookingData['partner'] ?? '',
-                                oldQuotePrice: 0,
-                                paymentStatus: bookingData['paymentStatus'] ?? '',
-                                quotePrice: 0,
-                                advanceOrPay: bookingData['remainingBalance']??0,
-                                bookingStatus: bookingData['bookingStatus'] ?? '',
-                                email: widget.email,
-                              )
-                          ),
-                        )
-                            : Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PaymentCompleted(
-                                firstName: widget.firstName,
-                                lastName: widget.lastName,
-                                selectedType: widget.selectedType,
-                                token: widget.token,
-                                unit: bookingData['name'] ?? '',
-                                load: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeOfLoad'] ?? '' : '',
-                                size: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['scale'] ?? '' : '',
-                                bookingId: bookingData['_id'] ?? '',
-                                unitType: bookingData['unitType'] ?? '',
-                                pickup: bookingData['pickup'] ?? '',
-                                dropPoints: bookingData['dropPoints'] ?? [],
-                                cityName: bookingData['cityName'] ?? '',
-                                address: bookingData['address'] ?? '',
-                                zipCode: bookingData['zipCode'] ?? '',
-                                unitTypeName: bookingData['type']?.isNotEmpty ?? false ? bookingData['type'][0]['typeName'] ?? '' : '',
-                                id: widget.id,
-                                partnerId: bookingData['partner'] ?? '',
-                                bookingStatus: bookingData['bookingStatus'] ?? '',
-                                email: widget.email,
-                              )
-                          ),
-                        );
-                      } else {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => NewBooking(token: widget.token, firstName: widget.firstName, lastName: widget.lastName, id: widget.id,email: widget.email,)
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      Navigator.pop(context);
-                      commonWidgets.showToast('Error fetching booking details: $e');
-                    }
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/booking_history.svg',
-                      height: viewUtil.isTablet
-                          ? MediaQuery.of(context).size.height * 0.028
-                          : MediaQuery.of(context).size.height * 0.035),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: viewUtil.isTablet ?5:10),
-                    child: Text('booking_history'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BookingHistory(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              ListTile(
-                  leading: SvgPicture.asset('assets/payment_logo.svg'),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('payment'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Payment(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              ListTile(
-                  leading: Icon(Icons.account_balance_outlined,size: 35,),
-                  title: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text('Invoice'.tr(),style: TextStyle(fontSize: 25),),
-                  ),
-                  onTap: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserInvoice(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                      ),
-                    );
-                  }
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.only(left: 20,bottom: 10,top: 15),
-                child: Text('more_info_and_support'.tr(),style: TextStyle(fontSize: 20,fontWeight: FontWeight.bold)),
-              ),
-              ListTile(
-                leading: SvgPicture.asset('assets/report_logo.svg'),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('report'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserSubmitTicket(firstName: widget.firstName,lastName: widget.lastName,token: widget.token,id: widget.id,email: widget.email,),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: SvgPicture.asset('assets/help_logo.svg'),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 7),
-                  child: Text('help'.tr(),style: TextStyle(fontSize: 25),),
-                ),
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> UserHelp(
-                          firstName: widget.firstName,
-                          lastName: widget.lastName,
-                          token: widget.token,
-                          id: widget.id,
-                          email: widget.email
-                      )));
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.logout,color: Colors.red,size: 30,),
-                title: Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Text('logout'.tr(),style: TextStyle(fontSize: 25,color: Colors.red),),
-                ),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Directionality(
-                        textDirection: ui.TextDirection.ltr,
-                        child: AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          backgroundColor: Colors.white,
-                          contentPadding: const EdgeInsets.all(20),
-                          content: Container(
-                            width: viewUtil.isTablet
-                                ? MediaQuery.of(context).size.width * 0.6
-                                : MediaQuery.of(context).size.width,
-                            height: viewUtil.isTablet
-                                ? MediaQuery.of(context).size.height * 0.08
-                                : MediaQuery.of(context).size.height * 0.12,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.only(top: 30,bottom: 10),
-                                  child: Text(
-                                    'are_you_sure_you_want_to_logout'.tr(),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: viewUtil.isTablet?27:19),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: Text('yes'.tr(),
-                                style: TextStyle(fontSize: viewUtil.isTablet?22:16),),
-                              onPressed: () async {
-                                await clearUserData();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => UserLogin()),
-                                );
-                              },
-                            ),
-                            TextButton(
-                              child: Text('no'.tr(),
-                                  style: TextStyle(fontSize: viewUtil.isTablet?22:16)),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+            final bool hasUserToken = snapshot.data ?? false;
+
+            return hasUserToken
+                ? _buildUserDrawer(context)
+                : _buildPublicDrawer(context);
+          },
         ),
         body: Center(
           child: Column(
@@ -588,7 +294,7 @@ class _CreateBookingState extends State<CreateBooking> {
         bottomNavigationBar: BottomAppBar(
           height: MediaQuery.sizeOf(context).height * 0.11,
           color: Colors.white,
-          child:  Padding(
+          child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -613,14 +319,15 @@ class _CreateBookingState extends State<CreateBooking> {
                         'back'.tr(),
                         style: TextStyle(
                             color: Color(0xff6269FE),
-                            fontSize: viewUtil.isTablet ?26:18,
+                            fontSize: viewUtil.isTablet ? 26 : 18,
                             fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
                 if (_currentStep < 3)
                   Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 5,top:5),
+                    padding:
+                        const EdgeInsets.only(right: 10, bottom: 5, top: 5),
                     child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.055,
                       width: MediaQuery.of(context).size.width * 0.3,
@@ -631,34 +338,40 @@ class _CreateBookingState extends State<CreateBooking> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: () async{
+                        onPressed: () async {
                           setState(() {
                             if (widget.selectedType == 'vehicle') {
                               if (_currentStep == 1) {
                                 if (selectedTypeName == null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
+                                  commonWidgets.showToast(
+                                      'Please select an option'.tr());
                                 } else {
                                   _currentStep++;
                                 }
-                              }else if (_currentStep == 2) {
+                              } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null ||
                                     productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
-                                  fetchLoadsForSelectedType(selectedTypeName ?? '').then((loadTypes) {
-                                    if (loadTypes.isEmpty || selectedLoad !=null) {
-
+                                  fetchLoadsForSelectedType(
+                                          selectedTypeName ?? '')
+                                      .then((loadTypes) {
+                                    if (loadTypes.isEmpty ||
+                                        selectedLoad != null) {
                                       setState(() {
                                         _currentStep++;
                                       });
                                     } else {
                                       if (loadTypes.isNotEmpty) {
-                                        commonWidgets.showToast('Please select Load type'.tr());
+                                        commonWidgets.showToast(
+                                            'Please select Load type'.tr());
                                       }
                                     }
                                   }).catchError((error) {
-                                    commonWidgets.showToast('Error fetching load types');
+                                    commonWidgets
+                                        .showToast('Error fetching load types');
                                   });
                                 }
                               }
@@ -666,7 +379,8 @@ class _CreateBookingState extends State<CreateBooking> {
                             if (widget.selectedType == 'bus') {
                               if (_currentStep == 1) {
                                 if (selectedBus == null) {
-                                  commonWidgets.showToast('Please select Bus'.tr());
+                                  commonWidgets
+                                      .showToast('Please select Bus'.tr());
                                 } else {
                                   _currentStep++;
                                 }
@@ -674,40 +388,6 @@ class _CreateBookingState extends State<CreateBooking> {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null ||
                                     productController.text.isEmpty) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'equipment') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName ==null) {
-                                  commonWidgets.showToast('Please select an option'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'shared-cargo') {
-                              if (_currentStep == 1) {
-                                if (selectedShipmentType == null || selectedShipmentCondition == null ||
-                                    lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
-                                  commonWidgets.showToast(
-                                      'Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null || productController.text.isEmpty || weightController.text.isEmpty) {
                                   commonWidgets
                                       .showToast('Please fill all fields'.tr());
                                 } else {
@@ -715,17 +395,62 @@ class _CreateBookingState extends State<CreateBooking> {
                                 }
                               }
                             }
-                            if (widget.selectedType == 'special' || widget.selectedType == 'others') {
+                            if (widget.selectedType == 'equipment') {
                               if (_currentStep == 1) {
-                                if (selectedSpecial ==null) {
-                                  commonWidgets.showToast('Please select Special/Other Units'.tr());
+                                if (selectedTypeName == null) {
+                                  commonWidgets.showToast(
+                                      'Please select an option'.tr());
                                 } else {
                                   _currentStep++;
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null) {
-                                  commonWidgets.showToast('Please fill all fields'.tr());
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'shared-cargo') {
+                              if (_currentStep == 1) {
+                                if (selectedShipmentType == null ||
+                                    selectedShipmentCondition == null ||
+                                    lengthController.text.isEmpty ||
+                                    breadthController.text.isEmpty ||
+                                    heightController.text.isEmpty) {
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null ||
+                                    productController.text.isEmpty ||
+                                    weightController.text.isEmpty) {
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              }
+                            }
+                            if (widget.selectedType == 'special' ||
+                                widget.selectedType == 'others') {
+                              if (_currentStep == 1) {
+                                if (selectedSpecial == null) {
+                                  commonWidgets.showToast(
+                                      'Please select Special/Other Units'.tr());
+                                } else {
+                                  _currentStep++;
+                                }
+                              } else if (_currentStep == 2) {
+                                if (_selectedFromTime == null ||
+                                    _selectedDate == null) {
+                                  commonWidgets
+                                      .showToast('Please fill all fields'.tr());
                                 } else {
                                   _currentStep++;
                                 }
@@ -737,7 +462,7 @@ class _CreateBookingState extends State<CreateBooking> {
                           'next'.tr(),
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet ?26:18,
+                              fontSize: viewUtil.isTablet ? 26 : 18,
                               fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -757,24 +482,769 @@ class _CreateBookingState extends State<CreateBooking> {
                           ),
                         ),
                         onPressed: () async {
-                          setState(() {
-                            createBooking();
-                          });
+                          String formattedDate =
+                              DateFormat('yyyy-MM-dd').format(_selectedDate);
+                          String formattedTime =
+                              _formatTimeOfDay(_selectedFromTime);
+                          String formattedToTime =
+                              _formatTimeOfDay(_selectedToTime);
+                          List<String> dropPlaces =
+                              _dropPointControllers.map((c) => c.text).toList();
+
+                          String bookingData = buildBookingData(
+                            selectedType: widget.selectedType,
+                            selectedName: selectedName.toString(),
+                            selectedTypeName: selectedTypeName.toString(),
+                            selectedLoad: selectedLoad.toString(),
+                            selectedLabour: selectedLabour.toString(),
+                            formattedDate: formattedDate,
+                            formattedTime: formattedTime,
+                            formattedToTime: formattedToTime,
+                            dropPlaces: dropPlaces,
+                            pickup: pickUpController.text,
+                            productValue: productController.text,
+                            cityName: cityNameController.text,
+                            address: addressController.text,
+                            zipCode: zipCodeController.text,
+                            scale: scale.toString(),
+                            typeImage: typeImage.toString(),
+                          );
+
+                          bool hasUserToken = await hasToken();
+                          final UserService userService = UserService();
+
+                          if (hasUserToken) {
+                            // ✅ Create booking for all types
+                            String? bookingId;
+
+                            switch (widget.selectedType) {
+                              case 'vehicle':
+                                bookingId = await userService.userVehicleCreateBooking(
+                                  context,
+                                  name: selectedName.toString(),
+                                  unitType: widget.selectedType,
+                                  typeName: selectedTypeName.toString(),
+                                  scale: scale.toString(),
+                                  typeImage: typeImage.toString(),
+                                  typeOfLoad: selectedLoad.toString(),
+                                  date: formattedDate,
+                                  additionalLabour: selectedLabour.toString(),
+                                  time: formattedTime,
+                                  productValue: productController.text,
+                                  pickup: pickUpController.text,
+                                  dropPoints: dropPlaces,
+                                  token: widget.token,
+                                );
+                                break;
+
+                              case 'bus':
+                                bookingId = await userService.userBusCreateBooking(
+                                  context,
+                                  name: selectedName.toString(),
+                                  unitType: widget.selectedType,
+                                  image: typeImage.toString(),
+                                  date: formattedDate,
+                                  additionalLabour: selectedLabour.toString(),
+                                  time: formattedTime,
+                                  productValue: productController.text,
+                                  pickup: pickUpController.text,
+                                  dropPoints: dropPlaces,
+                                  token: widget.token,
+                                );
+                                break;
+
+                              case 'equipment':
+                                bookingId = await userService.userEquipmentCreateBooking(
+                                  context,
+                                  name: selectedName.toString(),
+                                  unitType: widget.selectedType,
+                                  typeName: selectedTypeName.toString(),
+                                  typeImage: typeImage.toString(),
+                                  date: formattedDate,
+                                  additionalLabour: selectedLabour.toString(),
+                                  fromTime: formattedTime,
+                                  toTime: formattedToTime,
+                                  cityName: cityNameController.text,
+                                  address: addressController.text,
+                                  zipCode: zipCodeController.text,
+                                  token: widget.token,
+                                );
+                                break;
+
+                              case 'special':
+                                bookingId = await userService.userSpecialCreateBooking(
+                                  context,
+                                  name: selectedName.toString(),
+                                  unitType: widget.selectedType,
+                                  image: typeImage.toString(),
+                                  date: formattedDate,
+                                  additionalLabour: selectedLabour.toString(),
+                                  fromTime: formattedTime,
+                                  toTime: formattedToTime,
+                                  cityName: cityNameController.text,
+                                  address: addressController.text,
+                                  zipCode: zipCodeController.text,
+                                  token: widget.token,
+                                );
+                                break;
+
+                              case 'shared-cargo':
+                                bookingId = await userService.userSharedCargoCreateBooking(
+                                  context,
+                                  name: '',
+                                  unitType: widget.selectedType,
+                                  shipmentType: selectedTypeName.toString(),
+                                  shippingCondition: selectedLoad.toString(),
+                                  cargoLength: scale.toString(),
+                                  cargoBreadth: scale.toString(),
+                                  cargoHeight: scale.toString(),
+                                  cargoUnit: 'm', // replace with your actual logic
+                                  date: formattedDate,
+                                  time: formattedTime,
+                                  productValue: productController.text,
+                                  shipmentWeight: productController.text,
+                                  pickup: pickUpController.text,
+                                  dropPoints: dropPlaces,
+                                  token: widget.token,
+                                );
+                                break;
+                            }
+
+                            if (bookingId != null && bookingId.isNotEmpty) {
+                              await clearSavedLocalBookingDataWithoutLogin();
+
+                              // Step 1: Show booking dialog first
+                              CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+
+                              // Step 2: Navigate to ChooseVendor after a short delay
+                              Future.delayed(const Duration(seconds: 2), () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChooseVendor(
+                                      bookingId: bookingId ?? '',
+                                      size: scale.toString(),
+                                      unitType: widget.selectedType,
+                                      unitTypeName: selectedTypeName.toString(),
+                                      load: selectedLoad.toString(),
+                                      unit: selectedName.toString(),
+                                      pickup: pickUpController.text,
+                                      dropPoints: dropPlaces,
+                                      token: widget.token,
+                                      firstName: widget.firstName,
+                                      lastName: widget.lastName,
+                                      selectedType: widget.selectedType,
+                                      cityName: cityNameController.text,
+                                      address: addressController.text,
+                                      zipCode: zipCodeController.text,
+                                      id: widget.id,
+                                      email: widget.email,
+                                      accountType: widget.accountType,
+                                    ),
+                                  ),
+                                );
+                              });
+                            } else {
+                              CommonWidgets().showToast('Booking creation failed, please try again.');
+                            }
+                          }
+                          else {
+                            // Not logged in → save locally & go to login
+                            bool isSaved =
+                                await saveLocalBookingDataWithoutLogin(
+                                    bookingData);
+                            if (isSaved) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => UserLogin()),
+                              );
+                            }
+                          }
                         },
                         child: Text(
                           'createBooking'.tr(),
                           style: TextStyle(
-                              color: Colors.white,
-                              fontSize: viewUtil.isTablet?26: 18,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.white,
+                            fontSize: viewUtil.isTablet ? 26 : 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  )
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserDrawer(BuildContext context) {
+    ViewUtil viewUtil = ViewUtil(context);
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: ListView(
+        children: <Widget>[
+          GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserEditProfile(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email,
+                    ),
+                  ),
+                );
+              },
+              child: ListTile(
+                leading: FutureBuilder<UserDataModel>(
+                  future: userData,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        radius: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (snapshot.hasError ||
+                        !snapshot.hasData ||
+                        snapshot.data?.userProfile == null) {
+                      return CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        radius: 24,
+                        child: Icon(Icons.person, color: Colors.grey, size: 30),
+                      );
+                    } else {
+                      final user = snapshot.data!;
+                      return CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        radius: 24,
+                        backgroundImage: NetworkImage(
+                          "https://prod.naqlee.com/api/image/${user.userProfile!.fileName}",
+                        ),
+                      );
+                    }
+                  },
+                ),
+                title: Text(
+                  widget.firstName + ' ' + widget.lastName,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  widget.id,
+                  style: TextStyle(color: Color(0xff8E8D96)),
+                ),
+                trailing: Icon(Icons.edit, color: Colors.grey, size: 20),
+              )),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Divider(),
+          ),
+          ListTile(
+              leading: Icon(Icons.home, size: 30, color: Color(0xff707070)),
+              title: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text(
+                  'Home'.tr(),
+                  style: TextStyle(fontSize: 25),
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserType(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email,
+                    ),
+                  ),
+                );
+              }),
+          ListTile(
+              leading: SvgPicture.asset('assets/booking_logo.svg'),
+              title: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text(
+                  'booking'.tr(),
+                  style: TextStyle(fontSize: 25),
+                ),
+              ),
+              onTap: () async {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => Center(
+                      child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 30, vertical: 30),
+                          child: CircularProgressIndicator())),
+                );
+                try {
+                  final bookingData = await booking;
+
+                  if (bookingData != null) {
+                    Navigator.pop(context);
+                    bookingData['paymentStatus'] == 'Pending' ||
+                            bookingData['paymentStatus'] == 'NotPaid'
+                        ? Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChooseVendor(
+                                id: widget.id,
+                                bookingId: bookingData['_id'] ?? '',
+                                size: bookingData['type']?.isNotEmpty ?? false
+                                    ? bookingData['type'][0]['scale'] ?? ''
+                                    : '',
+                                unitType: bookingData['unitType'] ?? '',
+                                unitTypeName: bookingData['type']?.isNotEmpty ??
+                                        false
+                                    ? bookingData['type'][0]['typeName'] ?? ''
+                                    : '',
+                                load: bookingData['type']?.isNotEmpty ?? false
+                                    ? bookingData['type'][0]['typeOfLoad'] ?? ''
+                                    : '',
+                                unit: bookingData['name'] ?? '',
+                                pickup: bookingData['pickup'] ?? '',
+                                dropPoints: bookingData['dropPoints'] ?? [],
+                                token: widget.token,
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                selectedType: widget.selectedType,
+                                cityName: bookingData['cityName'] ?? '',
+                                address: bookingData['address'] ?? '',
+                                zipCode: bookingData['zipCode'] ?? '',
+                                email: widget.email,
+                                accountType: widget.accountType,
+                              ),
+                            ),
+                          )
+                        : bookingData['paymentStatus'] == 'HalfPaid'
+                            ? Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => PendingPayment(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          selectedType: widget.selectedType,
+                                          token: widget.token,
+                                          unit: bookingData['name'] ?? '',
+                                          load:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeOfLoad'] ??
+                                                      ''
+                                                  : '',
+                                          size:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['scale'] ??
+                                                      ''
+                                                  : '',
+                                          bookingId: bookingData['_id'] ?? '',
+                                          unitType:
+                                              bookingData['unitType'] ?? '',
+                                          pickup: bookingData['pickup'] ?? '',
+                                          dropPoints:
+                                              bookingData['dropPoints'] ?? [],
+                                          cityName:
+                                              bookingData['cityName'] ?? '',
+                                          address: bookingData['address'] ?? '',
+                                          zipCode: bookingData['zipCode'] ?? '',
+                                          unitTypeName:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeName'] ??
+                                                      ''
+                                                  : '',
+                                          id: widget.id,
+                                          partnerName: '',
+                                          partnerId:
+                                              bookingData['partner'] ?? '',
+                                          oldQuotePrice: 0,
+                                          paymentStatus:
+                                              bookingData['paymentStatus'] ??
+                                                  '',
+                                          quotePrice: 0,
+                                          advanceOrPay:
+                                              bookingData['remainingBalance'] ??
+                                                  0,
+                                          bookingStatus:
+                                              bookingData['bookingStatus'] ??
+                                                  '',
+                                          email: widget.email,
+                                        )),
+                              )
+                            : Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => PaymentCompleted(
+                                          firstName: widget.firstName,
+                                          lastName: widget.lastName,
+                                          selectedType: widget.selectedType,
+                                          token: widget.token,
+                                          unit: bookingData['name'] ?? '',
+                                          load:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeOfLoad'] ??
+                                                      ''
+                                                  : '',
+                                          size:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['scale'] ??
+                                                      ''
+                                                  : '',
+                                          bookingId: bookingData['_id'] ?? '',
+                                          unitType:
+                                              bookingData['unitType'] ?? '',
+                                          pickup: bookingData['pickup'] ?? '',
+                                          dropPoints:
+                                              bookingData['dropPoints'] ?? [],
+                                          cityName:
+                                              bookingData['cityName'] ?? '',
+                                          address: bookingData['address'] ?? '',
+                                          zipCode: bookingData['zipCode'] ?? '',
+                                          unitTypeName:
+                                              bookingData['type']?.isNotEmpty ??
+                                                      false
+                                                  ? bookingData['type'][0]
+                                                          ['typeName'] ??
+                                                      ''
+                                                  : '',
+                                          id: widget.id,
+                                          partnerId:
+                                              bookingData['partner'] ?? '',
+                                          bookingStatus:
+                                              bookingData['bookingStatus'] ??
+                                                  '',
+                                          email: widget.email,
+                                        )),
+                              );
+                  } else {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => NewBooking(
+                                token: widget.token,
+                                firstName: widget.firstName,
+                                lastName: widget.lastName,
+                                id: widget.id,
+                                email: widget.email,
+                              )),
+                    );
+                  }
+                } catch (e) {
+                  Navigator.pop(context);
+                  commonWidgets.showToast('Error fetching booking details: $e');
+                }
+              }),
+          ListTile(
+              leading: SvgPicture.asset('assets/booking_history.svg',
+                  height: viewUtil.isTablet
+                      ? MediaQuery.of(context).size.height * 0.028
+                      : MediaQuery.of(context).size.height * 0.035),
+              title: Padding(
+                padding: EdgeInsets.only(left: viewUtil.isTablet ? 5 : 10),
+                child: Text(
+                  'booking_history'.tr(),
+                  style: TextStyle(fontSize: 25),
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookingHistory(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email,
+                    ),
+                  ),
+                );
+              }),
+          ListTile(
+              leading: SvgPicture.asset('assets/payment_logo.svg'),
+              title: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text(
+                  'payment'.tr(),
+                  style: TextStyle(fontSize: 25),
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Payment(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email,
+                    ),
+                  ),
+                );
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.account_balance_outlined,
+                size: 35,
+              ),
+              title: Padding(
+                padding: EdgeInsets.only(left: 10),
+                child: Text(
+                  'Invoice'.tr(),
+                  style: TextStyle(fontSize: 25),
+                ),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserInvoice(
+                      firstName: widget.firstName,
+                      lastName: widget.lastName,
+                      token: widget.token,
+                      id: widget.id,
+                      email: widget.email,
+                    ),
+                  ),
+                );
+              }),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.only(left: 20, bottom: 10, top: 15),
+            child: Text('more_info_and_support'.tr(),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: SvgPicture.asset('assets/report_logo.svg'),
+            title: Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text(
+                'report'.tr(),
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserSubmitTicket(
+                    firstName: widget.firstName,
+                    lastName: widget.lastName,
+                    token: widget.token,
+                    id: widget.id,
+                    email: widget.email,
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: SvgPicture.asset('assets/help_logo.svg'),
+            title: Padding(
+              padding: EdgeInsets.only(left: 7),
+              child: Text(
+                'help'.tr(),
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => UserHelp(
+                          firstName: widget.firstName,
+                          lastName: widget.lastName,
+                          token: widget.token,
+                          id: widget.id,
+                          email: widget.email)));
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.logout,
+              color: Colors.red,
+              size: 30,
+            ),
+            title: Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text(
+                'logout'.tr(),
+                style: TextStyle(fontSize: 25, color: Colors.red),
+              ),
+            ),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return Directionality(
+                    textDirection: ui.TextDirection.ltr,
+                    child: AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      backgroundColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(20),
+                      content: Container(
+                        width: viewUtil.isTablet
+                            ? MediaQuery.of(context).size.width * 0.6
+                            : MediaQuery.of(context).size.width,
+                        height: viewUtil.isTablet
+                            ? MediaQuery.of(context).size.height * 0.08
+                            : MediaQuery.of(context).size.height * 0.12,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(top: 30, bottom: 10),
+                              child: Text(
+                                'are_you_sure_you_want_to_logout'.tr(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ? 27 : 19),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text(
+                            'yes'.tr(),
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet ? 22 : 16),
+                          ),
+                          onPressed: () async {
+                            await clearUserData();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => UserLogin()),
+                            );
+                          },
+                        ),
+                        TextButton(
+                          child: Text('no'.tr(),
+                              style: TextStyle(
+                                  fontSize: viewUtil.isTablet ? 22 : 16)),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPublicDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: ListView(
+        children: <Widget>[
+          ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SvgPicture.asset('assets/naqlee-logo.svg',
+                    height: MediaQuery.of(context).size.height * 0.05),
+                GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: const CircleAvatar(
+                        child: Icon(FontAwesomeIcons.multiply)))
+              ],
+            ),
+          ),
+          const Divider(),
+          Container(
+            color: Color(0xffE5EBF8),
+            child: ListTile(
+                leading: Icon(Icons.person, size: 30),
+                title: Padding(
+                  padding: EdgeInsets.only(left: 7),
+                  child: Text(
+                    'User'.tr(),
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                }),
+          ),
+          ListTile(
+            leading: Icon(Icons.people, size: 30),
+            title: Padding(
+              padding: EdgeInsets.only(left: 7),
+              child: Text(
+                'Partner'.tr(),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+            ),
+            onTap: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => PartnerHomePage()));
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.drive_eta_rounded, size: 30),
+            title: Padding(
+              padding: EdgeInsets.only(left: 7),
+              child: Text(
+                'Driver'.tr(),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+            ),
+            onTap: () {
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => DriverLogin()));
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.help_outline, size: 30),
+            title: Padding(
+              padding: EdgeInsets.only(left: 7),
+              child: Text(
+                'Help'.tr(),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => UserHelp()));
+            },
+          ),
+        ],
       ),
     );
   }
@@ -790,7 +1260,7 @@ class _CreateBookingState extends State<CreateBooking> {
             width: 1),
       ),
       child: CircleAvatar(
-        radius: viewUtil.isTablet?30: 20,
+        radius: viewUtil.isTablet ? 30 : 20,
         backgroundColor: isActive ? const Color(0xff6A66D1) : Colors.white,
         child: Text(
           step.toString(),
@@ -846,12 +1316,8 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget buildStepTwoContent(String selectedType) {
     switch (selectedType) {
       case 'vehicle':
-        return UserVehicleStepTwo(
-            selectedTypeName??'',
-            selectedName??'',
-            typeImage??'',
-            scale??''
-        );
+        return UserVehicleStepTwo(selectedTypeName ?? '', selectedName ?? '',
+            typeImage ?? '', scale ?? '');
       case 'bus':
         return UserBusStepTwo();
       case 'equipment':
@@ -871,16 +1337,15 @@ class _CreateBookingState extends State<CreateBooking> {
     switch (selectedType) {
       case 'vehicle':
         return UserVehicleStepThree(
-            selectedTypeName??'',
-            selectedName??'',
-            typeImage??'',
-            scale??'',
-            _selectedDate .toString(),
+            selectedTypeName ?? '',
+            selectedName ?? '',
+            typeImage ?? '',
+            scale ?? '',
+            _selectedDate.toString(),
             _selectedFromTime.toString(),
             productController.text,
-            selectedLoad??'',
-            selectedLabour.toString()
-        );
+            selectedLoad ?? '',
+            selectedLabour.toString());
       case 'bus':
         return UserBusStepThree();
       case 'equipment':
@@ -917,7 +1382,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_vehicle_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -925,7 +1392,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   itemCount: vehicles.length,
                   itemBuilder: (context, index) {
                     final vehicle = vehicles[index];
-                    final selectedType = _selectedSubClassification[vehicle.name] ?? '';
+                    final selectedType =
+                        _selectedSubClassification[vehicle.name] ?? '';
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -939,15 +1407,16 @@ class _CreateBookingState extends State<CreateBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8),
-                              child: SvgPicture.asset('assets/delivery-truck.svg',
-                                  height: viewUtil.isTablet?50: 35),
+                              child: SvgPicture.asset(
+                                  'assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet ? 50 : 35),
                             ),
                             Expanded(
                               flex: 6,
                               child: Text(
                                 vehicle.name.tr(),
                                 style: TextStyle(
-                                    fontSize: viewUtil.isTablet?20: 15,
+                                    fontSize: viewUtil.isTablet ? 20 : 15,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -955,7 +1424,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               flex: 1,
                               child: Container(
                                 height:
-                                MediaQuery.of(context).size.height * 0.06,
+                                    MediaQuery.of(context).size.height * 0.06,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -972,62 +1441,103 @@ class _CreateBookingState extends State<CreateBooking> {
                                   child: PopupMenuButton<String>(
                                     elevation: 5,
                                     constraints: BoxConstraints(
-                                      minWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
-                                      maxWidth: viewUtil.isTablet ? MediaQuery.sizeOf(context).width * 0.92 : 350,
+                                      minWidth: viewUtil.isTablet
+                                          ? MediaQuery.sizeOf(context).width *
+                                              0.92
+                                          : 350,
+                                      maxWidth: viewUtil.isTablet
+                                          ? MediaQuery.sizeOf(context).width *
+                                              0.92
+                                          : 350,
                                     ),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
                                     offset: Offset(0, 55),
                                     padding: EdgeInsets.zero,
                                     color: Colors.white,
                                     onSelected: (newValue) {
                                       setState(() {
-                                        _selectedSubClassification[vehicle.name] = newValue;
+                                        _selectedSubClassification[
+                                            vehicle.name] = newValue;
                                         selectedTypeName = newValue;
                                         selectedName = vehicle.name;
-                                        var selectedTypeObj = vehicle.types?.firstWhere((type) => type.typeName == newValue);
+                                        var selectedTypeObj = vehicle.types
+                                            ?.firstWhere((type) =>
+                                                type.typeName == newValue);
                                         scale = selectedTypeObj?.scale;
                                         typeImage = selectedTypeObj?.typeImage;
                                       });
                                     },
                                     itemBuilder: (context) {
                                       return vehicle.types?.map((type) {
-                                        return PopupMenuItem<String>(
-                                          value: type.typeName,
-                                          child: Row(
-                                            children: [
-                                              SizedBox(
-                                                child: Image.asset(
-                                                  type.typeImage,
-                                                  width: MediaQuery.of(context).size.width * 0.15,
-                                                  height: MediaQuery.of(context).size.height * 0.06,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 15),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                            return PopupMenuItem<String>(
+                                              value: type.typeName,
+                                              child: Row(
                                                 children: [
-                                                  Text(type.typeName.tr(), style: TextStyle(fontSize: viewUtil.isTablet ? 22 : 16)),
-                                                  Text(type.scale, style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                                  SizedBox(
+                                                    child: Image.asset(
+                                                      type.typeImage,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.15,
+                                                      height:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .height *
+                                                              0.06,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 15),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(type.typeName.tr(),
+                                                          style: TextStyle(
+                                                              fontSize: viewUtil
+                                                                      .isTablet
+                                                                  ? 22
+                                                                  : 16)),
+                                                      Text(type.scale,
+                                                          style: TextStyle(
+                                                              fontSize: viewUtil
+                                                                      .isTablet
+                                                                  ? 20
+                                                                  : 14)),
+                                                    ],
+                                                  ),
                                                 ],
                                               ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList() ?? [];
+                                            );
+                                          }).toList() ??
+                                          [];
                                     },
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8.0),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              selectedType.isEmpty ? 'select'.tr() : selectedType.tr(),
-                                              style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                                              selectedType.isEmpty
+                                                  ? 'select'.tr()
+                                                  : selectedType.tr(),
+                                              style: TextStyle(
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 16),
                                             ),
                                           ),
                                           const SizedBox(width: 10),
-                                          Icon(Icons.arrow_drop_down, size: viewUtil.isTablet ? 25 : 20),
+                                          Icon(Icons.arrow_drop_down,
+                                              size:
+                                                  viewUtil.isTablet ? 25 : 20),
                                         ],
                                       ),
                                     ),
@@ -1070,7 +1580,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_bus_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -1112,8 +1624,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                   side: BorderSide(
                                       color: isBusSelected
                                           ? Color(
-                                        0xff6A66D1,
-                                      )
+                                              0xff6A66D1,
+                                            )
                                           : Color(0xffACACAD),
                                       width: isBusSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
@@ -1122,11 +1634,16 @@ class _CreateBookingState extends State<CreateBooking> {
                                   children: [
                                     Padding(
                                       padding: viewUtil.isTablet
-                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
-                                          :EdgeInsets.only(top: 45, bottom: 10),
+                                          ? EdgeInsets.only(
+                                              top: MediaQuery.sizeOf(context)
+                                                      .width *
+                                                  0.08,
+                                              bottom: 10)
+                                          : EdgeInsets.only(
+                                              top: 45, bottom: 10),
                                       child: MyVectorImage(
                                         name: bus.image,
-                                        height: viewUtil.isTablet?70:40,
+                                        height: viewUtil.isTablet ? 70 : 40,
                                       ),
                                     ),
                                     SizedBox(height: 7),
@@ -1142,7 +1659,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                         bus.name,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                            fontSize: viewUtil.isTablet?20: 15),
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
                                       ),
                                     )
                                   ],
@@ -1184,7 +1702,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_equipments_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -1192,7 +1712,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   itemCount: equipment.length,
                   itemBuilder: (context, index) {
                     final equipments = equipment[index];
-                    final selectedType = _selectedSubClassification[equipments.name] ?? '';
+                    final selectedType =
+                        _selectedSubClassification[equipments.name] ?? '';
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 30, vertical: 10),
@@ -1205,8 +1726,9 @@ class _CreateBookingState extends State<CreateBooking> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset('assets/delivery-truck.svg',
-                                  height: viewUtil.isTablet?50: 35),
+                              child: SvgPicture.asset(
+                                  'assets/delivery-truck.svg',
+                                  height: viewUtil.isTablet ? 50 : 35),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -1214,14 +1736,15 @@ class _CreateBookingState extends State<CreateBooking> {
                               child: Text(
                                 equipments.name.tr(),
                                 style: TextStyle(
-                                    fontSize: viewUtil.isTablet?20: 15,
+                                    fontSize: viewUtil.isTablet ? 20 : 15,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                             Expanded(
                               flex: 1,
                               child: Container(
-                                height: MediaQuery.of(context).size.height * 0.06,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.06,
                                 child: const VerticalDivider(
                                   color: Colors.grey,
                                   thickness: 1,
@@ -1236,10 +1759,14 @@ class _CreateBookingState extends State<CreateBooking> {
                                 child: PopupMenuButton<String>(
                                   elevation: 5,
                                   constraints: BoxConstraints(
-                                    minWidth:viewUtil.isTablet
-                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
-                                    maxWidth:viewUtil.isTablet
-                                        ?MediaQuery.sizeOf(context).width * 0.92: 350,
+                                    minWidth: viewUtil.isTablet
+                                        ? MediaQuery.sizeOf(context).width *
+                                            0.92
+                                        : 350,
+                                    maxWidth: viewUtil.isTablet
+                                        ? MediaQuery.sizeOf(context).width *
+                                            0.92
+                                        : 350,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
@@ -1250,40 +1777,55 @@ class _CreateBookingState extends State<CreateBooking> {
                                   onSelected: (newValue) {
                                     setState(() {
                                       _selectedSubClassification[
-                                      equipments.name] = newValue;
+                                          equipments.name] = newValue;
                                       selectedTypeName = newValue;
                                       selectedName = equipments.name;
                                       typeImage = equipments.types
-                                          ?.firstWhere((type) => type.typeName == newValue)
+                                          ?.firstWhere((type) =>
+                                              type.typeName == newValue)
                                           .typeImage;
                                     });
                                   },
                                   itemBuilder: (context) {
                                     return equipments.types?.map((type) {
-                                      return PopupMenuItem<String>(
-                                        value: type.typeName,
-                                        child: Directionality(
-                                          textDirection: ui.TextDirection.ltr,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(15),
-                                            child: Row(
-                                              children: [
-                                                SizedBox(
-                                                  child: Image.asset(
-                                                    type.typeImage,
-                                                    width: MediaQuery.of(context).size.width * 0.15,
-                                                    height: MediaQuery.of(context).size.height * 0.04,
-                                                  ),
+                                          return PopupMenuItem<String>(
+                                            value: type.typeName,
+                                            child: Directionality(
+                                              textDirection:
+                                                  ui.TextDirection.ltr,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(15),
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      child: Image.asset(
+                                                        type.typeImage,
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.15,
+                                                        height: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .height *
+                                                            0.04,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 15),
+                                                    Text(type.typeName.tr(),
+                                                        style: TextStyle(
+                                                            fontSize: viewUtil
+                                                                    .isTablet
+                                                                ? 22
+                                                                : 16)),
+                                                  ],
                                                 ),
-                                                const SizedBox(width: 15),
-                                                Text(type.typeName.tr(),
-                                                    style: TextStyle(fontSize: viewUtil.isTablet?22: 16)),
-                                              ],
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList() ??
+                                          );
+                                        }).toList() ??
                                         [];
                                   },
                                   child: Container(
@@ -1292,22 +1834,29 @@ class _CreateBookingState extends State<CreateBooking> {
                                     width: double.infinity,
                                     child: Row(
                                       mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             selectedType.isEmpty
                                                 ? 'select'.tr()
                                                 : selectedType.isNotEmpty
-                                                ? selectedType.tr()
-                                                : equipments.types?.isNotEmpty == true
-                                                ? equipments.types!.first.typeName
-                                                : 'no_data'.tr(),
-                                            style: TextStyle(fontSize: viewUtil.isTablet?20: 16),
+                                                    ? selectedType.tr()
+                                                    : equipments.types
+                                                                ?.isNotEmpty ==
+                                                            true
+                                                        ? equipments.types!
+                                                            .first.typeName
+                                                        : 'no_data'.tr(),
+                                            style: TextStyle(
+                                                fontSize: viewUtil.isTablet
+                                                    ? 20
+                                                    : 16),
                                           ),
                                         ),
                                         const SizedBox(width: 10),
-                                        Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?25: 20),
+                                        Icon(Icons.arrow_drop_down,
+                                            size: viewUtil.isTablet ? 25 : 20),
                                       ],
                                     ),
                                   ),
@@ -1349,7 +1898,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 margin: const EdgeInsets.only(left: 30, top: 20, bottom: 10),
                 child: Text(
                   'available_special_others_units'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet?24: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 24 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
               Expanded(
@@ -1389,7 +1940,9 @@ class _CreateBookingState extends State<CreateBooking> {
                                 shape: RoundedRectangleBorder(
                                   side: BorderSide(
                                       color: isSpecialSelected
-                                          ? Color(0xff6A66D1,)
+                                          ? Color(
+                                              0xff6A66D1,
+                                            )
                                           : Color(0xffACACAD),
                                       width: isSpecialSelected ? 2 : 1),
                                   borderRadius: BorderRadius.circular(10),
@@ -1398,11 +1951,16 @@ class _CreateBookingState extends State<CreateBooking> {
                                   children: [
                                     Padding(
                                       padding: viewUtil.isTablet
-                                          ?EdgeInsets.only(top: MediaQuery.sizeOf(context).width * 0.08, bottom: 10)
-                                          :EdgeInsets.only(top: 45, bottom: 10),
+                                          ? EdgeInsets.only(
+                                              top: MediaQuery.sizeOf(context)
+                                                      .width *
+                                                  0.08,
+                                              bottom: 10)
+                                          : EdgeInsets.only(
+                                              top: 45, bottom: 10),
                                       child: MyVectorImage(
                                         name: specials.image,
-                                        height: viewUtil.isTablet?70:40,
+                                        height: viewUtil.isTablet ? 70 : 40,
                                       ),
                                     ),
                                     SizedBox(height: 7),
@@ -1416,7 +1974,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                       specials.name.tr(),
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                          fontSize: viewUtil.isTablet?20: 15),
+                                          fontSize:
+                                              viewUtil.isTablet ? 20 : 15),
                                     )
                                   ],
                                 ),
@@ -1467,7 +2026,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   });
                 },
               ),
-              SizedBox(height:20),
+              SizedBox(height: 20),
               commonWidgets.buildDropdown(
                 label: 'Shipping Condition'.tr(),
                 selectedValue: selectedShipmentCondition,
@@ -1479,7 +2038,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   });
                 },
               ),
-              SizedBox(height:20),
+              SizedBox(height: 20),
               commonWidgets.buildCargoLabeledTextField(
                 label: 'Length',
                 controller: lengthController,
@@ -1493,7 +2052,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   });
                 },
               ),
-              SizedBox(height:20),
+              SizedBox(height: 20),
               commonWidgets.buildCargoLabeledTextField(
                 label: 'Breadth',
                 controller: breadthController,
@@ -1507,7 +2066,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   });
                 },
               ),
-              SizedBox(height:20),
+              SizedBox(height: 20),
               commonWidgets.buildCargoLabeledTextField(
                 label: 'Height',
                 controller: heightController,
@@ -1550,11 +2109,11 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget UserVehicleStepTwo(
-      String selectedTypeName,
-      String name,
-      String typeImage,
-      String scale,
-      ) {
+    String selectedTypeName,
+    String name,
+    String typeImage,
+    String scale,
+  ) {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     return SingleChildScrollView(
@@ -1570,12 +2129,14 @@ class _CreateBookingState extends State<CreateBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Time'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 _selectTime(context);
               },
               child: Container(
@@ -1589,22 +2150,30 @@ class _CreateBookingState extends State<CreateBooking> {
                   children: [
                     IconButton(
                       onPressed: () => _selectTime(context),
-                      icon: Icon(FontAwesomeIcons.clock,color: const Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
+                      icon: Icon(
+                        FontAwesomeIcons.clock,
+                        color: const Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
                     ),
                     Container(
-                      height: viewUtil.isTablet ?60:50,
+                      height: viewUtil.isTablet ? 60 : 50,
                       child: const VerticalDivider(
                         color: Colors.grey,
                         thickness: 1.2,
                       ),
                     ),
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         _selectTime(context);
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16),),
+                        child: Text(
+                          '${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                        ),
                       ),
                     ),
                   ],
@@ -1618,12 +2187,14 @@ class _CreateBookingState extends State<CreateBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Date'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
             GestureDetector(
-              onTap: (){
+              onTap: () {
                 _selectDate(context);
               },
               child: Container(
@@ -1637,22 +2208,26 @@ class _CreateBookingState extends State<CreateBooking> {
                   children: [
                     IconButton(
                       onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                      icon: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                     ),
                     Container(
-                      height: viewUtil.isTablet ?60:50,
+                      height: viewUtil.isTablet ? 60 : 50,
                       child: const VerticalDivider(
                         color: Colors.grey,
                         thickness: 1.2,
                       ),
                     ),
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         _selectDate(context);
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                        child: Text('$formattedDate',
+                            style: TextStyle(
+                                fontSize: viewUtil.isTablet ? 20 : 16)),
                       ),
                     ),
                   ],
@@ -1666,7 +2241,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   "${'valueOfProduct'.tr()} (SAR)",
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -1679,7 +2256,8 @@ class _CreateBookingState extends State<CreateBooking> {
                 focusNode: productValueFocusNode,
                 controller: productController,
                 decoration: InputDecoration(
-                  hintStyle: const TextStyle(color: Color(0xffCCCCCC),fontSize: 16),
+                  hintStyle:
+                      const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
                   border: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                     borderSide: const BorderSide(
@@ -1694,7 +2272,8 @@ class _CreateBookingState extends State<CreateBooking> {
                       width: 1.0, // Border width
                     ),
                   ),
-                ),keyboardType: TextInputType.number,
+                ),
+                keyboardType: TextInputType.number,
               ),
             ),
             Container(
@@ -1704,7 +2283,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'loadType'.tr(),
-                  style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -1742,8 +2323,9 @@ class _CreateBookingState extends State<CreateBooking> {
                       padding: EdgeInsets.all(8.0),
                       child: Text(
                         'needAdditionalLabour'.tr(),
-                        style:
-                        TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            fontSize: viewUtil.isTablet ? 20 : 16,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
@@ -1808,12 +2390,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'Time'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectTime(context);
             },
             child: Container(
@@ -1827,22 +2411,26 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectTime(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -1856,12 +2444,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'Date'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectDate(context);
             },
             child: Container(
@@ -1875,22 +2465,26 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                    icon: Icon(FontAwesomeIcons.calendar,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectDate(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -1904,7 +2498,9 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 "${'valueOfProduct'.tr()} (SAR)",
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -1952,8 +2548,9 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2017,12 +2614,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'fromTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectTime(context);
             },
             child: Container(
@@ -2036,22 +2635,26 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectTime(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2065,12 +2668,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'toTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectToTime(context);
             },
             child: Container(
@@ -2084,22 +2689,26 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                    icon: Icon(FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectToTime(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2113,12 +2722,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'startingDate'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectDate(context);
             },
             child: Container(
@@ -2132,22 +2743,26 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20),
+                    icon: Icon(FontAwesomeIcons.calendar,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectDate(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2171,8 +2786,9 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2236,12 +2852,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'fromTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectTime(context);
             },
             child: Container(
@@ -2255,22 +2873,28 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
+                    icon: Icon(
+                      FontAwesomeIcons.clock,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectTime(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2284,12 +2908,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'toTime'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectToTime(context);
             },
             child: Container(
@@ -2303,22 +2929,28 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
+                    icon: Icon(
+                      FontAwesomeIcons.clock,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectToTime(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2332,12 +2964,14 @@ class _CreateBookingState extends State<CreateBooking> {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 'startingDate'.tr(),
-                style: TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ),
           GestureDetector(
-            onTap: (){
+            onTap: () {
               _selectDate(context);
             },
             child: Container(
@@ -2351,22 +2985,28 @@ class _CreateBookingState extends State<CreateBooking> {
                 children: [
                   IconButton(
                     onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,color: Color(0xffBCBCBC),size: viewUtil.isTablet ?27:20,),
+                    icon: Icon(
+                      FontAwesomeIcons.calendar,
+                      color: Color(0xffBCBCBC),
+                      size: viewUtil.isTablet ? 27 : 20,
+                    ),
                   ),
                   Container(
-                    height: viewUtil.isTablet ?60:50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     child: const VerticalDivider(
                       color: Colors.grey,
                       thickness: 1.2,
                     ),
                   ),
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       _selectDate(context);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                      child: Text('$formattedDate',
+                          style:
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2390,8 +3030,9 @@ class _CreateBookingState extends State<CreateBooking> {
                     padding: EdgeInsets.all(8.0),
                     child: Text(
                       'needAdditionalLabour'.tr(),
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ?20:16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontSize: viewUtil.isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -2500,7 +3141,7 @@ class _CreateBookingState extends State<CreateBooking> {
                         child: Text(
                           '${_formatTimeOfDay(_selectedFromTime)}',
                           style:
-                          TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                         ),
                       ),
                     ),
@@ -2585,7 +3226,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 controller: productController,
                 decoration: InputDecoration(
                   hintStyle:
-                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                      const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
                   border: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                     borderSide: const BorderSide(
@@ -2626,7 +3267,7 @@ class _CreateBookingState extends State<CreateBooking> {
                 controller: weightController,
                 decoration: InputDecoration(
                   hintStyle:
-                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                      const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
                   border: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
                     borderSide: const BorderSide(
@@ -2652,18 +3293,18 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Widget UserVehicleStepThree(
-      String selectedTypeName,
-      String name,
-      String typeImage,
-      String scale,
-      String selectedDate,
-      String selectedTime,
-      String valueOfProduct,
-      String selectedLoad,
-      String additionalLabour,
-      ) {
+    String selectedTypeName,
+    String name,
+    String typeImage,
+    String scale,
+    String selectedDate,
+    String selectedTime,
+    String valueOfProduct,
+    String selectedLoad,
+    String additionalLabour,
+  ) {
     ViewUtil viewUtil = ViewUtil(context);
-    return  GestureDetector(
+    return GestureDetector(
       onTap: () {
         setState(() {
           _dismissSuggestions();
@@ -2689,7 +3330,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   polylines: polylines,
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                      () => EagerGestureRecognizer(),
                     ),
                   },
                 ),
@@ -2698,9 +3339,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 top: 15,
                 child: Container(
                   width: MediaQuery.of(context).size.width,
-                  padding:  viewUtil.isTablet
-                      ?EdgeInsets.only(left: 45, right: 45)
-                      :EdgeInsets.only(left: 30, right: 30),
+                  padding: viewUtil.isTablet
+                      ? EdgeInsets.only(left: 45, right: 45)
+                      : EdgeInsets.only(left: 30, right: 30),
                   child: Column(
                     children: [
                       Card(
@@ -2710,7 +3351,8 @@ class _CreateBookingState extends State<CreateBooking> {
                             Row(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 17, 10, 10),
                                   child: CircleAvatar(
                                     backgroundColor: Color(0xff009E10),
                                     minRadius: 6,
@@ -2718,29 +3360,43 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                                 Expanded(
                                   child: Container(
-                                    height: viewUtil.isTablet?60:40,
+                                    height: viewUtil.isTablet ? 60 : 40,
                                     padding: viewUtil.isTablet
-                                        ?EdgeInsets.only(right: 8,top: 10)
-                                        :EdgeInsets.only(right: 3,top: 0),
+                                        ? EdgeInsets.only(right: 8, top: 10)
+                                        : EdgeInsets.only(right: 3, top: 0),
                                     child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      onChanged: (value) =>
+                                          _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
                                         suffixIcon: Tooltip(
-                                          message: 'Locate Current Location'.tr(),
+                                          message:
+                                              'Locate Current Location'.tr(),
                                           child: IconButton(
-                                              onPressed: ()async{
-                                                FocusScope.of(context).unfocus();
+                                              onPressed: () async {
+                                                FocusScope.of(context)
+                                                    .unfocus();
                                                 await locateCurrentPosition();
                                               },
                                               icon: Padding(
-                                                padding: const EdgeInsets.only(top: 7),
-                                                child: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),),
+                                                padding: const EdgeInsets.only(
+                                                    top: 7),
+                                                child: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                ),
                                               )),
                                         ),
                                         hintText: 'Pick Up'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -2748,7 +3404,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                               ],
                             ),
-                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                            if (_pickUpSuggestions.isNotEmpty &&
+                                pickUpController.text.isNotEmpty)
                               Container(
                                 padding: EdgeInsets.all(8),
                                 height: 200,
@@ -2760,18 +3417,31 @@ class _CreateBookingState extends State<CreateBooking> {
                                       return ListTile(
                                         title: Row(
                                           children: [
-                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.25),
-                                              child: Text('Current Location'.tr()),
+                                            Icon(
+                                              Icons.my_location_outlined,
+                                              color: Colors.blue,
+                                              size: 20,
                                             ),
-                                            isLocating ? Container(
-                                              height: 15,
-                                              width: 15,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ):Container()
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 13,
+                                                  right:
+                                                      MediaQuery.sizeOf(context)
+                                                              .width *
+                                                          0.25),
+                                              child:
+                                                  Text('Current Location'.tr()),
+                                            ),
+                                            isLocating
+                                                ? Container(
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : Container()
                                           ],
                                         ),
                                         onTap: () async {
@@ -2780,8 +3450,12 @@ class _CreateBookingState extends State<CreateBooking> {
                                       );
                                     } else {
                                       return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),
-                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
+                                        title:
+                                            Text(_pickUpSuggestions[index - 1]),
+                                        onTap: () => _onSuggestionTap(
+                                            _pickUpSuggestions[index - 1],
+                                            pickUpController,
+                                            true),
                                       );
                                     }
                                   },
@@ -2791,7 +3465,10 @@ class _CreateBookingState extends State<CreateBooking> {
                               indent: 5,
                               endIndent: 5,
                             ),
-                            ..._dropPointControllers.asMap().entries.map((entry) {
+                            ..._dropPointControllers
+                                .asMap()
+                                .entries
+                                .map((entry) {
                               int i = entry.key;
                               TextEditingController controller = entry.value;
                               return Column(
@@ -2799,7 +3476,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                   Row(
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 5, 10),
                                         child: CircleAvatar(
                                           backgroundColor: Color(0xffE20808),
                                           minRadius: 6,
@@ -2807,37 +3485,77 @@ class _CreateBookingState extends State<CreateBooking> {
                                       ),
                                       Expanded(
                                         child: Container(
-                                          height: viewUtil.isTablet?60:43,
+                                          height: viewUtil.isTablet ? 60 : 43,
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextFormField(
-                                            textCapitalization: TextCapitalization.sentences,
-                                            onChanged: (value) => _fetchSuggestions(value, i, false),
+                                            textCapitalization:
+                                                TextCapitalization.sentences,
+                                            onChanged: (value) =>
+                                                _fetchSuggestions(
+                                                    value, i, false),
                                             controller: controller,
                                             decoration: InputDecoration(
                                               isDense: true,
-                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
+                                              hintText:
+                                                  '${'Drop Point'.tr()} ${i + 1}',
+                                              hintStyle: TextStyle(
+                                                  color: Color(0xff707070),
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 15),
                                               border: InputBorder.none,
-                                              suffixIcon: i == _dropPointControllers.length - 1
+                                              suffixIcon: i ==
+                                                      _dropPointControllers
+                                                              .length -
+                                                          1
                                                   ? Padding(
-                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (_dropPointControllers.length > 1)
-                                                      GestureDetector(
-                                                        onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
+                                                      padding: EdgeInsets.only(
+                                                          right:
+                                                              viewUtil.isTablet
+                                                                  ? 10
+                                                                  : 10),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          if (_dropPointControllers
+                                                                  .length >
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap: () =>
+                                                                  _removeTextField(
+                                                                      i),
+                                                              child: Icon(
+                                                                  Icons
+                                                                      .cancel_outlined,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: viewUtil
+                                                                          .isTablet
+                                                                      ? 25
+                                                                      : 20),
+                                                            ),
+                                                          if (_dropPointControllers
+                                                                  .length ==
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap:
+                                                                  _addTextField,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .add_circle_outline_sharp,
+                                                                size: viewUtil
+                                                                        .isTablet
+                                                                    ? 25
+                                                                    : 20,
+                                                              ),
+                                                            ),
+                                                        ],
                                                       ),
-                                                    if (_dropPointControllers.length == 1)
-                                                      GestureDetector(
-                                                        onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
+                                                    )
                                                   : null,
                                             ),
                                           ),
@@ -2845,16 +3563,24 @@ class _CreateBookingState extends State<CreateBooking> {
                                       ),
                                     ],
                                   ),
-                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
+                                  if (_dropPointSuggestions[i] != null &&
+                                      _dropPointSuggestions[i]!.isNotEmpty &&
+                                      controller.text.isNotEmpty)
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       height: 200,
                                       child: ListView.builder(
-                                        itemCount: _dropPointSuggestions[i]!.length,
+                                        itemCount:
+                                            _dropPointSuggestions[i]!.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text(_dropPointSuggestions[i]![index]),
-                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
+                                            title: Text(_dropPointSuggestions[
+                                                i]![index]),
+                                            onTap: () => _onSuggestionTap(
+                                                _dropPointSuggestions[i]![
+                                                    index],
+                                                controller,
+                                                false),
                                           );
                                         },
                                       ),
@@ -2890,7 +3616,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: viewUtil.isTablet?23:16,
+                                fontSize: viewUtil.isTablet ? 23 : 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -2936,7 +3662,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   polylines: polylines,
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                      () => EagerGestureRecognizer(),
                     ),
                   },
                 ),
@@ -2955,7 +3681,8 @@ class _CreateBookingState extends State<CreateBooking> {
                             Row(
                               children: [
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,17,10,10),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 17, 10, 10),
                                   child: CircleAvatar(
                                     backgroundColor: Color(0xff009E10),
                                     minRadius: 6,
@@ -2963,29 +3690,43 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                                 Expanded(
                                   child: Container(
-                                    height: viewUtil.isTablet?60:40,
+                                    height: viewUtil.isTablet ? 60 : 40,
                                     padding: viewUtil.isTablet
-                                        ?EdgeInsets.only(right: 8,top: 10)
-                                        :EdgeInsets.only(right: 3,top: 0),
+                                        ? EdgeInsets.only(right: 8, top: 10)
+                                        : EdgeInsets.only(right: 3, top: 0),
                                     child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
-                                      onChanged: (value) => _fetchSuggestions(value, -1, true),
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      onChanged: (value) =>
+                                          _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
                                         suffixIcon: Tooltip(
-                                          message: 'Locate Current Location'.tr(),
+                                          message:
+                                              'Locate Current Location'.tr(),
                                           child: Padding(
-                                            padding: const EdgeInsets.only(top: 7),
+                                            padding:
+                                                const EdgeInsets.only(top: 7),
                                             child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25: 20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
                                           ),
                                         ),
                                         hintText: 'Pick Up'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 20 : 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -2993,7 +3734,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                 ),
                               ],
                             ),
-                            if (_pickUpSuggestions.isNotEmpty && pickUpController.text.isNotEmpty)
+                            if (_pickUpSuggestions.isNotEmpty &&
+                                pickUpController.text.isNotEmpty)
                               Container(
                                 padding: EdgeInsets.all(8),
                                 height: 200,
@@ -3005,18 +3747,31 @@ class _CreateBookingState extends State<CreateBooking> {
                                       return ListTile(
                                         title: Row(
                                           children: [
-                                            Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.25),
-                                              child: Text('Current Location'.tr()),
+                                            Icon(
+                                              Icons.my_location_outlined,
+                                              color: Colors.blue,
+                                              size: 20,
                                             ),
-                                            isLocating ? Container(
-                                              height: 15,
-                                              width: 15,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ):Container()
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 13,
+                                                  right:
+                                                      MediaQuery.sizeOf(context)
+                                                              .width *
+                                                          0.25),
+                                              child:
+                                                  Text('Current Location'.tr()),
+                                            ),
+                                            isLocating
+                                                ? Container(
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
+                                                : Container()
                                           ],
                                         ),
                                         onTap: () async {
@@ -3025,8 +3780,12 @@ class _CreateBookingState extends State<CreateBooking> {
                                       );
                                     } else {
                                       return ListTile(
-                                        title: Text(_pickUpSuggestions[index - 1]),
-                                        onTap: () => _onSuggestionTap(_pickUpSuggestions[index - 1], pickUpController, true),
+                                        title:
+                                            Text(_pickUpSuggestions[index - 1]),
+                                        onTap: () => _onSuggestionTap(
+                                            _pickUpSuggestions[index - 1],
+                                            pickUpController,
+                                            true),
                                       );
                                     }
                                   },
@@ -3036,7 +3795,10 @@ class _CreateBookingState extends State<CreateBooking> {
                               indent: 5,
                               endIndent: 5,
                             ),
-                            ..._dropPointControllers.asMap().entries.map((entry) {
+                            ..._dropPointControllers
+                                .asMap()
+                                .entries
+                                .map((entry) {
                               int i = entry.key;
                               TextEditingController controller = entry.value;
                               return Column(
@@ -3044,7 +3806,8 @@ class _CreateBookingState extends State<CreateBooking> {
                                   Row(
                                     children: [
                                       Padding(
-                                        padding: const EdgeInsets.fromLTRB(10,10,5,10),
+                                        padding: const EdgeInsets.fromLTRB(
+                                            10, 10, 5, 10),
                                         child: CircleAvatar(
                                           backgroundColor: Color(0xffE20808),
                                           minRadius: 6,
@@ -3052,37 +3815,77 @@ class _CreateBookingState extends State<CreateBooking> {
                                       ),
                                       Expanded(
                                         child: Container(
-                                          height: viewUtil.isTablet?60:43,
+                                          height: viewUtil.isTablet ? 60 : 43,
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextFormField(
-                                            textCapitalization: TextCapitalization.sentences,
-                                            onChanged: (value) => _fetchSuggestions(value, i, false),
+                                            textCapitalization:
+                                                TextCapitalization.sentences,
+                                            onChanged: (value) =>
+                                                _fetchSuggestions(
+                                                    value, i, false),
                                             controller: controller,
                                             decoration: InputDecoration(
                                               isDense: true,
-                                              hintText: '${'Drop Point'.tr()} ${i + 1}',
-                                              hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?20: 15),
+                                              hintText:
+                                                  '${'Drop Point'.tr()} ${i + 1}',
+                                              hintStyle: TextStyle(
+                                                  color: Color(0xff707070),
+                                                  fontSize: viewUtil.isTablet
+                                                      ? 20
+                                                      : 15),
                                               border: InputBorder.none,
-                                              suffixIcon: i == _dropPointControllers.length - 1
+                                              suffixIcon: i ==
+                                                      _dropPointControllers
+                                                              .length -
+                                                          1
                                                   ? Padding(
-                                                padding: EdgeInsets.only(right: viewUtil.isTablet?10:10),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.end,
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    if (_dropPointControllers.length > 1)
-                                                      GestureDetector(
-                                                        onTap: () => _removeTextField(i),
-                                                        child: Icon(Icons.cancel_outlined, color: Colors.red,size: viewUtil.isTablet?25: 20),
+                                                      padding: EdgeInsets.only(
+                                                          right:
+                                                              viewUtil.isTablet
+                                                                  ? 10
+                                                                  : 10),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          if (_dropPointControllers
+                                                                  .length >
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap: () =>
+                                                                  _removeTextField(
+                                                                      i),
+                                                              child: Icon(
+                                                                  Icons
+                                                                      .cancel_outlined,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: viewUtil
+                                                                          .isTablet
+                                                                      ? 25
+                                                                      : 20),
+                                                            ),
+                                                          if (_dropPointControllers
+                                                                  .length ==
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap:
+                                                                  _addTextField,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .add_circle_outline_sharp,
+                                                                size: viewUtil
+                                                                        .isTablet
+                                                                    ? 25
+                                                                    : 20,
+                                                              ),
+                                                            ),
+                                                        ],
                                                       ),
-                                                    if (_dropPointControllers.length == 1)
-                                                      GestureDetector(
-                                                        onTap: _addTextField,
-                                                        child: Icon(Icons.add_circle_outline_sharp,size: viewUtil.isTablet?25: 20,),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
+                                                    )
                                                   : null,
                                             ),
                                           ),
@@ -3090,16 +3893,24 @@ class _CreateBookingState extends State<CreateBooking> {
                                       ),
                                     ],
                                   ),
-                                  if (_dropPointSuggestions[i] != null && _dropPointSuggestions[i]!.isNotEmpty && controller.text.isNotEmpty)
+                                  if (_dropPointSuggestions[i] != null &&
+                                      _dropPointSuggestions[i]!.isNotEmpty &&
+                                      controller.text.isNotEmpty)
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       height: 200,
                                       child: ListView.builder(
-                                        itemCount: _dropPointSuggestions[i]!.length,
+                                        itemCount:
+                                            _dropPointSuggestions[i]!.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text(_dropPointSuggestions[i]![index]),
-                                            onTap: () => _onSuggestionTap(_dropPointSuggestions[i]![index], controller, false),
+                                            title: Text(_dropPointSuggestions[
+                                                i]![index]),
+                                            onTap: () => _onSuggestionTap(
+                                                _dropPointSuggestions[i]![
+                                                    index],
+                                                controller,
+                                                false),
                                           );
                                         },
                                       ),
@@ -3135,7 +3946,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               'getDirection'.tr(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: viewUtil.isTablet?23:16,
+                                fontSize: viewUtil.isTablet ? 23 : 16,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -3156,7 +3967,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserEquipmentStepThree() {
     ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         _dismissAddressSuggestions();
       },
       child: SingleChildScrollView(
@@ -3165,9 +3976,9 @@ class _CreateBookingState extends State<CreateBooking> {
             children: [
               Container(
                 width: MediaQuery.of(context).size.width,
-                padding:  viewUtil.isTablet
-                    ?EdgeInsets.only(left: 45, right: 45)
-                    :EdgeInsets.only(left: 30, right: 30),
+                padding: viewUtil.isTablet
+                    ? EdgeInsets.only(left: 45, right: 45)
+                    : EdgeInsets.only(left: 30, right: 30),
                 child: Column(
                   children: [
                     Card(
@@ -3186,31 +3997,48 @@ class _CreateBookingState extends State<CreateBooking> {
                             child: Row(
                               children: [
                                 Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
-                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 8, 15, 5),
+                                    child: SvgPicture.asset('assets/search.svg',
+                                        height: viewUtil.isTablet ? 20 : 14)),
                                 Expanded(
                                   child: Container(
-                                    height: viewUtil.isTablet?40:30,
+                                    height: viewUtil.isTablet ? 40 : 30,
                                     child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
                                       controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                      onChanged: (value) =>
+                                          _fetchAddressSuggestions(
+                                              value, 'city'),
                                       decoration: InputDecoration(
                                         isDense: true,
                                         suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8),
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                            message:
+                                                'Locate Current Location'.tr(),
                                             child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
                                           ),
                                         ),
                                         hintText: 'enterCityName'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 23 : 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3219,7 +4047,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               ],
                             ),
                           ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                          if (_cityNameSuggestions.isNotEmpty &&
+                              cityNameController.text.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(8),
                               height: 200,
@@ -3231,18 +4060,31 @@ class _CreateBookingState extends State<CreateBooking> {
                                     return ListTile(
                                       title: Row(
                                         children: [
-                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.25),
-                                            child: Text('Current Location'.tr()),
+                                          Icon(
+                                            Icons.my_location_outlined,
+                                            color: Colors.blue,
+                                            size: 20,
                                           ),
-                                          isLocating ? Container(
-                                            height: 15,
-                                            width: 15,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          ):Container()
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                left: 13,
+                                                right:
+                                                    MediaQuery.sizeOf(context)
+                                                            .width *
+                                                        0.25),
+                                            child:
+                                                Text('Current Location'.tr()),
+                                          ),
+                                          isLocating
+                                              ? Container(
+                                                  height: 15,
+                                                  width: 15,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : Container()
                                         ],
                                       ),
                                       onTap: () async {
@@ -3251,8 +4093,12 @@ class _CreateBookingState extends State<CreateBooking> {
                                     );
                                   } else {
                                     return ListTile(
-                                      title: Text(_cityNameSuggestions[index - 1]),
-                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
+                                      title:
+                                          Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(
+                                          _cityNameSuggestions[index - 1],
+                                          cityNameController,
+                                          'city'),
                                     );
                                   }
                                 },
@@ -3262,20 +4108,28 @@ class _CreateBookingState extends State<CreateBooking> {
                           Row(
                             children: [
                               Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 8, 15, 10),
+                                  child: SvgPicture.asset('assets/address.svg',
+                                      height: viewUtil.isTablet ? 23 : 15)),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(bottom: 5),
-                                  height: viewUtil.isTablet?40:33,
+                                  height: viewUtil.isTablet ? 40 : 33,
                                   child: TextFormField(
-                                    textCapitalization: TextCapitalization.sentences,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
                                     controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
+                                    onChanged: (value) =>
+                                        _fetchAddressSuggestions(
+                                            value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
                                       hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
+                                      hintStyle: TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize:
+                                              viewUtil.isTablet ? 22 : 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
@@ -3284,7 +4138,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               ),
                             ],
                           ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
+                          if (_addressSuggestions.isNotEmpty &&
+                              addressController.text.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(8),
                               height: 200,
@@ -3294,7 +4149,10 @@ class _CreateBookingState extends State<CreateBooking> {
                                 itemBuilder: (context, index) {
                                   return ListTile(
                                     title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
+                                    onTap: () => _onAddressSuggestionTap(
+                                        _addressSuggestions[index],
+                                        addressController,
+                                        'address'),
                                   );
                                 },
                               ),
@@ -3322,7 +4180,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet?23:16,
+                              fontSize: viewUtil.isTablet ? 23 : 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -3349,7 +4207,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   polylines: polylines,
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                      () => EagerGestureRecognizer(),
                     ),
                   },
                 ),
@@ -3364,7 +4222,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserSpecialStepThree() {
     ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         _dismissAddressSuggestions();
       },
       child: SingleChildScrollView(
@@ -3374,8 +4232,8 @@ class _CreateBookingState extends State<CreateBooking> {
               Container(
                 width: MediaQuery.of(context).size.width,
                 padding: viewUtil.isTablet
-                    ?EdgeInsets.only(left: 45, right: 45)
-                    :EdgeInsets.only(left: 30, right: 30),
+                    ? EdgeInsets.only(left: 45, right: 45)
+                    : EdgeInsets.only(left: 30, right: 30),
                 child: Column(
                   children: [
                     Card(
@@ -3387,38 +4245,55 @@ class _CreateBookingState extends State<CreateBooking> {
                         ),
                       ),
                       color: Colors.white,
-                      child:Column(
+                      child: Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               children: [
                                 Padding(
-                                    padding: const EdgeInsets.fromLTRB(10,8,15,5),
-                                    child: SvgPicture.asset('assets/search.svg',height: viewUtil.isTablet?20:14)),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 8, 15, 5),
+                                    child: SvgPicture.asset('assets/search.svg',
+                                        height: viewUtil.isTablet ? 20 : 14)),
                                 Expanded(
                                   child: Container(
-                                    height: viewUtil.isTablet?40:30,
+                                    height: viewUtil.isTablet ? 40 : 30,
                                     child: TextFormField(
-                                      textCapitalization: TextCapitalization.sentences,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
                                       controller: cityNameController,
-                                      onChanged: (value) => _fetchAddressSuggestions(value, 'city'),
+                                      onChanged: (value) =>
+                                          _fetchAddressSuggestions(
+                                              value, 'city'),
                                       decoration: InputDecoration(
                                         isDense: true,
                                         suffixIcon: Padding(
-                                          padding: const EdgeInsets.only(right: 8),
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
                                           child: Tooltip(
-                                            message: 'Locate Current Location'.tr(),
+                                            message:
+                                                'Locate Current Location'.tr(),
                                             child: IconButton(
-                                                onPressed: ()async{
-                                                  FocusScope.of(context).unfocus();
+                                                onPressed: () async {
+                                                  FocusScope.of(context)
+                                                      .unfocus();
                                                   await locateCurrentPosition();
                                                 },
-                                                icon: Icon(Icons.my_location,size: viewUtil.isTablet?25:20,color: Color(0xff6A66D1),)),
+                                                icon: Icon(
+                                                  Icons.my_location,
+                                                  size: viewUtil.isTablet
+                                                      ? 25
+                                                      : 20,
+                                                  color: Color(0xff6A66D1),
+                                                )),
                                           ),
                                         ),
                                         hintText: 'enterCityName'.tr(),
-                                        hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?23: 15),
+                                        hintStyle: TextStyle(
+                                            color: Color(0xff707070),
+                                            fontSize:
+                                                viewUtil.isTablet ? 23 : 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3427,7 +4302,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               ],
                             ),
                           ),
-                          if (_cityNameSuggestions.isNotEmpty && cityNameController.text.isNotEmpty)
+                          if (_cityNameSuggestions.isNotEmpty &&
+                              cityNameController.text.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(8),
                               height: 200,
@@ -3439,18 +4315,31 @@ class _CreateBookingState extends State<CreateBooking> {
                                     return ListTile(
                                       title: Row(
                                         children: [
-                                          Icon(Icons.my_location_outlined,color: Colors.blue,size: 20,),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 13,right: MediaQuery.sizeOf(context).width * 0.25),
-                                            child: Text('Current Location'.tr()),
+                                          Icon(
+                                            Icons.my_location_outlined,
+                                            color: Colors.blue,
+                                            size: 20,
                                           ),
-                                          isLocating ? Container(
-                                            height: 15,
-                                            width: 15,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          ):Container()
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                                left: 13,
+                                                right:
+                                                    MediaQuery.sizeOf(context)
+                                                            .width *
+                                                        0.25),
+                                            child:
+                                                Text('Current Location'.tr()),
+                                          ),
+                                          isLocating
+                                              ? Container(
+                                                  height: 15,
+                                                  width: 15,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : Container()
                                         ],
                                       ),
                                       onTap: () async {
@@ -3459,8 +4348,12 @@ class _CreateBookingState extends State<CreateBooking> {
                                     );
                                   } else {
                                     return ListTile(
-                                      title: Text(_cityNameSuggestions[index - 1]),
-                                      onTap: () => _onAddressSuggestionTap(_cityNameSuggestions[index -1], cityNameController, 'city'),
+                                      title:
+                                          Text(_cityNameSuggestions[index - 1]),
+                                      onTap: () => _onAddressSuggestionTap(
+                                          _cityNameSuggestions[index - 1],
+                                          cityNameController,
+                                          'city'),
                                     );
                                   }
                                 },
@@ -3470,20 +4363,28 @@ class _CreateBookingState extends State<CreateBooking> {
                           Row(
                             children: [
                               Padding(
-                                  padding: const EdgeInsets.fromLTRB(10,8,15,10),
-                                  child: SvgPicture.asset('assets/address.svg',height: viewUtil.isTablet?23:15)),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(10, 8, 15, 10),
+                                  child: SvgPicture.asset('assets/address.svg',
+                                      height: viewUtil.isTablet ? 23 : 15)),
                               Expanded(
                                 child: Container(
                                   padding: const EdgeInsets.only(bottom: 5),
-                                  height: viewUtil.isTablet?40:33,
+                                  height: viewUtil.isTablet ? 40 : 33,
                                   child: TextFormField(
-                                    textCapitalization: TextCapitalization.sentences,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
                                     controller: addressController,
-                                    onChanged: (value) => _fetchAddressSuggestions(value, 'address'),
+                                    onChanged: (value) =>
+                                        _fetchAddressSuggestions(
+                                            value, 'address'),
                                     decoration: InputDecoration(
                                       isDense: true,
                                       hintText: 'enterYourAddress'.tr(),
-                                      hintStyle: TextStyle(color: Color(0xff707070), fontSize: viewUtil.isTablet?22: 15),
+                                      hintStyle: TextStyle(
+                                          color: Color(0xff707070),
+                                          fontSize:
+                                              viewUtil.isTablet ? 22 : 15),
                                       border: InputBorder.none,
                                       // contentPadding: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
                                     ),
@@ -3492,7 +4393,8 @@ class _CreateBookingState extends State<CreateBooking> {
                               ),
                             ],
                           ),
-                          if (_addressSuggestions.isNotEmpty && addressController.text.isNotEmpty)
+                          if (_addressSuggestions.isNotEmpty &&
+                              addressController.text.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(8),
                               height: 200,
@@ -3502,7 +4404,10 @@ class _CreateBookingState extends State<CreateBooking> {
                                 itemBuilder: (context, index) {
                                   return ListTile(
                                     title: Text(_addressSuggestions[index]),
-                                    onTap: () => _onAddressSuggestionTap(_addressSuggestions[index], addressController, 'address'),
+                                    onTap: () => _onAddressSuggestionTap(
+                                        _addressSuggestions[index],
+                                        addressController,
+                                        'address'),
                                   );
                                 },
                               ),
@@ -3530,7 +4435,7 @@ class _CreateBookingState extends State<CreateBooking> {
                             'getDirection'.tr(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: viewUtil.isTablet?23:16,
+                              fontSize: viewUtil.isTablet ? 23 : 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -3557,7 +4462,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   polylines: polylines,
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                      () => EagerGestureRecognizer(),
                     ),
                   },
                 ),
@@ -3597,7 +4502,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   polylines: polylines,
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                     Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
+                      () => EagerGestureRecognizer(),
                     ),
                   },
                 ),
@@ -3619,7 +4524,7 @@ class _CreateBookingState extends State<CreateBooking> {
                               children: [
                                 Padding(
                                   padding:
-                                  const EdgeInsets.fromLTRB(10, 17, 10, 10),
+                                      const EdgeInsets.fromLTRB(10, 17, 10, 10),
                                   child: CircleAvatar(
                                     backgroundColor: Color(0xff009E10),
                                     minRadius: 6,
@@ -3633,14 +4538,14 @@ class _CreateBookingState extends State<CreateBooking> {
                                         : EdgeInsets.only(right: 3, top: 0),
                                     child: TextFormField(
                                       textCapitalization:
-                                      TextCapitalization.sentences,
+                                          TextCapitalization.sentences,
                                       onChanged: (value) =>
                                           _fetchSuggestions(value, -1, true),
                                       controller: pickUpController,
                                       decoration: InputDecoration(
                                         suffixIcon: Tooltip(
                                           message:
-                                          'Locate Current Location'.tr(),
+                                              'Locate Current Location'.tr(),
                                           child: IconButton(
                                               onPressed: () async {
                                                 FocusScope.of(context)
@@ -3663,7 +4568,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                         hintStyle: TextStyle(
                                             color: Color(0xff707070),
                                             fontSize:
-                                            viewUtil.isTablet ? 20 : 15),
+                                                viewUtil.isTablet ? 20 : 15),
                                         border: InputBorder.none,
                                       ),
                                     ),
@@ -3693,21 +4598,21 @@ class _CreateBookingState extends State<CreateBooking> {
                                               padding: EdgeInsets.only(
                                                   left: 13,
                                                   right:
-                                                  MediaQuery.sizeOf(context)
-                                                      .width *
-                                                      0.25),
+                                                      MediaQuery.sizeOf(context)
+                                                              .width *
+                                                          0.25),
                                               child:
-                                              Text('Current Location'.tr()),
+                                                  Text('Current Location'.tr()),
                                             ),
                                             isLocating
                                                 ? Container(
-                                              height: 15,
-                                              width: 15,
-                                              child:
-                                              CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
+                                                    height: 15,
+                                                    width: 15,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                                  )
                                                 : Container()
                                           ],
                                         ),
@@ -3718,7 +4623,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                     } else {
                                       return ListTile(
                                         title:
-                                        Text(_pickUpSuggestions[index - 1]),
+                                            Text(_pickUpSuggestions[index - 1]),
                                         onTap: () => _onSuggestionTap(
                                             _pickUpSuggestions[index - 1],
                                             pickUpController,
@@ -3756,7 +4661,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextFormField(
                                             textCapitalization:
-                                            TextCapitalization.sentences,
+                                                TextCapitalization.sentences,
                                             onChanged: (value) =>
                                                 _fetchSuggestions(
                                                     value, i, false),
@@ -3764,7 +4669,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                             decoration: InputDecoration(
                                               isDense: true,
                                               hintText:
-                                              '${'Drop Point'.tr()} ${i + 1}',
+                                                  '${'Drop Point'.tr()} ${i + 1}',
                                               hintStyle: TextStyle(
                                                   color: Color(0xff707070),
                                                   fontSize: viewUtil.isTablet
@@ -3772,57 +4677,57 @@ class _CreateBookingState extends State<CreateBooking> {
                                                       : 15),
                                               border: InputBorder.none,
                                               suffixIcon: i ==
-                                                  _dropPointControllers
-                                                      .length -
-                                                      1
+                                                      _dropPointControllers
+                                                              .length -
+                                                          1
                                                   ? Padding(
-                                                padding: EdgeInsets.only(
-                                                    right:
-                                                    viewUtil.isTablet
-                                                        ? 10
-                                                        : 10),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .end,
-                                                  mainAxisSize:
-                                                  MainAxisSize.min,
-                                                  children: [
-                                                    if (_dropPointControllers
-                                                        .length >
-                                                        1)
-                                                      GestureDetector(
-                                                        onTap: () =>
-                                                            _removeTextField(
-                                                                i),
-                                                        child: Icon(
-                                                            Icons
-                                                                .cancel_outlined,
-                                                            color: Colors
-                                                                .red,
-                                                            size: viewUtil
-                                                                .isTablet
-                                                                ? 25
-                                                                : 20),
+                                                      padding: EdgeInsets.only(
+                                                          right:
+                                                              viewUtil.isTablet
+                                                                  ? 10
+                                                                  : 10),
+                                                      child: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          if (_dropPointControllers
+                                                                  .length >
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap: () =>
+                                                                  _removeTextField(
+                                                                      i),
+                                                              child: Icon(
+                                                                  Icons
+                                                                      .cancel_outlined,
+                                                                  color: Colors
+                                                                      .red,
+                                                                  size: viewUtil
+                                                                          .isTablet
+                                                                      ? 25
+                                                                      : 20),
+                                                            ),
+                                                          if (_dropPointControllers
+                                                                  .length ==
+                                                              1)
+                                                            GestureDetector(
+                                                              onTap:
+                                                                  _addTextField,
+                                                              child: Icon(
+                                                                Icons
+                                                                    .add_circle_outline_sharp,
+                                                                size: viewUtil
+                                                                        .isTablet
+                                                                    ? 25
+                                                                    : 20,
+                                                              ),
+                                                            ),
+                                                        ],
                                                       ),
-                                                    if (_dropPointControllers
-                                                        .length ==
-                                                        1)
-                                                      GestureDetector(
-                                                        onTap:
-                                                        _addTextField,
-                                                        child: Icon(
-                                                          Icons
-                                                              .add_circle_outline_sharp,
-                                                          size: viewUtil
-                                                              .isTablet
-                                                              ? 25
-                                                              : 20,
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              )
+                                                    )
                                                   : null,
                                             ),
                                           ),
@@ -3838,14 +4743,14 @@ class _CreateBookingState extends State<CreateBooking> {
                                       height: 200,
                                       child: ListView.builder(
                                         itemCount:
-                                        _dropPointSuggestions[i]!.length,
+                                            _dropPointSuggestions[i]!.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
                                             title: Text(_dropPointSuggestions[
-                                            i]![index]),
+                                                i]![index]),
                                             onTap: () => _onSuggestionTap(
                                                 _dropPointSuggestions[i]![
-                                                index],
+                                                    index],
                                                 controller,
                                                 false),
                                           );
@@ -3959,7 +4864,8 @@ class _CreateBookingState extends State<CreateBooking> {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        commonWidgets.showToast('Location permanently denied. Please enable it in settings.');
+        commonWidgets.showToast(
+            'Location permanently denied. Please enable it in settings.');
         await Geolocator.openAppSettings();
         return;
       }
@@ -3978,7 +4884,8 @@ class _CreateBookingState extends State<CreateBooking> {
       String place = 'Unknown location';
       if (placemarks.isNotEmpty) {
         final Placemark placemark = placemarks[0];
-        place = "${placemark.name}, ${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
+        place =
+            "${placemark.name}, ${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea}, ${placemark.country}";
       }
 
       if (mapController != null) {
@@ -4054,12 +4961,14 @@ class _CreateBookingState extends State<CreateBooking> {
             markers.add(
               Marker(
                 markerId: const MarkerId('current_location'),
-                position: LatLng(currentPosition.latitude, currentPosition.longitude),
+                position:
+                    LatLng(currentPosition.latitude, currentPosition.longitude),
                 infoWindow: InfoWindow(
                   title: 'Current Location',
                   snippet: formattedAddress,
                 ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen),
               ),
             );
           });
@@ -4118,12 +5027,14 @@ class _CreateBookingState extends State<CreateBooking> {
             markers.add(
               Marker(
                 markerId: const MarkerId('current_location'),
-                position: LatLng(currentPosition.latitude, currentPosition.longitude),
+                position:
+                    LatLng(currentPosition.latitude, currentPosition.longitude),
                 infoWindow: InfoWindow(
                   title: 'Current Location',
                   snippet: formattedAddress,
                 ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueGreen),
               ),
             );
           });
@@ -4133,7 +5044,6 @@ class _CreateBookingState extends State<CreateBooking> {
       } else {
         setState(() => isLocating = false);
       }
-
     } catch (e) {
       setState(() => isLocating = false);
     }
@@ -4145,7 +5055,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
       String pickupPlace = pickUpController.text;
       List<String> dropPlaces =
-      _dropPointControllers.map((controller) => controller.text).toList();
+          _dropPointControllers.map((controller) => controller.text).toList();
 
       setState(() {
         markers.clear();
@@ -4165,14 +5075,14 @@ class _CreateBookingState extends State<CreateBooking> {
       }).toList();
 
       final List<http.Response> dropResponsesList =
-      await Future.wait(dropResponses);
+          await Future.wait(dropResponses);
 
       if (pickupResponse.statusCode == 200) {
         final pickupData = json.decode(pickupResponse.body);
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-          pickupData['results']?[0]['geometry']?['location'];
+              pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -4197,12 +5107,8 @@ class _CreateBookingState extends State<CreateBooking> {
               polylines.clear();
               _dropLatLngs.clear();
             });
-          } else {
-
-          }
-        } else {
-
-        }
+          } else {}
+        } else {}
 
         // Handle each drop point response
         List<LatLng> waypoints = [];
@@ -4213,12 +5119,12 @@ class _CreateBookingState extends State<CreateBooking> {
 
             if (dropData != null && dropData['status'] == 'OK') {
               final dropLocation =
-              dropData['results']?[0]['geometry']?['location'];
+                  dropData['results']?[0]['geometry']?['location'];
               final dropAddress = dropData['results']?[0]['formatted_address'];
 
               if (dropLocation != null) {
                 LatLng dropLatLng =
-                LatLng(dropLocation['lat'], dropLocation['lng']);
+                    LatLng(dropLocation['lat'], dropLocation['lng']);
 
                 setState(() {
                   markers.add(
@@ -4238,15 +5144,9 @@ class _CreateBookingState extends State<CreateBooking> {
                   _dropLatLngs.add(dropLatLng);
                   waypoints.add(dropLatLng);
                 });
-              } else {
-
-              }
-            } else {
-
-            }
-          } else {
-
-          }
+              } else {}
+            } else {}
+          } else {}
         }
 
         // Fetch route with Directions API
@@ -4277,12 +5177,8 @@ class _CreateBookingState extends State<CreateBooking> {
                   );
                 });
               }
-            } else {
-
-            }
-          } else {
-
-          }
+            } else {}
+          } else {}
         }
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -4290,9 +5186,7 @@ class _CreateBookingState extends State<CreateBooking> {
             _moveCameraToFitAllMarkers();
           }
         });
-      } else {
-
-      }
+      } else {}
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }
@@ -4307,7 +5201,8 @@ class _CreateBookingState extends State<CreateBooking> {
       String zipCode = zipCodeController.text.trim();
 
       if (cityName.isEmpty || address.isEmpty) {
-        commonWidgets.showToast('Please enter both city name and address to locate the place.');
+        commonWidgets.showToast(
+            'Please enter both city name and address to locate the place.');
         return;
       }
 
@@ -4332,7 +5227,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
         if (pickupData != null && pickupData['status'] == 'OK') {
           final pickupLocation =
-          pickupData['results']?[0]['geometry']?['location'];
+              pickupData['results']?[0]['geometry']?['location'];
           final pickupAddress = pickupData['results']?[0]['formatted_address'];
 
           if (pickupLocation != null) {
@@ -4369,15 +5264,9 @@ class _CreateBookingState extends State<CreateBooking> {
                 _moveCameraToFitAllMarkers();
               }
             });
-          } else {
-
-          }
-        } else {
-
-        }
-      } else {
-
-      }
+          } else {}
+        } else {}
+      } else {}
     } catch (e) {
       commonWidgets.showToast('An error occurred,Please try again.');
     }
@@ -4481,7 +5370,8 @@ class _CreateBookingState extends State<CreateBooking> {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
 
     _debounce = Timer(const Duration(milliseconds: 1000), () async {
-      final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$apiKey';
 
       try {
         final response = await http.get(Uri.parse(url));
@@ -4491,9 +5381,11 @@ class _CreateBookingState extends State<CreateBooking> {
 
           setState(() {
             if (isPickUp) {
-              _pickUpSuggestions = predictions.map((p) => p['description'] as String).toList();
+              _pickUpSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
             } else {
-              _dropPointSuggestions[index] = predictions.map((p) => p['description'] as String).toList();
+              _dropPointSuggestions[index] =
+                  predictions.map((p) => p['description'] as String).toList();
             }
           });
         } else {
@@ -4505,7 +5397,8 @@ class _CreateBookingState extends State<CreateBooking> {
     });
   }
 
-  void _onSuggestionTap(String suggestion, TextEditingController controller, bool isPickUp) {
+  void _onSuggestionTap(
+      String suggestion, TextEditingController controller, bool isPickUp) {
     setState(() {
       controller.text = suggestion;
       if (isPickUp) {
@@ -4549,22 +5442,25 @@ class _CreateBookingState extends State<CreateBooking> {
 
           setState(() {
             if (type == 'city') {
-              _cityNameSuggestions = predictions.map((p) => p['description'] as String).toList();
+              _cityNameSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
             } else if (type == 'address') {
-              _addressSuggestions = predictions.map((p) => p['description'] as String).toList();
+              _addressSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
             } else if (type == 'zipCode') {
-              _zipCodeSuggestions = predictions.map((p) => p['description'] as String).toList();
+              _zipCodeSuggestions =
+                  predictions.map((p) => p['description'] as String).toList();
             }
           });
-        } else {
-        }
+        } else {}
       } catch (e) {
         commonWidgets.showToast('An error occurred, Please try again.');
       }
     });
   }
 
-  void _onAddressSuggestionTap(String suggestion, TextEditingController controller, String type) {
+  void _onAddressSuggestionTap(
+      String suggestion, TextEditingController controller, String type) {
     setState(() {
       controller.text = suggestion;
       if (type == 'city') {
@@ -4577,20 +5473,15 @@ class _CreateBookingState extends State<CreateBooking> {
     });
   }
 
-  Future<List<LoadType>> fetchLoadsForSelectedType(String selectedTypeName) async {
+  Future<List<LoadType>> fetchLoadsForSelectedType(
+      String selectedTypeName) async {
     try {
-      List<Vehicle> vehicles =
-          await userService.fetchUserVehicle();
+      List<Vehicle> vehicles = await userService.fetchUserVehicle();
 
-      var selectedType = vehicles
-          .expand((vehicle) => vehicle.types)
-          .firstWhere(
+      var selectedType = vehicles.expand((vehicle) => vehicle.types).firstWhere(
             (type) => type.typeName == selectedTypeName,
             orElse: () => VehicleType(
-                typeName: '',
-                typeOfLoad: [],
-                typeImage: '',
-                scale: ''),
+                typeName: '', typeOfLoad: [], typeImage: '', scale: ''),
           );
       return selectedType.typeOfLoad;
     } catch (e) {
@@ -4674,10 +5565,13 @@ class _CreateBookingState extends State<CreateBooking> {
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
     String formattedTime = _formatTimeOfDay(_selectedFromTime);
     String formattedToTime = _formatTimeOfDay(_selectedToTime);
-    List<String> dropPlaces = _dropPointControllers.map((controller) => controller.text).toList();
+    List<String> dropPlaces =
+        _dropPointControllers.map((controller) => controller.text).toList();
 
     if (widget.selectedType == 'vehicle') {
-      if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
+      if (pickUpController.text.isEmpty ||
+          dropPlaces.contains('') ||
+          dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
         String? bookingId = await userService.userVehicleCreateBooking(
@@ -4699,7 +5593,8 @@ class _CreateBookingState extends State<CreateBooking> {
 
         setState(() {
           if (bookingId != null) {
-            CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+            CommonWidgets()
+                .showBookingDialog(context: context, bookingId: bookingId);
             Future.delayed(const Duration(seconds: 2), () {
               Navigator.push(
                 context,
@@ -4731,16 +5626,13 @@ class _CreateBookingState extends State<CreateBooking> {
         });
       }
     }
-    if(widget.selectedType=='bus') {
+    if (widget.selectedType == 'bus') {
       if (pickUpController.text.isEmpty ||
           dropPlaces.contains('') ||
           dropPlaces.isEmpty) {
-        commonWidgets.showToast(
-            'Choose Pickup and DropPoints'.tr());
-      }
-      else {
-        String? bookingId = await userService.userBusCreateBooking(
-            context,
+        commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
+      } else {
+        String? bookingId = await userService.userBusCreateBooking(context,
             name: selectedName.toString(),
             unitType: widget.selectedType,
             image: typeImage.toString(),
@@ -4751,8 +5643,9 @@ class _CreateBookingState extends State<CreateBooking> {
             pickup: pickUpController.text,
             dropPoints: dropPlaces,
             token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
             Navigator.push(
               context,
@@ -4783,12 +5676,10 @@ class _CreateBookingState extends State<CreateBooking> {
         }
       }
     }
-    if(widget.selectedType=='equipment') {
-      if (cityNameController.text.isEmpty ||
-          addressController.text.isEmpty) {
+    if (widget.selectedType == 'equipment') {
+      if (cityNameController.text.isEmpty || addressController.text.isEmpty) {
         commonWidgets.showToast('Choose City name and Address'.tr());
-      }
-      else {
+      } else {
         String? bookingId = await userService.userEquipmentCreateBooking(
             context,
             name: selectedName.toString(),
@@ -4803,8 +5694,9 @@ class _CreateBookingState extends State<CreateBooking> {
             address: addressController.text,
             zipCode: zipCodeController.text,
             token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
             Navigator.push(
               context,
@@ -4835,15 +5727,11 @@ class _CreateBookingState extends State<CreateBooking> {
         }
       }
     }
-    if(widget.selectedType=='special') {
-      if (cityNameController.text.isEmpty ||
-          addressController.text.isEmpty) {
-        commonWidgets.showToast(
-            'Choose City name and Address'.tr());
-      }
-      else {
-        String? bookingId = await userService.userSpecialCreateBooking(
-            context,
+    if (widget.selectedType == 'special') {
+      if (cityNameController.text.isEmpty || addressController.text.isEmpty) {
+        commonWidgets.showToast('Choose City name and Address'.tr());
+      } else {
+        String? bookingId = await userService.userSpecialCreateBooking(context,
             name: selectedName.toString(),
             unitType: widget.selectedType,
             image: typeImage.toString(),
@@ -4855,8 +5743,9 @@ class _CreateBookingState extends State<CreateBooking> {
             address: addressController.text,
             zipCode: zipCodeController.text,
             token: widget.token);
-        if (bookingId != null){
-          CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+        if (bookingId != null) {
+          CommonWidgets()
+              .showBookingDialog(context: context, bookingId: bookingId);
           Future.delayed(const Duration(seconds: 2), () {
             Navigator.push(
               context,
@@ -4888,7 +5777,9 @@ class _CreateBookingState extends State<CreateBooking> {
       }
     }
     if (widget.selectedType == 'shared-cargo') {
-      if (pickUpController.text.isEmpty || dropPlaces.contains('') || dropPlaces.isEmpty) {
+      if (pickUpController.text.isEmpty ||
+          dropPlaces.contains('') ||
+          dropPlaces.isEmpty) {
         commonWidgets.showToast('Choose Pickup and DropPoints'.tr());
       } else {
         String? bookingId = await userService.userSharedCargoCreateBooking(
@@ -4912,7 +5803,8 @@ class _CreateBookingState extends State<CreateBooking> {
 
         setState(() {
           if (bookingId != null) {
-            CommonWidgets().showBookingDialog(context: context, bookingId: bookingId);
+            CommonWidgets()
+                .showBookingDialog(context: context, bookingId: bookingId);
             Future.delayed(const Duration(seconds: 2), () {
               Navigator.push(
                 context,
@@ -4956,10 +5848,12 @@ class _CreateBookingState extends State<CreateBooking> {
     final String? token = data['token'];
 
     if (bookingId == null && widget.id != null && widget.token != null) {
-      bookingId = await userService.getPaymentPendingBooking(widget.id, widget.token);
+      bookingId =
+          await userService.getPaymentPendingBooking(widget.id, widget.token);
 
       if (bookingId == null || bookingId.isEmpty) {
-        bookingId = await userService.getBookingByUserId(widget.id, widget.token);
+        bookingId =
+            await userService.getBookingByUserId(widget.id, widget.token);
       }
 
       if (bookingId == null || bookingId.isEmpty) {
@@ -4968,7 +5862,8 @@ class _CreateBookingState extends State<CreateBooking> {
     }
 
     if (bookingId != null && widget.token != null) {
-      final bookingDetails = await userService.fetchBookingDetails(bookingId, widget.token);
+      final bookingDetails =
+          await userService.fetchBookingDetails(bookingId, widget.token);
 
       if (bookingDetails != null) {
         return bookingDetails;
@@ -4980,7 +5875,6 @@ class _CreateBookingState extends State<CreateBooking> {
     }
     return null;
   }
-
 }
 
 class LoadTypeDropdown extends StatefulWidget {
@@ -5006,7 +5900,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
   @override
   void initState() {
     super.initState();
-    _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+    _loadTypesFuture =
+        widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
   }
 
   @override
@@ -5014,7 +5909,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedName != oldWidget.selectedName) {
       setState(() {
-        _loadTypesFuture = widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
+        _loadTypesFuture =
+            widget.fetchLoadsForSelectedType(widget.selectedName ?? '');
       });
     }
   }
@@ -5032,7 +5928,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
         } else if (snapshot.hasData) {
           List<LoadType> loadItems = snapshot.data ?? [];
           return Container(
-            padding: EdgeInsets.symmetric(vertical: viewUtil.isTablet?17:14,horizontal: 10),
+            padding: EdgeInsets.symmetric(
+                vertical: viewUtil.isTablet ? 17 : 14, horizontal: 10),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8.0),
@@ -5048,7 +5945,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                 color: Colors.white,
                 constraints: BoxConstraints.tightFor(
                     width: viewUtil.isTablet
-                    ?MediaQuery.sizeOf(context).width * 0.92 :350),
+                        ? MediaQuery.sizeOf(context).width * 0.92
+                        : 350),
                 // offset: const Offset(0, -280),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -5057,9 +5955,10 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                       (widget.selectedLoad?.isNotEmpty ?? false)
                           ? widget.selectedLoad!
                           : 'loadType'.tr(),
-                      style: TextStyle(fontSize: viewUtil.isTablet ?20:16),
+                      style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                     ),
-                    Icon(Icons.arrow_drop_down,size: viewUtil.isTablet?30: 26),
+                    Icon(Icons.arrow_drop_down,
+                        size: viewUtil.isTablet ? 30 : 26),
                   ],
                 ),
                 itemBuilder: (BuildContext context) {
@@ -5070,7 +5969,9 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                         enabled: false,
                         child: Text(
                           'No Load Type Available',
-                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16,color: Colors.black),
+                          style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16,
+                              color: Colors.black),
                         ),
                       ),
                     ];
@@ -5083,7 +5984,8 @@ class _LoadTypeDropdownState extends State<LoadTypeDropdown> {
                         child: Row(
                           children: [
                             Text(load.load.tr(),
-                                style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
+                                style: TextStyle(
+                                    fontSize: viewUtil.isTablet ? 20 : 16)),
                           ],
                         ),
                       ),
