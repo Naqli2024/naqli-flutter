@@ -508,13 +508,20 @@ class _CreateBookingState extends State<CreateBooking> {
                             zipCode: zipCodeController.text,
                             scale: scale.toString(),
                             typeImage: typeImage.toString(),
+                            selectedShipmentType: selectedShipmentType.toString(),
+                            selectedShipmentCondition: selectedShipmentCondition.toString(),
+                            cargoLength: lengthController.text,
+                            cargoBreadth: breadthController.text,
+                            cargoHeight: heightController.text,
+                            cargoUnit: selectedUnit,
+                            shipmentWeight: weightController.text,
                           );
 
-                          bool hasUserToken = await hasToken();
+                          bool hasUserToken = widget.token != null && widget.token.isNotEmpty;
                           final UserService userService = UserService();
 
                           if (hasUserToken) {
-                            // ✅ Create booking for all types
+                            // Create booking for all types
                             String? bookingId;
 
                             switch (widget.selectedType) {
@@ -593,16 +600,16 @@ class _CreateBookingState extends State<CreateBooking> {
                                   context,
                                   name: '',
                                   unitType: widget.selectedType,
-                                  shipmentType: selectedTypeName.toString(),
-                                  shippingCondition: selectedLoad.toString(),
-                                  cargoLength: scale.toString(),
-                                  cargoBreadth: scale.toString(),
-                                  cargoHeight: scale.toString(),
-                                  cargoUnit: 'm', // replace with your actual logic
+                                  shipmentType: selectedShipmentType.toString(),
+                                  shippingCondition: selectedShipmentCondition.toString(),
+                                  cargoLength: lengthController.text,
+                                  cargoBreadth: breadthController.text,
+                                  cargoHeight: heightController.text,
+                                  cargoUnit: selectedUnit,
                                   date: formattedDate,
                                   time: formattedTime,
                                   productValue: productController.text,
-                                  shipmentWeight: productController.text,
+                                  shipmentWeight: weightController.text,
                                   pickup: pickUpController.text,
                                   dropPoints: dropPlaces,
                                   token: widget.token,
@@ -644,15 +651,12 @@ class _CreateBookingState extends State<CreateBooking> {
                                   ),
                                 );
                               });
-                            } else {
-                              CommonWidgets().showToast('Booking creation failed, please try again.');
                             }
                           }
                           else {
                             // Not logged in → save locally & go to login
-                            bool isSaved =
-                                await saveLocalBookingDataWithoutLogin(
-                                    bookingData);
+                            bool isSaved = await saveLocalBookingDataWithoutLogin(bookingData);
+                            print(bookingData);
                             if (isSaved) {
                               Navigator.push(
                                 context,
@@ -4819,6 +4823,18 @@ class _CreateBookingState extends State<CreateBooking> {
     for (var controller in _dropPointControllers) {
       controller.dispose();
     }
+    timeController.dispose();
+    productController.dispose();
+    pickUpController.dispose();
+    cityNameController.dispose();
+    zipCodeController.dispose();
+    addressController.dispose();
+    lengthController.dispose();
+    breadthController.dispose();
+    heightController.dispose();
+    weightController.dispose();
+
+    productValueFocusNode.dispose();
     super.dispose();
   }
 

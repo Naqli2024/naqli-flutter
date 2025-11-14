@@ -311,7 +311,7 @@ Future<Map<String, String?>> getSavedLocalBookingDataWithoutLogin() async {
 
 Future<void> clearSavedLocalBookingDataWithoutLogin() async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
+  // await prefs.remove('bookingData');
 }
 
 Future<void> restoreBookingData() async {

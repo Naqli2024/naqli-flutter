@@ -23,7 +23,7 @@ android {
         applicationId = "com.app.naqlee"
         minSdkVersion = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 26
+        versionCode = 28
         versionName = "1.0.9"
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
 
@@ -32,22 +32,13 @@ android {
         }
     }
 
-//    splits {
-//        abi {
-//            enable true
-//            reset()
-//            include 'armeabi-v7a', 'arm64-v8a'
-//            universalApk false
-//        }
-//    }
-
     buildFeatures {
         buildConfig true
     }
 
     signingConfigs {
         release {
-            storeFile file("D:/naqli-flutter/android/app/upload-keystore.jks")
+            storeFile file("D:/SARAVANAN/naqli-flutter/android/app/upload-keystore.jks")
             storePassword "naqli@123"
             keyAlias "upload"
             keyPassword "naqli@123"

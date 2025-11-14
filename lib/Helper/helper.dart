@@ -27,6 +27,13 @@ String buildBookingData({
   required String zipCode,
   required String scale,
   required String typeImage,
+  required String selectedShipmentType,
+  required String selectedShipmentCondition,
+  required String cargoLength,
+  required String cargoBreadth,
+  required String cargoHeight,
+  required String cargoUnit,
+  required String shipmentWeight,
 }) {
   final Map<String, dynamic> bookingData = {
     'selectedType': selectedType,
@@ -45,6 +52,13 @@ String buildBookingData({
     'zipCode': zipCode,
     'scale': scale,
     'typeImage': typeImage,
+    'selectedShipmentType': selectedShipmentType,
+    'selectedShipmentCondition': selectedShipmentCondition,
+    'cargoLength': cargoLength,
+    'cargoBreadth': cargoBreadth,
+    'cargoHeight': cargoHeight,
+    'cargoUnit': cargoUnit,
+    'shipmentWeight': shipmentWeight,
   };
   return jsonEncode(bookingData);
 }

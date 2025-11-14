@@ -46,17 +46,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
           actions: [
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            UserType(
-                              firstName: widget.firstName??'',
-                              lastName: widget.lastName??'',
-                              token: widget.token??'',
-                              id: widget.id??'',
-                              email: widget.email??'',
-                            )));
+                Navigator.pop(context);
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 15,top: 15),
