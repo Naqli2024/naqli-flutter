@@ -625,6 +625,7 @@ class _CreateBookingState extends State<CreateBooking> {
 
                               // Step 2: Navigate to ChooseVendor after a short delay
                               Future.delayed(const Duration(seconds: 2), () {
+                                if (!mounted) return;
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
@@ -1320,8 +1321,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget buildStepTwoContent(String selectedType) {
     switch (selectedType) {
       case 'vehicle':
-        return UserVehicleStepTwo(selectedTypeName ?? '', selectedName ?? '',
-            typeImage ?? '', scale ?? '');
+        return UserVehicleStepTwo();
       case 'bus':
         return UserBusStepTwo();
       case 'equipment':
@@ -1340,16 +1340,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget buildStepThreeContent(String selectedType) {
     switch (selectedType) {
       case 'vehicle':
-        return UserVehicleStepThree(
-            selectedTypeName ?? '',
-            selectedName ?? '',
-            typeImage ?? '',
-            scale ?? '',
-            _selectedDate.toString(),
-            _selectedFromTime.toString(),
-            productController.text,
-            selectedLoad ?? '',
-            selectedLabour.toString());
+        return UserVehicleStepThree();
       case 'bus':
         return UserBusStepThree();
       case 'equipment':
@@ -2112,14 +2103,11 @@ class _CreateBookingState extends State<CreateBooking> {
     );
   }
 
-  Widget UserVehicleStepTwo(
-    String selectedTypeName,
-    String name,
-    String typeImage,
-    String scale,
-  ) {
+  Widget UserVehicleStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    String formattedDate = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        : '';
     return SingleChildScrollView(
       child: Directionality(
         textDirection: ui.TextDirection.ltr,
@@ -2174,7 +2162,9 @@ class _CreateBookingState extends State<CreateBooking> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          '${_formatTimeOfDay(_selectedFromTime)}',
+                          _selectedFromTime != null
+                              ? _formatTimeOfDay(_selectedFromTime)
+                              : 'Select time',
                           style:
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                         ),
@@ -2229,7 +2219,7 @@ class _CreateBookingState extends State<CreateBooking> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',
+                        child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                             style: TextStyle(
                                 fontSize: viewUtil.isTablet ? 20 : 16)),
                       ),
@@ -2302,7 +2292,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   setState(() {
                     selectedLoad = newValue;
                   });
-                  await Future.delayed(Duration(milliseconds: -1));
+                  await Future.delayed(const Duration(milliseconds: -1));
                   if (productValueFocusNode.hasFocus) {
                     productValueFocusNode.unfocus();
                   }
@@ -2382,7 +2372,9 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Widget UserBusStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    String formattedDate = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        : '';
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2432,9 +2424,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(_selectedFromTime != null
+                          ? _formatTimeOfDay(_selectedFromTime)
+                          : 'Select time',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2486,9 +2479,8 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2606,7 +2598,9 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Widget UserEquipmentStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    String formattedDate = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        : '';
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2656,9 +2650,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(_selectedFromTime != null
+                          ? _formatTimeOfDay(_selectedFromTime)
+                          : 'Select from time',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2710,9 +2705,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(_selectedToTime != null
+                          ? _formatTimeOfDay(_selectedToTime)
+                          : 'Select to time',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2764,9 +2760,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(formattedDate.isNotEmpty
+                          ? formattedDate
+                          : 'Select date',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2844,7 +2841,9 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Widget UserSpecialStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    String formattedDate = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        : '';
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2896,9 +2895,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedFromTime)}',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(_selectedFromTime != null
+                          ? _formatTimeOfDay(_selectedFromTime)
+                          : 'Select from time',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -2952,9 +2952,10 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${_formatTimeOfDay(_selectedToTime)}',
-                          style:
-                              TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
+                      child: Text(_selectedToTime != null
+                          ? _formatTimeOfDay(_selectedToTime)
+                          : 'Select to time',
+                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ),
                 ],
@@ -3008,7 +3009,7 @@ class _CreateBookingState extends State<CreateBooking> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('$formattedDate',
+                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                           style:
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -3088,7 +3089,9 @@ class _CreateBookingState extends State<CreateBooking> {
 
   Widget UserSharedCargoStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    String formattedDate = _selectedDate != null
+        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        : '';
     return SingleChildScrollView(
       child: Directionality(
         textDirection: ui.TextDirection.ltr,
@@ -3142,8 +3145,9 @@ class _CreateBookingState extends State<CreateBooking> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          '${_formatTimeOfDay(_selectedFromTime)}',
+                        child: Text(_selectedFromTime != null
+                            ? _formatTimeOfDay(_selectedFromTime)
+                            : 'Select time',
                           style:
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                         ),
@@ -3198,7 +3202,7 @@ class _CreateBookingState extends State<CreateBooking> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('$formattedDate',
+                        child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                             style: TextStyle(
                                 fontSize: viewUtil.isTablet ? 20 : 16)),
                       ),
@@ -3296,17 +3300,7 @@ class _CreateBookingState extends State<CreateBooking> {
     );
   }
 
-  Widget UserVehicleStepThree(
-    String selectedTypeName,
-    String name,
-    String typeImage,
-    String scale,
-    String selectedDate,
-    String selectedTime,
-    String valueOfProduct,
-    String selectedLoad,
-    String additionalLabour,
-  ) {
+  Widget UserVehicleStepThree() {
     ViewUtil viewUtil = ViewUtil(context);
     return GestureDetector(
       onTap: () {

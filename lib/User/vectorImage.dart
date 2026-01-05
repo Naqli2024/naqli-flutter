@@ -15,7 +15,6 @@ class MyVectorImage extends StatelessWidget {
   static Future<void> preload(BuildContext context, String assetName) async {
     try {
       await AssetBytesLoader('assets/vectors/$assetName').loadBytes(context);
-      debugPrint('Preloaded asset: assets/vectors/$assetName'); // Optional logging
     } catch (e) {
       debugPrint('Error preloading asset assets/vectors/$assetName: $e'); // Optional error logging
     }

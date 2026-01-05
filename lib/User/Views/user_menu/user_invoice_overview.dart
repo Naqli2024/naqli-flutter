@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/commonWidgets.dart';
 import 'package:flutter_naqli/Partner/Viewmodel/viewUtil.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
@@ -101,17 +102,59 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
     final logoImage = await imageFromAssetBundle('assets/naqleePdf.png');
     final qrCodeData = 'http://localhost:4200/home/user/invoice-data/${widget.invoiceId}/${formatDateFromInvoiceId(widget.invoiceId)}/${'${widget.firstName} ${widget.lastName}'}/${widget.paymentAmount.toInt()}/${address}/${widget.bookingId}/${widget.unitType}/${partnerData?[0]['partnerName']}/${widget.paymentType}';
     final qrCodeImage = await _generateQrCodeImage(qrCodeData);
+    final englishFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
+    );
 
+    final arabicFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoNaskhArabic-Regular.ttf'),
+    );
+
+    final hindiFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSansDevanagari-Regular.ttf'),
+    );
+
+
+    bool containsArabic(String text) =>
+        RegExp(r'[\u0600-\u06FF]').hasMatch(text);
+
+    bool containsHindi(String text) =>
+        RegExp(r'[\u0900-\u097F]').hasMatch(text);
+
+    final combinedText = '''
+      ${widget.firstName} ${widget.lastName}
+      $address
+      ${partnerData?[0]['partnerName'] ?? ''}
+      ${widget.unitType}
+      ''';
+
+    pw.Font baseFont;
+
+    if (containsArabic(combinedText)) {
+      baseFont = arabicFont;
+    } else if (containsHindi(combinedText)) {
+      baseFont = hindiFont;
+    } else {
+      baseFont = englishFont;
+    }
     pdf.addPage(
       pw.Page(
+          theme: pw.ThemeData.withFont(
+            base: englishFont,
+            bold: englishFont,
+            fontFallback: [
+              arabicFont,
+              hindiFont,
+            ],
+          ),
         build: (context) => pw.Column(
           children: [
             pw.Image(
                 logoImage,
-                width: 200,
-                height: 200,
+                width: 150,
+                height: 150,
                 fit: pw.BoxFit.contain),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 15),
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -152,9 +195,9 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                     ))
               ],
             ),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 10),
             pw.Divider(),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 10),
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -273,11 +316,12 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                 ),
               ],
             ),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 15),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Column(
+                pw.Expanded(
+                  child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text('Description'.tr(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
@@ -285,19 +329,14 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                           ? pw.Column(
                         children: [
                           pw.Text(widget.pickup,style: pw.TextStyle(fontSize: 16)),
-                          pw.Text((widget.dropPoints as List).join(', '),style: pw.TextStyle(fontSize: 16)),
+                          pw.Text((widget.dropPoints).join(', '),style: pw.TextStyle(fontSize: 16)),
                         ],
                       )
                           : pw.Text(widget.city,style: pw.TextStyle(fontSize: 16)),
-                      pw.Text('${"Qty:".tr()} 1',style: pw.TextStyle(fontSize: 16)),
+                      pw.Text('${'Amount:'.tr()} ${widget.paymentAmount.toInt()} SAR',style: pw.TextStyle(fontSize: 16)),
+                      pw.Text('${'Qty:'.tr()} 1',style: pw.TextStyle(fontSize: 16)),
                     ],
-                  ),
-                pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text('${widget.paymentAmount.toInt()} SAR',style: pw.TextStyle(fontSize: 16)),
-                    ],
-                  ),
+                  )),
               ],
             ),
             pw.Divider(),
@@ -310,12 +349,12 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [pw.Text("Subtotal".tr(),style: pw.TextStyle(fontSize: 16)), pw.Text('${widget.paymentAmount.toInt()} SAR',style: pw.TextStyle(fontSize: 16))],
             ),
-            pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text("VAT".tr(),style: pw.TextStyle(fontSize: 16)), pw.Text("0%",style: pw.TextStyle(fontSize: 16))],
+              children: [
+                pw.Text("VAT".tr(),style: pw.TextStyle(fontSize: 16)),
+                pw.Text("0%",style: pw.TextStyle(fontSize: 16))],
             ),
-            pw.SizedBox(height: 5),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
@@ -591,22 +630,24 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Description'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 16, fontWeight: FontWeight.w500)),
-                                    widget.pickup.isNotEmpty || widget.pickup != ''
-                                    ? Column(
-                                      children: [
-                                        Text(widget.pickup,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                        Text( (widget.dropPoints as List).join(', '),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                      ],
-                                    )
-                                    : Text(widget.city,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
-                                    buildLabelValue('Qty'.tr(),'1'),
-                                  ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Description'.tr(),style: TextStyle(fontSize: viewUtil.isTablet ? 23 : 16, fontWeight: FontWeight.w500)),
+                                      widget.pickup.isNotEmpty || widget.pickup != ''
+                                      ? Column(
+                                        children: [
+                                          Text(widget.pickup,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                          Text( (widget.dropPoints).join(', '),style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                        ],
+                                      )
+                                      : Text(widget.city,style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
+                                      buildLabelValue('Amount'.tr(),'${widget.paymentAmount.toInt()} SAR'),
+                                      buildLabelValue('Qty'.tr(),'1'),
+                                    ],
+                                  ),
                                 ),
-                                Text('${widget.paymentAmount.toInt()} SAR',style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 14)),
                               ],
                             ),
                             Divider(),

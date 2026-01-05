@@ -231,6 +231,10 @@ flutter:
     - assets/equipments/fork lift.png
     - assets/equipments/scissor lift.png
     - assets/vectors/
+    - assets/fonts/NotoSans-Regular.ttf
+    - assets/fonts/NotoNaskhArabic-Regular.ttf
+    - assets/fonts/NotoSansDevanagari-Regular.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

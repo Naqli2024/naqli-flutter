@@ -89,13 +89,20 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
   @override
   void initState() {
     super.initState();
-    fetchRunningBookingsCount().then((_) {
-      updateAllChartData(selectedDuration);
-    });
+    userData = userService.getUserData(widget.id, widget.token);
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await fetchRunningBookingsCount();
+
+    if (!mounted) return;
+
+    updateAllChartData(selectedDuration);
+
     completedChartData = completedData(date);
     pendingChartData = pendingData(pendingBookingDate);
-    allChartData = mainData(date,pendingBookingDate);
-    userData = userService.getUserData(widget.id,widget.token);
+    allChartData = mainData(date, pendingBookingDate);
   }
 
 
@@ -1114,6 +1121,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
 
     try {
       final counts = await superUserServices.getBookingsCount(userId, token);
+      if (!mounted) return;
       setState(() {
         totalBookingsCount = counts['totalBookings'] ?? 0;
         runningBookingsCount = counts['runningBookingsCount'] ?? 0;
@@ -1128,11 +1136,10 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
         pendingBookingDate = List<String>.from(counts['pendingBookingDates'] ?? []);
         totalPending = runningBookingsCount + yetToStartBookingsCount;
         totalCompleted = completedPaymentCount + paidPaymentCount;
-      });
-      setState(() {
         isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });

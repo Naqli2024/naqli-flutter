@@ -202,34 +202,35 @@ Future<void> restoreBookingDataAfterLogin({
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ChooseVendor(
-            bookingId: bookingId ?? '',
-            size: booking['scale'] ?? '',
-            unitType: selectedType,
-            unitTypeName: booking['selectedTypeName'] ?? '',
-            load: booking['selectedLoad'] ?? '',
-            unit: booking['selectedName'] ?? '',
-            pickup: booking['pickup'] ?? '',
-            dropPoints: List<String>.from(booking['dropPoints'] ?? []),
-            token: token,
-            firstName: firstName,
-            lastName: lastName,
-            selectedType: selectedType,
-            cityName: booking['cityName'] ?? '',
-            address: booking['address'] ?? '',
-            zipCode: booking['zipCode'] ?? '',
-            id: id,
-            email: email,
-            accountType: accountType,
-          ),
+          builder: (newContext) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (!newContext.mounted) return;
+              CommonWidgets()
+                  .showBookingDialog(context: newContext, bookingId: bookingId ??'');
+            });
+            return ChooseVendor(
+              bookingId: bookingId ?? '',
+              size: booking['scale'] ?? '',
+              unitType: selectedType,
+              unitTypeName: booking['selectedTypeName'] ?? '',
+              load: booking['selectedLoad'] ?? '',
+              unit: booking['selectedName'] ?? '',
+              pickup: booking['pickup'] ?? '',
+              dropPoints: List<String>.from(booking['dropPoints'] ?? []),
+              token: token,
+              firstName: firstName,
+              lastName: lastName,
+              selectedType: selectedType,
+              cityName: booking['cityName'] ?? '',
+              address: booking['address'] ?? '',
+              zipCode: booking['zipCode'] ?? '',
+              id: id,
+              email: email,
+              accountType: accountType,
+            );
+          },
         ),
       );
-
-// Step 2: After small delay, show booking dialog on next frame
-      Future.delayed(const Duration(seconds: 2), () {
-        CommonWidgets()
-            .showBookingDialog(context: context, bookingId: bookingId ?? "");
-      });
     } else {
       // Fallback → Go to normal user flow
       Navigator.of(context).pushReplacement(
