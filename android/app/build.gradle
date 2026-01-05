@@ -23,7 +23,7 @@ android {
         applicationId = "com.app.naqlee"
         minSdkVersion = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = 28
+        versionCode = 29
         versionName = "1.0.9"
         buildConfigField "String", "API_KEY", "\"${project.hasProperty('API_KEY') ? project.properties['API_KEY'] : ''}\""
 
