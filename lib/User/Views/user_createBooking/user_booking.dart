@@ -141,6 +141,7 @@ class _CreateBookingState extends State<CreateBooking> {
   ];
   final List<String> shipmentConditionItems = ['Refrigerator', 'Dry Storage'];
   String selectedUnit = 'mm';
+  bool _isTimePickerOpen = false;
 
   @override
   void initState() {
@@ -166,6 +167,13 @@ class _CreateBookingState extends State<CreateBooking> {
       for (var special in specials) {
         MyVectorImage.preload(context, special.image);
       }
+    });
+  }
+
+  void goToNextStep() {
+    if (!mounted) return;
+    setState(() {
+      _currentStep++;
     });
   }
 
@@ -300,7 +308,7 @@ class _CreateBookingState extends State<CreateBooking> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (_currentStep == 1) Container(),
+                if (_currentStep == 1) const SizedBox.shrink(),
                 if (_currentStep > 1)
                   Container(
                     padding: const EdgeInsets.only(left: 12, bottom: 10),
@@ -339,50 +347,45 @@ class _CreateBookingState extends State<CreateBooking> {
                           ),
                         ),
                         onPressed: () async {
-                          setState(() {
-                            if (widget.selectedType == 'vehicle') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName == null) {
-                                  commonWidgets.showToast(
-                                      'Please select an option'.tr());
+                          if (!mounted) return;
+                          if (widget.selectedType == 'vehicle') {
+                            if (_currentStep == 1) {
+                              if (selectedTypeName == null) {
+                                commonWidgets.showToast('Please select an option'.tr());
+                                return;
+                              }
+                              setState(() => _currentStep++);
+                              return;
+                            } else if (_currentStep == 2) {
+                              if (_selectedFromTime == null ||
+                                  _selectedDate == null ||
+                                  productController.text.isEmpty) {
+                                commonWidgets.showToast('Please fill all fields'.tr());
+                                return;
+                              }
+                              try {
+                                final loadTypes =
+                                await fetchLoadsForSelectedType(selectedTypeName ?? '');
+
+                                if (!mounted) return;
+
+                                if (loadTypes.isEmpty || selectedLoad != null) {
+                                  setState(() => _currentStep++);
                                 } else {
-                                  _currentStep++;
+                                  commonWidgets.showToast('Please select Load type'.tr());
                                 }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  fetchLoadsForSelectedType(
-                                          selectedTypeName ?? '')
-                                      .then((loadTypes) {
-                                    if (loadTypes.isEmpty ||
-                                        selectedLoad != null) {
-                                      setState(() {
-                                        _currentStep++;
-                                      });
-                                    } else {
-                                      if (loadTypes.isNotEmpty) {
-                                        commonWidgets.showToast(
-                                            'Please select Load type'.tr());
-                                      }
-                                    }
-                                  }).catchError((error) {
-                                    commonWidgets
-                                        .showToast('Error fetching load types');
-                                  });
-                                }
+                              } catch (_) {
+                                commonWidgets.showToast('Error fetching load types'.tr());
                               }
                             }
+                          }
                             if (widget.selectedType == 'bus') {
                               if (_currentStep == 1) {
                                 if (selectedBus == null) {
                                   commonWidgets
                                       .showToast('Please select Bus'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
@@ -391,7 +394,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets
                                       .showToast('Please fill all fields'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               }
                             }
@@ -401,7 +404,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets.showToast(
                                       'Please select an option'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
@@ -409,7 +412,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets
                                       .showToast('Please fill all fields'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               }
                             }
@@ -423,7 +426,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets
                                       .showToast('Please fill all fields'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
@@ -433,7 +436,7 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets
                                       .showToast('Please fill all fields'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               }
                             }
@@ -444,19 +447,17 @@ class _CreateBookingState extends State<CreateBooking> {
                                   commonWidgets.showToast(
                                       'Please select Special/Other Units'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               } else if (_currentStep == 2) {
                                 if (_selectedFromTime == null ||
                                     _selectedDate == null) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
+                                  commonWidgets.showToast('Please fill all fields'.tr());
                                 } else {
-                                  _currentStep++;
+                                  goToNextStep();
                                 }
                               }
                             }
-                          });
                         },
                         child: Text(
                           'next'.tr(),
@@ -2140,13 +2141,13 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: Icon(
-                        FontAwesomeIcons.clock,
-                        color: const Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20,
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(
+                          FontAwesomeIcons.clock,
+                          color: const Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20,
+                        ),
                     ),
                     Container(
                       height: viewUtil.isTablet ? 60 : 50,
@@ -2155,11 +2156,7 @@ class _CreateBookingState extends State<CreateBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectTime(context);
-                      },
-                      child: Padding(
+                    Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
                           _selectedFromTime != null
@@ -2169,7 +2166,6 @@ class _CreateBookingState extends State<CreateBooking> {
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -2200,11 +2196,11 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,
-                          color: Color(0xffBCBCBC),
-                          size: viewUtil.isTablet ? 27 : 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(FontAwesomeIcons.calendar,
+                            color: Color(0xffBCBCBC),
+                            size: viewUtil.isTablet ? 27 : 20),
                     ),
                     Container(
                       height: viewUtil.isTablet ? 60 : 50,
@@ -2213,17 +2209,12 @@ class _CreateBookingState extends State<CreateBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectDate(context);
-                      },
-                      child: Padding(
+                    Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                             style: TextStyle(
                                 fontSize: viewUtil.isTablet ? 20 : 16)),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -2405,11 +2396,11 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2418,18 +2409,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
                           ? _formatTimeOfDay(_selectedFromTime)
                           : 'Select time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2460,11 +2446,11 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2473,15 +2459,10 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                           style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
                   ),
                 ],
               ),
@@ -2631,11 +2612,11 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2644,18 +2625,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
                           ? _formatTimeOfDay(_selectedFromTime)
                           : 'Select from time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2686,11 +2662,11 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2699,18 +2675,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectToTime(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedToTime != null
                           ? _formatTimeOfDay(_selectedToTime)
                           : 'Select to time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2741,11 +2712,11 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2754,18 +2725,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(formattedDate.isNotEmpty
                           ? formattedDate
                           : 'Select date',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2874,13 +2840,13 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(
-                      FontAwesomeIcons.clock,
-                      color: Color(0xffBCBCBC),
-                      size: viewUtil.isTablet ? 27 : 20,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
+                        FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2889,18 +2855,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
                           ? _formatTimeOfDay(_selectedFromTime)
                           : 'Select from time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2931,13 +2892,13 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(
-                      FontAwesomeIcons.clock,
-                      color: Color(0xffBCBCBC),
-                      size: viewUtil.isTablet ? 27 : 20,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
+                        FontAwesomeIcons.clock,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -2946,18 +2907,13 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectToTime(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedToTime != null
                           ? _formatTimeOfDay(_selectedToTime)
                           : 'Select to time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2988,13 +2944,13 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(
-                      FontAwesomeIcons.calendar,
-                      color: Color(0xffBCBCBC),
-                      size: viewUtil.isTablet ? 27 : 20,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
+                        FontAwesomeIcons.calendar,
+                        color: Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
                   ),
                   Container(
                     height: viewUtil.isTablet ? 60 : 50,
@@ -3003,17 +2959,12 @@ class _CreateBookingState extends State<CreateBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
+                  Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                           style:
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -3124,13 +3075,13 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: Icon(
-                        FontAwesomeIcons.clock,
-                        color: const Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20,
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(
+                          FontAwesomeIcons.clock,
+                          color: const Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20,
+                        ),
                     ),
                     Container(
                       height: viewUtil.isTablet ? 60 : 50,
@@ -3139,11 +3090,7 @@ class _CreateBookingState extends State<CreateBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectTime(context);
-                      },
-                      child: Padding(
+                    Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(_selectedFromTime != null
                             ? _formatTimeOfDay(_selectedFromTime)
@@ -3151,7 +3098,6 @@ class _CreateBookingState extends State<CreateBooking> {
                           style:
                               TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                         ),
-                      ),
                     ),
                   ],
                 ),
@@ -3183,11 +3129,11 @@ class _CreateBookingState extends State<CreateBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,
-                          color: Color(0xffBCBCBC),
-                          size: viewUtil.isTablet ? 27 : 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(FontAwesomeIcons.calendar,
+                            color: Color(0xffBCBCBC),
+                            size: viewUtil.isTablet ? 27 : 20),
                     ),
                     Container(
                       height: viewUtil.isTablet ? 60 : 50,
@@ -3196,17 +3142,12 @@ class _CreateBookingState extends State<CreateBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectDate(context);
-                      },
-                      child: Padding(
+                    Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
                             style: TextStyle(
                                 fontSize: viewUtil.isTablet ? 20 : 16)),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -5500,14 +5441,26 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
+    if (!mounted) return;
+
+    final now = DateTime.now();
+
+    final DateTime safeInitialDate = (_selectedDate != null &&
+        _selectedDate.isAfter(DateTime(2000)) &&
+        _selectedDate.isBefore(DateTime(2100)))
+        ? _selectedDate
+        : now;
+
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: safeInitialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
 
-    if (pickedDate != null && pickedDate != _selectedDate) {
+    if (!mounted) return;
+
+    if (pickedDate != null) {
       setState(() {
         _selectedDate = pickedDate;
       });
@@ -5515,10 +5468,16 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    if (!mounted || _isTimePickerOpen) return;
+
+    _isTimePickerOpen = true;
+
+    final initialTime = _selectedFromTime ?? TimeOfDay.now();
+
+    final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedFromTime,
-      builder: (BuildContext context, Widget? child) {
+      initialTime: initialTime,
+      builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
@@ -5528,7 +5487,10 @@ class _CreateBookingState extends State<CreateBooking> {
       },
     );
 
-    if (picked != null && picked != _selectedFromTime) {
+    _isTimePickerOpen = false;
+    if (!mounted) return;
+
+    if (picked != null) {
       setState(() {
         _selectedFromTime = picked;
       });
@@ -5536,10 +5498,16 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Future<void> _selectToTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    if (!mounted || _isTimePickerOpen) return;
+
+    _isTimePickerOpen = true;
+
+    final initialTime = _selectedToTime ?? TimeOfDay.now();
+
+    final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedToTime,
-      builder: (BuildContext context, Widget? child) {
+      initialTime: initialTime,
+      builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
@@ -5549,7 +5517,10 @@ class _CreateBookingState extends State<CreateBooking> {
       },
     );
 
-    if (picked != null && picked != _selectedToTime) {
+    _isTimePickerOpen = false;
+    if (!mounted) return;
+
+    if (picked != null) {
       setState(() {
         _selectedToTime = picked;
       });

@@ -947,6 +947,7 @@ class CommonWidgets {
         DropdownButtonFormField<String>(
           borderRadius: BorderRadius.all(Radius.circular(10)),
           value: selectedValue,
+          dropdownColor: Colors.white,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(
               vertical: isTablet ? 20 : 14,
@@ -1039,6 +1040,7 @@ class CommonWidgets {
             flex: 2,
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
+                dropdownColor: Colors.white,
                 value: selectedUnit,
                 items: units.map((unit) {
                   return DropdownMenuItem<String>(

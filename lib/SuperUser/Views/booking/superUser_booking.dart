@@ -133,6 +133,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   ];
   final List<String> shipmentConditionItems = ['Refrigerator', 'Dry Storage'];
   String selectedUnit = 'mm';
+  bool _isTimePickerOpen = false;
 
 
   @override
@@ -158,6 +159,13 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       for (var special in specials) {
         MyVectorImage.preload(context, special.image);
       }
+    });
+  }
+
+  void goToNextStep() {
+    if (!mounted) return;
+    setState(() {
+      _currentStep++;
     });
   }
 
@@ -498,207 +506,202 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
             ],
           ),
         ),
-        bottomNavigationBar: BottomAppBar(
-          height: MediaQuery.sizeOf(context).height * 0.11,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (_currentStep == 1) Container(),
-                if (_currentStep > 1)
-                  Container(
-                    padding: const EdgeInsets.only(left: 12, bottom: 10),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (_currentStep > 1) {
-                            if (_currentStep == 2) {
-                              selectedLoad = null;
-                            }
-                            _currentStep--;
-                          }
-                        });
-                      },
-                      child: Text(
-                        'back'.tr(),
-                        style: TextStyle(
-                            color: Color(0xff6269FE),
-                            fontSize: viewUtil.isTablet ? 26 : 18,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                if (_currentStep < 3)
-                  Container(
-                    padding:
-                        const EdgeInsets.only(right: 10, bottom: 5, top: 5),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () async {
+        bottomNavigationBar: SafeArea(
+          child: BottomAppBar(
+            height: MediaQuery.sizeOf(context).height * 0.11,
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_currentStep == 1) const SizedBox.shrink(),
+                  if (_currentStep > 1)
+                    Container(
+                      padding: const EdgeInsets.only(left: 12, bottom: 10),
+                      child: GestureDetector(
+                        onTap: () {
                           setState(() {
-                            if (widget.selectedType == 'vehicle') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName == null) {
-                                  commonWidgets.showToast(
-                                      'Please select an option'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  fetchLoadsForSelectedType(
-                                          selectedTypeName ?? '')
-                                      .then((loadTypes) {
-                                    if (loadTypes.isEmpty ||
-                                        selectedLoad != null) {
-                                      setState(() {
-                                        _currentStep++;
-                                      });
-                                    } else {
-                                      if (loadTypes.isNotEmpty) {
-                                        commonWidgets.showToast(
-                                            'Please select Load type'.tr());
-                                      }
-                                    }
-                                  }).catchError((error) {
-                                    commonWidgets
-                                        .showToast('Error fetching load types');
-                                  });
-                                }
+                            if (_currentStep > 1) {
+                              if (_currentStep == 2) {
+                                selectedLoad = null;
                               }
-                            }
-                            if (widget.selectedType == 'bus') {
-                              if (_currentStep == 1) {
-                                if (selectedBus == null) {
-                                  commonWidgets
-                                      .showToast('Please select Bus'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null ||
-                                    productController.text.isEmpty) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'equipment') {
-                              if (_currentStep == 1) {
-                                if (selectedTypeName == null) {
-                                  commonWidgets.showToast(
-                                      'Please select an option'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'shared-cargo') {
-                              if (_currentStep == 1) {
-                                if (selectedShipmentType == null || selectedShipmentCondition == null ||
-                                lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
-                                  commonWidgets.showToast(
-                                      'Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null || productController.text.isEmpty || weightController.text.isEmpty) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
-                            }
-                            if (widget.selectedType == 'special' ||
-                                widget.selectedType == 'others') {
-                              if (_currentStep == 1) {
-                                if (selectedSpecial == null) {
-                                  commonWidgets.showToast(
-                                      'Please select Special/Other Units'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              } else if (_currentStep == 2) {
-                                if (_selectedFromTime == null ||
-                                    _selectedDate == null) {
-                                  commonWidgets
-                                      .showToast('Please fill all fields'.tr());
-                                } else {
-                                  _currentStep++;
-                                }
-                              }
+                              _currentStep--;
                             }
                           });
                         },
                         child: Text(
-                          'next'.tr(),
+                          'back'.tr(),
                           style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xff6269FE),
                               fontSize: viewUtil.isTablet ? 26 : 18,
                               fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
-                  ),
-                if (_currentStep == 3)
-                  Container(
-                    padding: const EdgeInsets.only(right: 10, bottom: 0),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.055,
-                      width: MediaQuery.of(context).size.width * 0.52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff6269FE),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  if (_currentStep < 3)
+                    Container(
+                      padding:
+                          const EdgeInsets.only(right: 10, bottom: 5, top: 5),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        onPressed: () async {
-                          setState(() {
-                            createBooking();
-                          });
-                        },
-                        child: Text(
-                          'createBooking'.tr(),
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: viewUtil.isTablet ? 26 : 18,
-                              fontWeight: FontWeight.bold),
+                          onPressed: () async {
+                            if (!mounted) return;
+                              if (widget.selectedType == 'vehicle') {
+                                if (_currentStep == 1) {
+                                  if (selectedTypeName == null) {
+                                    commonWidgets.showToast('Please select an option'.tr());
+                                    return;
+                                  }
+                                  setState(() => _currentStep++);
+                                  return;
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null ||
+                                      productController.text.isEmpty) {
+                                    commonWidgets.showToast('Please fill all fields'.tr());
+                                    return;
+                                  }
+                                  try {
+                                    final loadTypes =
+                                        await fetchLoadsForSelectedType(selectedTypeName ?? '');
+          
+                                    if (!mounted) return;
+          
+                                    if (loadTypes.isEmpty || selectedLoad != null) {
+                                      setState(() => _currentStep++);
+                                    } else {
+                                      commonWidgets.showToast('Please select Load type'.tr());
+                                    }
+                                  } catch (_) {
+                                    commonWidgets.showToast('Error fetching load types'.tr());
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'bus') {
+                                if (_currentStep == 1) {
+                                  if (selectedBus == null) {
+                                    commonWidgets
+                                        .showToast('Please select Bus'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null ||
+                                      productController.text.isEmpty) {
+                                    commonWidgets
+                                        .showToast('Please fill all fields'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'equipment') {
+                                if (_currentStep == 1) {
+                                  if (selectedTypeName == null) {
+                                    commonWidgets.showToast(
+                                        'Please select an option'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null) {
+                                    commonWidgets
+                                        .showToast('Please fill all fields'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'shared-cargo') {
+                                if (_currentStep == 1) {
+                                  if (selectedShipmentType == null || selectedShipmentCondition == null ||
+                                  lengthController.text.isEmpty || breadthController.text.isEmpty || heightController.text.isEmpty) {
+                                    commonWidgets.showToast(
+                                        'Please fill all fields'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null || productController.text.isEmpty || weightController.text.isEmpty) {
+                                    commonWidgets
+                                        .showToast('Please fill all fields'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                }
+                              }
+                              if (widget.selectedType == 'special' ||
+                                  widget.selectedType == 'others') {
+                                if (_currentStep == 1) {
+                                  if (selectedSpecial == null) {
+                                    commonWidgets.showToast(
+                                        'Please select Special/Other Units'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                } else if (_currentStep == 2) {
+                                  if (_selectedFromTime == null ||
+                                      _selectedDate == null) {
+                                    commonWidgets
+                                        .showToast('Please fill all fields'.tr());
+                                  } else {
+                                    goToNextStep();
+                                  }
+                                }
+                              }
+                          },
+                          child: Text(
+                            'next'.tr(),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: viewUtil.isTablet ? 26 : 18,
+                                fontWeight: FontWeight.w500),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                  if (_currentStep == 3)
+                    Container(
+                      padding: const EdgeInsets.only(right: 10, bottom: 0),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.055,
+                        width: MediaQuery.of(context).size.width * 0.52,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff6269FE),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          onPressed: () async {
+                              if (!mounted) return;
+                              createBooking();
+                          },
+                          child: Text(
+                            'createBooking'.tr(),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: viewUtil.isTablet ? 26 : 18,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1591,9 +1594,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: Icon(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(
                         FontAwesomeIcons.clock,
                         color: const Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20,
@@ -1606,19 +1609,14 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectTime(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          _selectedFromTime != null
-                              ? _formatTimeOfDay(_selectedFromTime)
-                              : 'Select time',
-                          style:
-                          TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        _selectedFromTime != null
+                            ? _formatTimeOfDay(_selectedFromTime)
+                            : 'Select time',
+                        style:
+                        TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                       ),
                     ),
                   ],
@@ -1651,9 +1649,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(FontAwesomeIcons.calendar,
                           color: Color(0xffBCBCBC),
                           size: viewUtil.isTablet ? 27 : 20),
                     ),
@@ -1664,16 +1662,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectDate(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet ? 20 : 16)),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                          style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ],
                 ),
@@ -1856,9 +1849,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
                         color: Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20),
                   ),
@@ -1869,17 +1862,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
-                          : 'Select time',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_selectedFromTime != null
+                        ? _formatTimeOfDay(_selectedFromTime)
+                        : 'Select time',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -1911,9 +1899,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.calendar,
                         color: Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20),
                   ),
@@ -1924,15 +1912,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
-                          style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                        style: TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2082,9 +2065,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
                         color: Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20),
                   ),
@@ -2095,17 +2078,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
-                          : 'Select from time',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_selectedFromTime != null
+                        ? _formatTimeOfDay(_selectedFromTime)
+                        : 'Select from time',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2137,9 +2115,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(FontAwesomeIcons.clock,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.clock,
                         color: Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20),
                   ),
@@ -2150,17 +2128,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectToTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(_selectedToTime != null
-                          ? _formatTimeOfDay(_selectedToTime)
-                          : 'Select to time',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_selectedToTime != null
+                        ? _formatTimeOfDay(_selectedToTime)
+                        : 'Select to time',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2192,9 +2165,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(FontAwesomeIcons.calendar,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(FontAwesomeIcons.calendar,
                         color: Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20),
                   ),
@@ -2205,17 +2178,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(formattedDate.isNotEmpty
-                          ? formattedDate
-                          : 'Select date',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(formattedDate.isNotEmpty
+                        ? formattedDate
+                        : 'Select date',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2325,9 +2293,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectTime(context),
-                    icon: Icon(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
                       FontAwesomeIcons.clock,
                       color: Color(0xffBCBCBC),
                       size: viewUtil.isTablet ? 27 : 20,
@@ -2340,17 +2308,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
-                          : 'Select from time',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_selectedFromTime != null
+                        ? _formatTimeOfDay(_selectedFromTime)
+                        : 'Select from time',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2382,9 +2345,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectToTime(context),
-                    icon: Icon(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
                       FontAwesomeIcons.clock,
                       color: Color(0xffBCBCBC),
                       size: viewUtil.isTablet ? 27 : 20,
@@ -2397,17 +2360,12 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectToTime(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(_selectedToTime != null
-                          ? _formatTimeOfDay(_selectedToTime)
-                          : 'Select to time',
-                          style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(_selectedToTime != null
+                        ? _formatTimeOfDay(_selectedToTime)
+                        : 'Select to time',
+                        style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2439,9 +2397,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  IconButton(
-                    onPressed: () => _selectDate(context),
-                    icon: Icon(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Icon(
                       FontAwesomeIcons.calendar,
                       color: Color(0xffBCBCBC),
                       size: viewUtil.isTablet ? 27 : 20,
@@ -2454,16 +2412,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                       thickness: 1.2,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
-                          style:
-                          TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                        style:
+                        TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
                 ],
               ),
@@ -2575,9 +2528,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectTime(context),
-                      icon: Icon(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(
                         FontAwesomeIcons.clock,
                         color: const Color(0xffBCBCBC),
                         size: viewUtil.isTablet ? 27 : 20,
@@ -2590,18 +2543,13 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectTime(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(_selectedFromTime != null
-                            ? _formatTimeOfDay(_selectedFromTime)
-                            : 'Select time',
-                          style:
-                          TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(_selectedFromTime != null
+                          ? _formatTimeOfDay(_selectedFromTime)
+                          : 'Select time',
+                        style:
+                        TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
                       ),
                     ),
                   ],
@@ -2634,9 +2582,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    IconButton(
-                      onPressed: () => _selectDate(context),
-                      icon: Icon(FontAwesomeIcons.calendar,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(FontAwesomeIcons.calendar,
                           color: Color(0xffBCBCBC),
                           size: viewUtil.isTablet ? 27 : 20),
                     ),
@@ -2647,16 +2595,11 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                         thickness: 1.2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        _selectDate(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
-                            style: TextStyle(
-                                fontSize: viewUtil.isTablet ? 20 : 16)),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                          style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
                   ],
                 ),
@@ -4547,7 +4490,6 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     }
   }
 
-
   Future<void> _fetchCoordinates() async {
     try {
       String apiKey = dotenv.env['API_KEY'] ?? 'No API Key Found';
@@ -4985,14 +4927,26 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
+    if (!mounted) return;
+
+    final now = DateTime.now();
+
+    final DateTime safeInitialDate = (_selectedDate != null &&
+        _selectedDate.isAfter(DateTime(2000)) &&
+        _selectedDate.isBefore(DateTime(2100)))
+        ? _selectedDate
+        : now;
+
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
+      initialDate: safeInitialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
 
-    if (pickedDate != null && pickedDate != _selectedDate) {
+    if (!mounted) return;
+
+    if (pickedDate != null) {
       setState(() {
         _selectedDate = pickedDate;
       });
@@ -5000,10 +4954,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    if (!mounted || _isTimePickerOpen) return;
+
+    _isTimePickerOpen = true;
+
+    final initialTime = _selectedFromTime ?? TimeOfDay.now();
+
+    final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedFromTime,
-      builder: (BuildContext context, Widget? child) {
+      initialTime: initialTime,
+      builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
@@ -5013,7 +4973,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       },
     );
 
-    if (picked != null && picked != _selectedFromTime) {
+    _isTimePickerOpen = false;
+    if (!mounted) return;
+
+    if (picked != null) {
       setState(() {
         _selectedFromTime = picked;
       });
@@ -5021,10 +4984,16 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Future<void> _selectToTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    if (!mounted || _isTimePickerOpen) return;
+
+    _isTimePickerOpen = true;
+
+    final initialTime = _selectedToTime ?? TimeOfDay.now();
+
+    final picked = await showTimePicker(
       context: context,
-      initialTime: _selectedToTime,
-      builder: (BuildContext context, Widget? child) {
+      initialTime: initialTime,
+      builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             alwaysUse24HourFormat: false,
@@ -5034,7 +5003,10 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       },
     );
 
-    if (picked != null && picked != _selectedToTime) {
+    _isTimePickerOpen = false;
+    if (!mounted) return;
+
+    if (picked != null) {
       setState(() {
         _selectedToTime = picked;
       });

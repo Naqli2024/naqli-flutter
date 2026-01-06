@@ -8,6 +8,7 @@ import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_type.dart';
 import 'package:flutter_naqli/User/Views/user_createBooking/user_vendor.dart';
+import 'package:flutter_naqli/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String buildBookingData({
@@ -202,13 +203,8 @@ Future<void> restoreBookingDataAfterLogin({
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (newContext) {
-            Future.delayed(const Duration(milliseconds: 300), () {
-              if (!newContext.mounted) return;
-              CommonWidgets()
-                  .showBookingDialog(context: newContext, bookingId: bookingId ??'');
-            });
-            return ChooseVendor(
+          builder: (context) =>
+            ChooseVendor(
               bookingId: bookingId ?? '',
               size: booking['scale'] ?? '',
               unitType: selectedType,
@@ -227,10 +223,18 @@ Future<void> restoreBookingDataAfterLogin({
               id: id,
               email: email,
               accountType: accountType,
-            );
-          },
+            ),
         ),
-      );
+      ).then((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (navigatorKey.currentContext != null) {
+              CommonWidgets().showBookingDialog(
+                context: navigatorKey.currentContext!,
+                bookingId: bookingId??'',
+              );
+            }
+          });
+      });
     } else {
       // Fallback → Go to normal user flow
       Navigator.of(context).pushReplacement(
