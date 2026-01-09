@@ -1058,6 +1058,12 @@ class CommonWidgets {
     );
   }
 
+  Locale normalizeLocaleFromLocale(Locale locale) {
+    if (locale.languageCode == 'ars') {
+      return const Locale('ar', 'SA');
+    }
+    return locale;
+  }
 
 
 

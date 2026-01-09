@@ -19,6 +19,7 @@ import 'dart:ui' as ui;
 
 import 'package:shared_preferences/shared_preferences.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+CommonWidgets commonWidgets = CommonWidgets();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.top]);
@@ -63,7 +64,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
-      locale: context.locale,
+      locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
       title: 'Naqlee',
       builder: (context, child) {
         return LayoutBuilder(

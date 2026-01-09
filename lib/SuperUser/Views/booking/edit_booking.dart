@@ -923,6 +923,7 @@ class _EditBookingState extends State<EditBooking> {
       initialDate: _selectedStartDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
     );
 
     if (pickedDate != null && pickedDate != _selectedStartDate) {

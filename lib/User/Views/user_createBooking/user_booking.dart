@@ -1478,44 +1478,48 @@ class _CreateBookingState extends State<CreateBooking> {
                                       return vehicle.types?.map((type) {
                                             return PopupMenuItem<String>(
                                               value: type.typeName,
-                                              child: Row(
-                                                children: [
-                                                  SizedBox(
-                                                    child: Image.asset(
-                                                      type.typeImage,
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                      height:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .height *
-                                                              0.06,
+                                              child: Directionality(
+                                                textDirection:
+                                                ui.TextDirection.ltr,
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      child: Image.asset(
+                                                        type.typeImage,
+                                                        width:
+                                                            MediaQuery.of(context)
+                                                                    .size
+                                                                    .width *
+                                                                0.15,
+                                                        height:
+                                                            MediaQuery.of(context)
+                                                                    .size
+                                                                    .height *
+                                                                0.06,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(width: 15),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(type.typeName.tr(),
-                                                          style: TextStyle(
-                                                              fontSize: viewUtil
-                                                                      .isTablet
-                                                                  ? 22
-                                                                  : 16)),
-                                                      Text(type.scale,
-                                                          style: TextStyle(
-                                                              fontSize: viewUtil
-                                                                      .isTablet
-                                                                  ? 20
-                                                                  : 14)),
-                                                    ],
-                                                  ),
-                                                ],
+                                                    const SizedBox(width: 15),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(type.typeName.tr(),
+                                                            style: TextStyle(
+                                                                fontSize: viewUtil
+                                                                        .isTablet
+                                                                    ? 22
+                                                                    : 16)),
+                                                        Text(type.scale,
+                                                            style: TextStyle(
+                                                                fontSize: viewUtil
+                                                                        .isTablet
+                                                                    ? 20
+                                                                    : 14)),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             );
                                           }).toList() ??
@@ -2158,9 +2162,9 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 25,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
                   Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -2210,7 +2214,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2409,7 +2413,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2432,7 +2436,7 @@ class _CreateBookingState extends State<CreateBooking> {
               child: Text(
                 'Date'.tr(),
                 style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontSize: viewUtil.isTablet ? 90 : 16,
                     fontWeight: FontWeight.w500),
               ),
             ),
@@ -2458,7 +2462,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2623,7 +2627,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2672,7 +2676,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2721,7 +2725,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2850,7 +2854,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2901,7 +2905,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2952,7 +2956,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -3084,7 +3088,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -3135,7 +3139,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -5453,6 +5457,7 @@ class _CreateBookingState extends State<CreateBooking> {
       initialDate: safeInitialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
     );
 
     if (!mounted) return;
@@ -5475,11 +5480,15 @@ class _CreateBookingState extends State<CreateBooking> {
       context: context,
       initialTime: initialTime,
       builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: false,
+        return Localizations.override(
+          context: context,
+          locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              alwaysUse24HourFormat: false,
+            ),
+            child: child ?? const SizedBox(),
           ),
-          child: child ?? const SizedBox(),
         );
       },
     );
@@ -5505,11 +5514,15 @@ class _CreateBookingState extends State<CreateBooking> {
       context: context,
       initialTime: initialTime,
       builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: false,
+        return Localizations.override(
+          context: context,
+          locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              alwaysUse24HourFormat: false,
+            ),
+            child: child ?? const SizedBox(),
           ),
-          child: child ?? const SizedBox(),
         );
       },
     );

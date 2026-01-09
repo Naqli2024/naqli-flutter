@@ -19,8 +19,6 @@ import 'package:flutter_naqli/SuperUser/Views/superUser_home_page.dart';
 import 'package:flutter_naqli/User/Model/user_model.dart';
 import 'package:flutter_naqli/User/Viewmodel/user_services.dart';
 import 'package:flutter_naqli/User/Views/user_auth/user_login.dart';
-import 'package:flutter_naqli/User/Views/user_createBooking/user_paymentStatus.dart';
-import 'package:flutter_naqli/User/Views/user_menu/user_editProfile.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_help.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_invoice.dart';
 import 'package:flutter_naqli/User/Views/user_menu/user_submitTicket.dart';
@@ -932,44 +930,48 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                                       return vehicle.types?.map((type) {
                                             return PopupMenuItem<String>(
                                               value: type.typeName,
-                                              child: Row(
-                                                children: [
-                                                  SizedBox(
-                                                    child: Image.asset(
-                                                      type.typeImage,
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                      height:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .height *
-                                                              0.06,
+                                              child: Directionality(
+                                                textDirection:
+                                                ui.TextDirection.ltr,
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      child: Image.asset(
+                                                        type.typeImage,
+                                                        width:
+                                                            MediaQuery.of(context)
+                                                                    .size
+                                                                    .width *
+                                                                0.15,
+                                                        height:
+                                                            MediaQuery.of(context)
+                                                                    .size
+                                                                    .height *
+                                                                0.06,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(width: 15),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(type.typeName.tr(),
-                                                          style: TextStyle(
-                                                              fontSize: viewUtil
-                                                                      .isTablet
-                                                                  ? 22
-                                                                  : 16)),
-                                                      Text(type.scale,
-                                                          style: TextStyle(
-                                                              fontSize: viewUtil
-                                                                      .isTablet
-                                                                  ? 20
-                                                                  : 14)),
-                                                    ],
-                                                  ),
-                                                ],
+                                                    const SizedBox(width: 15),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(type.typeName.tr(),
+                                                            style: TextStyle(
+                                                                fontSize: viewUtil
+                                                                        .isTablet
+                                                                    ? 22
+                                                                    : 16)),
+                                                        Text(type.scale,
+                                                            style: TextStyle(
+                                                                fontSize: viewUtil
+                                                                        .isTablet
+                                                                    ? 20
+                                                                    : 14)),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             );
                                           }).toList() ??
@@ -1862,7 +1864,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -1885,7 +1887,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
               child: Text(
                 'Date'.tr(),
                 style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
+                    fontSize: viewUtil.isTablet ? 90 : 16,
                     fontWeight: FontWeight.w500),
               ),
             ),
@@ -1911,7 +1913,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2076,7 +2078,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2125,7 +2127,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2174,7 +2176,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2303,7 +2305,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2354,7 +2356,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2405,7 +2407,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   ),
                   Container(
                     width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
+                    height: viewUtil.isTablet ? 60 : 50,
                     color: const Color(0xffBCBCBC),
                     margin: const EdgeInsets.symmetric(horizontal: 5),
                   ),
@@ -2494,199 +2496,200 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
         ? DateFormat('yyyy-MM-dd').format(_selectedDate)
         : '';
     return ScrollConfiguration(
-        behavior: const ScrollBehavior().copyWith(
-          overscroll: false,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Shipping Time'.tr(),
-                style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              _selectTime(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Icon(
-                      FontAwesomeIcons.clock,
-                      color: const Color(0xffBCBCBC),
-                      size: viewUtil.isTablet ? 27 : 20,
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
-                    color: const Color(0xffBCBCBC),
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(_selectedFromTime != null
-                        ? _formatTimeOfDay(_selectedFromTime)
-                        : 'Select time',
-                      style:
-                      TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                'Shipping Date'.tr(),
-                style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              _selectDate(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xffBCBCBC)),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Icon(FontAwesomeIcons.calendar,
-                        color: Color(0xffBCBCBC),
-                        size: viewUtil.isTablet ? 27 : 20),
-                  ),
-                  Container(
-                    width: 1,
-                    height: viewUtil.isTablet ? 30 : 50,
-                    color: const Color(0xffBCBCBC),
-                    margin: const EdgeInsets.symmetric(horizontal: 5),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
-                        style: TextStyle(
-                            fontSize: viewUtil.isTablet ? 20 : 16)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                "${'Shipment Value'.tr()} (SAR)",
-                style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            child: TextFormField(
-              onTapOutside: (event) {
-                FocusScope.of(context).unfocus();
-              },
-              controller: productController,
-              decoration: InputDecoration(
-                hintStyle:
-                const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
-                border: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0, // Border width
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0, // Border width
-                  ),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(left: 22),
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                "${'Shipment Weight'.tr()} (Kg)",
-                style: TextStyle(
-                    fontSize: viewUtil.isTablet ? 20 : 16,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-            child: TextFormField(
-              onTapOutside: (event) {
-                FocusScope.of(context).unfocus();
-              },
-              controller: weightController,
-              decoration: InputDecoration(
-                hintStyle:
-                const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
-                border: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0, // Border width
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  borderSide: const BorderSide(
-                    color: Color(0xffBCBCBC),
-                    width: 1.0, // Border width
-                  ),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ),
-        ],
+      behavior: const ScrollBehavior().copyWith(
+        overscroll: false,
       ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Shipping Time'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectTime(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(
+                        FontAwesomeIcons.clock,
+                        color: const Color(0xffBCBCBC),
+                        size: viewUtil.isTablet ? 27 : 20,
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: viewUtil.isTablet ? 60 : 50,
+                      color: const Color(0xffBCBCBC),
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(_selectedFromTime != null
+                          ? _formatTimeOfDay(_selectedFromTime)
+                          : 'Select time',
+                        style:
+                        TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Shipping Date'.tr(),
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                _selectDate(context);
+              },
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xffBCBCBC)),
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Icon(FontAwesomeIcons.calendar,
+                          color: Color(0xffBCBCBC),
+                          size: viewUtil.isTablet ? 27 : 20),
+                    ),
+                    Container(
+                      width: 1,
+                      height: viewUtil.isTablet ? 60 : 50,
+                      color: const Color(0xffBCBCBC),
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(formattedDate.isEmpty ? 'Select date' : formattedDate,
+                          style: TextStyle(
+                              fontSize: viewUtil.isTablet ? 20 : 16)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "${'Shipment Value'.tr()} (SAR)",
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                focusNode: productValueFocusNode,
+                controller: productController,
+                decoration: InputDecoration(
+                  hintStyle:
+                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(left: 22),
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  "${'Shipment Weight'.tr()} (Kg)",
+                  style: TextStyle(
+                      fontSize: viewUtil.isTablet ? 20 : 16,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                controller: weightController,
+                decoration: InputDecoration(
+                  hintStyle:
+                  const TextStyle(color: Color(0xffCCCCCC), fontSize: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderSide: const BorderSide(
+                      color: Color(0xffBCBCBC),
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -4938,6 +4941,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       initialDate: safeInitialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
     );
 
     if (!mounted) return;
@@ -4960,11 +4964,15 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       context: context,
       initialTime: initialTime,
       builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: false,
+        return Localizations.override(
+          context: context,
+          locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              alwaysUse24HourFormat: false,
+            ),
+            child: child ?? const SizedBox(),
           ),
-          child: child ?? const SizedBox(),
         );
       },
     );
@@ -4990,11 +4998,15 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
       context: context,
       initialTime: initialTime,
       builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            alwaysUse24HourFormat: false,
+        return Localizations.override(
+          context: context,
+          locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              alwaysUse24HourFormat: false,
+            ),
+            child: child ?? const SizedBox(),
           ),
-          child: child ?? const SizedBox(),
         );
       },
     );
