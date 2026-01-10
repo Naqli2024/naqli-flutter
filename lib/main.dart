@@ -31,6 +31,8 @@ void main() async {
     EasyLocalization.ensureInitialized(),
     dotenv.load(fileName: ".env"),
   ]);
+  Locale deviceLocale = ui.window.locale;
+  Locale startLocale = commonWidgets.normalizeLocaleFromLocale(deviceLocale);
     runApp(
       EasyLocalization(
         supportedLocales: [
@@ -40,6 +42,7 @@ void main() async {
         ],
         path: 'assets/translations',
         fallbackLocale: Locale('en', 'US'),
+        startLocale: startLocale,
         child: const MyApp(),
       ),
     );
@@ -65,6 +68,12 @@ class MyApp extends StatelessWidget {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: commonWidgets.normalizeLocaleFromLocale(context.locale),
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (locale != null && locale.languageCode.startsWith('ar')) {
+          return const Locale('ar', 'SA');
+        }
+        return locale;
+      },
       title: 'Naqlee',
       builder: (context, child) {
         return LayoutBuilder(
@@ -86,9 +95,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff6A66D1)),
         useMaterial3: true,
       ),
-      home: Directionality(
-          textDirection: ui.TextDirection.ltr,
-          child: const LoginScreen()),
+      home: const LoginScreen(),
     );
   }
 }

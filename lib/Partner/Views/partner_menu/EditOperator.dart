@@ -80,7 +80,7 @@ class _EditOperatorState extends State<EditOperator> {
 
     if (pickedDate != null) {
       setState(() {
-        dobController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+        dobController.text = DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(pickedDate);
       });
     }
   }

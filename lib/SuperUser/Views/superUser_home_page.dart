@@ -1663,7 +1663,7 @@ class _SuperUserHomePageState extends State<SuperUserHomePage> {
 
   Map<int, int> countBookingsByMonth(List<String> bookingDates) {
     Map<int, int> monthlyCounts = {};
-    final dateFormat = DateFormat('yyyy-MM-dd');
+    final dateFormat = DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode);
 
     for (var dateStr in bookingDates) {
       try {

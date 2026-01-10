@@ -1059,7 +1059,7 @@ class CommonWidgets {
   }
 
   Locale normalizeLocaleFromLocale(Locale locale) {
-    if (locale.languageCode == 'ars') {
+    if (locale.languageCode.startsWith('ar')) {
       return const Locale('ar', 'SA');
     }
     return locale;

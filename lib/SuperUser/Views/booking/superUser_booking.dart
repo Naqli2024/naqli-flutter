@@ -1571,7 +1571,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget UserVehicleStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -1621,7 +1621,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
                       _selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select time',
                       style:
                       TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
@@ -1824,7 +1824,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget UserBusStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -1871,7 +1871,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(_selectedFromTime != null
-                        ? _formatTimeOfDay(_selectedFromTime)
+                        ? _formatTimeOfDay(context,_selectedFromTime)
                         : 'Select time',
                         style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
@@ -2038,7 +2038,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget UserEquipmentStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2085,7 +2085,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(_selectedFromTime != null
-                        ? _formatTimeOfDay(_selectedFromTime)
+                        ? _formatTimeOfDay(context,_selectedFromTime)
                         : 'Select from time',
                         style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
@@ -2134,7 +2134,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(_selectedToTime != null
-                        ? _formatTimeOfDay(_selectedToTime)
+                        ? _formatTimeOfDay(context,_selectedToTime)
                         : 'Select to time',
                         style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
@@ -2263,7 +2263,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget UserSpecialStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2312,7 +2312,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(_selectedFromTime != null
-                        ? _formatTimeOfDay(_selectedFromTime)
+                        ? _formatTimeOfDay(context,_selectedFromTime)
                         : 'Select from time',
                         style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
@@ -2363,7 +2363,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(_selectedToTime != null
-                        ? _formatTimeOfDay(_selectedToTime)
+                        ? _formatTimeOfDay(context,_selectedToTime)
                         : 'Select to time',
                         style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                   ),
@@ -2493,7 +2493,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   Widget UserSharedCargoStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return ScrollConfiguration(
       behavior: const ScrollBehavior().copyWith(
@@ -2546,7 +2546,7 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select time',
                         style:
                         TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
@@ -5021,14 +5021,13 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
     }
   }
 
-  String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour;
-    final minute = time.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final formattedHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    final formattedMinute = minute.toString().padLeft(2, '0');
-    return '$formattedHour:$formattedMinute $period';
+  String _formatTimeOfDay(BuildContext context, TimeOfDay time) {
+    return MaterialLocalizations.of(context).formatTimeOfDay(
+      time,
+      alwaysUse24HourFormat: false,
+    );
   }
+
 
   void _onCheckboxChanged(bool? value) {
     setState(() {
@@ -5037,9 +5036,9 @@ class _SuperUserBookingState extends State<SuperUserBooking> {
   }
 
   Future<void> createBooking() async {
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    String formattedTime = _formatTimeOfDay(_selectedFromTime);
-    String formattedToTime = _formatTimeOfDay(_selectedToTime);
+    String formattedDate = DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate);
+    String formattedTime = _formatTimeOfDay(context,_selectedFromTime);
+    String formattedToTime = _formatTimeOfDay(context,_selectedToTime);
     List<String> dropPlaces =
         _dropPointControllers.map((controller) => controller.text).toList();
 

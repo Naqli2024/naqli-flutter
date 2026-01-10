@@ -489,11 +489,11 @@ class _CreateBookingState extends State<CreateBooking> {
                         ),
                         onPressed: () async {
                           String formattedDate =
-                              DateFormat('yyyy-MM-dd').format(_selectedDate);
+                              DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate);
                           String formattedTime =
-                              _formatTimeOfDay(_selectedFromTime);
+                              _formatTimeOfDay(context,_selectedFromTime);
                           String formattedToTime =
-                              _formatTimeOfDay(_selectedToTime);
+                              _formatTimeOfDay(context,_selectedToTime);
                           List<String> dropPlaces =
                               _dropPointControllers.map((c) => c.text).toList();
 
@@ -2120,7 +2120,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserVehicleStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2170,7 +2170,7 @@ class _CreateBookingState extends State<CreateBooking> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         _selectedFromTime != null
-                            ? _formatTimeOfDay(_selectedFromTime)
+                            ? _formatTimeOfDay(context,_selectedFromTime)
                             : 'Select time',
                         style:
                             TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
@@ -2373,7 +2373,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserBusStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2420,7 +2420,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -2587,7 +2587,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserEquipmentStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2634,7 +2634,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select from time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -2683,7 +2683,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedToTime != null
-                          ? _formatTimeOfDay(_selectedToTime)
+                          ? _formatTimeOfDay(context,_selectedToTime)
                           : 'Select to time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -2812,7 +2812,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserSpecialStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return SingleChildScrollView(
       child: Column(
@@ -2861,7 +2861,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select from time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -2912,7 +2912,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedToTime != null
-                          ? _formatTimeOfDay(_selectedToTime)
+                          ? _formatTimeOfDay(context,_selectedToTime)
                           : 'Select to time',
                           style:TextStyle(fontSize: viewUtil.isTablet ? 20 : 16)),
                     ),
@@ -3042,7 +3042,7 @@ class _CreateBookingState extends State<CreateBooking> {
   Widget UserSharedCargoStepTwo() {
     ViewUtil viewUtil = ViewUtil(context);
     String formattedDate = _selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(_selectedDate)
+        ? DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate)
         : '';
     return ScrollConfiguration(
         behavior: const ScrollBehavior().copyWith(
@@ -3095,7 +3095,7 @@ class _CreateBookingState extends State<CreateBooking> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(_selectedFromTime != null
-                          ? _formatTimeOfDay(_selectedFromTime)
+                          ? _formatTimeOfDay(context,_selectedFromTime)
                           : 'Select time',
                         style:
                             TextStyle(fontSize: viewUtil.isTablet ? 20 : 16),
@@ -5537,13 +5537,11 @@ class _CreateBookingState extends State<CreateBooking> {
     }
   }
 
-  String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour;
-    final minute = time.minute;
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final formattedHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    final formattedMinute = minute.toString().padLeft(2, '0');
-    return '$formattedHour:$formattedMinute $period';
+  String _formatTimeOfDay(BuildContext context, TimeOfDay time) {
+    return MaterialLocalizations.of(context).formatTimeOfDay(
+      time,
+      alwaysUse24HourFormat: false,
+    );
   }
 
   void _onCheckboxChanged(bool? value) {
@@ -5553,9 +5551,9 @@ class _CreateBookingState extends State<CreateBooking> {
   }
 
   Future<void> createBooking() async {
-    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    String formattedTime = _formatTimeOfDay(_selectedFromTime);
-    String formattedToTime = _formatTimeOfDay(_selectedToTime);
+    String formattedDate = DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedDate);
+    String formattedTime = _formatTimeOfDay(context,_selectedFromTime);
+    String formattedToTime = _formatTimeOfDay(context,_selectedToTime);
     List<String> dropPlaces =
         _dropPointControllers.map((controller) => controller.text).toList();
 

@@ -57,7 +57,7 @@ class _UserInvoiceOverviewState extends State<UserInvoiceOverview> {
       try {
         String formattedDateString = '${dateString.substring(0, 4)}-${dateString.substring(4, 6)}-${dateString.substring(6, 8)}';
         DateTime date = DateTime.parse(formattedDateString);
-        return DateFormat('dd/MM/yyyy').format(date);
+        return DateFormat('dd/MM/yyyy',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(date);
       } catch (e) {
         return 'Invalid Date Format';
       }

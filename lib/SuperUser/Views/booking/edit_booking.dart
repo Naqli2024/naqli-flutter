@@ -82,7 +82,7 @@ class _EditBookingState extends State<EditBooking> {
     modeController = TextEditingController(text: widget.mode.tr());
     modeClassificationController = TextEditingController(text: widget.modeClassification.tr());
     _selectedStartDate = widget.date != null
-        ? DateFormat("yyyy-MM-dd").parse(widget.date)
+        ? DateFormat("yyyy-MM-dd",commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).parse(widget.date)
         : DateTime.now();
     if (widget.additionalLabour != null && widget.additionalLabour! > 0) {
       isChecked = true;
@@ -633,7 +633,7 @@ class _EditBookingState extends State<EditBooking> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                                DateFormat('yyyy-MM-dd').format(_selectedStartDate),
+                                DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedStartDate),
                                 style: TextStyle(fontSize: viewUtil.isTablet ?20:16)),
                           ),
                         ),
@@ -718,7 +718,7 @@ class _EditBookingState extends State<EditBooking> {
                         setState(() {
                           isLoading = true;
                         });
-                        String updatedDate = DateFormat('yyyy-MM-dd').format(_selectedStartDate);
+                        String updatedDate = DateFormat('yyyy-MM-dd',commonWidgets.normalizeLocaleFromLocale(context.locale).languageCode).format(_selectedStartDate);
                         String updatedPickup = pickUpPointController.text;
                         List<String> updatedDropPoints = _dropPointControllers.map((controller) => controller.text).toList();
                         await superUserServices.updateBooking(

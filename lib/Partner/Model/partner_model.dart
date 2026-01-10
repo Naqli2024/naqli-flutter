@@ -102,7 +102,7 @@ class OperatorDetail {
           : 'Upload a file',
 
       dateOfBirth: json['dateOfBirth'] != null
-          ? DateFormat('yyyy-MM-dd').format(DateTime.parse(json['dateOfBirth']))
+          ? DateFormat('yyyy-MM-dd','ar').format(DateTime.parse(json['dateOfBirth']))
           : '',
     );
   }
